@@ -1,0 +1,77 @@
+# -----------------------------------------------
+# Godot Engine
+# -----------------------------------------------
+# Godot-specific cache and import data — never commit these
+.godot/
+/android/
+
+# Export outputs
+/export/
+*.apk
+*.aab
+*.exe
+*.x86_64
+*.x86_32
+*.arm64
+*.dmg
+*.app
+*.pck
+
+# -----------------------------------------------
+# AI Model Files
+# -----------------------------------------------
+# LLM model weights can be multiple GB — users provide their own
+*.gguf
+*.ggml
+*.safetensors
+/models/
+
+# -----------------------------------------------
+# Secrets & Environment
+# -----------------------------------------------
+# Never commit API keys or local config overrides
+.env
+*.env
+*.local
+config.local.json
+
+# -----------------------------------------------
+# GUT Test Runner
+# -----------------------------------------------
+.gut_editor_config.json
+.gut_editor.json
+/test-results/
+
+# -----------------------------------------------
+# OS Files
+# -----------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# -----------------------------------------------
+# IDE & Editor
+# -----------------------------------------------
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# -----------------------------------------------
+# Dev-Only Addons (remove before release)
+# -----------------------------------------------
+# Binaries are large and the whole addon is stripped at release
+addons/ziva_agent/bin/
+addons/ziva_agent/bin-deps/
+
+# GUT is dev-only — exclude from release exports via export presets,
+# but we keep it tracked in git so all devs have it.
+# To exclude from a release build: add addons/gut to export exclusions.
