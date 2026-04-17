@@ -19,6 +19,9 @@ var stats: Dictionary = {}
 ## Entity-owned currencies: { currency_key → float }
 var currencies: Dictionary = {}
 
+## Per-faction standing: { faction_id → float }
+var reputation: Dictionary = {}
+
 ## Inventory: Array of PartInstance
 var inventory: Array = []   # Array[PartInstance]
 
@@ -27,6 +30,9 @@ var equipped: Dictionary = {}
 
 ## Arbitrary instance flags: { flag_key → Variant }
 var flags: Dictionary = {}
+
+## Locations this entity has discovered for travel/navigation purposes.
+var discovered_locations: Array[String] = []
 
 ## Current location id.
 var location_id: String = ""
@@ -42,7 +48,9 @@ static func from_template(template: Dictionary) -> EntityInstance:
 	inst.entity_id = template.get("entity_id", _generate_id())
 	inst.location_id = template.get("location_id", "")
 	inst.currencies = template.get("currencies", {}).duplicate(true)
+	inst.reputation = template.get("reputation", {}).duplicate(true)
 	inst.flags = template.get("flags", {}).duplicate(true)
+	inst.discovered_locations = inst._to_string_array(template.get("discovered_locations", []))
 	inst._init_stats(template)
 	inst._init_inventory(template)
 	inst._init_equipped_from_template(template)
@@ -126,6 +134,11 @@ func has_stat(stat_key: String) -> bool:
 	return stats.has(stat_key)
 
 
+func effective_stat(stat_key: String) -> float:
+	var effective_stats := StatManager.compute_effective_stats(self)
+	return float(effective_stats.get(stat_key, 0.0))
+
+
 func get_currency(currency_key: String) -> float:
 	return float(currencies.get(currency_key, 0.0))
 
@@ -144,6 +157,38 @@ func spend_currency(currency_key: String, amount: float) -> bool:
 		return false
 	add_currency(currency_key, -amount)
 	return true
+
+
+func get_reputation(faction_id: String) -> float:
+	return float(reputation.get(faction_id, 0.0))
+
+
+func add_reputation(faction_id: String, amount: float) -> void:
+	reputation[faction_id] = get_reputation(faction_id) + amount
+
+
+func set_flag(flag_key: String, value: Variant) -> void:
+	flags[flag_key] = value
+	if GameEvents:
+		GameEvents.flag_changed.emit(entity_id, flag_key, value)
+
+
+func get_flag(flag_key: String, default_value: Variant = null) -> Variant:
+	return flags.get(flag_key, default_value)
+
+
+func has_flag(flag_key: String) -> bool:
+	return flags.has(flag_key)
+
+
+func discover_location(location_id: String) -> void:
+	if location_id.is_empty() or location_id in discovered_locations:
+		return
+	discovered_locations.append(location_id)
+
+
+func has_discovered_location(location_id: String) -> bool:
+	return location_id in discovered_locations
 
 
 # ---------------------------------------------------------------------------
@@ -350,9 +395,11 @@ func to_dict() -> Dictionary:
 		"entity_id": entity_id,
 		"stats": stats.duplicate(),
 		"currencies": currencies.duplicate(),
+		"reputation": reputation.duplicate(),
 		"inventory": inventory_list,
 		"equipped": equipped_map,
 		"flags": flags.duplicate(),
+		"discovered_locations": discovered_locations.duplicate(),
 		"location_id": location_id,
 	}
 
@@ -362,7 +409,9 @@ func from_dict(data: Dictionary) -> void:
 	entity_id = data.get("entity_id", "")
 	stats = data.get("stats", {}).duplicate(true)
 	currencies = data.get("currencies", {}).duplicate(true)
+	reputation = data.get("reputation", {}).duplicate(true)
 	flags = data.get("flags", {}).duplicate(true)
+	discovered_locations = _to_string_array(data.get("discovered_locations", []))
 	location_id = data.get("location_id", "")
 	inventory.clear()
 	var inv_data: Array = data.get("inventory", [])
@@ -383,3 +432,12 @@ func from_dict(data: Dictionary) -> void:
 			var part := PartInstance.new()
 			part.from_dict(part_data)
 			equipped[slot] = part
+
+
+func _to_string_array(values: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not values is Array:
+		return result
+	for value in values:
+		result.append(str(value))
+	return result

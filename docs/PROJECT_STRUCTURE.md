@@ -202,16 +202,17 @@ Signal naming should stay specific and domain-oriented. Prefer names that encode
 Key signals (non-exhaustive):
 ```gdscript
 signal tick_advanced(tick: int)
-signal day_started(day: int)
-signal player_location_changed(location_id: String)
-signal part_equipped(entity_id: String, socket_id: String, instance_id: String)
-signal part_unequipped(entity_id: String, socket_id: String, instance_id: String)
+signal day_advanced(day: int)
+signal location_changed(old_id: String, new_id: String)
+signal part_equipped(entity_id: String, part_id: String, slot: String)
+signal part_unequipped(entity_id: String, part_id: String, slot: String)
 signal quest_stage_advanced(quest_id: String, stage_index: int)
 signal quest_completed(quest_id: String)
+signal task_started(task_id: String, entity_id: String)
 signal task_completed(task_id: String, entity_id: String)
 signal achievement_unlocked(achievement_id: String)
-signal currency_changed(entity_id: String, currency_id: String, new_amount: float)
-signal flag_changed(entity_id: String, flag_id: String, value: bool)
+signal entity_currency_changed(entity_id: String, currency_id: String, old_amount: float, new_amount: float)
+signal flag_changed(entity_id: String, flag_id: String, value: Variant)
 signal dialogue_started(entity_id: String, dialogue_resource: String)
 signal dialogue_ended(entity_id: String, dialogue_resource: String)
 signal ai_response_received(request_id: String, response: String)
@@ -251,9 +252,9 @@ func get_config_value(key_path: String, default: Variant = null) -> Variant  # e
 
 Hardening rules for `DataManager`:
 
-- Template dictionaries returned from `DataManager` are read-only by convention and should be treated as immutable snapshots.
+- Template dictionaries returned from `DataManager` should be treated as immutable snapshots. The current implementation returns defensive copies for direct getters and filtered query helpers.
 - Every loader should validate additions and patches before mutating the merged registry.
-- `DataManager` should eventually expose query helpers for common lookups (`query_parts`, `query_entities`, `query_locations`) so systems and UI do not re-implement filtering logic ad hoc.
+- `DataManager` should expose query helpers for common lookups (`query_parts`, `query_entities`, `query_locations`) so systems and UI do not re-implement filtering logic ad hoc.
 - Unknown references should fail fast during loading rather than surfacing as null lookups later in gameplay.
 
 ### `GameState` (`autoloads/game_state.gd`)
@@ -266,21 +267,23 @@ Contains:
 - `tick: int` — current game tick counter.
 - `day: int` — current in-game day.
 - `active_quests: Dictionary` — quest_id → lightweight quest instance data (current stage, timestamps, transient quest state).
-- `active_tasks: Array` — in-progress task instances.
+- `active_tasks: Dictionary` — runtime_id → in-progress task instance data.
+- `completed_task_templates: Array[String]` — non-repeatable task templates already completed in this save.
 - `achievement_stats: Dictionary` — global tracking stats (gold_spent, etc.).
 
 ### `SaveManager` (`autoloads/save_manager.gd`)
-Reads and writes `GameState` as human-readable JSON to `user://saves/`. Uses `A2J` for lossless typed serialization of all runtime objects. Handles schema versioning so old saves can be migrated forward.
+Reads and writes `GameState` as human-readable JSON to `user://saves/`. Uses `A2J` for lossless typed serialization of all runtime objects. Handles schema versioning so old saves can be migrated forward and revalidates runtime references after load.
 
 All custom runtime classes that appear in save data (`EntityInstance`, `PartInstance`, `GameState`, etc.) must be registered in `A2J.object_registry` during `_ready()` before any save/load can occur.
 
 Key methods:
 ```gdscript
 func save_game(slot: int) -> void
-func load_game(slot: int) -> void
-func list_save_slots() -> Array[Dictionary]  # Returns slot metadata (date, playtime, etc.)
-func delete_save(slot: int) -> void
-func _register_types() -> void  # Registers all serializable classes with A2J.object_registry
+func load_game(slot: int) -> bool
+func get_slot_info(slot: int) -> Dictionary
+func slot_exists(slot: int) -> bool
+func get_debug_snapshot() -> Dictionary
+func _register_runtime_classes() -> void
 ```
 
 Usage pattern:
@@ -299,7 +302,7 @@ A2J.from_json(raw, _save_ruleset)  # Populates GameState in place
 ```
 
 ### `TimeKeeper` (`autoloads/time_keeper.gd`)
-The tick clock. Exposes methods for advancing time (manually or via UI buttons). Dispatches `tick_advanced` and `day_started` signals on `GameEvents`. Drives `TaskRunner` to advance in-progress tasks.
+The tick clock. Exposes methods for advancing time (manually or via UI buttons). Dispatches `tick_advanced` and `day_started` signals on `GameEvents`. Drives `TaskRunner` to advance in-progress tasks and resynchronizes its derived tick-within-day counter from `GameState` after load/reset.
 
 Key methods:
 ```gdscript
@@ -426,11 +429,13 @@ These are not autoloads — they are classes instantiated and owned by the autol
 | `AssemblySession` | `AssemblyEditorBackend` | Transactional draft wrapper for assembly edits — clones the target entity, tracks build cost against a budget, computes projected stats, and reports what would change on confirm. Supports a separate payer entity when the budget source differs from the target. |
 | `AssemblyCommitService` | Systems utility | Applies finalized assembly edits to runtime state, commits the updated entity, and emits equip/unequip events based on the final diff. |
 | `TransactionService` | Systems utility | Applies cross-entity transaction side effects such as currency transfers and inventory stock deduction so UI backends do not mutate runtime economy state ad hoc. |
+| `RewardService` | Systems utility | Applies reward dictionaries consistently across tasks, quests, and action payloads. |
+| `ScriptHookService` | Systems utility | Resolves template `script_path` hooks and dispatches lifecycle callbacks from runtime systems. |
 | `StatManager` | Systems utility | Stat calculation, modifier stacking, clamping |
 | `ConditionEvaluator` | Systems utility | Evaluates JSON `conditions` blocks (AND/OR trees) |
-| `ActionDispatcher` | Systems utility | Executes `action_payload` objects, emits events |
-| `QuestTracker` | GameState | Quest HSM built on LimboAI — reads `quests.json`, creates `LimboHSM` nodes dynamically; JSON schema is unchanged |
-| `TaskRunner` | TimeKeeper | Advances active tasks on each tick |
+| `ActionDispatcher` | Systems utility | Executes `action_payload` objects, emits events, and delegates reward payloads to shared runtime helpers |
+| `QuestTracker` | GameState | Quest progression runtime — evaluates objective blocks against `GameEvents`, applies stage/final rewards, and dispatches quest hooks |
+| `TaskRunner` | TimeKeeper | Advances active tasks on each tick, resolves travel completions, and applies shared reward/hook logic |
 | `ScriptHookLoader` | ModLoader | Loads, validates, and caches GDScript mod hooks |
 
 ### Planned Hardening Systems
@@ -439,14 +444,15 @@ The following support systems are important enough to be part of the documented 
 
 - **SchemaValidator**: lightweight per-file schema checks for required fields, primitive types, enums, and reference validity.
 - **BackendContractRegistry**: maps `backend_class` values to required JSON fields and validates screens/interactions before UI construction.
-- **QueryService**: shared filtered lookup helpers used by UI, tasks, generators, and AI-safe content discovery.
+- **QueryService**: shared filtered lookup helpers used by UI, tasks, generators, and AI-safe content discovery. The current codebase has started this work inside `DataManager` with immutable `query_parts` / `query_entities` helpers.
 - **DebugOverlay / DebugPanel**: live inspection for loaded mods, emitted events, active quests/tasks, view models, and patch results.
 
 ### Debug And Test Tooling
 
 Development-time tooling is part of the architecture, not an afterthought.
 
-- **`imgui-godot` is the preferred runtime debug layer** for inspecting mods, registries, GameState, event flow, backend params, and save/migration behavior.
+- **The built-in dev overlay is the current always-on runtime debug layer** for inspecting mods, registries, GameState, event flow, and save/migration behavior.
+- **`imgui-godot` remains the preferred richer future debug layer** when immediate-mode tooling will materially help iteration speed.
 - **GUT is the preferred automated test layer** for unit, integration, and content invariant tests.
 - Debug and testing tools are dev-only and must not become required for normal gameplay.
 - New systems should ideally arrive with both:

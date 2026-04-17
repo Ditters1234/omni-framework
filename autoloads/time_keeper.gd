@@ -16,6 +16,7 @@ var is_running: bool = false
 
 var _timer: Timer = null
 var _tick_accumulator: int = 0   # ticks elapsed in the current day
+var _task_runner: TaskRunner = null
 
 # ---------------------------------------------------------------------------
 # Boot
@@ -27,6 +28,9 @@ func _ready() -> void:
 	_timer.one_shot = false
 	_timer.timeout.connect(_on_timer_tick)
 	add_child(_timer)
+	_task_runner = TaskRunner.new()
+	add_child(_task_runner)
+	sync_from_game_state()
 
 
 # ---------------------------------------------------------------------------
@@ -83,6 +87,46 @@ func advance_tick() -> void:
 func advance_ticks(count: int) -> void:
 	for _i in range(maxi(count, 0)):
 		advance_tick()
+
+
+func advance_to_next_day() -> void:
+	var ticks_per_day := int(DataManager.get_config_value("game.ticks_per_day", TICKS_PER_DAY))
+	if ticks_per_day <= 0:
+		return
+	var remaining := ticks_per_day - _tick_accumulator
+	if remaining <= 0:
+		remaining = ticks_per_day
+	advance_ticks(remaining)
+
+
+func get_current_tick() -> int:
+	return GameState.current_tick
+
+
+func get_current_day() -> int:
+	return GameState.current_day
+
+
+func get_ticks_into_day() -> int:
+	return _tick_accumulator
+
+
+func get_time_string() -> String:
+	return "Day %d, Tick %d" % [GameState.current_day, GameState.current_tick]
+
+
+func accept_task(template_id: String, params: Dictionary = {}) -> String:
+	if _task_runner == null:
+		return ""
+	return _task_runner.accept_task(template_id, params)
+
+
+func sync_from_game_state() -> void:
+	var ticks_per_day := int(DataManager.get_config_value("game.ticks_per_day", TICKS_PER_DAY))
+	if ticks_per_day <= 0:
+		_tick_accumulator = 0
+		return
+	_tick_accumulator = posmod(GameState.current_tick, ticks_per_day)
 
 
 # ---------------------------------------------------------------------------

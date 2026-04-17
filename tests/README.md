@@ -23,4 +23,8 @@ Current baseline suites cover:
 - entity stat initialization and clamping
 - action signal forwarding
 - basic GameState/save flow
+- save/load time resynchronization
+- DataManager query helpers and immutability
+- AI provider config selection
+- mod dependency-aware load ordering
 - base content invariants

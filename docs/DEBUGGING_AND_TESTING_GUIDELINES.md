@@ -4,7 +4,8 @@ This document defines how Omni-Framework should use its development-time debuggi
 
 The two core tools are:
 
-- `imgui-godot` for in-engine debug overlays and runtime inspection
+- the built-in dev overlay at `ui/debug/dev_debug_overlay.gd` for always-available runtime inspection
+- `imgui-godot` for richer future debug tooling where an immediate-mode workflow helps
 - GUT for automated tests in `tests/`
 
 These are not optional "nice to have" extras. They are part of how the engine stays debuggable as the data model, mod pipeline, and runtime systems get more complex.
@@ -17,6 +18,18 @@ These are not optional "nice to have" extras. They are part of how the engine st
 - Give developers one consistent way to inspect the engine at runtime
 
 ## Tool Roles
+
+### Runtime Overlay
+
+Use the built-in dev overlay for:
+
+- Boot/load summaries
+- Registry counts
+- Runtime state inspection
+- Event stream inspection
+- Save/load result snapshots
+
+The current implementation is intentionally lightweight and ships as standard Godot UI so it remains easy to keep alive while the platform architecture is still moving.
 
 ### `imgui-godot`
 
@@ -59,9 +72,9 @@ The debug layer should help answer these questions fast:
 - What view model did a backend build?
 - What save/load or migration step just failed?
 
-## Recommended ImGui Panels
+## Recommended Debug Panels
 
-The initial debug overlay should grow around a few stable panels.
+Whether a panel lives in the built-in overlay or a future ImGui tool, the initial debug surface should grow around a few stable panels.
 
 ### Boot / Mods
 
@@ -119,6 +132,7 @@ Show:
 - Last loaded slot metadata
 - Migration path used
 - Post-load sanity check failures
+- Tick/day resync state after load
 
 ### AI
 
@@ -150,7 +164,7 @@ Recommended early policy:
 Use logs and overlays together:
 
 - Logs are the durable record
-- ImGui is the fast live inspector
+- The runtime overlay is the fast live inspector
 
 Prefer logging:
 
@@ -176,6 +190,7 @@ Fast, isolated tests for:
 - Patch helper logic
 - Manifest validation
 - Query filters
+- AI provider config selection
 
 ### Integration Tests
 
@@ -184,6 +199,7 @@ Cross-system tests for:
 - Two-phase mod loading
 - Definitions/stat metadata consumption
 - Save/load round trips
+- Save/load time resynchronization
 - Quest/task lifecycle wiring
 - Action dispatch against GameState
 - Event emission on key transitions
@@ -198,6 +214,8 @@ Whole-data-set checks for:
 - Missing asset paths where required
 - Broken location graph links
 - Duplicate IDs
+- Unknown stat/currency usage in content
+- Unmapped `backend_class` values in location/entity screens
 
 ## Test Folder Conventions
 

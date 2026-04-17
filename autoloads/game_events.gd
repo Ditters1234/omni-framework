@@ -9,6 +9,7 @@ class_name OmniGameEvents
 # Mod / Data loading
 # ---------------------------------------------------------------------------
 signal mod_loaded(mod_id: String)
+signal mod_load_error(mod_id: String, message: String)
 signal all_mods_loaded()
 
 # ---------------------------------------------------------------------------
@@ -28,6 +29,7 @@ signal game_over()
 signal location_changed(old_id: String, new_id: String)
 signal player_stat_changed(stat_key: String, old_value: float, new_value: float)
 signal entity_stat_changed(entity_id: String, stat_key: String, old_value: float, new_value: float)
+signal flag_changed(entity_id: String, flag_id: String, value: Variant)
 
 # ---------------------------------------------------------------------------
 # Inventory / Parts
@@ -51,8 +53,8 @@ signal quest_started(quest_id: String)
 signal quest_stage_advanced(quest_id: String, stage_index: int)
 signal quest_completed(quest_id: String)
 signal quest_failed(quest_id: String)
-signal task_started(task_id: String)
-signal task_completed(task_id: String)
+signal task_started(task_id: String, entity_id: String)
+signal task_completed(task_id: String, entity_id: String)
 
 # ---------------------------------------------------------------------------
 # Achievements
@@ -73,6 +75,7 @@ signal ui_notification_requested(message: String, level: String)
 # AI
 # ---------------------------------------------------------------------------
 signal ai_response_received(context_id: String, response: String)
+signal ai_token_received(context_id: String, token: String)
 signal ai_error(context_id: String, error: String)
 
 # ---------------------------------------------------------------------------

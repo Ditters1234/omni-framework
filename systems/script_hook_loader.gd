@@ -1,6 +1,6 @@
 ## ScriptHookLoader — Loads and caches ScriptHook instances from mod scripts.
 ## Mod scripts are GDScript files extending ScriptHook, referenced by
-## the documented "script_path" field in part/quest/location JSON templates.
+## the documented "script_path" field in part/entity/location/quest/task templates.
 ##
 ## Example JSON usage:
 ##   "script_path": "res://mods/my_name/my_mod/scripts/my_hook.gd"
@@ -57,12 +57,20 @@ func _load_hook(script_path: String) -> ScriptHook:
 
 func _collect_hook_paths() -> Array[String]:
 	var paths: Array[String] = []
-	for part in DataManager.parts.values():
-		var hook_path: String = part.get("script_path", part.get("script_hook", ""))
-		if not hook_path.is_empty() and not hook_path in paths:
-			paths.append(hook_path)
-	for quest in DataManager.quests.values():
-		var hook_path: String = quest.get("script_path", quest.get("script_hook", ""))
-		if not hook_path.is_empty() and not hook_path in paths:
-			paths.append(hook_path)
+	_append_hook_paths(paths, DataManager.parts.values())
+	_append_hook_paths(paths, DataManager.entities.values())
+	_append_hook_paths(paths, DataManager.locations.values())
+	_append_hook_paths(paths, DataManager.quests.values())
+	_append_hook_paths(paths, DataManager.tasks.values())
 	return paths
+
+
+func _append_hook_paths(paths: Array[String], templates: Array) -> void:
+	for template_data in templates:
+		if not template_data is Dictionary:
+			continue
+		var template: Dictionary = template_data
+		var hook_path := str(template.get("script_path", template.get("script_hook", "")))
+		if hook_path.is_empty() or hook_path in paths:
+			continue
+		paths.append(hook_path)

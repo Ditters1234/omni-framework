@@ -48,6 +48,11 @@ Recommended top-level structure:
 - `slot_metadata`
 - `game_state`
 
+Compatibility note:
+
+- Legacy saves that still contain `game_state` but are missing some metadata fields may be backfilled during migration.
+- A save with no `game_state` payload is always invalid.
+
 ## Slot Metadata Purpose
 
 `slot_metadata` exists so save-slot UI does not need to deserialize the entire runtime state just to show:
@@ -124,6 +129,10 @@ Recommended load order:
 6. Deserialize `game_state` with `A2J`
 7. Re-run runtime sanity checks
 
+Current implementation note:
+
+- The runtime sanity pass should also resynchronize any derived clock state such as `TimeKeeper`'s tick-within-day accumulator after `GameState` is restored.
+
 ## Runtime Sanity Checks After Load
 
 After deserialization, verify:
@@ -134,6 +143,7 @@ After deserialization, verify:
 - Active quests still reference known quest definitions
 - Active tasks still reference known task templates
 - Inventories do not contain impossible duplicate instance IDs
+- Any derived runtime counters that mirror saved state are recomputed instead of trusted blindly
 
 ## Handling Missing Template References
 

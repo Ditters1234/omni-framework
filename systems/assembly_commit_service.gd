@@ -19,8 +19,10 @@ static func commit_entity(previous_entity: EntityInstance, committed_entity: Ent
 			continue
 		if not previous_template_id.is_empty():
 			GameEvents.part_unequipped.emit(entity_id, previous_template_id, slot_id)
+			_invoke_part_hook(previous_entity, slot_id, "on_unequip")
 		if not committed_template_id.is_empty():
 			GameEvents.part_equipped.emit(entity_id, committed_template_id, slot_id)
+			_invoke_part_hook(committed_entity, slot_id, "on_equip")
 
 
 static func _collect_slot_ids(previous_entity: EntityInstance, committed_entity: EntityInstance) -> Array[String]:
@@ -37,3 +39,18 @@ static func _collect_slot_ids(previous_entity: EntityInstance, committed_entity:
 				slot_ids.append(slot_id)
 	slot_ids.sort()
 	return slot_ids
+
+
+static func _invoke_part_hook(entity: EntityInstance, slot_id: String, method_name: String) -> void:
+	if entity == null:
+		return
+	var part := entity.get_equipped(slot_id)
+	if part == null and method_name == "on_unequip":
+		var previous_part_data: Variant = entity.equipped.get(slot_id, null)
+		part = previous_part_data as PartInstance
+	if part == null:
+		return
+	var part_template := part.get_template()
+	if part_template.is_empty():
+		return
+	ScriptHookService.invoke_template_hook(part_template, method_name, [entity.to_dict(), part.to_dict()])

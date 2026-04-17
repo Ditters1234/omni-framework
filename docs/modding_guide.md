@@ -30,6 +30,7 @@ Omni-Framework is intentionally data-driven, but it is not "anything goes." The 
 - IDs and references must point at real content by the end of the load pipeline.
 - `backend_class` values are validated against explicit backend contracts, not informal conventions.
 - AI-assisted content is optional and must degrade safely if the provider is unavailable or returns malformed output.
+- Dependency order matters for mods: a lower `load_order` value does not let a dependent mod load before the mod it depends on.
 
 ### System Hierarchy Map
 Here is how the engine's autoloads and core systems interact with your mod files at startup. Each system is a singleton accessible globally via its autoload name.
@@ -705,6 +706,8 @@ Many screens and quest rewards support an `action_payload` object. This is how y
 - `has_currency`: Check if entity has enough currency. Requires `currency_id`, `amount`.
 - `reputation_threshold`: Check faction reputation. Requires `faction_id`, `threshold`, `comparison` (e.g., `">="`)..
 
+The condition runtime accepts both the legacy flat block shape and the newer recursive tree shape shown above. `AND`, `OR`, and `NOT` nodes can contain typed condition objects, so mods can express larger unlock rules without adding new backend logic.
+
 **Payload Types (Common Actions):**
 *   `"start_task"`: Begin a repeatable task. Requires `task_template_id`.
 *   `"start_quest"`: Begin a quest. Requires `quest_id`.
@@ -804,6 +807,7 @@ For example, a `DELIVER` task forces an entity to dead-reckon travel across the 
 - `description` (optional, string): Task flavor text/briefing shown to player.
 - `difficulty` (optional, number): Difficulty rating (used for UI display and possibly challenge scaling).
 - `repeatable` (optional, boolean, default: true): Whether this task can be done multiple times or only once.
+- `script_path` (optional, string): Path to a `ScriptHook` that receives `on_task_start()` and `on_task_complete()` callbacks.
 
 **Patching a Task:**
 ```json
@@ -880,6 +884,7 @@ Supported objective types: `has_item_tag` and `reach_location`.
 - `reward` (optional, object): Final reward granted when ALL stages complete. Can include gold, reputation dicts, items.
 - `complete_sound` (optional, string): WAV/OGG played when entire quest completes.
 - `repeatable` (optional, boolean, default: false): Whether player can retake quest after completion.
+- `script_path` (optional, string): Path to a `ScriptHook` that receives `on_quest_start()`, `on_quest_complete()`, and `on_quest_fail()` callbacks.
 
 **Patching an Existing Quest:**
 ```json

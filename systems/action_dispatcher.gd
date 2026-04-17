@@ -27,11 +27,15 @@ static func dispatch(action: Dictionary) -> void:
 		"give_currency", "add_currency": _action_give_currency(action)
 		"take_currency", "remove_currency": _action_take_currency(action)
 		"give_part":        _action_give_part(action)
-		"remove_part":      _action_remove_part(action)
+		"remove_part", "consume": _action_remove_part(action)
 		"set_flag":         _action_set_flag(action)
 		"modify_stat":      _action_modify_stat(action)
 		"travel":           _action_travel(action)
+		"start_task":       _action_start_task(action)
 		"start_quest":      _action_start_quest(action)
+		"unlock_location":  _action_unlock_location(action)
+		"spawn_entity":     _action_spawn_entity(action)
+		"reward":           _action_reward(action)
 		"unlock_achievement": _action_unlock_achievement(action)
 		"emit_signal":      _action_emit_signal(action)
 		_:
@@ -100,7 +104,7 @@ static func _action_set_flag(action: Dictionary) -> void:
 		return
 	var entity := _resolve_entity(entity_id)
 	if entity:
-		entity.flags[str(action.get("flag_id", action.get("key", "")))] = action.get("value", true)
+		entity.set_flag(str(action.get("flag_id", action.get("key", ""))), action.get("value", true))
 
 
 static func _action_modify_stat(action: Dictionary) -> void:
@@ -117,11 +121,52 @@ static func _action_travel(action: Dictionary) -> void:
 	GameState.travel_to(str(action.get("location_id", "")))
 
 
+static func _action_start_task(action: Dictionary) -> void:
+	var template_id := str(action.get("task_template_id", action.get("template_id", "")))
+	if template_id.is_empty():
+		return
+	var params: Dictionary = {}
+	var entity_id := str(action.get("entity_id", "player"))
+	if not entity_id.is_empty():
+		params["entity_id"] = entity_id
+	TimeKeeper.accept_task(template_id, params)
+
+
 static func _action_start_quest(action: Dictionary) -> void:
 	var quest_id := str(action.get("quest_id", ""))
 	if quest_id.is_empty():
 		return
 	GameState.start_quest(quest_id)
+
+
+static func _action_unlock_location(action: Dictionary) -> void:
+	var entity := _resolve_entity(str(action.get("entity_id", "player")))
+	if entity == null:
+		return
+	var location_id := str(action.get("location_id", ""))
+	entity.discover_location(location_id)
+
+
+static func _action_spawn_entity(action: Dictionary) -> void:
+	var template_id := str(action.get("entity_id", action.get("template_id", "")))
+	if template_id.is_empty():
+		return
+	var template := DataManager.get_entity(template_id)
+	if template.is_empty():
+		return
+	var instance := EntityInstance.from_template(template)
+	var location_id := str(action.get("location_id", instance.location_id))
+	if not location_id.is_empty():
+		instance.location_id = location_id
+	GameState.commit_entity_instance(instance)
+
+
+static func _action_reward(action: Dictionary) -> void:
+	var entity := _resolve_entity(str(action.get("entity_id", "player")))
+	if entity == null:
+		return
+	var reward_data: Variant = action.get("reward", action)
+	RewardService.apply_reward(entity, reward_data)
 
 
 static func _action_unlock_achievement(action: Dictionary) -> void:

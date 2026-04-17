@@ -68,6 +68,7 @@ The event surface should stay grouped by domain.
 - `game_over()`
 - `location_changed(old_id, new_id)`
 - `entity_stat_changed(entity_id, stat_id, old_value, new_value)`
+- `flag_changed(entity_id, flag_id, value)`
 
 ### Inventory And Assembly
 
@@ -87,8 +88,8 @@ The event surface should stay grouped by domain.
 - `quest_stage_advanced(quest_id, stage_index)`
 - `quest_completed(quest_id)`
 - `quest_failed(quest_id)`
-- `task_started(task_id)`
-- `task_completed(task_id)`
+- `task_started(task_id, entity_id)`
+- `task_completed(task_id, entity_id)`
 
 ### Achievements
 
@@ -105,6 +106,10 @@ The event surface should stay grouped by domain.
 - `ai_response_received(context_id, response)`
 - `ai_token_received(context_id, token)`
 - `ai_error(context_id, error)`
+
+Current implementation note:
+
+- `ai_token_received` is part of the public event surface now, even though some providers currently fall back to whole-response delivery instead of true token streaming.
 
 ### Save And Load
 

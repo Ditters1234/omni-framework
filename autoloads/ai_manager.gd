@@ -20,13 +20,16 @@ var _provider_type: String = PROVIDER_DISABLED
 # ---------------------------------------------------------------------------
 
 func _ready() -> void:
-	pass
+	return
 
 
 ## Called after DataManager is loaded so we can read config.
 ## Instantiates and configures the appropriate provider.
 func initialize() -> void:
-	var ai_config: Dictionary = DataManager.config.get("ai", {})
+	var ai_config_value: Variant = DataManager.config.get("ai", {})
+	var ai_config: Dictionary = {}
+	if ai_config_value is Dictionary:
+		ai_config = ai_config_value
 	_provider_type = str(ai_config.get("provider", PROVIDER_DISABLED))
 
 	if _provider:
@@ -44,7 +47,8 @@ func initialize() -> void:
 
 	add_child(_provider)
 	if _provider.has_method("initialize"):
-		_provider.initialize(ai_config)
+		var provider_config := _build_provider_config(ai_config, _provider_type)
+		_provider.initialize(provider_config)
 
 
 # ---------------------------------------------------------------------------
@@ -53,7 +57,11 @@ func initialize() -> void:
 
 ## Returns true if a working AI provider is configured and ready.
 func is_available() -> bool:
-	return _provider != null and _provider_type != PROVIDER_DISABLED
+	if _provider == null or _provider_type == PROVIDER_DISABLED:
+		return false
+	if _provider.has_method("is_ready"):
+		return bool(_provider.call("is_ready"))
+	return true
 
 
 ## Returns the active provider type string.
@@ -103,3 +111,25 @@ func _load_provider(provider_type: String) -> Node:
 	if script == null:
 		return null
 	return script.new()
+
+
+func _build_provider_config(ai_config: Dictionary, provider_type: String) -> Dictionary:
+	var result: Dictionary = {}
+	for key_value in ai_config.keys():
+		var key := str(key_value)
+		if key == "provider":
+			continue
+		var value: Variant = ai_config.get(key_value, null)
+		if value is Dictionary and (
+				key == PROVIDER_OPENAI_COMPATIBLE
+				or key == PROVIDER_ANTHROPIC
+				or key == PROVIDER_NOBODYWHO):
+			continue
+		result[key] = value
+
+	var nested_config_value: Variant = ai_config.get(provider_type, {})
+	if nested_config_value is Dictionary:
+		var nested_config: Dictionary = nested_config_value
+		for key_value in nested_config.keys():
+			result[str(key_value)] = nested_config.get(key_value, null)
+	return result

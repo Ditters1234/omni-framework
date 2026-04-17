@@ -116,35 +116,90 @@ func apply_patches(mod_id: String, mod_data_path: String) -> void:
 # ---------------------------------------------------------------------------
 
 func get_part(part_id: String) -> Dictionary:
-	return parts.get(part_id, {})
+	return _duplicate_dictionary(parts.get(part_id, {}))
 
 
 func get_entity(entity_id: String) -> Dictionary:
-	return entities.get(entity_id, {})
+	return _duplicate_dictionary(entities.get(entity_id, {}))
 
 
 func get_location(location_id: String) -> Dictionary:
-	return locations.get(location_id, {})
+	return _duplicate_dictionary(locations.get(location_id, {}))
 
 
 func get_faction(faction_id: String) -> Dictionary:
-	return factions.get(faction_id, {})
+	return _duplicate_dictionary(factions.get(faction_id, {}))
 
 
 func get_quest(quest_id: String) -> Dictionary:
-	return quests.get(quest_id, {})
+	return _duplicate_dictionary(quests.get(quest_id, {}))
 
 
 func get_task(template_id: String) -> Dictionary:
-	return tasks.get(template_id, {})
+	return _duplicate_dictionary(tasks.get(template_id, {}))
 
 
 func get_achievement(achievement_id: String) -> Dictionary:
-	return achievements.get(achievement_id, {})
+	return _duplicate_dictionary(achievements.get(achievement_id, {}))
 
 
 func get_definitions(category: String) -> Array:
-	return definitions.get(category, [])
+	return _duplicate_array(definitions.get(category, []))
+
+
+func query_parts(filters: Dictionary = {}) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var tag_filters := _variant_to_string_array(filters.get("tags", []))
+	var required_tag_filters := _variant_to_string_array(filters.get("required_tags", []))
+	var template_ids := _variant_to_string_array(filters.get("template_ids", []))
+	for part_id_value in parts.keys():
+		var part_id := str(part_id_value)
+		if not template_ids.is_empty() and not template_ids.has(part_id):
+			continue
+		var part_value: Variant = parts.get(part_id_value, {})
+		if not part_value is Dictionary:
+			continue
+		var part: Dictionary = part_value
+		var part_tags := _variant_to_string_array(part.get("tags", []))
+		var part_required_tags := _variant_to_string_array(part.get("required_tags", []))
+		if not _contains_all_strings(part_tags, tag_filters):
+			continue
+		if not _contains_all_strings(part_required_tags, required_tag_filters):
+			continue
+		results.append(part.duplicate(true))
+	return results
+
+
+func query_entities(filters: Dictionary = {}) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var location_id := str(filters.get("location_id", ""))
+	var template_ids := _variant_to_string_array(filters.get("template_ids", []))
+	for entity_id_value in entities.keys():
+		var entity_id := str(entity_id_value)
+		if not template_ids.is_empty() and not template_ids.has(entity_id):
+			continue
+		var entity_value: Variant = entities.get(entity_id_value, {})
+		if not entity_value is Dictionary:
+			continue
+		var entity: Dictionary = entity_value
+		if not location_id.is_empty() and str(entity.get("location_id", "")) != location_id:
+			continue
+		results.append(entity.duplicate(true))
+	return results
+
+
+func get_registry_counts() -> Dictionary:
+	return {
+		"stats": get_definitions("stats").size(),
+		"currencies": get_definitions("currencies").size(),
+		"parts": parts.size(),
+		"entities": entities.size(),
+		"locations": locations.size(),
+		"factions": factions.size(),
+		"quests": quests.size(),
+		"tasks": tasks.size(),
+		"achievements": achievements.size(),
+	}
 
 
 func get_config_value(key_path: String, default_value: Variant = null) -> Variant:
@@ -177,6 +232,40 @@ func _deep_merge(dst: Dictionary, src: Dictionary) -> void:
 			_deep_merge(dst[key], src_value)
 		else:
 			dst[key] = src_value
+
+
+func _duplicate_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dict_value: Dictionary = value
+		return dict_value.duplicate(true)
+	return {}
+
+
+func _duplicate_array(value: Variant) -> Array:
+	if value is Array:
+		var array_value: Array = value
+		return array_value.duplicate(true)
+	return []
+
+
+func _variant_to_string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not value is Array:
+		return result
+	var values: Array = value
+	for entry in values:
+		var text := str(entry)
+		if text.is_empty():
+			continue
+		result.append(text)
+	return result
+
+
+func _contains_all_strings(values: Array[String], required_values: Array[String]) -> bool:
+	for required_value in required_values:
+		if not values.has(required_value):
+			return false
+	return true
 
 
 func clear_all() -> void:

@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://ch6yq0polv5xw"]
 
-[ext_resource type="Script" path="res://ui/screens/location_view/location_view_screen.gd" id="1_locview"]
+[ext_resource type="Script" uid="uid://eby76kwon16t" path="res://ui/screens/location_view/location_view_screen.gd" id="1_locview"]
 
-[node name="LocationViewScreen" type="Control"]
+[node name="LocationViewScreen" type="Control" unique_id=594725937]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_locview")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1493091934]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,51 +23,48 @@ theme_override_constants/margin_top = 32
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1849290411]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=818317548]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Location"
-horizontal_alignment = 0
 
-[node name="DescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="DescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1928242446]
 layout_mode = 2
 autowrap_mode = 3
-text = ""
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=173906852]
 layout_mode = 2
 
-[node name="ScreensLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="ScreensLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=201650054]
+modulate = Color(0.8, 0.8, 0.8, 1)
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Available:"
-modulate = Color(0.8, 0.8, 0.8, 1)
 
-[node name="ScreensScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ScreensScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer" unique_id=1679745941]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ScreensContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScreensScroll"]
+[node name="ScreensContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScreensScroll" unique_id=1059152660]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="ConnectionsContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ConnectionsContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1011667714]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="NavRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="NavRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=979709611]
 layout_mode = 2
 
-[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer/NavRow"]
+[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer/NavRow" unique_id=1445232361]
 layout_mode = 2
 text = "Back"
 
-[node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = ""
+[node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=2134043178]
 modulate = Color(0.7, 0.7, 0.7, 1)
+layout_mode = 2
