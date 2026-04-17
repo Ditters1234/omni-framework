@@ -265,7 +265,7 @@ Contains:
 - `current_location_id: String` — where the player currently is.
 - `tick: int` — current game tick counter.
 - `day: int` — current in-game day.
-- `active_quests: Dictionary` — quest_id → current stage index.
+- `active_quests: Dictionary` — quest_id → lightweight quest instance data (current stage, timestamps, transient quest state).
 - `active_tasks: Array` — in-progress task instances.
 - `achievement_stats: Dictionary` — global tracking stats (gold_spent, etc.).
 
@@ -423,7 +423,9 @@ These are not autoloads — they are classes instantiated and owned by the autol
 | `TaskRegistry` | DataManager | Task template storage |
 | `AchievementRegistry` | DataManager | Achievement template storage |
 | `ConfigLoader` | DataManager | Deep-merges `config.json` across all mods |
-| `AssemblySession` | `AssemblyEditorBackend` | Transactional draft wrapper for assembly edits — clones the target entity, tracks build cost against a budget, computes projected stats, and commits on confirm. Supports a separate payer entity when the budget source differs from the target. |
+| `AssemblySession` | `AssemblyEditorBackend` | Transactional draft wrapper for assembly edits — clones the target entity, tracks build cost against a budget, computes projected stats, and reports what would change on confirm. Supports a separate payer entity when the budget source differs from the target. |
+| `AssemblyCommitService` | Systems utility | Applies finalized assembly edits to runtime state, commits the updated entity, and emits equip/unequip events based on the final diff. |
+| `TransactionService` | Systems utility | Applies cross-entity transaction side effects such as currency transfers and inventory stock deduction so UI backends do not mutate runtime economy state ad hoc. |
 | `StatManager` | Systems utility | Stat calculation, modifier stacking, clamping |
 | `ConditionEvaluator` | Systems utility | Evaluates JSON `conditions` blocks (AND/OR trees) |
 | `ActionDispatcher` | Systems utility | Executes `action_payload` objects, emits events |

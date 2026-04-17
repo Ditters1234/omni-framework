@@ -324,6 +324,12 @@ func _find_socket_def(slot: String) -> Dictionary:
 	return {}
 
 
+func duplicate_instance() -> EntityInstance:
+	var clone := EntityInstance.new()
+	clone.from_dict(to_dict())
+	return clone
+
+
 # ---------------------------------------------------------------------------
 # Serialization (manual dict round-trip for AssemblySession cloning)
 # ---------------------------------------------------------------------------

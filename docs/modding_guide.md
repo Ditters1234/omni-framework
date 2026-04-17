@@ -637,6 +637,7 @@ When defining a screen in a location or an interaction on an NPC, you assign a `
 - Required backend fields should be treated as mandatory load-time validation, not "best effort" runtime assumptions.
 - Backends gather runtime data and build a view model; UI scenes render that view model. Do not make UI components responsible for fetching game state on their own.
 - Assembly-style backends should keep preview state in a draft session object instead of mutating live entities on every cursor move. That draft layer should answer "can this fit", "can I afford this", "what stats change", and "what gets committed".
+- Confirm-time currency transfers and stock deduction should go through a shared runtime transaction utility rather than being hardcoded directly into a screen scene.
 - If a backend needs structured output from AI or script hooks, validate that output before it is rendered or applied.
 
 **Common Required Backend Fields:**

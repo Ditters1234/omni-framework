@@ -48,6 +48,7 @@ signal transaction_completed(buyer_id: String, seller_id: String, part_id: Strin
 # Quests / Tasks
 # ---------------------------------------------------------------------------
 signal quest_started(quest_id: String)
+signal quest_stage_advanced(quest_id: String, stage_index: int)
 signal quest_completed(quest_id: String)
 signal quest_failed(quest_id: String)
 signal task_started(task_id: String)

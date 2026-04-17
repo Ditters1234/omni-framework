@@ -21,7 +21,6 @@ var _slot_states: Dictionary = {}
 var _selected_slot_id: String = ""
 var _initialized: bool = false
 var _target_entity_lookup_id: String = "player"
-var _target_runtime_entity_id: String = ""
 var _budget_entity_lookup_id: String = ""
 var _budget_currency_id: String = "credits"
 var _payment_recipient_lookup_id: String = ""
@@ -104,8 +103,6 @@ func _resolve_target_entity() -> EntityInstance:
 	var entity: EntityInstance = GameState.get_entity_instance(_target_entity_lookup_id)
 	if entity == null and _target_entity_lookup_id == "player":
 		entity = GameState.player as EntityInstance
-	if entity != null:
-		_target_runtime_entity_id = entity.entity_id
 	return entity
 
 
@@ -119,6 +116,15 @@ func _resolve_source_entity() -> EntityInstance:
 	return source
 
 
+func _resolve_payment_recipient_entity() -> EntityInstance:
+	if _payment_recipient_lookup_id.is_empty():
+		return null
+	var recipient: EntityInstance = GameState.get_entity_instance(_payment_recipient_lookup_id)
+	if recipient == null and _payment_recipient_lookup_id == "player":
+		recipient = GameState.player as EntityInstance
+	return recipient
+
+
 ## In inventory mode, removes one instance of each newly equipped template
 ## from the source entity's inventory and commits the source back to GameState.
 func _deduct_from_source_inventory() -> void:
@@ -127,31 +133,11 @@ func _deduct_from_source_inventory() -> void:
 	var source := _resolve_source_entity()
 	if source == null:
 		return
-	var original := _session.original_entity
-	var draft := _session.draft_entity
-	if draft == null:
-		return
-	for slot_value in draft.equipped.keys():
-		var slot := str(slot_value)
-		var new_template_id := draft.get_equipped_template_id(slot)
-		var old_template_id := "" if original == null else original.get_equipped_template_id(slot)
-		if new_template_id.is_empty() or new_template_id == old_template_id:
-			continue
-		_remove_one_from_source_inventory(source, new_template_id)
-	GameState.entity_instances[source.entity_id] = source
-	var current_player := GameState.player as EntityInstance
-	if current_player != null and current_player.entity_id == source.entity_id:
-		GameState.player = source
-
-
-## Removes the first unequipped PartInstance with the given template_id from
-## source.inventory. Does nothing if no matching unequipped part is found.
-func _remove_one_from_source_inventory(source: EntityInstance, template_id: String) -> void:
-	for i in source.inventory.size():
-		var part: PartInstance = source.inventory[i]
-		if part is PartInstance and part.template_id == template_id and not part.is_equipped:
-			source.inventory.remove_at(i)
-			return
+	var committed_source := source.duplicate_instance()
+	var template_ids: Array[String] = _session.get_newly_equipped_template_ids()
+	for template_id in template_ids:
+		TransactionService.remove_one_inventory_template(committed_source, template_id)
+	GameState.commit_entity_instance(committed_source, _option_source_entity_lookup_id)
 
 
 ## Returns the entity that pays the build cost, or null if the target pays itself.
@@ -796,11 +782,13 @@ func _on_begin_button_pressed() -> void:
 	if committed == null:
 		_status_label.text = "The edited build could not be finalized."
 		return
-	_commit_entity_to_game_state(committed)
 	var committed_payer := _session.get_committed_payer()
+	if not _apply_confirm_transaction_effects(committed, committed_payer):
+		_status_label.text = "The transaction could not be completed."
+		return
+	_commit_target_entity_to_game_state(committed)
 	if committed_payer != null:
-		_commit_payer_to_game_state(committed_payer)
-	_pay_recipient(_session.get_total_cost())
+		_commit_entity_to_game_state(committed_payer, _budget_entity_lookup_id)
 	_deduct_from_source_inventory()
 	if _pop_on_confirm:
 		UIRouter.pop()
@@ -811,38 +799,37 @@ func _on_begin_button_pressed() -> void:
 	UIRouter.replace_all(_next_screen_id, _confirm_screen_params)
 
 
-func _commit_entity_to_game_state(entity: EntityInstance) -> void:
+func _commit_target_entity_to_game_state(entity: EntityInstance) -> void:
 	if entity == null:
 		return
-	GameState.entity_instances[entity.entity_id] = entity
-	var current_player := GameState.player as EntityInstance
-	if _target_entity_lookup_id == "player" or current_player == null or current_player.entity_id == _target_runtime_entity_id:
-		GameState.player = entity
+	AssemblyCommitService.commit_entity(_session.original_entity, entity, _target_entity_lookup_id)
 
 
-## Adds the paid amount to the payment recipient's currency and commits them.
-## No-op if payment_recipient_id was not set or the entity cannot be found.
-func _pay_recipient(amount: float) -> void:
-	if _payment_recipient_lookup_id.is_empty() or amount <= 0.0:
+func _commit_entity_to_game_state(entity: EntityInstance, lookup_id: String = "") -> void:
+	if entity == null:
 		return
-	var recipient: EntityInstance = GameState.get_entity_instance(_payment_recipient_lookup_id)
+	GameState.commit_entity_instance(entity, lookup_id)
+
+
+func _apply_confirm_transaction_effects(committed_target: EntityInstance, committed_payer: EntityInstance) -> bool:
+	var total_cost := _session.get_total_cost()
+	var buyer := committed_target if committed_payer == null else committed_payer
+	if buyer == null:
+		return false
+	return _commit_payment_recipient(buyer, total_cost)
+
+
+func _commit_payment_recipient(buyer: EntityInstance, amount: float) -> bool:
+	if amount <= 0.0 or _budget_currency_id.is_empty():
+		return true
+	var recipient := _resolve_payment_recipient_entity()
 	if recipient == null:
-		return
-	recipient.add_currency(_budget_currency_id, amount)
-	GameState.entity_instances[recipient.entity_id] = recipient
-	var current_player := GameState.player as EntityInstance
-	if current_player != null and current_player.entity_id == recipient.entity_id:
-		GameState.player = recipient
-
-
-## Commits the payer entity's updated currency balance back to GameState.
-func _commit_payer_to_game_state(payer: EntityInstance) -> void:
-	if payer == null:
-		return
-	GameState.entity_instances[payer.entity_id] = payer
-	var current_player := GameState.player as EntityInstance
-	if current_player != null and current_player.entity_id == payer.entity_id:
-		GameState.player = payer
+		return TransactionService.spend_currency(buyer, _budget_currency_id, amount)
+	var committed_recipient := recipient.duplicate_instance()
+	if not TransactionService.transfer_currency(buyer, committed_recipient, _budget_currency_id, amount):
+		return false
+	_commit_entity_to_game_state(committed_recipient, _payment_recipient_lookup_id)
+	return true
 
 
 func _to_string_array(values: Variant) -> Array[String]:

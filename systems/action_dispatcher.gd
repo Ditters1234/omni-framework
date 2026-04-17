@@ -75,7 +75,22 @@ static func _action_give_part(action: Dictionary) -> void:
 
 
 static func _action_remove_part(action: Dictionary) -> void:
-	pass
+	var entity := _resolve_entity(str(action.get("entity_id", "player")))
+	if entity == null:
+		return
+	var instance_id := str(action.get("instance_id", ""))
+	if not instance_id.is_empty():
+		var existing_part := entity.get_inventory_part(instance_id)
+		if existing_part == null:
+			return
+		var template_id := existing_part.template_id
+		if entity.remove_part(instance_id):
+			GameEvents.part_removed.emit(entity.entity_id, template_id)
+		return
+	var template_id := str(action.get("part_id", action.get("template_id", "")))
+	if template_id.is_empty():
+		return
+	TransactionService.remove_one_inventory_template(entity, template_id)
 
 
 static func _action_set_flag(action: Dictionary) -> void:
@@ -103,7 +118,10 @@ static func _action_travel(action: Dictionary) -> void:
 
 
 static func _action_start_quest(action: Dictionary) -> void:
-	pass  # Handled by QuestTracker
+	var quest_id := str(action.get("quest_id", ""))
+	if quest_id.is_empty():
+		return
+	GameState.start_quest(quest_id)
 
 
 static func _action_unlock_achievement(action: Dictionary) -> void:

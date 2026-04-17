@@ -1,5 +1,5 @@
-## AssemblySession -- Draft assembly/economy wrapper for creator and workbench UIs.
-## Holds a cloned entity, tracks build budget, and exposes projected stats.
+## AssemblySession -- Draft wrapper for creator and workbench UIs.
+## Holds cloned entities, tracks build budget, and exposes projected stats.
 extends RefCounted
 
 class_name AssemblySession
@@ -127,29 +127,31 @@ func get_remaining_budget_after_preview(slot: String, template_id: String) -> fl
 	return starting_budget - get_preview_total_cost(slot, template_id)
 
 
-## Returns the finalized target entity. Currency is deducted here only when
-## there is no separate payer — if payer_entity is set, use get_committed_payer()
-## to get the payer with adjusted currency.
+## Returns the finalized target entity clone. Economic side effects are applied
+## by runtime systems after confirm, not by the draft session itself.
 func get_committed_entity() -> EntityInstance:
-	var committed := _clone_entity(draft_entity)
-	if committed == null:
-		return null
-	if payer_entity == null and not budget_currency_id.is_empty():
-		committed.currencies[budget_currency_id] = maxf(get_remaining_budget(), 0.0)
-	return committed
+	return _clone_entity(draft_entity)
 
 
-## Returns the payer entity with the build cost deducted, or null if there is
-## no separate payer (i.e. the target entity pays for itself).
+## Returns the separate payer clone, or null if the target pays for itself.
 func get_committed_payer() -> EntityInstance:
 	if payer_entity == null:
 		return null
-	var committed := _clone_entity(payer_entity)
-	if committed == null:
-		return null
-	if not budget_currency_id.is_empty():
-		committed.currencies[budget_currency_id] = maxf(get_remaining_budget(), 0.0)
-	return committed
+	return _clone_entity(payer_entity)
+
+
+func get_newly_equipped_template_ids() -> Array[String]:
+	var result: Array[String] = []
+	if draft_entity == null:
+		return result
+	for slot_value in draft_entity.equipped.keys():
+		var slot := str(slot_value)
+		var new_template_id := draft_entity.get_equipped_template_id(slot)
+		var old_template_id := "" if original_entity == null else original_entity.get_equipped_template_id(slot)
+		if new_template_id.is_empty() or new_template_id == old_template_id:
+			continue
+		result.append(new_template_id)
+	return result
 
 
 func get_template_price(template: Dictionary) -> float:
@@ -178,9 +180,7 @@ func _compute_total_cost(entity: EntityInstance) -> float:
 func _clone_entity(source_entity: EntityInstance) -> EntityInstance:
 	if source_entity == null:
 		return null
-	var clone := EntityInstance.new()
-	clone.from_dict(source_entity.to_dict())
-	return clone
+	return source_entity.duplicate_instance()
 
 
 func _resolve_currency_id(source_entity: EntityInstance, preferred_currency_id: String) -> String:

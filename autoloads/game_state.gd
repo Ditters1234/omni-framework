@@ -36,13 +36,15 @@ var unlocked_achievements: Array[String] = []
 
 ## Arbitrary flags set by script hooks / quests: { flag_key → Variant }
 var flags: Dictionary = {}
+var _quest_tracker: QuestTracker = null
 
 # ---------------------------------------------------------------------------
 # Boot
 # ---------------------------------------------------------------------------
 
 func _ready() -> void:
-	pass
+	_quest_tracker = QuestTracker.new()
+	add_child(_quest_tracker)
 
 
 # ---------------------------------------------------------------------------
@@ -136,6 +138,34 @@ func has_flag(flag_key: String) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Quests
+# ---------------------------------------------------------------------------
+
+func start_quest(quest_id: String) -> bool:
+	if _quest_tracker == null:
+		return false
+	return _quest_tracker.start_quest(quest_id)
+
+
+func advance_quest(quest_id: String, transition: String = "") -> void:
+	if _quest_tracker == null:
+		return
+	_quest_tracker.advance_quest(quest_id, transition)
+
+
+func complete_quest(quest_id: String) -> void:
+	if _quest_tracker == null:
+		return
+	_quest_tracker.complete_quest(quest_id)
+
+
+func fail_quest(quest_id: String) -> void:
+	if _quest_tracker == null:
+		return
+	_quest_tracker.fail_quest(quest_id)
+
+
+# ---------------------------------------------------------------------------
 # Serialization (called by SaveManager)
 # ---------------------------------------------------------------------------
 
@@ -184,6 +214,18 @@ func get_entity_instance(entity_id: String) -> EntityInstance:
 	if entity_id == "player" and player:
 		return player
 	return entity_instances.get(entity_id, null)
+
+
+func commit_entity_instance(entity: EntityInstance, lookup_id: String = "") -> void:
+	if entity == null:
+		return
+	entity_instances[entity.entity_id] = entity
+	if lookup_id == "player":
+		player = entity
+		return
+	var current_player := player as EntityInstance
+	if current_player != null and current_player.entity_id == entity.entity_id:
+		player = entity
 
 
 func _to_string_array(values: Variant) -> Array[String]:
