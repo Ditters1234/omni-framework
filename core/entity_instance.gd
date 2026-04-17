@@ -283,7 +283,27 @@ func set_equipped_template(slot: String, template_id: String) -> bool:
 	return true
 
 
-## Removes the part from slot without placing it back in inventory.
+## Equips an existing inventory part into the given slot.
+## Returns false if the part is missing or cannot fit the socket.
+func equip(instance_id: String, slot: String) -> bool:
+	if instance_id.is_empty() or slot.is_empty():
+		return false
+	var part := _find_inventory_part(instance_id)
+	if part == null:
+		return false
+	if not can_equip_template_in_slot(slot, part.template_id):
+		return false
+	if equipped.has(slot):
+		unequip(slot)
+	if not remove_part(instance_id):
+		return false
+	part.equipped_slot = slot
+	part.is_equipped = true
+	equipped[slot] = part
+	return true
+
+
+## Removes the part from slot and returns it to inventory.
 func unequip(slot: String) -> void:
 	if not equipped.has(slot):
 		return
@@ -291,6 +311,8 @@ func unequip(slot: String) -> void:
 	if part != null:
 		part.equipped_slot = ""
 		part.is_equipped = false
+		if not _has_inventory_part(part.instance_id):
+			inventory.append(part)
 	equipped.erase(slot)
 
 
@@ -360,6 +382,10 @@ func _find_inventory_part(instance_id: String) -> PartInstance:
 		if part is PartInstance and part.instance_id == instance_id:
 			return part
 	return null
+
+
+func _has_inventory_part(instance_id: String) -> bool:
+	return _find_inventory_part(instance_id) != null
 
 
 func _find_socket_def(slot: String) -> Dictionary:
