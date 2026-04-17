@@ -504,6 +504,7 @@ Menu system requirements:
 - Starting a new game should initialize runtime state first, then replace the current stack with the first gameplay screen.
 - Loading a save should complete `SaveManager.load_game(slot)` first, then replace the current stack with gameplay.
 - A lightweight `gameplay_shell` screen is an acceptable early routed gameplay destination while world-map and location flows are still being built.
+- The current base-game flow lands directly in `location_view` after new-game confirmation and save loading so the first location does not sit on top of a shell screen.
 - Main menu presentation can be influenced by `config.json ui.main_menu`, but actions like `new_game`, `continue`, `load_slot`, and `quit` remain engine-owned commands.
 
 ```

@@ -89,6 +89,7 @@ func _render_location() -> void:
 		_screens_container.add_child(empty_label)
 
 	_render_connections()
+	_refresh_nav_state()
 	_status_label.text = ""
 	_status_label.modulate = _get_semantic_color("muted_text", FALLBACK_MUTED_TEXT_COLOR)
 
@@ -114,6 +115,8 @@ func _add_screen_button(screen_entry: Dictionary) -> void:
 	else:
 		# Capture params for closure — pass the full screen entry as params
 		var push_params: Dictionary = screen_entry.duplicate(true)
+		if not push_params.has("cancel_screen_id"):
+			push_params["cancel_screen_id"] = ""
 		btn.pressed.connect(_on_screen_button_pressed.bind(screen_id, push_params))
 
 	_screens_container.add_child(btn)
@@ -152,6 +155,7 @@ func _show_error(message: String) -> void:
 	_description_label.text = message
 	_status_label.text = message
 	_status_label.modulate = _get_semantic_color("negative", FALLBACK_NEGATIVE_COLOR)
+	_refresh_nav_state()
 	_clear_container(_screens_container)
 	_clear_container(_connections_container)
 
@@ -171,6 +175,8 @@ func _on_travel_button_pressed(dest_location_id: String) -> void:
 
 
 func _on_back_button_pressed() -> void:
+	if UIRouter.stack_depth() <= 1:
+		return
 	UIRouter.pop()
 
 
@@ -186,3 +192,7 @@ func _get_semantic_color(color_name: String, fallback: Color) -> Color:
 	if has_theme_color(color_name, SEMANTIC_THEME_TYPE):
 		return get_theme_color(color_name, SEMANTIC_THEME_TYPE)
 	return fallback
+
+
+func _refresh_nav_state() -> void:
+	_back_button.disabled = UIRouter.stack_depth() <= 1

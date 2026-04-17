@@ -1,7 +1,7 @@
 extends Control
 
 const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
-const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
+const SCREEN_LOCATION_VIEW := "location_view"
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _subtitle_label: Label = $MarginContainer/PanelContainer/VBoxContainer/SubtitleLabel
@@ -50,7 +50,9 @@ func _refresh_buttons() -> void:
 
 
 func _transition_to_gameplay() -> void:
-	UIRouter.replace_all(SCREEN_GAMEPLAY_SHELL)
+	UIRouter.replace_all(SCREEN_LOCATION_VIEW, {
+		"location_id": GameState.current_location_id
+	})
 
 
 func _on_new_game_button_pressed() -> void:
@@ -67,7 +69,7 @@ func _on_new_game_button_pressed() -> void:
 		"option_tag": "character_creator_option",
 		"confirm_label": "Begin",
 		"cancel_label": "Back",
-		"next_screen_id": SCREEN_GAMEPLAY_SHELL,
+		"next_screen_id": SCREEN_LOCATION_VIEW,
 		"cancel_screen_id": "main_menu",
 		"reset_game_state_on_cancel": true
 	})

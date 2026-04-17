@@ -11,9 +11,15 @@ const SCREEN_LOCATION_VIEW := "location_view"
 @onready var _equipped_label: Label = $MarginContainer/VBoxContainer/EquippedLabel
 @onready var _status_label: Label = $MarginContainer/VBoxContainer/StatusLabel
 
+var _auto_open_location_view: bool = false
+var _opened_initial_location_view: bool = false
 
-func initialize(_params: Dictionary = {}) -> void:
+
+func initialize(params: Dictionary = {}) -> void:
+	var auto_open_data: Variant = params.get("auto_open_location_view", false)
+	_auto_open_location_view = bool(auto_open_data)
 	_refresh()
+	_maybe_open_initial_location_view()
 
 
 func _ready() -> void:
@@ -25,6 +31,7 @@ func _ready() -> void:
 	GameEvents.part_equipped.connect(_on_part_equipped)
 	GameEvents.part_unequipped.connect(_on_part_unequipped)
 	_refresh()
+	_maybe_open_initial_location_view()
 
 
 func _refresh() -> void:
@@ -118,3 +125,18 @@ func _on_part_equipped(entity_id: String, _part_id: String, _slot: String) -> vo
 func _on_part_unequipped(entity_id: String, _part_id: String, _slot: String) -> void:
 	if GameState.player and entity_id == GameState.player.entity_id:
 		_refresh()
+
+
+func _maybe_open_initial_location_view() -> void:
+	if not _auto_open_location_view or _opened_initial_location_view:
+		return
+	if GameState.current_location_id.is_empty():
+		return
+	_opened_initial_location_view = true
+	call_deferred("_open_initial_location_view")
+
+
+func _open_initial_location_view() -> void:
+	UIRouter.push(SCREEN_LOCATION_VIEW, {
+		"location_id": GameState.current_location_id
+	})

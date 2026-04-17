@@ -7,22 +7,18 @@
       "connections": {},
       "screens": [
         {
-          "tab_id": "base:start:character_creator",
-          "display_name": "Character Creator",
-          "description": "Customize your starting loadout before you begin.",
-          "backend_class": "AssemblyEditorBackend",
-          "target_entity_id": "player",
-          "title": "Character Creator",
-          "confirm_label": "Begin Adventure"
-        },
-        {
           "tab_id": "base:start:inventory",
           "display_name": "Inspect Gear",
           "description": "Review the parts and equipment in your current loadout.",
           "backend_class": "AssemblyEditorBackend",
           "target_entity_id": "player",
-          "title": "Your Gear",
-          "confirm_label": "Done"
+          "screen_title": "Inspect Gear",
+          "screen_description": "Review your current build, preview alternate fits, and make any changes available from this location.",
+          "screen_summary": "Use Done or Back to return to the location when you finish reviewing your loadout.",
+          "confirm_label": "Done",
+          "cancel_label": "Back",
+          "cancel_screen_id": "",
+          "pop_on_confirm": true
         }
       ]
     }

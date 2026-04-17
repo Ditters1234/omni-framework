@@ -31,6 +31,7 @@ var _option_template_ids: Array[String] = []
 var _next_screen_id: String = ""
 var _cancel_screen_id: String = SCREEN_MAIN_MENU
 var _reset_game_state_on_cancel: bool = false
+var _pop_on_confirm: bool = false
 var _confirm_screen_params: Dictionary = {}
 var _cancel_screen_params: Dictionary = {}
 
@@ -38,11 +39,15 @@ var _cancel_screen_params: Dictionary = {}
 func initialize(params: Dictionary = {}) -> void:
 	var copied_params: Dictionary = params.duplicate(true)
 	_params = copied_params
+	if _initialized:
+		_apply_screen_params()
+		_refresh_editor_state()
+		return
 	_initialize_editor()
 
 
 func _ready() -> void:
-	_initialize_editor()
+	call_deferred("_initialize_editor")
 
 
 func _initialize_editor() -> void:
@@ -70,6 +75,7 @@ func _apply_screen_params() -> void:
 	_next_screen_id = str(_params.get("next_screen_id", ""))
 	_cancel_screen_id = str(_params.get("cancel_screen_id", SCREEN_MAIN_MENU))
 	_reset_game_state_on_cancel = bool(_params.get("reset_game_state_on_cancel", false))
+	_pop_on_confirm = bool(_params.get("pop_on_confirm", false))
 
 	var confirm_params_data: Variant = _params.get("next_screen_params", {})
 	if confirm_params_data is Dictionary:
@@ -796,6 +802,9 @@ func _on_begin_button_pressed() -> void:
 		_commit_payer_to_game_state(committed_payer)
 	_pay_recipient(_session.get_total_cost())
 	_deduct_from_source_inventory()
+	if _pop_on_confirm:
+		UIRouter.pop()
+		return
 	if _next_screen_id.is_empty():
 		_status_label.text = "Build confirmed."
 		return
