@@ -29,3 +29,7 @@ TimeKeeper="*res://autoloads/time_keeper.gd"
 AudioManager="*res://autoloads/audio_manager.gd"
 UIRouter="*res://autoloads/ui_router.gd"
 AIManager="*res://autoloads/ai_manager.gd"
+
+[dotnet]
+
+project/assembly_name="Omni-Framework"

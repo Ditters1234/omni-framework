@@ -11,6 +11,10 @@ extends Control
 
 class_name LocationViewScreen
 
+const SEMANTIC_THEME_TYPE := "OmniSemantic"
+const FALLBACK_MUTED_TEXT_COLOR := Color(0.6, 0.6, 0.6)
+const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
+
 # ---------------------------------------------------------------------------
 # Backend class → UIRouter screen_id mapping.
 # Add new entries here when new backends are registered.
@@ -81,11 +85,12 @@ func _render_location() -> void:
 	else:
 		var empty_label := Label.new()
 		empty_label.text = "Nothing to do here yet."
-		empty_label.modulate = Color(0.6, 0.6, 0.6)
+		empty_label.modulate = _get_semantic_color("muted_text", FALLBACK_MUTED_TEXT_COLOR)
 		_screens_container.add_child(empty_label)
 
 	_render_connections()
 	_status_label.text = ""
+	_status_label.modulate = _get_semantic_color("muted_text", FALLBACK_MUTED_TEXT_COLOR)
 
 
 func _add_screen_button(screen_entry: Dictionary) -> void:
@@ -128,7 +133,7 @@ func _render_connections() -> void:
 		var dest_template: Dictionary = LocationGraph.get_location(dest_id)
 		var dest_name: String = str(dest_template.get("display_name", dest_id))
 		var btn := Button.new()
-		btn.text = "%s → %s" % [str(direction).capitalize(), dest_name]
+		btn.text = "%s -> %s" % [str(direction).capitalize(), dest_name]
 		btn.pressed.connect(_on_travel_button_pressed.bind(dest_id))
 		_connections_container.add_child(btn)
 
@@ -146,6 +151,7 @@ func _show_error(message: String) -> void:
 	_title_label.text = "Error"
 	_description_label.text = message
 	_status_label.text = message
+	_status_label.modulate = _get_semantic_color("negative", FALLBACK_NEGATIVE_COLOR)
 	_clear_container(_screens_container)
 	_clear_container(_connections_container)
 
@@ -174,3 +180,9 @@ func _on_location_changed(_old_id: String, new_id: String) -> void:
 	if new_id != _location_id:
 		_location_id = new_id
 		_load_location()
+
+
+func _get_semantic_color(color_name: String, fallback: Color) -> Color:
+	if has_theme_color(color_name, SEMANTIC_THEME_TYPE):
+		return get_theme_color(color_name, SEMANTIC_THEME_TYPE)
+	return fallback

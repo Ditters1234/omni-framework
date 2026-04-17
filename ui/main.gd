@@ -1,6 +1,7 @@
 extends Node
 
 const DEV_DEBUG_OVERLAY := preload("res://ui/debug/dev_debug_overlay.gd")
+const THEME_APPLIER := preload("res://ui/theme/theme_applier.gd")
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
 const SCREEN_CHARACTER_CREATOR := "character_creator"
@@ -29,6 +30,9 @@ func _ready() -> void:
 	UIRouter.register_screen(SCREEN_LOCATION_VIEW, LOCATION_VIEW_SCENE)
 	ModLoader.load_all_mods()
 	AIManager.initialize()
+	var ui_theme: Theme = THEME_APPLIER.build_theme()
+	UIRouter.set_screen_theme(ui_theme)
+	_status_label.theme = ui_theme
 
 	if ModLoader.is_loaded:
 		_status_label.text = str(DataManager.get_config_value("ui.strings.boot_status", "Omni-Framework ready."))

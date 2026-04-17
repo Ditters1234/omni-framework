@@ -463,6 +463,21 @@ func _refresh_sidebar() -> void:
 	_refresh_stat_sheet()
 
 
+func _get_currency_symbol() -> String:
+	var currency_symbol_data: Variant = DataManager.get_config_value("ui.currency_symbol", "")
+	if currency_symbol_data is String:
+		return str(currency_symbol_data)
+	return ""
+
+
+func _get_part_default_sprite_paths() -> Dictionary:
+	var sprite_paths_data: Variant = DataManager.get_config_value("ui.default_sprites.parts", {})
+	if sprite_paths_data is Dictionary:
+		var sprite_paths: Dictionary = sprite_paths_data
+		return sprite_paths.duplicate(true)
+	return {}
+
+
 func _get_currency_summary_panel() -> CurrencySummaryPanel:
 	if _currency_summary_panel == null:
 		_currency_summary_panel = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/CurrencySummaryPanel") as CurrencySummaryPanel
@@ -489,6 +504,7 @@ func _refresh_currency_panel() -> void:
 		return
 	panel.render({
 		"currency_id": _session.get_budget_currency_id(),
+		"currency_symbol": _get_currency_symbol(),
 		"budget": _session.starting_budget,
 		"spent": _session.get_total_cost(),
 		"remaining": _session.get_remaining_budget()
@@ -511,7 +527,8 @@ func _refresh_part_detail_panel() -> void:
 			"price_text": "Price: 0",
 			"stats_lines": ["No stat changes."],
 			"affordable": true,
-			"part_template": {}
+			"part_template": {},
+			"default_sprite_paths": _get_part_default_sprite_paths()
 		})
 		return
 	var state: Dictionary = _get_slot_state(slot_id)
@@ -542,7 +559,8 @@ func _refresh_part_detail_panel() -> void:
 		"price_text": price_text,
 		"stats_lines": stats_lines,
 		"affordable": affordable,
-		"part_template": template
+		"part_template": template,
+		"default_sprite_paths": _get_part_default_sprite_paths()
 	})
 
 

@@ -110,8 +110,8 @@ res://
 ├── ui/                     # All scenes and scripts for the UI layer
 │   ├── main.tscn            # Root scene — top-level layout shell
 │   ├── theme/
-│   │   ├── omni_theme.tres  # ⚠️ PLANNED — centralized Godot Theme resource (THE source of truth)
-│   │   └── theme_applier.gd # ⚠️ PLANNED — reads config.json ui.theme overrides, patches the .tres at runtime
+│   │   ├── omni_theme.tres  # ✅ Centralized Godot Theme resource (the UI source of truth)
+│   │   └── theme_applier.gd # ✅ Reads config.json ui.theme overrides and patches the theme at runtime
 │   ├── screens/             # Full-screen views (managed by UIRouter)
 │   │   ├── world_map/           # ⚠️ PLANNED
 │   │   │   ├── world_map_screen.tscn
@@ -489,6 +489,7 @@ That flow is the missing scalability layer between "backend-driven screens" and 
 - **Screens are shells that render a view model and host reusable widgets.**
 - **Components are dumb widgets.** They should not query `DataManager`, `GameState`, or unrelated autoloads on their own.
 - **Themes style semantics, not business logic.**
+- The shared `ui/theme/omni_theme.tres` resource is applied to routed screens after mod config loads, so `ui.theme` overrides propagate across menu and backend screens without per-scene palette edits.
 
 ### Navigation Flow
 

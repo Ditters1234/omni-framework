@@ -16,6 +16,7 @@ var _stack: Array[Dictionary] = []
 
 ## The root container where screens are instantiated.
 var _screen_container: CanvasLayer = null
+var _screen_theme: Theme = null
 
 # ---------------------------------------------------------------------------
 # Boot
@@ -28,6 +29,15 @@ func _ready() -> void:
 ## Called after the scene tree is ready. Sets the container node.
 func initialize(container: CanvasLayer) -> void:
 	_screen_container = container
+
+
+func set_screen_theme(screen_theme: Theme) -> void:
+	_screen_theme = screen_theme
+	for entry in _stack:
+		var node_data: Variant = entry.get("node", null)
+		var screen := node_data as Control
+		if screen != null:
+			screen.theme = _screen_theme
 
 
 # ---------------------------------------------------------------------------
@@ -138,4 +148,7 @@ func _instantiate_screen(screen_id: String) -> Control:
 	if packed == null:
 		push_error("UIRouter: could not load scene at '%s'" % path)
 		return null
-	return packed.instantiate()
+	var screen := packed.instantiate() as Control
+	if screen != null and _screen_theme != null:
+		screen.theme = _screen_theme
+	return screen
