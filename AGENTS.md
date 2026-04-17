@@ -1,0 +1,213 @@
+# Omni-Framework — Codex Context
+
+## Rules
+- Edit files in-place only. Never rewrite entire files.
+- This is a Godot 4.6 GDScript project. No C#.
+- All code follows the naming conventions below.
+- Always check docs/ before making architectural decisions.
+- Treat Godot warnings as errors when writing GDScript. Avoid relying on implicit typing when values come from `Dictionary.get()`, autoload properties typed as `Object`, JSON data, or other `Variant` sources.
+
+### GDScript Typing Rules
+- Prefer explicit types for locals when a value may come from a `Variant`.
+- After `Dictionary.get()`, store into `Variant` first if needed, type-check it, then cast/narrow to the expected type.
+- When reading autoload fields like `GameState.player` that are stored as generic `Object`, cast them with `as` before calling methods on them.
+- When pulling Controls or Arrays back out of untyped dictionaries, cast them explicitly instead of depending on inference.
+- For helper methods that return structured collections from dynamic data, give the return type explicitly and normalize the contents before returning.
+
+---
+
+## What This Project Is
+
+**Omni-Framework** is a single-player game engine built on Godot 4.6. It is a fully data-driven, genre-agnostic platform — the engine provides systems, JSON provides content. No hardcoded genres, stats, or currencies. The same engine runs a fantasy RPG, sci-fi sim, or cyberpunk trading game without code changes.
+
+Core pillars:
+- **Data-first:** JSON templates define content; GDScript instances are runtime objects.
+- **Moddable by default:** Two-phase loading (additions then patches) ensures mods layer non-destructively.
+- **Genre-agnostic:** All systems use abstract names (Parts, Entities, Locations) not genre-specific ones.
+
+---
+
+## Key Documentation
+
+| File | Purpose |
+|---|---|
+| `docs/PROJECT_STRUCTURE.md` | Canonical folder layout, all autoloads, core systems, UI framework, theme system, AI architecture |
+| `docs/modding_guide.md` | Full modder reference — data schemas, JSON examples, patching, backend classes, script hooks |
+| `docs/STAT_SYSTEM_IMPLEMENTATION.md` | Stat + capacity stat system, clamping rules, GDScript patterns |
+
+**Always read the relevant doc section before editing architecture.**
+
+---
+
+## Folder Layout (abbreviated — see docs/PROJECT_STRUCTURE.md for full annotated tree)
+
+```
+res://
+├── autoloads/       # Global singletons
+├── systems/         # Core runtime systems + loaders + AI providers
+│   ├── loaders/     # One file per data type (parts_registry.gd, etc.)
+│   └── ai/          # LimboAI states/behaviors + AI provider scripts
+├── ui/              # All scenes — main.tscn, theme/, screens/, components/
+├── core/            # Base classes: ScriptHook, EntityInstance, PartInstance, AssemblySession, constants
+├── mods/            # ALL content — base game and user mods
+│   ├── base/        # The base game mod (load_order: 0, always required)
+│   │   ├── mod.json
+│   │   ├── data/    # Base game JSON (the "base:" namespace)
+│   │   ├── dialogue/
+│   │   ├── scripts/
+│   │   └── assets/
+│   └── <author>/<mod>/  # User/community mods
+├── tests/           # GUT test suites (DEV ONLY)
+└── addons/          # Third-party plugins (see below)
+```
+
+**There is no `data/` folder at the project root.** The engine is content-free — all game data, including the base game, flows through the mod pipeline. `ModLoader` treats a missing `mods/base/` as a fatal boot error.
+
+---
+
+## Autoloads (all global singletons)
+
+| Name | File | Purpose |
+|---|---|---|
+| `GameEvents` | `autoloads/game_events.gd` | Global signal bus — ALL cross-system comms go here |
+| `ModLoader` | `autoloads/mod_loader.gd` | Scans mods/, two-phase load pipeline |
+| `DataManager` | `autoloads/data_manager.gd` | Central template registry after load |
+| `GameState` | `autoloads/game_state.gd` | Active runtime state (player, location, tick) |
+| `SaveManager` | `autoloads/save_manager.gd` | A2J-based JSON save/load to user://saves/ |
+| `TimeKeeper` | `autoloads/time_keeper.gd` | Tick clock, dispatches tick/day signals |
+| `AudioManager` | `autoloads/audio_manager.gd` | SFX pools + music playback |
+| `UIRouter` | `autoloads/ui_router.gd` | Screen navigation stack |
+| `AIManager` | `autoloads/ai_manager.gd` | LLM abstraction over local/remote providers |
+
+**Boot order matters:** GameEvents → ModLoader → DataManager → GameState → SaveManager → TimeKeeper → AudioManager → UIRouter → AIManager
+
+---
+
+## Addons
+
+| Addon | Path | Purpose | Release? |
+|---|---|---|---|
+| Any-JSON | `addons/A2J/` | Lossless variant serialization (`A2J` autoload) | ✅ Ship |
+| LimboAI | `addons/limboai/` | GDExtension — HSM for quests, behavior trees | ✅ Ship |
+| Dialogue Manager | `addons/dialogue_manager/` | Branching NPC dialogue (`DialogueManager` autoload) | ✅ Ship |
+| NobodyWho | `addons/nobodywho/` | GDExtension — embedded local LLM inference | ✅ Ship |
+| ImGui | `addons/imgui-godot/` | In-game debug overlay and dev tooling | ❌ DEV ONLY |
+| GUT | `addons/gut/` | Unit testing | ❌ DEV ONLY |
+| ziva_agent | `addons/ziva_agent/` | AI dev assistant | ❌ DEV ONLY — remove before release |
+
+GDExtensions (LimboAI, NobodyWho) load automatically — no plugin.cfg needed.
+Plugins requiring enable: A2J, dialogue_manager, gut — already set in project.godot `[editor_plugins]`.
+
+---
+
+## Two JSON Layers
+
+| Layer | Tool | Notes |
+|---|---|---|
+| Template data (parts.json, entities.json, etc.) | `FileAccess` + `JSON.parse_string()` → `Dictionary` | Human-authored, plain JSON |
+| Save data (GameState, EntityInstance, etc.) | `A2J.to_json()` / `A2J.from_json()` | Typed, lossless round-trip |
+
+Never use A2J for template parsing. Never use plain JSON for save data.
+
+---
+
+## Data Systems & JSON Schemas
+
+Each system has a JSON file in `mods/base/data/` and a registry in `systems/loaders/`:
+
+| System | Data File | Registry | Key ID Field |
+|---|---|---|---|
+| Definitions | `definitions.json` | `DefinitionLoader` | — (arrays only) |
+| Parts | `parts.json` | `PartsRegistry` | `id` |
+| Entities | `entities.json` | `EntityRegistry` | `entity_id` |
+| Locations | `locations.json` | `LocationGraph` | `location_id` |
+| Factions | `factions.json` | `FactionRegistry` | `faction_id` |
+| Quests | `quests.json` | `QuestRegistry` | `quest_id` |
+| Tasks | `tasks.json` | `TaskRegistry` | `template_id` |
+| Achievements | `achievements.json` | `AchievementRegistry` | `achievement_id` |
+| Config | `config.json` | `ConfigLoader` | — (deep-merged) |
+
+All data IDs use `author:mod:name` namespacing. Base game uses `base:`.
+
+---
+
+## UI Backend Classes
+
+Each `backend_class` value in JSON maps to a scene in `ui/screens/backends/`:
+
+| `backend_class` | Scene | What it does |
+|---|---|---|
+| `AssemblyEditorBackend` | `assembly_editor_screen.tscn` | Attach/detach parts |
+| `ExchangeBackend` | `exchange_screen.tscn` | Buy/sell from entity inventory |
+| `ListBackend` | `list_screen.tscn` | Display data lists |
+| `ChallengeBackend` | `challenge_screen.tscn` | Stat-check pass/fail |
+| `TaskProviderBackend` | `task_provider_screen.tscn` | Faction job board |
+| `CatalogListBackend` | `catalog_list_screen.tscn` | Infinite template vendor |
+| `DialogueBackend` | `dialogue_screen.tscn` | NPC branching dialogue |
+
+---
+
+## AI Architecture
+
+`AIManager` reads `config.json ai.provider` and routes to one of three providers:
+- `"openai_compatible"` → `systems/ai/providers/openai_provider.gd` (covers Ollama, LM Studio, OpenAI)
+- `"anthropic"` → `systems/ai/providers/anthropic_provider.gd`
+- `"nobodywho"` → `systems/ai/providers/nobodywho_provider.gd` (embedded, no server)
+- `"disabled"` → all calls silently no-op
+
+Modders call `AIManager.generate_async(prompt, context)` from script hooks. Always guard with `AIManager.is_available()`.
+
+---
+
+## Naming Conventions
+
+| Thing | Convention | Example |
+|---|---|---|
+| GDScript files | `snake_case.gd` | `stat_manager.gd` |
+| Class names | `PascalCase` | `class_name StatManager` |
+| Autoload names | `PascalCase` | `GameEvents` |
+| Autoload script class names | `Omni` + PascalCase | `class_name OmniUIRouter` |
+| Signal names | `snake_case` | `tick_advanced` |
+| Scene files | `snake_case.tscn` | `exchange_screen.tscn` |
+| JSON IDs | `author:mod:name` | `base:iron_sword` |
+| Constants | `UPPER_SNAKE_CASE` | `MAX_SAVE_SLOTS` |
+
+**Important:** autoload singleton names and `class_name` identifiers must not be identical in Godot. Keep the global singleton name ergonomic (`GameEvents`, `UIRouter`, etc.) and prefix the script class with `Omni` to avoid parser errors like `Class "UIRouter" hides an autoload singleton`.
+
+---
+
+## Stat System Rules
+
+- Stats always come in pairs: `health` + `health_max`, `mana` + `mana_max`
+- Base stats = current value. Capacity stats (`_max`) = ceiling.
+- Always clamp base to capacity when capacity changes.
+- Parts modify stats additively. Multiple parts stack.
+- See `docs/STAT_SYSTEM_IMPLEMENTATION.md` for full patterns.
+
+---
+
+## Mod Structure
+
+```
+mods/base/                  # Base game — load_order: 0, fatal if missing
+mods/<author_id>/<mod_id>/  # User/community mods
+├── mod.json       # manifest: name, version, load_order, dependencies
+├── data/          # JSON additions and patches
+├── dialogue/      # .dialogue files (Dialogue Manager format)
+├── scripts/       # GDScript hooks extending ScriptHook
+└── assets/        # PNGs, WAV/OGG
+```
+
+Two-phase load: Phase 1 adds new content, Phase 2 applies patches. Patches run last so Mod B can patch Mod A's additions. Base mod always loads first.
+
+---
+
+## Release Checklist (pre-ship)
+
+- [ ] Remove `addons/ziva_agent/` entirely
+- [ ] Exclude `addons/gut/` from export presets
+- [ ] Exclude `tests/` from export presets
+- [ ] Ensure no API keys are in any committed config files
+- [ ] Verify `*.gguf` model files are not in repo (they're gitignored)
+- [ ] Set `config/main_scene` in project.godot
+- [ ] Register all runtime classes with `A2J.object_registry` in SaveManager

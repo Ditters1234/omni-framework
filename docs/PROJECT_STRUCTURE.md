@@ -1,6 +1,6 @@
 # Omni-Framework — Project Structure
 
-This document is the canonical reference for the engine's folder layout, autoloads, core systems, UI framework, and theme architecture. It is a living outline — implementation details will be fleshed out as each system is built.
+This document is the canonical reference for the engine's folder layout, autoloads, core systems, UI framework, and theme architecture. It is a living outline: some sections describe the target architecture that the current repository is growing toward, and those future-facing constraints are documented here intentionally so implementation hardens in the right direction.
 
 ---
 
@@ -14,6 +14,25 @@ The engine ships with:
 - A **UI framework** composed of reusable screen components wired to backend classes.
 - A **centralized Godot Theme** that can be reskinned at runtime via `config.json`.
 - A **mod loader** that handles discovery, dependency resolution, and two-phase patching.
+
+### Current Implementation Snapshot
+
+As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, but the full target folder tree in this document is not implemented end-to-end yet. In particular, UI scenes, content mods, test coverage, schema tooling, and debug tooling are documented here as required architecture rather than fully landed code.
+
+Use this document as the "where we are going and what rules we must preserve" reference, not as a claim that every folder and subsystem below is feature-complete today.
+
+### Architecture Guardrails
+
+The key theme for this project is clear: the engine is already flexible, so the next phase is about making that flexibility hard to misuse.
+
+These rules now belong to the canonical architecture:
+
+- **Schema validation is mandatory** for every template file. Loaders should reject bad field names, bad types, missing required keys, unknown enums, and invalid references before data reaches runtime systems.
+- **Contracts beat conventions.** Every backend class, action payload, and cross-system data object should define the fields it requires instead of relying on informal expectations.
+- **Template data is immutable at runtime.** JSON definitions are static truth; mutation belongs on runtime instances only.
+- **Queries must scale beyond direct ID lookups.** `get_part(id)` and friends stay useful, but the engine also needs higher-level query helpers for tags, filters, and UI feeds.
+- **Debuggability is a feature.** Event inspection, loaded-mod summaries, patch results, and live runtime state should be observable without hand-instrumenting the game.
+- **Versioning is explicit.** Template schemas and save schemas need version markers plus migration points so the mod ecosystem can evolve without permanent breakage.
 
 ### Key Dependency: Any-JSON (`A2J`)
 
@@ -91,37 +110,44 @@ res://
 ├── ui/                     # All scenes and scripts for the UI layer
 │   ├── main.tscn            # Root scene — top-level layout shell
 │   ├── theme/
-│   │   ├── omni_theme.tres  # Centralized Godot Theme resource (THE source of truth)
-│   │   └── theme_applier.gd # Reads config.json ui.theme overrides, patches the .tres at runtime
+│   │   ├── omni_theme.tres  # ⚠️ PLANNED — centralized Godot Theme resource (THE source of truth)
+│   │   └── theme_applier.gd # ⚠️ PLANNED — reads config.json ui.theme overrides, patches the .tres at runtime
 │   ├── screens/             # Full-screen views (managed by UIRouter)
-│   │   ├── world_map/
+│   │   ├── world_map/           # ⚠️ PLANNED
 │   │   │   ├── world_map_screen.tscn
 │   │   │   └── world_map_screen.gd
-│   │   ├── location_view/
-│   │   │   ├── location_view_screen.tscn   # Shows location name, bg, and tab list
+│   │   ├── location_view/       # ✅ Hub screen — shows location name, description, and interactive screens as buttons
+│   │   │   ├── location_view_screen.tscn
 │   │   │   └── location_view_screen.gd
 │   │   └── backends/        # One scene per backend_class type
-│   │       ├── assembly_editor_screen.tscn   # AssemblyEditorBackend
-│   │       ├── exchange_screen.tscn          # ExchangeBackend
-│   │       ├── list_screen.tscn              # ListBackend
-│   │       ├── challenge_screen.tscn         # ChallengeBackend
-│   │       ├── task_provider_screen.tscn     # TaskProviderBackend
-│   │       ├── catalog_list_screen.tscn      # CatalogListBackend
-│   │       └── dialogue_screen.tscn          # DialogueBackend — wraps Dialogue Manager
-│   └── components/          # Reusable UI widgets (used inside screens)
-│       ├── part_card.tscn           # Part display: icon, name, stats, price
-│       ├── entity_portrait.tscn     # Entity avatar, name, description
-│       ├── currency_display.tscn    # Currency value + symbol/icon
-│       ├── stat_bar.tscn            # Labeled progress bar (health, mana, etc.)
-│       ├── stat_sheet.tscn          # Full stat list for an entity
-│       ├── tab_panel.tscn           # Reusable tabbed container (used by location_view)
-│       └── notification_popup.tscn  # Achievement / quest update popups
+│   │       ├── assembly_editor_screen.tscn   # ✅ AssemblyEditorBackend — implemented
+│   │       ├── assembly_editor_screen.gd
+│   │       ├── exchange_screen.tscn          # ⚠️ PLANNED — ExchangeBackend
+│   │       ├── list_screen.tscn              # ⚠️ PLANNED — ListBackend
+│   │       ├── challenge_screen.tscn         # ⚠️ PLANNED — ChallengeBackend
+│   │       ├── task_provider_screen.tscn     # ⚠️ PLANNED — TaskProviderBackend
+│   │       ├── catalog_list_screen.tscn      # ⚠️ PLANNED — CatalogListBackend
+│   │       └── dialogue_screen.tscn          # ⚠️ PLANNED — DialogueBackend (wraps Dialogue Manager)
+│   ├── components/          # Reusable UI widgets (used inside screens)
+│   │   ├── currency_summary_panel.tscn  # ✅ Budget display used by AssemblyEditor
+│   │   ├── part_detail_panel.tscn       # ✅ Part preview sidebar used by AssemblyEditor
+│   │   ├── stat_delta_sheet.tscn        # ✅ Before/after stat diff used by AssemblyEditor
+│   │   ├── part_card.tscn               # ⚠️ PLANNED — part display: icon, name, stats, price
+│   │   ├── entity_portrait.tscn         # ⚠️ PLANNED — entity avatar, name, description
+│   │   ├── currency_display.tscn        # ⚠️ PLANNED — currency value + symbol/icon
+│   │   ├── stat_bar.tscn                # ⚠️ PLANNED — labeled progress bar
+│   │   ├── stat_sheet.tscn              # ⚠️ PLANNED — full stat list for an entity
+│   │   ├── tab_panel.tscn               # ⚠️ PLANNED — tabbed container (used by location_view)
+│   │   └── notification_popup.tscn      # ⚠️ PLANNED — achievement / quest update popups
+│   └── debug/               # Dev-only debug tooling (excluded from export)
+│       └── dev_debug_overlay.gd         # ✅ Runtime overlay for registry/state inspection
 │
 ├── core/                   # Base classes and shared utilities
 │   ├── script_hook.gd      # Base class all mod script hooks extend
 │   ├── part_instance.gd    # Runtime part instance (wraps template + instance data)
-│   ├── entity_instance.gd  # Runtime entity instance
-│   └── constants.gd        # Engine-wide string constants, enums
+│   ├── entity_instance.gd  # Runtime entity instance (stats, inventory, sockets, equip/unequip)
+│   ├── assembly_session.gd # Transactional draft wrapper used by AssemblyEditorBackend
+│   └── constants.gd        # Engine-wide string constants, enums (OmniConstants)
 │
 ├── mods/                   # ALL game content lives here — including the base game
 │   ├── base/               # The base game mod — load_order: 0, always required
@@ -155,6 +181,7 @@ res://
 └── addons/                 # Third-party plugins
     ├── A2J/                # Any-JSON v2.0.1 — lossless variant serialization (phosxd)
     ├── gut/                # GUT — Godot Unit Testing framework ⚠️ DEV ONLY
+    ├── imgui-godot/        # imgui-godot — runtime debug overlay and developer tooling ⚠️ DEV ONLY
     ├── limboai/            # LimboAI — HSM for quests, behavior trees for NPCs (limbonaut)
     ├── dialogue_manager/   # Dialogue Manager v3.x — branching NPC dialogue (nathanhoad)
     ├── nobodywho/          # NobodyWho — embedded local LLM inference (no server needed)
@@ -165,10 +192,12 @@ res://
 
 ## Autoloads
 
-All autoloads are registered as global singletons in **Project Settings → Autoload**. They are accessible from anywhere without imports.
+In the target runtime configuration, these autoloads are registered as global singletons in **Project Settings → Autoload**. They are intended to be accessible from anywhere without imports once the full boot pipeline is wired in.
 
 ### `GameEvents` (`autoloads/game_events.gd`)
 The global signal bus. All cross-system communication goes here. No system should hold a direct reference to another — instead, emit and listen to signals on `GameEvents`.
+
+Signal naming should stay specific and domain-oriented. Prefer names that encode the subject and action (`entity_currency_changed`, `quest_stage_advanced`, `ui_screen_opened`) over ambiguous catch-all signals. A larger signal surface is acceptable if it keeps tooling, filtering, and debugging clear.
 
 Key signals (non-exhaustive):
 ```gdscript
@@ -207,15 +236,25 @@ The central template registry. After `ModLoader` runs, `DataManager` holds the f
 Key methods:
 ```gdscript
 func get_part(id: String) -> Dictionary
-func get_entity_template(id: String) -> Dictionary
+func get_entity(id: String) -> Dictionary
 func get_location(id: String) -> Dictionary
 func get_faction(id: String) -> Dictionary
 func get_quest(id: String) -> Dictionary
-func get_task_template(id: String) -> Dictionary
+func get_task(id: String) -> Dictionary
 func get_achievement(id: String) -> Dictionary
-func get_config() -> Dictionary
-func get_definitions() -> Dictionary
+func get_definitions(category: String) -> Array      # e.g. get_definitions("stats")
+func get_config_value(key_path: String, default: Variant = null) -> Variant  # e.g. get_config_value("game.ticks_per_day", 24)
+
+# Query helpers
+# PartsRegistry.get_by_category(tag: String) -> Array  — all parts with the given tag
 ```
+
+Hardening rules for `DataManager`:
+
+- Template dictionaries returned from `DataManager` are read-only by convention and should be treated as immutable snapshots.
+- Every loader should validate additions and patches before mutating the merged registry.
+- `DataManager` should eventually expose query helpers for common lookups (`query_parts`, `query_entities`, `query_locations`) so systems and UI do not re-implement filtering logic ad hoc.
+- Unknown references should fail fast during loading rather than surfacing as null lookups later in gameplay.
 
 ### `GameState` (`autoloads/game_state.gd`)
 Holds the active runtime state of the game session. This is what gets serialized to a save file by `SaveManager` via `A2J.to_json()`.
@@ -286,11 +325,36 @@ Manages the screen navigation stack. Screens push and pop; the router handles tr
 
 Key methods:
 ```gdscript
-func push_screen(screen_id: String, params: Dictionary = {}) -> void
-func pop_screen() -> void
-func replace_screen(screen_id: String, params: Dictionary = {}) -> void
-func get_current_screen() -> String
+func push(screen_id: String, params: Dictionary = {}) -> void
+func pop() -> void
+func replace_all(screen_id: String, params: Dictionary = {}) -> void
+func current_screen_id() -> String
+func is_registered(screen_id: String) -> bool
+func register_screen(screen_id: String, scene_path: String) -> void
 ```
+
+Registered screens (see `ui/main.gd`):
+
+| screen_id | Scene | Status |
+|---|---|---|
+| `main_menu` | `main_menu_screen.tscn` | ✅ |
+| `assembly_editor` | `assembly_editor_screen.tscn` | ✅ |
+| `character_creator` | `assembly_editor_screen.tscn` (alias) | ✅ |
+| `gameplay_shell` | `gameplay_shell_screen.tscn` | ✅ |
+| `location_view` | `location_view_screen.tscn` | ✅ |
+| `exchange` | `exchange_screen.tscn` | ⚠️ PLANNED |
+| `list_view` | `list_screen.tscn` | ⚠️ PLANNED |
+| `challenge` | `challenge_screen.tscn` | ⚠️ PLANNED |
+| `task_provider` | `task_provider_screen.tscn` | ⚠️ PLANNED |
+| `catalog_list` | `catalog_list_screen.tscn` | ⚠️ PLANNED |
+| `dialogue` | `dialogue_screen.tscn` | ⚠️ PLANNED |
+
+`UIRouter` is also the boundary where the UI should evolve from simple screen navigation into a state router:
+
+- Navigation always carries explicit context (`screen_id` + params), never hidden global assumptions.
+- Backends build view models from params and runtime state.
+- Screens render those view models without reaching back into unrelated systems.
+- Future dynamic layouts should still pass through the router so mod-defined UI stays inspectable and debuggable.
 
 ### `AIManager` (`autoloads/ai_manager.gd`)
 Abstracts all LLM calls behind a single interface. Reads the `ai` block from the merged `config.json` at startup and instantiates the appropriate provider. Modders and script hooks call `AIManager` directly — they never reference a specific provider.
@@ -335,6 +399,13 @@ GameEvents.ai_token_received.connect(func(id, token):
 )
 ```
 
+AI output is treated as untrusted input. The target architecture assumes:
+
+- Prompt templates are owned by the calling system, not duplicated ad hoc in random hooks.
+- Structured output should be schema-checked before it mutates gameplay state.
+- Every AI-assisted flow has a deterministic fallback when the provider is unavailable or returns malformed output.
+- Mods should never require online AI to keep core progression functional.
+
 ---
 
 ## Core Systems
@@ -346,18 +417,41 @@ These are not autoloads — they are classes instantiated and owned by the autol
 | `DefinitionLoader` | DataManager | Parses `definitions.json`, validates stat pairs |
 | `PartsRegistry` | DataManager | Part template storage and patch application |
 | `EntityRegistry` | DataManager | Entity template storage and patch application |
-| `LocationGraph` | DataManager | Graph of locations; exposes pathfinding |
+| `LocationGraph` | DataManager | Location template storage; `get_location(id)`, `get_connections(id)`, `get_all_locations()` |
 | `FactionRegistry` | DataManager | Faction data + reputation threshold queries |
 | `QuestRegistry` | DataManager | Quest template storage |
 | `TaskRegistry` | DataManager | Task template storage |
 | `AchievementRegistry` | DataManager | Achievement template storage |
 | `ConfigLoader` | DataManager | Deep-merges `config.json` across all mods |
+| `AssemblySession` | `AssemblyEditorBackend` | Transactional draft wrapper for assembly edits — clones the target entity, tracks build cost against a budget, computes projected stats, and commits on confirm. Supports a separate payer entity when the budget source differs from the target. |
 | `StatManager` | Systems utility | Stat calculation, modifier stacking, clamping |
 | `ConditionEvaluator` | Systems utility | Evaluates JSON `conditions` blocks (AND/OR trees) |
 | `ActionDispatcher` | Systems utility | Executes `action_payload` objects, emits events |
 | `QuestTracker` | GameState | Quest HSM built on LimboAI — reads `quests.json`, creates `LimboHSM` nodes dynamically; JSON schema is unchanged |
 | `TaskRunner` | TimeKeeper | Advances active tasks on each tick |
 | `ScriptHookLoader` | ModLoader | Loads, validates, and caches GDScript mod hooks |
+
+### Planned Hardening Systems
+
+The following support systems are important enough to be part of the documented architecture, even if they are still being implemented:
+
+- **SchemaValidator**: lightweight per-file schema checks for required fields, primitive types, enums, and reference validity.
+- **BackendContractRegistry**: maps `backend_class` values to required JSON fields and validates screens/interactions before UI construction.
+- **QueryService**: shared filtered lookup helpers used by UI, tasks, generators, and AI-safe content discovery.
+- **DebugOverlay / DebugPanel**: live inspection for loaded mods, emitted events, active quests/tasks, view models, and patch results.
+
+### Debug And Test Tooling
+
+Development-time tooling is part of the architecture, not an afterthought.
+
+- **`imgui-godot` is the preferred runtime debug layer** for inspecting mods, registries, GameState, event flow, backend params, and save/migration behavior.
+- **GUT is the preferred automated test layer** for unit, integration, and content invariant tests.
+- Debug and testing tools are dev-only and must not become required for normal gameplay.
+- New systems should ideally arrive with both:
+  - at least one useful debug inspection surface
+  - at least one automated test surface
+
+See `docs/DEBUGGING_AND_TESTING_GUIDELINES.md` for the working rules.
 
 ### Base Classes (in `core/`)
 
@@ -382,7 +476,34 @@ func get_buy_price(instance: Dictionary, buyer: Dictionary) -> int: return -1  #
 
 The UI is built as a set of composable scenes. `UIRouter` loads and unloads screens; screens are composed from reusable components.
 
+Target UI data flow:
+
+```text
+JSON definition -> Backend -> ViewModel -> Screen -> Components -> Theme
+```
+
+That flow is the missing scalability layer between "backend-driven screens" and a truly moddable UI system. The rules are:
+
+- **Backends own logic and data gathering.**
+- **View models are pure dictionaries/resources prepared for rendering.**
+- **Screens are shells that render a view model and host reusable widgets.**
+- **Components are dumb widgets.** They should not query `DataManager`, `GameState`, or unrelated autoloads on their own.
+- **Themes style semantics, not business logic.**
+
 ### Navigation Flow
+
+Menu system requirements:
+
+- Boot should land in a routed `main_menu` screen after mods and config finish loading.
+- `main_menu` is a normal `UIRouter` destination, not a separate boot scene.
+- A pre-world creator flow is a valid routed step between `New Game` and the first gameplay screen.
+- That flow should be a configured `AssemblyEditorBackend`/assembly editor screen, not a one-off scene contract.
+- If a `character_creator` route id exists, treat it as a convenience alias for a configured assembly editor, not a unique UI species.
+- The creator should render the currently reachable assembly sockets from the player entity and equipped parts, not assume a fixed humanoid slot list.
+- Starting a new game should initialize runtime state first, then replace the current stack with the first gameplay screen.
+- Loading a save should complete `SaveManager.load_game(slot)` first, then replace the current stack with gameplay.
+- A lightweight `gameplay_shell` screen is an acceptable early routed gameplay destination while world-map and location flows are still being built.
+- Main menu presentation can be influenced by `config.json ui.main_menu`, but actions like `new_game`, `continue`, `load_slot`, and `quit` remain engine-owned commands.
 
 ```
 main.tscn (root, always present)
@@ -396,167 +517,10 @@ main.tscn (root, always present)
 
 | `backend_class` in JSON | Scene | Functionality |
 |---|---|---|
-| `AssemblyEditorBackend` | `assembly_editor_screen.tscn` | Attach/detach parts into sockets |
-| `ExchangeBackend` | `exchange_screen.tscn` | Buy/sell part instances from entity inventory |
-| `ListBackend` | `list_screen.tscn` | Display lists (inventory, fleet, etc.) |
-| `ChallengeBackend` | `challenge_screen.tscn` | Stat-check attempt with pass/fail outcomes |
-| `TaskProviderBackend` | `task_provider_screen.tscn` | Job board — shows faction task pool |
-| `CatalogListBackend` | `catalog_list_screen.tscn` | Infinite vendor — sells part templates |
-| `DialogueBackend` | `dialogue_screen.tscn` | NPC conversation — wraps Dialogue Manager; plays `dialogue_blip` audio per line |
-
-Each backend screen receives a `params` dictionary from `UIRouter` containing the screen's JSON definition block (including `tab_id`, `backend_class`, `faction_id`, etc.).
-
-### Reusable Components
-
-| Component | Purpose |
-|---|---|
-| `PartCard` | Displays a single part: sprite, name, stat summary, price |
-| `EntityPortrait` | Entity avatar image, display name, brief description |
-| `CurrencyDisplay` | Shows a currency amount with symbol; updates live |
-| `StatBar` | Labeled progress bar for current/max resource stats |
-| `StatSheet` | Full tabular stat list for an entity |
-| `TabPanel` | Tabbed container driven by a `screens` array |
-| `NotificationPopup` | Floating pop-up for achievement unlocks and quest updates |
-
----
-
-## Theme System
-
-### The Centralized Theme
-
-All UI styling lives in a **single Godot `Theme` resource**: `res://ui/theme/omni_theme.tres`.
-
-Every UI `Control` node in the engine inherits from this theme. There are no inline `StyleBox` overrides scattered across scenes — everything flows from the one `.tres` file. This is what makes runtime reskinning via `config.json` possible.
-
-The `.tres` defines:
-- **Color constants** — `primary_color`, `secondary_color`, `bg_color`, `text_color`, `accent_color`, `danger_color`
-- **StyleBoxes** — `panel`, `button_normal`, `button_hover`, `button_pressed`, `input_normal`, `card_bg`, `tab_selected`, `tab_unselected`, `progress_bar_fg`, `progress_bar_bg`
-- **Font overrides** — `font_main` (body text), `font_mono` (numeric/code values), `font_heading`
-- **Icons** — fallback icon, currency symbols, navigation arrows
-
-### Runtime Theme Patching (`theme_applier.gd`)
-
-At startup, after `ConfigLoader` finishes, `ThemeApplier` reads the `ui.theme` block from the merged config and patches the live `Theme` resource in memory. This means a mod author only needs to add a `ui.theme` block to their `config.json` — they do not ship a `.tres` file.
-
-```gdscript
-# theme_applier.gd — called by DataManager after config is fully merged
-func apply_theme_overrides(theme_config: Dictionary) -> void:
-    var theme: Theme = preload("res://ui/theme/omni_theme.tres")
-    
-    if "primary_color" in theme_config:
-        theme.set_color("primary_color", "Global", Color(theme_config["primary_color"]))
-    
-    if "font_main" in theme_config:
-        var font = load(theme_config["font_main"]) as Font
-        if font:
-            theme.set_font("font_main", "Global", font)
-    # ... etc.
-```
-
-### Adding a New Theme Variable
-
-1. Define the constant/font/StyleBox in `omni_theme.tres`.
-2. Reference it in the relevant scene using `theme_override_*` or `get_theme_*()`.
-3. Add the key to `ThemeApplier.apply_theme_overrides()` if it should be mod-overridable.
-4. Document the key in the `ui.theme` section of the Modding Guide.
-
----
-
-## Data Layer
-
-### The Base Game Is a Mod
-
-There is no privileged `data/` folder at the project root. The base game content is simply the first mod loaded — `mods/base/` — with `load_order: 0` and no dependencies. This keeps the engine entirely content-free: it ships only systems, and every piece of game data (including the base game's) flows through the same mod pipeline.
-
-A game built on Omni-Framework ships a `mods/base/` folder containing all its core content. Community mods are added alongside it. The engine itself never needs to change.
-
-**`mods/base/mod.json`:**
-```json
-{
-  "name": "Base Game",
-  "id": "base",
-  "version": "1.0.0",
-  "load_order": 0,
-  "enabled": true,
-  "dependencies": []
-}
-```
-
-**`ModLoader` treats a missing or invalid `base` mod as a fatal boot error** — unlike all other mods, which fail non-fatally. Nothing can function without it.
-
-### Base Game Data Files (`mods/base/data/`)
-
-| File | Purpose |
-|---|---|
-| `definitions.json` | Valid stat names and currency IDs |
-| `parts.json` | Part templates (items, gear, skill nodes, etc.) |
-| `entities.json` | Entity templates (player, NPCs, vendors, abstract containers) |
-| `locations.json` | Location graph nodes with connections and UI screens |
-| `factions.json` | Faction definitions, rosters, quest pools, reputation tiers |
-| `quests.json` | Quest state machine definitions |
-| `tasks.json` | Repeatable time-bound task templates |
-| `achievements.json` | Achievement definitions and tracking stat requirements |
-| `config.json` | Global game settings, balance, UI strings, theme defaults |
-
-### Save Data (`user://saves/`)
-
-Save files are human-readable JSON, one file per save slot. Schema version is stored in each file header to support migration. `SaveManager` is responsible for versioning and forward-compatibility.
-
-```
-user://saves/
-├── slot_0.json
-├── slot_1.json
-└── slot_2.json
-```
-
----
-
-## Mod Loading Pipeline (Detailed)
-
-```
-1. ModLoader.scan_mods()
-      → Find all res://mods/*/mod.json  (base) and res://mods/*/*/mod.json  (user mods)
-      → Parse and validate each manifest
-      → FATAL ERROR if res://mods/base/mod.json is missing or invalid
-      → Topological sort: dependencies first, then load_order, then alpha
-        (base mod always sorts first — load_order: 0)
-
-2. ModLoader.load_phase_one()  [Additions]
-      For each mod in sorted order (base first, then user mods):
-        → Load data/<system>.json if present
-        → Pass "additions" arrays to DataManager registries
-        → Register any dialogue/*.dialogue files with Dialogue Manager
-
-3. ModLoader.load_phase_two()  [Patches]
-      For each mod in sorted order:
-        → Load data/<system>.json if present
-        → Pass "patches" arrays to DataManager registries
-        → Each registry applies patches to its merged dataset
-
-4. DataManager → ConfigLoader.merge_configs()
-      → Deep-merge all mods' config.json into base config
-      → ThemeApplier.apply_theme_overrides(config["ui"]["theme"])
-
-5. GameState.initialize_from_templates()
-      → Instantiate player entity from template
-      → Place entities at their starting locations
-      → Initialize quest/task/achievement state
-
-6. UIRouter.push_screen("world_map")
-      → Game is ready
-```
-
----
-
-## Naming Conventions
-
-| Thing | Convention | Example |
-|---|---|---|
-| GDScript files | `snake_case.gd` | `stat_manager.gd` |
-| Class names | `PascalCase` | `class_name StatManager` |
-| Autoload names | `PascalCase` | `GameEvents`, `DataManager` |
-| Signal names | `snake_case` | `tick_advanced` |
-| Scene files | `snake_case.tscn` | `exchange_screen.tscn` |
-| JSON data IDs | `author:mod:name` | `base:iron_sword` |
-| Save keys | `snake_case` | `"current_location_id"` |
-| Constants | `UPPER_SNAKE_CASE` | `const MAX_SAVE_SLOTS = 5` |
+| `AssemblyEditorBackend` | `assembly_editor_screen.tscn` ✅ | Attach/detach parts into sockets. Supports catalog mode (infinite stock from `PartsRegistry`) and inventory mode (`option_source_entity_id` draws from a live entity's inventory and depletes it on confirm). Supports entity-to-entity transactions via `budget_entity_id` (who pays) and `payment_recipient_id` (who earns). |
+| `ExchangeBackend` | `exchange_screen.tscn` ⚠️ planned | Buy/sell part instances from entity inventory |
+| `ListBackend` | `list_screen.tscn` ⚠️ planned | Display filtered data lists |
+| `ChallengeBackend` | `challenge_screen.tscn` ⚠️ planned | Stat-check pass/fail |
+| `TaskProviderBackend` | `task_provider_screen.tscn` ⚠️ planned | Faction job board |
+| `CatalogListBackend` | `catalog_list_screen.tscn` ⚠️ planned | Infinite template vendor |
+| `DialogueBackend` | `dialogue_screen.tscn` ⚠️ planned | Branching NPC dialogue via Dialogue Manager |

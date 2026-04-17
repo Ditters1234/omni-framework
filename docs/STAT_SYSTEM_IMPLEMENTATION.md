@@ -56,6 +56,53 @@ player.stats["health"] = min(player.stats["health"], effective_health_max)
 
 ---
 
+## Stat Definition Format
+
+The canonical stat-definition format should be explicit and machine-readable. Do not rely on string names alone to tell the engine whether a stat is flat, current-value, or capacity.
+
+Recommended `definitions.json` structure:
+```json
+{
+  "stats": [
+    {
+      "id": "strength",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "combat"
+    },
+    {
+      "id": "health",
+      "kind": "resource",
+      "paired_capacity_id": "health_max",
+      "default_value": 100,
+      "default_capacity_value": 100,
+      "clamp_min": 0,
+      "ui_group": "survival"
+    },
+    {
+      "id": "health_max",
+      "kind": "capacity",
+      "paired_base_id": "health",
+      "default_value": 100,
+      "clamp_min": 0,
+      "ui_group": "survival"
+    }
+  ]
+}
+```
+
+Field expectations:
+- `id`: Unique stat ID.
+- `kind`: `flat`, `resource`, or `capacity`.
+- `paired_capacity_id`: Required when `kind` is `resource`.
+- `paired_base_id`: Required when `kind` is `capacity`.
+- `default_value`: Used for entity initialization when omitted from a template.
+- `default_capacity_value`: Optional helper used by resource stats during initialization.
+- `clamp_min`: Lower bound used by runtime systems and validation.
+- `ui_group`: Optional display grouping.
+
+The `_max` suffix remains the required naming convention for capacity stats, but metadata should be the source of truth for validation and tooling.
+
 ## Always Paired Stats
 
 **Rule:** If you define one, you MUST define the other.
@@ -64,14 +111,14 @@ Valid pairs in `definitions.json`:
 ```json
 {
   "stats": [
-    "health",
-    "health_max",
-    "mana",
-    "mana_max",
-    "stamina",
-    "stamina_max",
-    "rage",
-    "rage_max"
+    { "id": "health", "kind": "resource", "paired_capacity_id": "health_max" },
+    { "id": "health_max", "kind": "capacity", "paired_base_id": "health" },
+    { "id": "mana", "kind": "resource", "paired_capacity_id": "mana_max" },
+    { "id": "mana_max", "kind": "capacity", "paired_base_id": "mana" },
+    { "id": "stamina", "kind": "resource", "paired_capacity_id": "stamina_max" },
+    { "id": "stamina_max", "kind": "capacity", "paired_base_id": "stamina" },
+    { "id": "rage", "kind": "resource", "paired_capacity_id": "rage_max" },
+    { "id": "rage_max", "kind": "capacity", "paired_base_id": "rage" }
   ]
 }
 ```
@@ -80,6 +127,22 @@ Valid pairs in `definitions.json`:
 - ❌ `health` without `health_max`
 - ❌ `mana_max` without `mana`
 - ❌ Unpaired capacity stats
+
+### Load-Time Validation Rules
+
+The stat system is one of the engine's core invariants, so template validation should reject bad stat data early.
+
+Required rules:
+
+- Every stat key used by an entity, part, task reward, or condition must exist in `definitions.json`.
+- Every stat definition must declare a valid `kind`.
+- Any stat with `kind: "resource"` must declare `paired_capacity_id`.
+- Any stat with `kind: "capacity"` must declare `paired_base_id`.
+- The named pair must exist in `definitions.json` and point back correctly.
+- Any stat ending with `_max` must be a `capacity` stat, and capacity stats should keep the `_max` naming convention.
+- Any entity template that defines `health_max`-style capacity stats should also define the matching base stat, unless the loader is explicitly filling it from metadata defaults.
+- Parts may modify base stats or capacity stats, but they may not invent unknown stat IDs.
+- Authoring data that starts with `current > max` is invalid and should be fixed in source, even if runtime clamping would eventually correct it.
 
 ---
 
@@ -112,28 +175,35 @@ Valid pairs in `definitions.json`:
 
 ### Default Values
 
-If an entity doesn't specify a stat, initialize from definitions with sensible defaults:
+If an entity doesn't specify a stat, initialize from definitions metadata instead of guessing from suffixes alone:
 
 ```gdscript
 # In EntityLoader.gd
 func initialize_entity_stats(entity: Dict) -> Dict:
     var stats = entity.get("stats", {})
     
-    for stat_name in definitions["stats"]:
-        if not stat_name in stats:
-            # Default initialization
-            if stat_name.ends_with("_max"):
-                stats[stat_name] = 10  # Default max = 10
-            else:
-                if "%s_max" % stat_name in definitions["stats"]:
-                    # This is a base stat with a capacity
-                    stats[stat_name] = stats["%s_max" % stat_name]  # current = max
-                else:
-                    # Flat stat with no capacity
-                    stats[stat_name] = 0
+    for stat_def in definitions["stats"]:
+        var stat_id = stat_def["id"]
+        var kind = stat_def["kind"]
+
+        if stat_id in stats:
+            continue
+
+        match kind:
+            "flat":
+                stats[stat_id] = stat_def.get("default_value", 0)
+            "capacity":
+                stats[stat_id] = stat_def.get("default_value", 0)
+            "resource":
+                var capacity_id = stat_def["paired_capacity_id"]
+                if not capacity_id in stats:
+                    stats[capacity_id] = stat_def.get("default_capacity_value", stat_def.get("default_value", 0))
+                stats[stat_id] = stat_def.get("default_value", stats[capacity_id])
     
     return stats
 ```
+
+This keeps initialization deterministic and makes flat stats, current-value stats, and capacity stats all first-class concepts in data.
 
 ---
 
@@ -225,6 +295,14 @@ func calculate_effective_max(entity: Dictionary, max_stat: String) -> int:
 3. **On Damage:** After reducing current health
 4. **On Load:** When entity loads with potentially invalid data
 5. **On Stat Patch:** If a mod patch changes stat values
+
+### Clamping Is Runtime Safety, Not Schema Validation
+
+Clamping keeps the live game safe, but it should not be used as an excuse to accept broken template data silently.
+
+- Runtime code clamps transient gameplay changes.
+- Load-time validation rejects malformed definitions and authoring mistakes.
+- Migration code may repair legacy data intentionally, but that repair should be explicit and logged.
 
 ---
 
@@ -349,6 +427,8 @@ Always use `_max` suffix consistently.
 - [ ] **Zero Max:** health_max goes to 0 → health forced to 0
 - [ ] **Stacking:** Multiple parts modify same stat → additive
 - [ ] **Unequip:** Removing part restores previous stat value
+- [ ] **Unknown Stat Rejected:** Template using undefined stat key fails validation
+- [ ] **Missing Pair Rejected:** `health_max` without `health` is rejected or explicitly defaulted by the loader
 
 ### Integration Tests
 
@@ -357,6 +437,8 @@ Always use `_max` suffix consistently.
 - [ ] **Part Override:** Equipping new part with same stat modifier works
 - [ ] **UI Display:** Character sheet shows correct current/max values
 - [ ] **Economy:** Selling damaged part with health_max modifier prices correctly
+- [ ] **Definitions Validation:** Stats file with broken base/capacity pairs fails before gameplay boots
+- [ ] **Patch Validation:** Mod patch that introduces an unknown stat is rejected with a useful error
 
 ### Example Test Cases
 

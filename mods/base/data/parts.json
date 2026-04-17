@@ -1,0 +1,465 @@
+{
+  "parts": [
+    {
+      "id": "base:body_head_human",
+      "display_name": "Round Head",
+      "description": "A simple rounded head for the starter creator.",
+      "tags": ["body_part", "character_creator_option", "creator_head", "head"],
+      "price": {
+        "credits": 4
+      },
+      "stats": {
+        "health_max": 2
+      },
+      "equippable": true,
+      "provides_sockets": [
+        {
+          "id": "{slot}:hair",
+          "accepted_tags": ["hair"],
+          "label": "Hair"
+        }
+      ]
+    },
+    {
+      "id": "base:body_head_angular",
+      "display_name": "Angular Head",
+      "description": "A slightly sharper head profile for the starter creator.",
+      "tags": ["body_part", "character_creator_option", "creator_head", "head"],
+      "price": {
+        "credits": 6
+      },
+      "stats": {
+        "strength": 1
+      },
+      "equippable": true,
+      "provides_sockets": [
+        {
+          "id": "{slot}:hair",
+          "accepted_tags": ["hair"],
+          "label": "Hair"
+        }
+      ]
+    },
+    {
+      "id": "base:body_hair_none",
+      "display_name": "No Hair",
+      "description": "Clean and simple.",
+      "tags": ["body_part", "character_creator_option", "creator_hair", "hair"],
+      "price": {
+        "credits": 0
+      },
+      "stats": {},
+      "equippable": true
+    },
+    {
+      "id": "base:body_hair_cropped",
+      "display_name": "Cropped Hair",
+      "description": "Clipped close for a tidy practical look.",
+      "tags": ["body_part", "character_creator_option", "creator_hair", "hair"],
+      "price": {
+        "credits": 1
+      },
+      "stats": {},
+      "equippable": true
+    },
+    {
+      "id": "base:body_hair_short",
+      "display_name": "Short Hair",
+      "description": "A short practical style.",
+      "tags": ["body_part", "character_creator_option", "creator_hair", "hair"],
+      "price": {
+        "credits": 1
+      },
+      "stats": {},
+      "equippable": true
+    },
+    {
+      "id": "base:body_hair_long",
+      "display_name": "Long Hair",
+      "description": "A longer flowing style.",
+      "tags": ["body_part", "character_creator_option", "creator_hair", "hair"],
+      "price": {
+        "credits": 2
+      },
+      "stats": {},
+      "equippable": true
+    },
+    {
+      "id": "base:body_hair_wavy",
+      "display_name": "Wavy Hair",
+      "description": "A relaxed style with a little extra volume.",
+      "tags": ["body_part", "character_creator_option", "creator_hair", "hair"],
+      "price": {
+        "credits": 2
+      },
+      "stats": {},
+      "equippable": true
+    },
+    {
+      "id": "base:body_torso_male",
+      "display_name": "Masculine Torso",
+      "description": "A simple masculine torso option.",
+      "tags": ["body_part", "character_creator_option", "starter_anchor", "creator_torso", "torso", "body_core"],
+      "price": {
+        "credits": 16
+      },
+      "stats": {
+        "strength": 2,
+        "health_max": 6
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "head", "accepted_tags": ["head"], "label": "Head" },
+        { "id": "left_arm", "accepted_tags": ["arm"], "label": "Left Arm" },
+        { "id": "right_arm", "accepted_tags": ["arm"], "label": "Right Arm" },
+        { "id": "left_leg", "accepted_tags": ["leg"], "label": "Left Leg" },
+        { "id": "right_leg", "accepted_tags": ["leg"], "label": "Right Leg" }
+      ]
+    },
+    {
+      "id": "base:body_torso_female",
+      "display_name": "Feminine Torso",
+      "description": "A simple feminine torso option.",
+      "tags": ["body_part", "character_creator_option", "starter_anchor", "creator_torso", "torso", "body_core"],
+      "price": {
+        "credits": 16
+      },
+      "stats": {
+        "strength": 1,
+        "health_max": 8
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "head", "accepted_tags": ["head"], "label": "Head" },
+        { "id": "left_arm", "accepted_tags": ["arm"], "label": "Left Arm" },
+        { "id": "right_arm", "accepted_tags": ["arm"], "label": "Right Arm" },
+        { "id": "left_leg", "accepted_tags": ["leg"], "label": "Left Leg" },
+        { "id": "right_leg", "accepted_tags": ["leg"], "label": "Right Leg" }
+      ]
+    },
+    {
+      "id": "base:body_torso_androgynous",
+      "display_name": "Androgynous Torso",
+      "description": "A simple androgynous torso option.",
+      "tags": ["body_part", "character_creator_option", "starter_anchor", "creator_torso", "torso", "body_core"],
+      "price": {
+        "credits": 16
+      },
+      "stats": {
+        "strength": 1,
+        "health_max": 7
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "head", "accepted_tags": ["head"], "label": "Head" },
+        { "id": "left_arm", "accepted_tags": ["arm"], "label": "Left Arm" },
+        { "id": "right_arm", "accepted_tags": ["arm"], "label": "Right Arm" },
+        { "id": "left_leg", "accepted_tags": ["leg"], "label": "Left Leg" },
+        { "id": "right_leg", "accepted_tags": ["leg"], "label": "Right Leg" }
+      ]
+    },
+    {
+      "id": "base:body_core_merfolk",
+      "display_name": "Merfolk Body",
+      "description": "A streamlined body plan with arms, a head, and a powerful tail.",
+      "tags": ["body_part", "character_creator_option", "starter_anchor", "body_core", "merfolk"],
+      "price": {
+        "credits": 22
+      },
+      "stats": {
+        "strength": 1,
+        "health_max": 10
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "head", "accepted_tags": ["head"], "label": "Head" },
+        { "id": "left_arm", "accepted_tags": ["arm"], "label": "Left Arm" },
+        { "id": "right_arm", "accepted_tags": ["arm"], "label": "Right Arm" },
+        { "id": "tail", "accepted_tags": ["tail"], "label": "Tail" }
+      ]
+    },
+    {
+      "id": "base:body_core_avian",
+      "display_name": "Avian Frame",
+      "description": "A feather-ready frame with wings and legs instead of a standard torso layout.",
+      "tags": ["body_part", "character_creator_option", "starter_anchor", "body_core", "avian"],
+      "price": {
+        "credits": 24
+      },
+      "stats": {
+        "strength": 2,
+        "health_max": 6
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "head", "accepted_tags": ["head"], "label": "Head" },
+        { "id": "left_arm", "accepted_tags": ["arm"], "label": "Left Arm" },
+        { "id": "right_arm", "accepted_tags": ["arm"], "label": "Right Arm" },
+        { "id": "left_wing", "accepted_tags": ["wing"], "label": "Left Wing" },
+        { "id": "right_wing", "accepted_tags": ["wing"], "label": "Right Wing" },
+        { "id": "left_leg", "accepted_tags": ["leg"], "label": "Left Leg" },
+        { "id": "right_leg", "accepted_tags": ["leg"], "label": "Right Leg" }
+      ]
+    },
+    {
+      "id": "base:vehicle_core_rocket_basic",
+      "display_name": "Rocket Core",
+      "description": "A starter vehicle core for a player that is more machine than body.",
+      "tags": ["part", "character_creator_option", "starter_anchor", "vehicle_core", "rocket_core"],
+      "price": {
+        "credits": 30
+      },
+      "stats": {
+        "strength": 3,
+        "health_max": 16
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "nose", "accepted_tags": ["nose_cone"], "label": "Nose" },
+        { "id": "fin_left", "accepted_tags": ["fin"], "label": "Left Fin" },
+        { "id": "fin_right", "accepted_tags": ["fin"], "label": "Right Fin" },
+        { "id": "thruster", "accepted_tags": ["thruster"], "label": "Thruster" }
+      ]
+    },
+    {
+      "id": "base:body_arm_light",
+      "display_name": "Lean Arm",
+      "description": "A lighter arm profile that still fits either side.",
+      "tags": ["body_part", "character_creator_option", "creator_arm", "arm"],
+      "price": {
+        "credits": 6
+      },
+      "stats": {
+        "strength": 1
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "{slot}:hand", "accepted_tags": ["hand"], "label": "Hand" }
+      ]
+    },
+    {
+      "id": "base:body_arm_standard",
+      "display_name": "Standard Arm",
+      "description": "A basic arm for left or right slots.",
+      "tags": ["body_part", "character_creator_option", "creator_arm", "arm"],
+      "price": {
+        "credits": 8
+      },
+      "stats": {
+        "strength": 2
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "{slot}:hand", "accepted_tags": ["hand"], "label": "Hand" }
+      ]
+    },
+    {
+      "id": "base:body_arm_sturdy",
+      "display_name": "Sturdy Arm",
+      "description": "A sturdier arm profile for either side.",
+      "tags": ["body_part", "character_creator_option", "creator_arm", "arm"],
+      "price": {
+        "credits": 10
+      },
+      "stats": {
+        "strength": 3
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "{slot}:hand", "accepted_tags": ["hand"], "label": "Hand" }
+      ]
+    },
+    {
+      "id": "base:body_leg_light",
+      "display_name": "Lean Leg",
+      "description": "A lighter leg profile suited to either side.",
+      "tags": ["body_part", "character_creator_option", "creator_leg", "leg"],
+      "price": {
+        "credits": 6
+      },
+      "stats": {
+        "health_max": 2
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "{slot}:foot", "accepted_tags": ["foot"], "label": "Foot" }
+      ]
+    },
+    {
+      "id": "base:body_leg_standard",
+      "display_name": "Standard Leg",
+      "description": "A basic leg for left or right slots.",
+      "tags": ["body_part", "character_creator_option", "creator_leg", "leg"],
+      "price": {
+        "credits": 8
+      },
+      "stats": {
+        "health_max": 4
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "{slot}:foot", "accepted_tags": ["foot"], "label": "Foot" }
+      ]
+    },
+    {
+      "id": "base:body_leg_sturdy",
+      "display_name": "Sturdy Leg",
+      "description": "A sturdier leg profile suited to either side.",
+      "tags": ["body_part", "character_creator_option", "creator_leg", "leg"],
+      "price": {
+        "credits": 10
+      },
+      "stats": {
+        "health_max": 6
+      },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "{slot}:foot", "accepted_tags": ["foot"], "label": "Foot" }
+      ]
+    },
+    {
+      "id": "base:body_tail_merfolk",
+      "display_name": "Merfolk Tail",
+      "description": "A powerful tail for aquatic movement.",
+      "tags": ["body_part", "character_creator_option", "tail"],
+      "price": {
+        "credits": 12
+      },
+      "stats": {
+        "strength": 2,
+        "health_max": 6
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:body_wing_feathered",
+      "display_name": "Feathered Wing",
+      "description": "A simple feathered wing for avian body plans.",
+      "tags": ["body_part", "character_creator_option", "wing"],
+      "price": {
+        "credits": 9
+      },
+      "stats": {
+        "health_max": 2
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:body_hands_deft",
+      "display_name": "Deft Hands",
+      "description": "A lighter pair of hands with a more delicate silhouette.",
+      "tags": ["body_part", "character_creator_option", "creator_hands", "hand", "hands"],
+      "price": {
+        "credits": 4
+      },
+      "stats": {
+        "strength": 1
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:body_hands_standard",
+      "display_name": "Standard Hands",
+      "description": "A basic pair of hands.",
+      "tags": ["body_part", "character_creator_option", "creator_hands", "hand", "hands"],
+      "price": {
+        "credits": 5
+      },
+      "stats": {
+        "strength": 1
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:body_hands_broad",
+      "display_name": "Broad Hands",
+      "description": "A broader pair of hands for a heavier silhouette.",
+      "tags": ["body_part", "character_creator_option", "creator_hands", "hand", "hands"],
+      "price": {
+        "credits": 6
+      },
+      "stats": {
+        "strength": 2
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:body_feet_nimble",
+      "display_name": "Nimble Feet",
+      "description": "A lighter pair of feet for a narrower stance.",
+      "tags": ["body_part", "character_creator_option", "creator_feet", "foot", "feet"],
+      "price": {
+        "credits": 4
+      },
+      "stats": {
+        "health_max": 1
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:body_feet_standard",
+      "display_name": "Standard Feet",
+      "description": "A basic pair of feet.",
+      "tags": ["body_part", "character_creator_option", "creator_feet", "foot", "feet"],
+      "price": {
+        "credits": 5
+      },
+      "stats": {
+        "health_max": 2
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:body_feet_grounded",
+      "display_name": "Grounded Feet",
+      "description": "A broader pair of feet for a heavier stance.",
+      "tags": ["body_part", "character_creator_option", "creator_feet", "foot", "feet"],
+      "price": {
+        "credits": 6
+      },
+      "stats": {
+        "health_max": 3
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:vehicle_nose_cone_standard",
+      "display_name": "Standard Nose Cone",
+      "description": "A simple front section for a starter rocket frame.",
+      "tags": ["part", "character_creator_option", "nose_cone"],
+      "price": {
+        "credits": 6
+      },
+      "stats": {
+        "health_max": 2
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:vehicle_fin_stabilizer",
+      "display_name": "Stabilizer Fin",
+      "description": "A basic fin for keeping a rocket body steady.",
+      "tags": ["part", "character_creator_option", "fin"],
+      "price": {
+        "credits": 5
+      },
+      "stats": {
+        "health_max": 1
+      },
+      "equippable": true
+    },
+    {
+      "id": "base:vehicle_thruster_standard",
+      "display_name": "Standard Thruster",
+      "description": "A basic thruster for a starter rocket body.",
+      "tags": ["part", "character_creator_option", "thruster"],
+      "price": {
+        "credits": 9
+      },
+      "stats": {
+        "strength": 2
+      },
+      "equippable": true
+    }
+  ]
+}

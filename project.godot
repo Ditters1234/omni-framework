@@ -13,15 +13,19 @@ config_version=5
 config/name="Omni-Framework"
 config/description="A data-driven, genre-agnostic single-player game engine built on Godot 4."
 config/version="0.1.0"
+run/main_scene="res://ui/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+config/main_scene="res://ui/main.tscn"
 
-[editor_plugins]
+[autoload]
 
-enabled=PackedStringArray("res://addons/A2J/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/gut/plugin.cfg")
-
-[rendering]
-
-rendering_device/driver.windows="d3d12"
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
+GameEvents="*res://autoloads/game_events.gd"
+ModLoader="*res://autoloads/mod_loader.gd"
+DataManager="*res://autoloads/data_manager.gd"
+GameState="*res://autoloads/game_state.gd"
+SaveManager="*res://autoloads/save_manager.gd"
+TimeKeeper="*res://autoloads/time_keeper.gd"
+AudioManager="*res://autoloads/audio_manager.gd"
+UIRouter="*res://autoloads/ui_router.gd"
+AIManager="*res://autoloads/ai_manager.gd"

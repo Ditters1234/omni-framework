@@ -1,0 +1,9 @@
+{
+  "name": "Base Game",
+  "id": "base",
+  "version": "0.1.0",
+  "schema_version": 1,
+  "load_order": 0,
+  "enabled": true,
+  "dependencies": []
+}

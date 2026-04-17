@@ -1,0 +1,35 @@
+{
+  "entities": [
+    {
+      "entity_id": "base:player",
+      "display_name": "Player",
+      "description": "Bootstrap player entity.",
+      "location_id": "base:start",
+      "currencies": {
+        "credits": 100
+      },
+      "stats": {
+        "health": 100,
+        "health_max": 100,
+        "strength": 5
+      },
+      "provides_sockets": [
+        {
+          "id": "core",
+          "accepted_tags": ["starter_anchor"],
+          "label": "Starter Part"
+        }
+      ],
+      "inventory": [
+        { "instance_id": "base:player_body_core", "template_id": "base:body_torso_androgynous" }
+      ],
+      "assembly_socket_map": {
+        "core": "base:player_body_core"
+      },
+      "assembly_instance_ids": [
+        "base:player_body_core"
+      ],
+      "interactions": []
+    }
+  ]
+}

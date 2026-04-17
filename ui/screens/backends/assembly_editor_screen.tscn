@@ -1,0 +1,113 @@
+[gd_scene format=3 uid="uid://d0obfyrgexyng"]
+
+[ext_resource type="Script" uid="uid://dqr10nj8m0hp5" path="res://ui/screens/backends/assembly_editor_screen.gd" id="1_editor"]
+[ext_resource type="PackedScene" path="res://ui/components/currency_summary_panel.tscn" id="2_currency"]
+[ext_resource type="PackedScene" path="res://ui/components/part_detail_panel.tscn" id="3_detail"]
+[ext_resource type="PackedScene" path="res://ui/components/stat_delta_sheet.tscn" id="4_stats"]
+
+[node name="AssemblyEditorScreen" type="Control" unique_id=18968600]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_editor")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=903401361]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer" unique_id=2037833289]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer" unique_id=1803874249]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=442561369]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Assembly Editor"
+horizontal_alignment = 1
+
+[node name="DescriptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1613063852]
+layout_mode = 2
+text = "Choose parts for the selected entity from the configured catalog."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="SummaryLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1970666550]
+layout_mode = 2
+text = "Preview parts on the left, inspect the current selection on the right, and confirm when the build looks right."
+autowrap_mode = 3
+
+[node name="MainContent" type="HSplitContainer" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1538772221]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="RowsScroll" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent" unique_id=867599348]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="RowsContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/RowsScroll" unique_id=1828305977]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="SidebarScroll" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent" unique_id=314198275]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Sidebar" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll" unique_id=808005989]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="CurrencySummaryPanel" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar" instance=ExtResource("2_currency")]
+layout_mode = 2
+
+[node name="PartDetailPanel" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar" instance=ExtResource("3_detail")]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatDeltaSheet" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar" instance=ExtResource("4_stats")]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1098975024]
+layout_mode = 2
+text = "Preparing editor..."
+autowrap_mode = 3
+
+[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1553130737]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow" unique_id=1394342845]
+layout_mode = 2
+text = "Cancel"
+
+[node name="BeginButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow" unique_id=1078529592]
+layout_mode = 2
+text = "Confirm"
+
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BeginButton" to="." method="_on_begin_button_pressed"]

@@ -5,6 +5,8 @@
 .godot/
 /android/
 
+
+
 # Export outputs
 /export/
 *.apk
@@ -66,11 +68,28 @@ ehthumbs.db
 *~
 
 # -----------------------------------------------
+# Windows File-Lock Artifacts
+# -----------------------------------------------
+# DLLs prefixed with ~ are created by Windows when a file is in use
+# (e.g. Godot holding the GDExtension DLL during a hot-reload)
+~*
+
+# -----------------------------------------------
+# AI Dev Assistant
+# -----------------------------------------------
+# Ziva agent snapshot data — local dev cache, not project source
+.ziva/
+
+# -----------------------------------------------
 # Dev-Only Addons (remove before release)
 # -----------------------------------------------
 # Binaries are large and the whole addon is stripped at release
-addons/ziva_agent/bin/
-addons/ziva_agent/bin-deps/
+/addons/ziva_agent/bin/
+/addons/ziva_agent/bin-deps/
+
+# Binaries are large and git is complaining
+/addons/nobodywho/
+
 
 # GUT is dev-only — exclude from release exports via export presets,
 # but we keep it tracked in git so all devs have it.

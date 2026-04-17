@@ -8,7 +8,7 @@ You do not need to know GDScript or Godot to add new items, magic systems, NPCs,
 
 This guide covers the core architecture, the system hierarchy, and provides practical examples for modifying every core game system.
 
-> **See also:** `docs/PROJECT_STRUCTURE.md` for the engine's folder layout, autoloads, UI framework, and Godot theme architecture.
+> **See also:** `docs/README.md` for the documentation map, `docs/PROJECT_STRUCTURE.md` for the engine architecture, and `docs/STAT_SYSTEM_IMPLEMENTATION.md` for the canonical stat rules.
 
 ---
 
@@ -20,6 +20,16 @@ The Omni-Framework relies on a strict separation between engine logic and game d
 To ensure maximum compatibility between mods, the game uses a **Two-Phase Loading** architecture:
 1. **Phase 1 (Additions):** The base game JSON files are loaded, followed by all new items/entities/locations added by active mods.
 2. **Phase 2 (Patches):** All active mods apply their "patches". Because patches run last, a patch in Mod B can successfully modify a part that was added by Mod A.
+
+### Validation, Contracts, and Failure Rules
+
+Omni-Framework is intentionally data-driven, but it is not "anything goes." The engine documentation now assumes the following validation rules, even where enforcement is still being finished in code:
+
+- Every data file is validated against a per-system schema before it is merged.
+- Unknown fields, wrong value types, bad enum values, and missing required fields are load errors.
+- IDs and references must point at real content by the end of the load pipeline.
+- `backend_class` values are validated against explicit backend contracts, not informal conventions.
+- AI-assisted content is optional and must degrade safely if the provider is unavailable or returns malformed output.
 
 ### System Hierarchy Map
 Here is how the engine's autoloads and core systems interact with your mod files at startup. Each system is a singleton accessible globally via its autoload name.
@@ -90,6 +100,7 @@ Every mod must have a manifest at its root:
 {
   "name": "My Cool Mod",
   "version": "1.0.0",
+  "schema_version": 1,
   "load_order": 100,
   "enabled": true,
   "dependencies": ["base"]
@@ -98,6 +109,7 @@ Every mod must have a manifest at its root:
 **Field Descriptions:**
 - `name` (required, string): Human-readable mod name displayed to players.
 - `version` (required, string): Semantic versioning for your mod (e.g., "1.0.0", "1.2.3-beta").
+- `schema_version` (recommended, integer): Version of the data schema your mod targets. Use this so future migration tooling can upgrade or reject incompatible content intentionally.
 - `load_order` (required, number): Integer controlling load sequence. Lower values load first. Use 0-50 for foundational content mods, 51-100 for feature mods, 101+ for balance overhauls. Mods with equal load_order are sorted alphabetically by directory name.
 - `enabled` (optional, boolean, default: true): If false, this mod will not load.
 - `dependencies` (optional, array): List of other mods this one requires, formatted as `"author_id:mod_id"`. The system will error if dependencies are missing.
@@ -124,13 +136,65 @@ File: `data/definitions.json`
 
 Define your game's physical laws here. This is the **foundational system** - a modder building in a different genre shouldn't be stuck with hardcoded stats. Define new global standards that ALL other systems will recognize.
 
-**Structure:**
+**Canonical Structure:**
 ```json
 {
   "currencies": ["gold", "gems", "credits"],
-  "stats": ["strength", "agility", "health", "health_max", "mana", "mana_max", "stamina"]
+  "stats": [
+    {
+      "id": "strength",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "combat"
+    },
+    {
+      "id": "agility",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "combat"
+    },
+    {
+      "id": "health",
+      "kind": "resource",
+      "paired_capacity_id": "health_max",
+      "default_value": 100,
+      "default_capacity_value": 100,
+      "clamp_min": 0,
+      "ui_group": "survival"
+    },
+    {
+      "id": "health_max",
+      "kind": "capacity",
+      "paired_base_id": "health",
+      "default_value": 100,
+      "clamp_min": 0,
+      "ui_group": "survival"
+    },
+    {
+      "id": "stamina",
+      "kind": "resource",
+      "paired_capacity_id": "stamina_max",
+      "default_value": 75,
+      "default_capacity_value": 75,
+      "clamp_min": 0,
+      "ui_group": "survival"
+    },
+    {
+      "id": "stamina_max",
+      "kind": "capacity",
+      "paired_base_id": "stamina",
+      "default_value": 75,
+      "clamp_min": 0,
+      "ui_group": "survival"
+    }
+  ]
 }
 ```
+
+**Legacy Compatibility:**
+- A plain string array of stat IDs may remain readable during an early transition period.
+- Going forward, the object form above should be treated as the canonical format because it makes flat stats, resource stats, defaults, and UI grouping explicit.
+- The `_max` suffix remains the naming convention for capacity stats, but metadata should be the source of truth for validation and tooling.
 
 **Important Notes:**
 
@@ -138,13 +202,27 @@ Define your game's physical laws here. This is the **foundational system** - a m
 - **Base Stats** (e.g., `health`, `mana`, `stamina`): Represent the **current/active value** of a resource. Can increase or decrease dynamically during gameplay.
 - **Capacity Stats** (e.g., `health_max`, `mana_max`, `stamina_max`): Represent the **maximum threshold** for their base counterpart. Always end with `_max` suffix. Define the hard ceiling of what a character can hold.
 - **Stat Pairing:** Always define both the base stat AND its `_max` counterpart together in definitions. Example: if you have `health`, you MUST also define `health_max`.
+- **Flat Stats** (e.g., `strength`, `agility`, `charisma`): Standalone stats with no capacity partner. Mark these as `kind: "flat"` in definitions.
+- **Metadata First:** Validation, editor tooling, default initialization, and UI grouping should read the stat metadata (`kind`, paired IDs, defaults, groups) instead of inferring everything from string names alone.
 - **Mod Philosophy:** Stats are **omni-system agnostic**. A modder building a space opera shouldn't require fantasy stats. Define only the stats your game needs.
+
+**Recommended Stat Metadata Fields:**
+- `id`: The stat ID used everywhere else in data.
+- `kind`: One of `flat`, `resource`, or `capacity`.
+- `paired_capacity_id`: Required on `resource` stats.
+- `paired_base_id`: Required on `capacity` stats.
+- `default_value`: Default value when an entity does not specify this stat.
+- `default_capacity_value`: Optional convenience field on `resource` stats for initializing the paired max.
+- `clamp_min`: Usually `0` for resource and capacity stats.
+- `ui_group`: Optional display grouping for sheets, filters, and tabs.
+- `hidden`: Optional flag for stats that exist for logic but should not render in normal UI.
 
 **Currencies:**
 - **Currencies are global** - they appear in Entity `currencies` dictionaries, Part `price` fields, and Task `reward` fields. If a currency isn't listed here, it won't be recognized.
 
 **Patching Rules:**
 - **There is no patching** for Definitions - it's a foundational layer. Mods should add to the arrays non-destructively (the system merges all mods' definitions).
+- Mods should not redefine the metadata of an existing stat owned by another mod unless they explicitly depend on that mod and intend to override the shared rules.
 
 ### 3.2. Parts (Hierarchical Data & Stat Nodes)
 File: `data/parts.json`
@@ -192,6 +270,7 @@ Parts are the fundamental building blocks of the game's data. Rather than just b
 - `equippable` (optional, boolean): If true, entity can equip this part as sub-part.
 - `provides_sockets` (optional, array): Array of socket objects that this part creates when attached.
   - Socket object: `{ "id": "socket_name", "accepted_tags": ["tag1", "tag2"], "label": "Display Name" }`
+  - If a reusable part needs unique child socket ids, you can use `"{slot}"` inside the socket id. Example: `"{slot}:hand"` becomes `left_arm:hand` when equipped in `left_arm`.
 - `customizable` (optional, boolean): If true, entity can set custom values on this part (e.g., renaming, tracking state).
 - `custom_field_labels` (optional, array): Array of field label strings for custom data UI (e.g., `["Kill Count", "Hair Color"]`). Each label represents one custom data field the player can modify.
 - `script_path` (optional, string): Path to GDScript hook extending `ScriptHook` base class.
@@ -206,7 +285,7 @@ You can modify an existing part to add/remove tags, sockets, or change stats and
       "add_sockets": [
         { "id": "eyewear", "accepted_tags": ["eyewear", "glasses"], "label": "Glasses" }
       ],
-      "remove_sockets": ["old_socket_id"],
+      "remove_socket_ids": ["old_socket_id"],
       "add_tags": ["has_eyewear_slot"],
       "remove_tags": ["basic_head"],
       "add_required_tags": ["organic"],
@@ -223,7 +302,7 @@ You can modify an existing part to add/remove tags, sockets, or change stats and
 ### 3.3. Entities (Stateful Actors & Containers)
 File: `data/entities.json`
 
-Entities are the stateful actors of the game engine. While they are typically used to represent the Player, NPCs, or Vendors, an Entity is fundamentally just a container. It holds an `inventory` of Parts, equips Parts into an `assembly_socket_map`, exists at a specific Location, and exposes UI `interactions`. 
+Entities are the stateful actors of the game engine. While they are typically used to represent the Player, NPCs, or Vendors, an Entity is fundamentally just a container. It can expose root assembly sockets via `provides_sockets`, holds an `inventory` of Parts, equips Parts into an `assembly_socket_map`, exists at a specific Location, and exposes UI `interactions`. 
 
 Crucially, **every Entity natively owns its own progression and state**. Any entity (not just the player) can have its own `currencies`, `reputation`, `stats`, `discovered_locations`, and persistent boolean `flags`. You could use an Entity to represent a locked treasure chest that tracks if it's been opened, a drivable vehicle that tracks its fuel as a currency, a physical terminal, or an abstract progression manager.
 
@@ -281,12 +360,13 @@ Crucially, **every Entity natively owns its own progression and state**. Any ent
 - `reputation` (optional, object): Dictionary of `{ "faction_id": points }`. Starting reputation with each faction.
 - `flags` (optional, object): Dictionary of `{ "flag_name": boolean }`. Persistent boolean state tracking (e.g., `"met_player": false`).
 - `discovered_locations` (optional, array): List of location IDs this entity has discovered.
+- `provides_sockets` (optional, array): Root socket objects exposed directly by the entity. This is the anatomy-agnostic entry point for things like a generic `"core"` slot, a starter `"mount"` slot, or a single `"starter_part"` slot.
 - `inventory` (optional, array): Array of part instances this entity owns.
   - Instance object: `{ "instance_id": "unique_id", "template_id": "part:id", "condition": 1.0, "custom_data": "optional" }`
   - `instance_id`: Unique identifier for THIS specific copy (used to track which exact item is equipped where).
   - `template_id`: References a Part definition (e.g., `"base:iron_sword"` or `"my_name:my_mod:flaming_sword"`).
   - `condition`: Float 0.0-1.0 representing durability/wear. Used in pricing and UI feedback.
-- `assembly_socket_map` (optional, object): Dictionary of `{ "socket_id": "instance_id" }`. Which parts are currently equipped where.
+- `assembly_socket_map` (optional, object): Dictionary of `{ "socket_id": "instance_id" }`. Which parts are currently equipped where. Socket ids may come from the entity's own `provides_sockets` or from `provides_sockets` on already-equipped parent parts.
 - `assembly_instance_ids` (optional, array): List of instance IDs currently equipped on this entity (convenience for UI).
 - `owned_entity_ids` (optional, array): List of entity IDs this entity "owns" (e.g., minions, vehicles, summons).
 - `interactions` (optional, array): Array of interaction/screen objects defining UI tabs.
@@ -309,6 +389,9 @@ Want to sell your new item at the local blacksmith, give them a custom currency,
         { "tab_id": "blacksmith_shop", "set": { "label": "Black Market Weapons" } }
       ],
       "add_owned_entity_ids": ["my_name:my_mod:guard_dog"],
+      "add_sockets": [
+        { "id": "core", "accepted_tags": ["starter_anchor"], "label": "Starter Part" }
+      ],
       "add_assembly_socket_map": { "head_slot": "my_name:my_mod:inst_002" },
       "add_assembly_instance_ids": ["my_name:my_mod:inst_002"],
       "set_currencies": { "gold": 10000 },
@@ -338,8 +421,7 @@ Locations represent nodes in a topological graph. While they form the "World Map
       "background_image": "res://mods/my_name/my_mod/assets/lab_bg.png",
       "music_track": "res://mods/my_name/my_mod/assets/music/spooky_lab.ogg",
       "ambient_sound": "res://mods/my_name/my_mod/assets/sfx/machinery_hum.wav",
-      "connections": ["hub_safehouse"],
-      "connection_costs": { "hub_safehouse": 5 },
+      "connections": { "hub_safehouse": 5 },
       "screens": []
     }
   ]
@@ -390,11 +472,143 @@ To make your new location accessible, you must patch an existing location to con
 }
 ```
 
-### 3.5. UI Screens & Action Payloads
+### 3.5. LocationViewScreen (How Players Enter a Location)
+
+`LocationViewScreen` is the hub screen rendered when a player enters or explores a location. It is pushed by the gameplay shell via `UIRouter.push("location_view")` (optionally with `{ "location_id": "..." }`).
+
+**What it displays:**
+- The location's `display_name` and `description`.
+- One button per entry in the location's `screens` array. Buttons are enabled if the backend is registered; unbuilt backends show a disabled button with a tooltip.
+- Travel buttons for each entry in `connections`, allowing the player to move directly to adjacent locations.
+
+**Screen entry fields** (inside a location's `"screens"` array):
+
+| Field | Type | Required | Purpose |
+|---|---|---|---|
+| `tab_id` | string | ✅ | Unique ID for patching / removing this screen. |
+| `display_name` | string | ✅ | Button label shown to the player. |
+| `description` | string | ✓ | Tooltip shown on hover. |
+| `backend_class` | string | ✅ | Determines which UI screen handles the interaction (see §3.6). |
+| *(all other fields)* | any | — | Passed verbatim as params to the backend screen's `initialize()`. |
+
+**Minimal location with a working screen:**
+```json
+{
+  "locations": [
+    {
+      "location_id": "my_name:my_mod:blacksmith",
+      "display_name": "The Blacksmith",
+      "description": "A master smith who can upgrade your gear.",
+      "connections": { "base:town_square": 1 },
+      "screens": [
+        {
+          "tab_id": "my_name:my_mod:blacksmith:upgrade",
+          "display_name": "Upgrade Equipment",
+          "description": "Enhance your weapons and armor.",
+          "backend_class": "AssemblyEditorBackend",
+          "target_entity_id": "player",
+          "option_tags": ["weapon", "armor"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Navigation:** Pressing a screen button pushes the backend on top of `LocationViewScreen`. The user returns with the backend's back button (or by pressing Back inside LocationViewScreen to return to the gameplay shell). Travel buttons call `GameState.travel_to(dest_id)` and refresh the view in-place.
+
+### 3.6. UI Screens & Action Payloads
 When defining a screen in a location or an interaction on an NPC, you assign a `backend_class` to dictate its functionality.
 
 **Backend Classes (Screen Types):**
-*   **`AssemblyEditorBackend` (Workbenches/Assembly):** Lets players modify their body/gear. Use `editable_tags` to restrict what they can attach (e.g., `["weapon"]` for an armory bench). Emits events when parts are attached/detached.
+*   **`AssemblyEditorBackend` (Workbenches / Assembly / Clinics / Shipyards):** Lets players modify any target entity by browsing and applying parts into its sockets. The same screen handles character creation, upgrade workbenches, ripperdoc clinics, shipyard refits, and any other "slot-and-part" editor — driven entirely by JSON params. Supports two distinct part-sourcing modes and full entity-to-entity (payer ≠ target) transactions.
+
+    **Part-sourcing modes:**
+    - **Catalog mode** (default): Options come from the global `PartsRegistry`, filtered by `option_tags` / `option_template_ids`. The source has infinite stock — use this for standard vendors, workbenches, or character creators.
+    - **Inventory mode**: Set `option_source_entity_id` to an entity id. Options are drawn from *that entity's live inventory*. On confirm, each newly installed part is removed from the source entity's stock. Use this for ripperdocs or merchants with finite supply.
+
+    **Full parameter reference:**
+
+    | Param | Type | Default | Purpose |
+    |---|---|---|---|
+    | `target_entity_id` | string | `"player"` | Which entity receives the new parts. |
+    | `budget_currency_id` | string | `"credits"` | Currency used to price parts and enforce the spend limit. |
+    | `budget_entity_id` | string | *(same as target)* | Who pays. Set to `"player"` when modifying a non-player entity (e.g. a ship) with player credits. |
+    | `payment_recipient_id` | string | *(none)* | Entity that *receives* the spent currency on confirm (e.g. the ripperdoc NPC). If omitted, spent credits disappear. |
+    | `option_tags` | array | `[]` | Show any catalog part that has at least one of these tags. |
+    | `option_tag` | string | `"character_creator_option"` | Convenience alias for a single tag (ignored if `option_tags` is set). |
+    | `option_template_ids` | array | `[]` | Show exactly these part template ids (stacks with tag results). |
+    | `option_source_entity_id` | string | *(none)* | Enables **inventory mode** — options come from this entity's inventory, not the global catalog. |
+    | `screen_title` | string | `"Assembly Editor"` | Header label. |
+    | `screen_description` | string | *(default)* | Sub-header description. |
+    | `screen_summary` | string | *(default)* | Footer instructions. |
+    | `confirm_label` | string | `"Confirm"` | Confirm button text. |
+    | `cancel_label` | string | `"Cancel"` | Cancel button text. |
+    | `next_screen_id` | string | *(none)* | Screen to navigate to on confirm. |
+    | `next_screen_params` | object | `{}` | Params forwarded to `next_screen_id`. |
+    | `cancel_screen_id` | string | `"main_menu"` | Screen to navigate to on cancel. |
+    | `cancel_screen_params` | object | `{}` | Params forwarded to `cancel_screen_id`. |
+    | `reset_game_state_on_cancel` | bool | `false` | If true, wipes `GameState` when the player cancels (useful for aborting character creation). |
+
+    **Examples:**
+
+    *Character creator (catalog, player edits themselves):*
+    ```json
+    {
+      "tab_id": "character_editor",
+      "label": "Edit Character",
+      "backend_class": "AssemblyEditorBackend",
+      "target_entity_id": "player",
+      "budget_currency_id": "credits",
+      "option_tags": ["character_creator_option"],
+      "screen_title": "Character Creator"
+    }
+    ```
+
+    *Ripperdoc clinic (catalog mode, player pays, ripperdoc earns):*
+    ```json
+    {
+      "tab_id": "install_cyberware",
+      "label": "Get Augmented",
+      "backend_class": "AssemblyEditorBackend",
+      "target_entity_id": "player",
+      "budget_entity_id": "player",
+      "payment_recipient_id": "base:ripperdoc_johnny",
+      "budget_currency_id": "credits",
+      "option_tags": ["cyberware"],
+      "screen_title": "Choose Your Augmentations"
+    }
+    ```
+
+    *Ripperdoc clinic (inventory mode — doc has finite stock, player pays, doc earns and loses the part):*
+    ```json
+    {
+      "tab_id": "install_cyberware",
+      "label": "Get Augmented",
+      "backend_class": "AssemblyEditorBackend",
+      "target_entity_id": "player",
+      "budget_entity_id": "player",
+      "payment_recipient_id": "base:ripperdoc_johnny",
+      "option_source_entity_id": "base:ripperdoc_johnny",
+      "budget_currency_id": "credits",
+      "option_tags": ["cyberware"],
+      "screen_title": "In Stock — Choose Your Augmentations"
+    }
+    ```
+
+    *Shipyard refit (player pays to upgrade their ship entity):*
+    ```json
+    {
+      "tab_id": "refit_ship",
+      "label": "Refit Ship",
+      "backend_class": "AssemblyEditorBackend",
+      "target_entity_id": "base:player_ship",
+      "budget_entity_id": "player",
+      "budget_currency_id": "credits",
+      "option_tags": ["ship_component"],
+      "screen_title": "Shipyard"
+    }
+    ```
 *   **`ExchangeBackend` (Inventory Shops/Trading):** Sells physical *Instances* directly out of an Entity's `inventory` array. Once the NPC runs out of an item, it's gone until restocked. Uses real game economy. Reverse source/destination to create a "Sell" screen.
     *   *Required:* Define `"source_inventory"` (e.g., `"entity:my_name:my_mod:merchant_bob"`) and `"destination_inventory"` (e.g., `"player"`). 
     *   *Optional:* Define `"transaction_sound"` and `"list_icon"` for rich feedback.
@@ -418,6 +632,21 @@ When defining a screen in a location or an interaction on an NPC, you assign a `
 
     Dialogue files live in your mod's `dialogue/` folder and use Dialogue Manager's own scripting syntax. Refer to the [Dialogue Manager documentation](https://dialogue.nathanhoad.net/) for the full `.dialogue` format. The engine connects `dialogue_started` and `dialogue_ended` signals on `GameEvents` when a conversation begins and ends, so other systems (quests, flags, etc.) can react to it.
 
+**Backend Contract Rules:**
+- `backend_class` does more than pick a screen scene; it selects a contract the JSON must satisfy.
+- Required backend fields should be treated as mandatory load-time validation, not "best effort" runtime assumptions.
+- Backends gather runtime data and build a view model; UI scenes render that view model. Do not make UI components responsible for fetching game state on their own.
+- Assembly-style backends should keep preview state in a draft session object instead of mutating live entities on every cursor move. That draft layer should answer "can this fit", "can I afford this", "what stats change", and "what gets committed".
+- If a backend needs structured output from AI or script hooks, validate that output before it is rendered or applied.
+
+**Common Required Backend Fields:**
+- `AssemblyEditorBackend`: no required fields — all params have defaults. See the full param table above.
+- `ExchangeBackend`: `source_inventory`, `destination_inventory`, `currency_id`
+- `TaskProviderBackend`: `faction_id`
+- `DialogueBackend`: `dialogue_resource`
+- `ChallengeBackend`: `required_stat`, `required_value`
+- `CatalogListBackend`: `data_source`, `action_payload`
+
 **Currency & Pricing Rules:**
 A Part's `"price"` property is a dictionary of currencies and their respective values. This allows items to natively cost multiple currencies simultaneously!
 *   Use `"price": { "gold": 500 }` for a single-currency item.
@@ -425,6 +654,8 @@ A Part's `"price"` property is a dictionary of currencies and their respective v
 *   Use `"price_modifier": 0.1` in a shop's config to apply an exchange rate multiplier (all prices multiplied by 0.1 at this specific shop).
 *   Negative prices are unsupported - items must have positive cost.
 *   **Economy Note:** Because currencies are local to each entity, an NPC vendor will literally run out of money unless their entity is restocked!
+
+For creator/workbench/shop UIs, it is valid to treat part prices as a draft transaction: the screen previews total spend and remaining currency during assembly, then commits the final leftover amount when the user confirms.
 
 **Screen Object Structure (Common Fields):**
 ```json
@@ -739,9 +970,11 @@ Your `config.json` is **deep-merged** into the base game config. This allows you
 - `currency_symbol` (string): Symbol displayed next to currency values (e.g., `"$"`).
 - `time_advance_buttons` (array): List of time skip buttons shown to player (e.g., `["1 hour", "1 day"]`).
 - `strings` (object): Dictionary for UI text overrides (translation/localization). Example: `{ "menu_button": "Grimoire" }`.
+- `main_menu` (object): Optional built-in main menu presentation overrides. Recommended keys: `title`, `subtitle`, `new_game_label`, `continue_label`, `load_label`, `quit_label`.
 - `default_sprites` (object): Fallback PNG paths keyed by tag. Example: `{ "parts": { "clothing": "res://assets/icon_clothing.png" } }`.
 - `theme` (object): Overrides applied at runtime to the engine's **centralized Godot Theme** resource (`res://ui/theme/omni_theme.tres`). Changes here propagate automatically to every UI control that inherits the theme. Available overrides:
   - `primary_color`, `secondary_color`, `bg_color` (hex strings) — remaps StyleBox color constants
+  - `color_positive`, `color_negative`, `color_warning`, `color_info`, `color_rarity_epic` (hex strings) — semantic color tokens used by reusable widgets
   - `font_main`, `font_mono` (TTF paths) — replaces the theme's default font resources
   > Note: The base `.tres` theme defines all default styles. Mod authors should only override what they need — the engine will deep-merge partial theme objects rather than replacing the entire theme.
 - `sounds` (object): Global UI sound effects routed through `AudioManager`. Example: `{ "hover": "res://sfx/ui_hover.wav", "click": "res://sfx/ui_click.wav" }`.
@@ -761,6 +994,12 @@ Configure the AI backend for dynamic NPC dialogue, procedural descriptions, or a
 - `max_tokens` (number, default: 150): Maximum response length in tokens.
 - `temperature` (number 0.0–1.0, default: 0.8): Response creativity. Lower = more deterministic.
 - `nobodywho_model_path` (string): Path to a `.gguf` model file for embedded local inference. Only used when `provider` is `"nobodywho"`. Example: `"user://models/llama3.2.gguf"`.
+
+**AI Safety Rules:**
+- Treat AI output like untrusted user input: validate format, clamp length, and reject malformed structures.
+- Keep AI-assisted features additive. Core progression, purchases, saves, and navigation should still work when AI is disabled.
+- Prefer system-owned prompt templates and narrow response formats over free-form "do anything" prompts.
+- Always provide a fallback path for script hooks that call `AIManager`.
 
 **Example `ai` config (Ollama local):**
 ```json
@@ -807,6 +1046,14 @@ Configure the AI backend for dynamic NPC dialogue, procedural descriptions, or a
   },
   "ui": {
     "currency_symbol": "$",
+    "main_menu": {
+      "title": "Fantasy Syndicate",
+      "subtitle": "Upgrade your magic and survive.",
+      "new_game_label": "Start Run",
+      "continue_label": "Continue",
+      "load_label": "Load Slot 1",
+      "quit_label": "Exit"
+    },
     "strings": {
       "menu_button": "Grimoire",
       "day_format": "Cycle %d"
@@ -906,100 +1153,4 @@ Achievements track game-wide statistics. Valid stat_name values include:
 - `quests_completed`: Count of quests finished.
 - `tasks_completed`: Count of tasks completed.
 - `distance_traveled`: Total ticks spent traveling.
-- Custom stat names: Implement tracking in your game's achievement system.
-
----
-
-## 7. Data Type Conventions & Field Naming
-
-To ensure your mods integrate seamlessly with other mods and the omni-framework, follow these conventions:
-
-**ID Fields (Always Namespaced Strings):**
-- Part/Entity/Quest/Faction/Location/Task IDs use format: `author:mod:name`
-- Within patches, use `"target"` to reference the ID being patched (never `"id"`).
-- Global/singleton entities use `"global"` as the entity_id.
-
-**Currency & Reward Fields (Always Objects/Dictionaries):**
-- `price` is ALWAYS `{ "currency_id": amount }`, never a single number.
-- `currencies` (on entities) is ALWAYS `{ "currency_id": amount }`, never a list.
-- `reward` (on tasks/quests) can include: `{ "gold": 100, "reputation": { "faction_id": 50 }, "items": [...] }`.
-
-**Stat Fields (Always Objects/Dictionaries - Capacity System):**
-- `stats` on parts/entities is ALWAYS `{ "stat_name": value }`.
-- **Base Stats** (e.g., `health`, `mana`) represent the current value. Modify them to reflect gameplay changes (damage, mana spent, etc.).
-- **Capacity Stats** (e.g., `health_max`, `mana_max`) represent the maximum pool. Modify them via equipment or buffs to increase/decrease resource ceilings.
-- **Always define both:** If your game has `health`, define `health_max`. The pair should ALWAYS exist together. Never define `mana_max` without `mana`.
-- **On Entities:** `stats` should include both base and capacity stats. Example: `{ "health": 80, "health_max": 100, "mana": 50, "mana_max": 100 }`.
-- **On Parts:** `stats` can modify either. Example: A sword adds `"strength": 5` (base stat), a bodysuit reduces `"health_max": -10` (capacity stat).
-
-**Array vs Object Decisions:**
-- `tags` / `required_tags`: Arrays (multiple values, order-independent).
-- `connections`: Can be array `["loc1", "loc2"]` OR object `{ "loc1": cost, "loc2": cost }` - object preferred for costs.
-- `interaction` / `screen`: Array of objects (multiple screens per entity/location).
-- `inventory`: Array of instance objects.
-- `assembly_socket_map`: Object mapping socket_id → instance_id.
-
-**Boolean vs String Fields:**
-- `enabled`: Boolean (on mod.json, flags).
-- `type` (on tasks/challenges): String enum (`"DELIVER"`, `"CRAFT"`, etc.).
-- `backend_class`: String class name (`"ExchangeBackend"`, etc.).
-- `flag_id`: String identifier within entity's `flags` object.
-
-**Paths (Always res:// Relative):**
-- `sprite`, `portrait`, `emblem`, `map_icon`: PNG paths.
-- `equip_sound`, `dialogue_blip`, `complete_sound`: WAV/OGG paths.
-- `music_track`, `ambient_sound`: OGG paths (preferred for long audio).
-- `script_path`: Path to GDScript hook file.
-
----
-
-## 8. Omni-Framework Design Philosophy
-
-The **Omni-Framework** is built on the principle that **game systems should be genre-agnostic**. This means:
-
-**What Makes a System "Omni":**
-1. **No Hardcoded Dependencies:** The system doesn't assume specific stats, currencies, or item types. Fantasy mods don't force sci-fi mods to deal with "mana" or "dragons".
-2. **Data-Driven Configuration:** All game rules live in JSON. Changing balance, adding new stats, or introducing new currencies requires editing data files, not code.
-3. **Stackable & Patchable:** Every system uses two-phase loading. Mods add new content, then patches modify existing content. This ensures mod A's additions work with mod B's modifications.
-4. **Non-Destructive Merging:** Arrays are extended, dictionaries are merged. Mods never need to know the complete state of another mod's additions.
-5. **Event-Driven State:** Global events (`GameEvents` bus) drive progression rather than hard-coded progression checks. This lets designers add new triggers without touching code.
-
-**When You're Designing a New System:**
-- Ask: "Could someone use this to build a completely different game genre?"
-- If your system mentions "weapons" or "magic", you're too specific. Use "parts" or "entities".
-- If your system hardcodes `strength` or `health`, you're too specific. Use stat names from `definitions.json`.
-- If your system creates state changes that can't be patched later, you're breaking the two-phase system.
-
-**When You're Extending an Existing System:**
-- Use `patches` to modify existing entries, never replace files.
-- Use `add_*` operations to extend arrays, never `set_*` an entire array unless you own the base definition.
-- Namespace your IDs to avoid collisions: `my_author:my_mod:my_feature`.
-- Document what you're patching: include a comment explaining why and which base IDs you depend on.
-
----
-
-## 9. Modding Checklist
-
-*   [ ] Did I put my files in `mods/<author_id>/<mod_id>/`?
-*   [ ] Did I define my mod manifest (`mod.json`) with `name`, `version`, `load_order`, `enabled`, and `dependencies`?
-*   [ ] Are my custom IDs properly namespaced (`author_id:mod_id:name`)?
-*   [ ] Did I add my game's physical laws (Stats/Currencies) to `definitions.json` if needed?
-*   [ ] For every capacity stat I defined (e.g., `health_max`), did I also define its base counterpart (e.g., `health`)?
-*   [ ] Does every item have a `price` field (object, not number) so it can be sold?
-*   [ ] If my item uses stat modifiers, did I test the math? (Parts modify existing stats, don't create new ones.)
-*   [ ] Did I correctly distinguish between base stats (`health`, current value) and capacity stats (`health_max`, maximum pool)?
-*   [ ] Are my explicit `"sprite"`, `"portrait"`, `"emblem"` links pointing to correct PNG paths?
-*   [ ] Did I verify all `.wav` and `.ogg` paths for audio exist?
-*   [ ] If I have no explicit sprite, did I register a default tag sprite in my mod's `data/config.json`?
-*   [ ] If I'm adding a new location, did I patch existing neighbouring locations to list it in their `connections`?
-*   [ ] If I'm patching data, did I use `"target"` (the ID to patch) NOT `"id"` (which creates a new object)?
-*   [ ] Did I use `modify_screen` / `modify_interaction` rather than replacing entire arrays when extending?
-*   [ ] Are all action payloads properly structured with `conditions` and `action_payload` blocks?
-*   [ ] Did I use the correct Currency/Reward format everywhere (objects, not numbers)?
-*   [ ] Did I avoid editing any file under `data/` or `scripts/`? Everything should live in my mod folder.
-*   [ ] Does my system avoid hardcoding genre-specific concepts? (Use "parts" not "weapons", use stat names not hardcoded values.)
-*   [ ] If I'm using `DialogueBackend`, does my `.dialogue` file exist at the path specified in `dialogue_resource`?
-*   [ ] If I'm using `DialogueBackend`, does the `dialogue_start` title exist in my `.dialogue` file (or is it intentionally omitted to use the first title)?
-*   [ ] Are my `.dialogue` files placed in `mods/<author_id>/<mod_id>/dialogue/`?
-
-Happy modding.
+- Custom 

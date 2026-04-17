@@ -5,6 +5,14 @@
 - This is a Godot 4.6 GDScript project. No C#.
 - All code follows the naming conventions below.
 - Always check docs/ before making architectural decisions.
+- Treat Godot warnings as errors when writing GDScript. Avoid relying on implicit typing when values come from `Dictionary.get()`, autoload properties typed as `Object`, JSON data, or other `Variant` sources.
+
+### GDScript Typing Rules
+- Prefer explicit types for locals when a value may come from a `Variant`.
+- After `Dictionary.get()`, store into `Variant` first if needed, type-check it, then cast/narrow to the expected type.
+- When reading autoload fields like `GameState.player` that are stored as generic `Object`, cast them with `as` before calling methods on them.
+- When pulling Controls or Arrays back out of untyped dictionaries, cast them explicitly instead of depending on inference.
+- For helper methods that return structured collections from dynamic data, give the return type explicitly and normalize the contents before returning.
 
 ---
 
@@ -31,7 +39,7 @@ Core pillars:
 
 ---
 
-## Folder Layout (Target — not yet built)
+## Folder Layout (abbreviated — see docs/PROJECT_STRUCTURE.md for full annotated tree)
 
 ```
 res://
@@ -40,7 +48,7 @@ res://
 │   ├── loaders/     # One file per data type (parts_registry.gd, etc.)
 │   └── ai/          # LimboAI states/behaviors + AI provider scripts
 ├── ui/              # All scenes — main.tscn, theme/, screens/, components/
-├── core/            # Base classes: ScriptHook, EntityInstance, PartInstance, constants
+├── core/            # Base classes: ScriptHook, EntityInstance, PartInstance, AssemblySession, constants
 ├── mods/            # ALL content — base game and user mods
 │   ├── base/        # The base game mod (load_order: 0, always required)
 │   │   ├── mod.json
@@ -71,7 +79,7 @@ res://
 | `UIRouter` | `autoloads/ui_router.gd` | Screen navigation stack |
 | `AIManager` | `autoloads/ai_manager.gd` | LLM abstraction over local/remote providers |
 
-**Boot order matters:** ModLoader → DataManager → GameState → SaveManager → TimeKeeper → AIManager → UIRouter
+**Boot order matters:** GameEvents → ModLoader → DataManager → GameState → SaveManager → TimeKeeper → AudioManager → UIRouter → AIManager
 
 ---
 
@@ -83,6 +91,7 @@ res://
 | LimboAI | `addons/limboai/` | GDExtension — HSM for quests, behavior trees | ✅ Ship |
 | Dialogue Manager | `addons/dialogue_manager/` | Branching NPC dialogue (`DialogueManager` autoload) | ✅ Ship |
 | NobodyWho | `addons/nobodywho/` | GDExtension — embedded local LLM inference | ✅ Ship |
+| ImGui | `addons/imgui-godot/` | In-game debug overlay and dev tooling | ❌ DEV ONLY |
 | GUT | `addons/gut/` | Unit testing | ❌ DEV ONLY |
 | ziva_agent | `addons/ziva_agent/` | AI dev assistant | ❌ DEV ONLY — remove before release |
 
@@ -157,10 +166,13 @@ Modders call `AIManager.generate_async(prompt, context)` from script hooks. Alwa
 | GDScript files | `snake_case.gd` | `stat_manager.gd` |
 | Class names | `PascalCase` | `class_name StatManager` |
 | Autoload names | `PascalCase` | `GameEvents` |
+| Autoload script class names | `Omni` + PascalCase | `class_name OmniUIRouter` |
 | Signal names | `snake_case` | `tick_advanced` |
 | Scene files | `snake_case.tscn` | `exchange_screen.tscn` |
 | JSON IDs | `author:mod:name` | `base:iron_sword` |
 | Constants | `UPPER_SNAKE_CASE` | `MAX_SAVE_SLOTS` |
+
+**Important:** autoload singleton names and `class_name` identifiers must not be identical in Godot. Keep the global singleton name ergonomic (`GameEvents`, `UIRouter`, etc.) and prefix the script class with `Omni` to avoid parser errors like `Class "UIRouter" hides an autoload singleton`.
 
 ---
 

@@ -1,0 +1,30 @@
+{
+  "locations": [
+    {
+      "location_id": "base:start",
+      "display_name": "Start",
+      "description": "Bootstrap location for the base project.",
+      "connections": {},
+      "screens": [
+        {
+          "tab_id": "base:start:character_creator",
+          "display_name": "Character Creator",
+          "description": "Customize your starting loadout before you begin.",
+          "backend_class": "AssemblyEditorBackend",
+          "target_entity_id": "player",
+          "title": "Character Creator",
+          "confirm_label": "Begin Adventure"
+        },
+        {
+          "tab_id": "base:start:inventory",
+          "display_name": "Inspect Gear",
+          "description": "Review the parts and equipment in your current loadout.",
+          "backend_class": "AssemblyEditorBackend",
+          "target_entity_id": "player",
+          "title": "Your Gear",
+          "confirm_label": "Done"
+        }
+      ]
+    }
+  ]
+}

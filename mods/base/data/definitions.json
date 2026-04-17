@@ -1,0 +1,28 @@
+{
+  "currencies": ["credits"],
+  "stats": [
+    {
+      "id": "strength",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "combat"
+    },
+    {
+      "id": "health",
+      "kind": "resource",
+      "paired_capacity_id": "health_max",
+      "default_value": 100,
+      "default_capacity_value": 100,
+      "clamp_min": 0,
+      "ui_group": "survival"
+    },
+    {
+      "id": "health_max",
+      "kind": "capacity",
+      "paired_base_id": "health",
+      "default_value": 100,
+      "clamp_min": 0,
+      "ui_group": "survival"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "game": {
+    "starting_player_id": "base:player",
+    "starting_location": "base:start",
+    "ticks_per_day": 24
+  },
+  "ui": {
+    "main_menu": {
+      "title": "Omni-Framework",
+      "subtitle": "A data-driven sandbox waiting for content.",
+      "new_game_label": "New Game",
+      "continue_label": "Continue",
+      "load_label": "Load Slot 1",
+      "quit_label": "Quit"
+    },
+    "strings": {
+      "boot_status": "Omni-Framework ready."
+    }
+  },
+  "ai": {
+    "provider": "disabled"
+  }
+}
