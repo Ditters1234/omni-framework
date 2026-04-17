@@ -20,6 +20,7 @@ This taxonomy exists to keep events:
 - Emit events for meaningful state transitions, not for every internal helper call.
 - Event payloads should be small, typed, and stable.
 - If a consumer must parse free-form strings to use an event, the event is underspecified.
+- Keep one canonical signal catalog in `autoloads/game_events.gd` so declared signals, domains, deprecations, and debug metadata cannot drift apart.
 
 ## Naming Pattern
 
@@ -147,6 +148,11 @@ Do not add a new event when:
 - If an event must change, deprecate it intentionally and document the replacement.
 - Do not reuse an old event name for a new meaning.
 
+Current implementation note:
+
+- `GameEvents` now maintains a central signal catalog plus a bounded in-memory event history for debug surfaces and tests.
+- Legacy signals such as `screen_pushed`, `screen_popped`, `notification_requested`, and `currency_changed` remain available for compatibility but should be treated as deprecated.
+
 ## Debugging Recommendations
 
 The eventual debug overlay should support:
@@ -156,6 +162,10 @@ The eventual debug overlay should support:
 - Time-ordered event history
 - Highlighting errors and warnings
 - Clicking through to the originating system
+
+Current implementation note:
+
+- The built-in dev overlay now reads its event feed from `GameEvents.get_event_history(...)` instead of maintaining a second parallel event log.
 
 ## Suggested Near-Term Cleanup
 

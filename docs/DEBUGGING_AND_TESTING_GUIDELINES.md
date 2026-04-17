@@ -115,6 +115,10 @@ Show:
 - Filter by entity ID / quest ID / task ID
 - Warning/error highlighting
 
+Implementation note:
+
+- Prefer one canonical event history owned by `GameEvents` itself. Debug panels should read that shared history instead of building separate partial logs.
+
 ### UI / Backend
 
 Show:

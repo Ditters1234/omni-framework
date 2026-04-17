@@ -20,6 +20,7 @@ godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gdir=res://tests/unit 
 Current baseline suites cover:
 
 - stat definition normalization
+- GameEvents catalog and dynamic emit guards
 - entity stat initialization and clamping
 - action signal forwarding
 - basic GameState/save flow

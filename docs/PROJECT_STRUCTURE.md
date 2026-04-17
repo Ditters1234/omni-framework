@@ -199,6 +199,12 @@ The global signal bus. All cross-system communication goes here. No system shoul
 
 Signal naming should stay specific and domain-oriented. Prefer names that encode the subject and action (`entity_currency_changed`, `quest_stage_advanced`, `ui_screen_opened`) over ambiguous catch-all signals. A larger signal surface is acceptable if it keeps tooling, filtering, and debugging clear.
 
+Implementation hardening notes:
+
+- `GameEvents` should own the canonical signal catalog metadata used by tests and debug tools.
+- `GameEvents` should retain a bounded event history so runtime inspection does not depend on ad hoc per-screen listeners.
+- Legacy compatibility signals may exist temporarily, but they should be explicitly marked deprecated in the catalog rather than silently lingering.
+
 Key signals (non-exhaustive):
 ```gdscript
 signal tick_advanced(tick: int)

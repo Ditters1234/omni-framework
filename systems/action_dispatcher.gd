@@ -179,9 +179,11 @@ static func _action_unlock_achievement(action: Dictionary) -> void:
 
 static func _action_emit_signal(action: Dictionary) -> void:
 	var signal_name := str(action.get("signal_name", ""))
-	if GameEvents.has_signal(signal_name):
-		var args: Array = action.get("args", [])
-		GameEvents.callv("emit_signal", [signal_name] + args)
+	var args_data: Variant = action.get("args", [])
+	var args: Array = []
+	if args_data is Array:
+		args = args_data
+	GameEvents.emit_dynamic(signal_name, args)
 
 
 static func _resolve_entity(entity_id: String) -> EntityInstance:
