@@ -209,6 +209,7 @@ Fast, isolated tests for:
 - Manifest validation
 - Query filters
 - AI provider config selection
+- Presenter/view-model builders for engine-owned screens and shared route catalogs
 
 ### Integration Tests
 

@@ -31,6 +31,8 @@ Current baseline suites cover:
 - AudioManager bus fallback, config reload hooks, pause/resume signal wiring, and music transition hardening
 - UIRouter stack semantics, failure-path hardening, and debug snapshot coverage
 - engine-owned UI behavior coverage for pause/cancel routing, settings back-save persistence, save-slot delete confirmation, and current-screen debug snapshots
+- gameplay shell presenter view-model coverage for active and inactive session states
+- shared UI route catalog coverage for backend mappings and runtime scene registration
 - mod dependency-aware load ordering
 - mod manifest validation and loader debug snapshot coverage
 - end-to-end boot pipeline contracts (load phases, new game bootstrap, repeated reloads, save/load flow)

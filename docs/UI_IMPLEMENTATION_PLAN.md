@@ -392,9 +392,10 @@ Priority order:
 
 ### Phase 3 — Engine-owned screens (~2 days)
 
-Current status: functionally complete. The engine-owned route set is built, wired through `main_menu` and `ui_cancel`, and covered by smoke tests plus targeted behavior tests for pause/cancel routing, settings persistence on back-navigation, save-slot delete confirmation, and current-screen debug snapshots. The remaining work in this area is polish and future follow-on improvements, not missing Phase 3 route contracts.
+Current status: functionally complete. The engine-owned route set is built, wired through `main_menu` and `ui_cancel`, and covered by smoke tests plus targeted behavior tests for pause/cancel routing, settings persistence on back-navigation, save-slot delete confirmation, current-screen debug snapshots, the extracted `gameplay_shell_presenter`, and the shared runtime route catalog. The remaining work in this area is polish and future follow-on improvements, not missing Phase 3 route contracts.
 
 - Refactor `gameplay_shell_screen.gd` in place to use components from Phase 2. Done.
+- Extract the shell's view-model assembly into a presenter/helper so the screen renders strictly from a backend-style payload. Done.
 - Build `settings_screen`, `save_slot_list_screen`, `pause_menu_screen`, `credits_screen`. Done.
 - Wire them into `main_menu` and into an Escape-key pause handler in `main.gd`. Done.
 
@@ -463,6 +464,7 @@ Every phase produces testable surface. Tests land alongside implementation, not 
 
 - GUT scene runner pushes each screen with canonical params and asserts no `push_error` during first render.
 - Dialogue screen runs a fixture `.dialogue` file start-to-finish without errors.
+- Shared route-catalog tests assert the engine-owned runtime registry still resolves to real scenes and known screen ids.
 
 ### 10.4 Debug surfaces
 
