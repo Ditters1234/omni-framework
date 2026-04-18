@@ -12,6 +12,15 @@ const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_PAUSE_MENU := "pause_menu"
 const SCREEN_CREDITS := "credits"
 
+const MAIN_MENU_SCENE := "res://ui/screens/main_menu/main_menu_screen.tscn"
+const ASSEMBLY_EDITOR_SCENE := "res://ui/screens/backends/assembly_editor_screen.tscn"
+const GAMEPLAY_SHELL_SCENE := "res://ui/screens/gameplay_shell/gameplay_shell_screen.tscn"
+const LOCATION_VIEW_SCENE := "res://ui/screens/location_view/location_view_screen.tscn"
+const SETTINGS_SCENE := "res://ui/screens/settings/settings_screen.tscn"
+const SAVE_SLOT_LIST_SCENE := "res://ui/screens/save_slot_list/save_slot_list_screen.tscn"
+const PAUSE_MENU_SCENE := "res://ui/screens/pause_menu/pause_menu_screen.tscn"
+const CREDITS_SCENE := "res://ui/screens/credits/credits_screen.tscn"
+
 const ENGINE_SCREEN_IDS := [
 	SCREEN_MAIN_MENU,
 	SCREEN_ASSEMBLY_EDITOR,
@@ -32,6 +41,18 @@ const BACKEND_SCREEN_MAP := {
 	"TaskProviderBackend": "task_provider",
 	"CatalogListBackend": "catalog_list",
 	"DialogueBackend": "dialogue",
+}
+
+const RUNTIME_SCREEN_REGISTRY := {
+	SCREEN_MAIN_MENU: MAIN_MENU_SCENE,
+	SCREEN_ASSEMBLY_EDITOR: ASSEMBLY_EDITOR_SCENE,
+	SCREEN_CHARACTER_CREATOR: ASSEMBLY_EDITOR_SCENE,
+	SCREEN_GAMEPLAY_SHELL: GAMEPLAY_SHELL_SCENE,
+	SCREEN_LOCATION_VIEW: LOCATION_VIEW_SCENE,
+	SCREEN_SETTINGS: SETTINGS_SCENE,
+	SCREEN_SAVE_SLOT_LIST: SAVE_SLOT_LIST_SCENE,
+	SCREEN_PAUSE_MENU: PAUSE_MENU_SCENE,
+	SCREEN_CREDITS: CREDITS_SCENE,
 }
 
 
@@ -67,3 +88,7 @@ static func get_known_screen_ids() -> Array[String]:
 		screen_ids.append(screen_id)
 	screen_ids.sort()
 	return screen_ids
+
+
+static func get_runtime_screen_registry() -> Dictionary:
+	return RUNTIME_SCREEN_REGISTRY.duplicate(true)

@@ -135,6 +135,8 @@ Show:
 Implementation note:
 
 - `UIRouter.get_debug_snapshot()` should be the canonical source for route stack, current params, container health, and recent navigation errors.
+- `UIRouter.get_current_screen_debug_snapshot()` should be the canonical source for the active screen's debug payload when that screen exposes one.
+- `dev_debug_overlay.gd` should continue surfacing the registered backend contracts and any recent backend-contract-related validation issues alongside the active screen snapshot.
 
 ### Save / Load
 

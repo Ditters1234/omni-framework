@@ -2,6 +2,7 @@ extends CanvasLayer
 
 class_name OmniDevDebugOverlay
 
+const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const PANEL_WIDTH := 560.0
 const PANEL_HEIGHT := 560.0
 const REFRESH_INTERVAL := 0.25
@@ -191,6 +192,24 @@ func _refresh_text() -> void:
 			lines.append("  router errors:")
 			for error_value in router_errors:
 				lines.append("    - %s" % str(error_value))
+	lines.append("  current params=%s" % _format_variant(router_snapshot.get("current_screen_params", {})))
+	var current_screen_snapshot := UIRouter.get_current_screen_debug_snapshot()
+	if not current_screen_snapshot.is_empty():
+		lines.append("  current screen snapshot:")
+		for snapshot_line in _format_multiline_variant(current_screen_snapshot):
+			lines.append("    %s" % snapshot_line)
+	var backend_classes := BACKEND_CONTRACT_REGISTRY.get_registered_backend_classes()
+	if backend_classes.is_empty():
+		lines.append("  backend contracts=<none>")
+	else:
+		lines.append("  backend contracts=%s" % ", ".join(backend_classes))
+	var backend_contract_issues := _extract_backend_contract_issues(recent_issues_value)
+	if backend_contract_issues.is_empty():
+		lines.append("  backend contract issues: none")
+	else:
+		lines.append("  backend contract issues:")
+		for issue_text in backend_contract_issues:
+			lines.append("    - %s" % issue_text)
 	lines.append("  location=%s day=%d tick=%d" % [GameState.current_location_id, GameState.current_day, GameState.current_tick])
 	var time_snapshot := TimeKeeper.get_debug_snapshot()
 	lines.append("  time_running=%s tick_rate=%.2f tick_in_day=%d/%d" % [
@@ -265,3 +284,37 @@ func _format_event_entry(event_entry: Dictionary) -> String:
 				rendered_args.append(str(arg))
 			args_text = " " + " | ".join(rendered_args)
 	return "%s [%s] %s%s" % [timestamp, domain, signal_name, args_text]
+
+
+func _format_variant(value: Variant) -> String:
+	if value is Dictionary or value is Array:
+		return JSON.stringify(value)
+	return str(value)
+
+
+func _format_multiline_variant(value: Variant) -> Array[String]:
+	var rendered := _format_variant(value)
+	if rendered.is_empty():
+		return ["<empty>"]
+	return rendered.split("\n", false)
+
+
+func _extract_backend_contract_issues(recent_issues_value: Variant) -> Array[String]:
+	var backend_issues: Array[String] = []
+	if not recent_issues_value is Array:
+		return backend_issues
+	var recent_issues: Array = recent_issues_value
+	for issue_value in recent_issues:
+		if not issue_value is Dictionary:
+			continue
+		var issue: Dictionary = issue_value
+		var field_path := str(issue.get("field_path", ""))
+		var message := str(issue.get("message", ""))
+		if (
+			field_path.contains("backend_class")
+			or field_path.contains("action_payload.screen_id")
+			or message.contains("backend_class")
+			or message.contains("routed screen")
+		):
+			backend_issues.append(message)
+	return backend_issues

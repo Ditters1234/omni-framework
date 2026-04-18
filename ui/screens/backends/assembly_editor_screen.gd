@@ -18,6 +18,7 @@ var _slot_rows: Dictionary = {}
 var _backend: RefCounted = ASSEMBLY_EDITOR_BACKEND.new()
 var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
+var _last_view_model: Dictionary = {}
 
 
 func initialize(params: Dictionary = {}) -> void:
@@ -44,6 +45,7 @@ func _refresh_editor_state() -> void:
 	if not _backend_initialized:
 		return
 	var view_model: Dictionary = _backend.build_view_model()
+	_last_view_model = view_model.duplicate(true)
 	_title_label.text = str(view_model.get("title", "Assembly Editor"))
 	_description_label.text = str(view_model.get("description", ""))
 	_summary_label.text = str(view_model.get("summary", ""))
@@ -55,6 +57,15 @@ func _refresh_editor_state() -> void:
 	_refresh_part_detail_panel(_read_dictionary(view_model.get("part_detail", {})))
 	_refresh_stat_sheet(_read_dictionary(view_model.get("stat_delta", {})))
 	_status_label.text = str(view_model.get("status_text", ""))
+
+
+func get_debug_snapshot() -> Dictionary:
+	return {
+		"screen_id": "assembly_editor",
+		"backend_initialized": _backend_initialized,
+		"pending_params": _pending_params.duplicate(true),
+		"last_view_model": _last_view_model.duplicate(true),
+	}
 
 
 func _refresh_editor_rows(row_view_models: Array[Dictionary]) -> void:

@@ -3,23 +3,13 @@ extends Node
 const APP_SETTINGS := preload("res://core/app_settings.gd")
 const DEV_DEBUG_OVERLAY := preload("res://ui/debug/dev_debug_overlay.gd")
 const THEME_APPLIER := preload("res://ui/theme/theme_applier.gd")
+const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const SCREEN_MAIN_MENU := "main_menu"
-const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
-const SCREEN_CHARACTER_CREATOR := "character_creator"
-const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
 const SCREEN_LOCATION_VIEW := "location_view"
 const SCREEN_SETTINGS := "settings"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_PAUSE_MENU := "pause_menu"
 const SCREEN_CREDITS := "credits"
-const MAIN_MENU_SCENE := "res://ui/screens/main_menu/main_menu_screen.tscn"
-const ASSEMBLY_EDITOR_SCENE := "res://ui/screens/backends/assembly_editor_screen.tscn"
-const GAMEPLAY_SHELL_SCENE := "res://ui/screens/gameplay_shell/gameplay_shell_screen.tscn"
-const LOCATION_VIEW_SCENE := "res://ui/screens/location_view/location_view_screen.tscn"
-const SETTINGS_SCENE := "res://ui/screens/settings/settings_screen.tscn"
-const SAVE_SLOT_LIST_SCENE := "res://ui/screens/save_slot_list/save_slot_list_screen.tscn"
-const PAUSE_MENU_SCENE := "res://ui/screens/pause_menu/pause_menu_screen.tscn"
-const CREDITS_SCENE := "res://ui/screens/credits/credits_screen.tscn"
 
 @onready var _screen_layer: CanvasLayer = $ScreenLayer
 @onready var _status_label: Label = $ScreenLayer/StatusLabel
@@ -36,15 +26,13 @@ func _ready() -> void:
 		add_child(debug_overlay)
 
 	UIRouter.initialize(_screen_layer)
-	UIRouter.register_screen(SCREEN_MAIN_MENU, MAIN_MENU_SCENE)
-	UIRouter.register_screen(SCREEN_ASSEMBLY_EDITOR, ASSEMBLY_EDITOR_SCENE)
-	UIRouter.register_screen(SCREEN_CHARACTER_CREATOR, ASSEMBLY_EDITOR_SCENE)
-	UIRouter.register_screen(SCREEN_GAMEPLAY_SHELL, GAMEPLAY_SHELL_SCENE)
-	UIRouter.register_screen(SCREEN_LOCATION_VIEW, LOCATION_VIEW_SCENE)
-	UIRouter.register_screen(SCREEN_SETTINGS, SETTINGS_SCENE)
-	UIRouter.register_screen(SCREEN_SAVE_SLOT_LIST, SAVE_SLOT_LIST_SCENE)
-	UIRouter.register_screen(SCREEN_PAUSE_MENU, PAUSE_MENU_SCENE)
-	UIRouter.register_screen(SCREEN_CREDITS, CREDITS_SCENE)
+	var runtime_screen_registry := UI_ROUTE_CATALOG.get_runtime_screen_registry()
+	for screen_id_value in runtime_screen_registry.keys():
+		var screen_id := str(screen_id_value)
+		var scene_path := str(runtime_screen_registry.get(screen_id_value, ""))
+		if screen_id.is_empty() or scene_path.is_empty():
+			continue
+		UIRouter.register_screen(screen_id, scene_path)
 	ModLoader.load_all_mods()
 	var app_settings := APP_SETTINGS.load_settings()
 	APP_SETTINGS.apply_settings(get_window(), app_settings)

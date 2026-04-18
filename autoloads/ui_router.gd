@@ -179,6 +179,22 @@ func get_debug_snapshot() -> Dictionary:
 	}
 
 
+func get_current_screen_debug_snapshot() -> Dictionary:
+	var screen := _get_top_screen_node()
+	if screen == null:
+		return {}
+	if screen.has_method("get_debug_snapshot"):
+		var snapshot_value: Variant = screen.call("get_debug_snapshot")
+		if snapshot_value is Dictionary:
+			var snapshot: Dictionary = snapshot_value
+			return snapshot.duplicate(true)
+	return {
+		"screen_id": current_screen_id(),
+		"params": current_screen_params(),
+		"node_name": _get_node_name(screen),
+	}
+
+
 # ---------------------------------------------------------------------------
 # Internals
 # ---------------------------------------------------------------------------

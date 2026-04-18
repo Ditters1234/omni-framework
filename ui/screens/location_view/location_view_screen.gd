@@ -27,6 +27,7 @@ const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
 
 var _location_id: String = ""
 var _location_template: Dictionary = {}
+var _last_view_model: Dictionary = {}
 
 
 func initialize(params: Dictionary = {}) -> void:
@@ -58,16 +59,20 @@ func _load_location() -> void:
 
 
 func _render_location() -> void:
-	_title_label.text = str(_location_template.get("display_name", _location_id))
-	_description_label.text = str(_location_template.get("description", ""))
+	var title_text := str(_location_template.get("display_name", _location_id))
+	var description_text := str(_location_template.get("description", ""))
+	_title_label.text = title_text
+	_description_label.text = description_text
 
 	_clear_container(_screens_container)
 	_clear_container(_connections_container)
 
+	var screen_entries: Array[Dictionary] = []
 	var screens: Variant = _location_template.get("screens", [])
 	if screens is Array and not screens.is_empty():
 		for screen_entry in screens:
 			if screen_entry is Dictionary:
+				screen_entries.append((screen_entry as Dictionary).duplicate(true))
 				_add_screen_button(screen_entry)
 	else:
 		var empty_label := Label.new()
@@ -75,10 +80,20 @@ func _render_location() -> void:
 		empty_label.modulate = _get_semantic_color("muted_text", FALLBACK_MUTED_TEXT_COLOR)
 		_screens_container.add_child(empty_label)
 
-	_render_connections()
+	var connection_entries := _render_connections()
 	_refresh_nav_state()
 	_status_label.text = ""
 	_status_label.modulate = _get_semantic_color("muted_text", FALLBACK_MUTED_TEXT_COLOR)
+	_last_view_model = {
+		"screen_id": "location_view",
+		"location_id": _location_id,
+		"title": title_text,
+		"description": description_text,
+		"screens": screen_entries,
+		"connections": connection_entries,
+		"status_text": "",
+		"back_enabled": not _back_button.disabled,
+	}
 
 
 func _add_screen_button(screen_entry: Dictionary) -> void:
@@ -109,10 +124,11 @@ func _add_screen_button(screen_entry: Dictionary) -> void:
 	_screens_container.add_child(btn)
 
 
-func _render_connections() -> void:
+func _render_connections() -> Array[Dictionary]:
+	var rendered_connections: Array[Dictionary] = []
 	var connections: Dictionary = LocationGraph.get_connections(_location_id)
 	if connections.is_empty():
-		return
+		return rendered_connections
 
 	var label := Label.new()
 	label.text = "Travel:"
@@ -122,10 +138,16 @@ func _render_connections() -> void:
 		var dest_id: String = str(connections[direction])
 		var dest_template: Dictionary = LocationGraph.get_location(dest_id)
 		var dest_name: String = str(dest_template.get("display_name", dest_id))
+		rendered_connections.append({
+			"direction": str(direction),
+			"destination_id": dest_id,
+			"destination_name": dest_name,
+		})
 		var btn := Button.new()
 		btn.text = "%s -> %s" % [str(direction).capitalize(), dest_name]
 		btn.pressed.connect(_on_travel_button_pressed.bind(dest_id))
 		_connections_container.add_child(btn)
+	return rendered_connections
 
 
 # ---------------------------------------------------------------------------
@@ -145,6 +167,16 @@ func _show_error(message: String) -> void:
 	_refresh_nav_state()
 	_clear_container(_screens_container)
 	_clear_container(_connections_container)
+	_last_view_model = {
+		"screen_id": "location_view",
+		"location_id": _location_id,
+		"title": "Error",
+		"description": message,
+		"screens": [],
+		"connections": [],
+		"status_text": message,
+		"back_enabled": not _back_button.disabled,
+	}
 
 
 # ---------------------------------------------------------------------------
@@ -183,3 +215,7 @@ func _get_semantic_color(color_name: String, fallback: Color) -> Color:
 
 func _refresh_nav_state() -> void:
 	_back_button.disabled = UIRouter.stack_depth() <= 1
+
+
+func get_debug_snapshot() -> Dictionary:
+	return _last_view_model.duplicate(true)

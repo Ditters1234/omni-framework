@@ -16,6 +16,8 @@ const SCREEN_CREDITS := "credits"
 @onready var _quit_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/QuitButton
 @onready var _status_label: Label = $MarginContainer/PanelContainer/VBoxContainer/StatusLabel
 
+var _last_view_model: Dictionary = {}
+
 
 func initialize(_params: Dictionary = {}) -> void:
 	_apply_menu_config()
@@ -63,6 +65,14 @@ func _refresh_buttons() -> void:
 			_status_label.text = "Continue from %s." % slot_label
 	else:
 		_status_label.text = "No saves or autosaves found."
+	_last_view_model = {
+		"screen_id": "main_menu",
+		"title": _title_label.text,
+		"subtitle": _subtitle_label.text,
+		"has_save": has_save,
+		"preferred_slot": preferred_slot,
+		"status_text": _status_label.text,
+	}
 
 
 func _transition_to_gameplay() -> void:
@@ -123,3 +133,7 @@ func _attempt_load_slot(slot: int) -> void:
 
 func _on_quit_button_pressed() -> void:
 	get_tree().quit()
+
+
+func get_debug_snapshot() -> Dictionary:
+	return _last_view_model.duplicate(true)

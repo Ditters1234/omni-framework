@@ -50,7 +50,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 ### Implemented
 
 - `UIRouter` (autoload) — screen stack, registration, theme propagation.
-- `ui/main.tscn` / `ui/main.gd` — boots mods, applies theme, registers the current engine-owned and backend-driven screen ids.
+- `ui/main.tscn` / `ui/main.gd` — boots mods, applies theme, and registers the current runtime screen ids from `OmniUIRouteCatalog`.
 - `omni_theme.tres` + `theme_applier.gd` — centralized theme with `OmniSemantic` color tokens driven by `config.json ui.theme`.
 - Screens: `main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, `gameplay_shell`, `location_view`, `assembly_editor` (also aliased as `character_creator`).
 - Components: `currency_summary_panel`, `part_detail_panel`, `stat_delta_sheet`, `assembly_slot_row`, `currency_display`, `stat_bar`, `stat_sheet`, `entity_portrait`, `part_card`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, `faction_badge`.
@@ -58,7 +58,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - `OmniAssemblyEditorBackend` (`ui/screens/backends/assembly_editor_backend.gd`) as the extracted runtime/backend layer behind the assembly editor screen.
 - `AssemblySession` in `core/` as the draft layer `AssemblyEditorBackend` operates on.
 - `BackendContractRegistry` (`systems/backend_contract_registry.gd`) for load-time `backend_class` validation during mod loading.
-- `OmniUIRouteCatalog` (`ui/ui_route_catalog.gd`) — the shared route catalog for `backend_class → screen_id` mapping and known routed screen ids used by both UI code and content validation.
+- `OmniUIRouteCatalog` (`ui/ui_route_catalog.gd`) — the shared route catalog for `backend_class → screen_id` mapping, the runtime `screen_id → scene_path` registry used by `ui/main.gd`, and the known routed screen ids used by content validation.
 
 ### Planned but not implemented
 
@@ -392,7 +392,7 @@ Priority order:
 
 ### Phase 3 — Engine-owned screens (~2 days)
 
-Current status: functionally complete. The engine-owned route set is built, wired through `main_menu` and `ui_cancel`, and covered by smoke tests. The remaining work in this area is polish and future follow-on improvements, not missing Phase 3 route contracts.
+Current status: functionally complete. The engine-owned route set is built, wired through `main_menu` and `ui_cancel`, and covered by smoke tests plus targeted behavior tests for pause/cancel routing, settings persistence on back-navigation, save-slot delete confirmation, and current-screen debug snapshots. The remaining work in this area is polish and future follow-on improvements, not missing Phase 3 route contracts.
 
 - Refactor `gameplay_shell_screen.gd` in place to use components from Phase 2. Done.
 - Build `settings_screen`, `save_slot_list_screen`, `pause_menu_screen`, `credits_screen`. Done.
@@ -466,7 +466,7 @@ Every phase produces testable surface. Tests land alongside implementation, not 
 
 ### 10.4 Debug surfaces
 
-Per `PROJECT_STRUCTURE.md §Debug And Test Tooling`, every new system gets a debug inspection surface. Add a "UI State" tab to `dev_debug_overlay.gd` showing:
+Per `PROJECT_STRUCTURE.md §Debug And Test Tooling`, every new system gets a debug inspection surface. The current overlay now shows the routed screen stack, current params, current-screen debug snapshots for the active screen when available, and the registered backend contract set. Continue growing that "UI State" surface toward:
 
 - Current router stack.
 - Each screen's most recently built view model (via a weakref — don't retain).

@@ -13,6 +13,8 @@ const SHIPPED_DEPENDENCIES := [
 @onready var _credits_label: Label = $MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/ContentMargin/CreditsLabel
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton
 
+var _last_view_model: Dictionary = {}
+
 
 func initialize(_params: Dictionary = {}) -> void:
 	_refresh()
@@ -29,8 +31,15 @@ func on_route_revealed() -> void:
 func _refresh() -> void:
 	_title_label.text = "Credits"
 	_subtitle_label.text = "Engine attribution, shipped dependencies, and loaded mods."
-	_credits_label.text = _build_credits_text()
+	var credits_text := _build_credits_text()
+	_credits_label.text = credits_text
 	_back_button.text = "Back"
+	_last_view_model = {
+		"screen_id": "credits",
+		"title": _title_label.text,
+		"subtitle": _subtitle_label.text,
+		"credits_text": credits_text,
+	}
 
 
 func _build_credits_text() -> String:
@@ -62,3 +71,7 @@ func _on_back_button_pressed() -> void:
 		UIRouter.pop()
 		return
 	UIRouter.replace_all(SCREEN_MAIN_MENU)
+
+
+func get_debug_snapshot() -> Dictionary:
+	return _last_view_model.duplicate(true)

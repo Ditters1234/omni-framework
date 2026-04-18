@@ -14,6 +14,7 @@ const MODE_SAVE := "save"
 var _mode: String = MODE_LOAD
 var _close_on_save: bool = true
 var _pending_delete_slot: int = -1
+var _last_view_model: Dictionary = {}
 
 
 func initialize(params: Dictionary = {}) -> void:
@@ -43,8 +44,15 @@ func _refresh() -> void:
 		_slots_container.remove_child(child)
 		child.queue_free()
 
+	var slot_snapshots: Array[Dictionary] = []
 	for slot in SaveManager.get_visible_slots():
 		var slot_info := SaveManager.get_slot_info(slot)
+		slot_snapshots.append({
+			"slot": slot,
+			"occupied": not slot_info.is_empty(),
+			"slot_info": slot_info.duplicate(true),
+			"delete_pending": _pending_delete_slot == slot,
+		})
 		var slot_entry := _build_slot_entry(slot, slot_info)
 		_slots_container.add_child(slot_entry)
 
@@ -57,6 +65,14 @@ func _refresh() -> void:
 		_status_label.text = "Saving will overwrite any existing slot you choose."
 	else:
 		_status_label.text = "Select a slot."
+	_last_view_model = {
+		"screen_id": "save_slot_list",
+		"mode": _mode,
+		"close_on_save": _close_on_save,
+		"pending_delete_slot": _pending_delete_slot,
+		"slots": slot_snapshots,
+		"status_text": _status_label.text,
+	}
 
 
 func _build_slot_entry(slot: int, slot_info: Dictionary) -> Control:
@@ -223,3 +239,7 @@ func _on_back_button_pressed() -> void:
 		UIRouter.pop()
 		return
 	UIRouter.replace_all(SCREEN_MAIN_MENU)
+
+
+func get_debug_snapshot() -> Dictionary:
+	return _last_view_model.duplicate(true)

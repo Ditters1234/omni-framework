@@ -31,6 +31,7 @@ const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 var _auto_open_location_view: bool = false
 var _opened_initial_location_view: bool = false
 var _status_message: String = "Ready."
+var _last_view_model: Dictionary = {}
 
 
 func initialize(params: Dictionary = {}) -> void:
@@ -62,6 +63,13 @@ func _refresh() -> void:
 	_title_label.text = "Gameplay Shell"
 	_subtitle_label.text = "Engine-owned hub for exploration, saves, and session-level actions."
 	if GameState.player == null:
+		_last_view_model = {
+			"screen_id": "gameplay_shell",
+			"has_session": false,
+			"title": "Gameplay Shell",
+			"subtitle": "Engine-owned hub for exploration, saves, and session-level actions.",
+			"status_text": "The gameplay shell becomes available once a runtime session exists.",
+		}
 		_location_title_label.text = "No Active Session"
 		_location_description_label.text = "Start or load a game to enter the shell."
 		_location_meta_label.text = ""
@@ -85,6 +93,12 @@ func _refresh() -> void:
 
 	var player := GameState.player as EntityInstance
 	if player == null:
+		_last_view_model = {
+			"screen_id": "gameplay_shell",
+			"has_session": false,
+			"title": "Gameplay Shell",
+			"status_text": "The gameplay shell could not resolve the active player entity.",
+		}
 		_status_label.text = "The gameplay shell could not resolve the active player entity."
 		_set_buttons_enabled(false)
 		return
@@ -93,18 +107,55 @@ func _refresh() -> void:
 	var location_template := DataManager.get_location(GameState.current_location_id)
 	var location_name := str(location_template.get("display_name", GameState.current_location_id))
 	var location_description := str(location_template.get("description", ""))
+	var player_portrait_view_model := _build_player_portrait_view_model(player, player_template, player_name)
+	var currency_view_models := _build_currency_view_models(player)
+	var stat_sheet_view_model := _build_stat_sheet_view_model(player)
+	var inventory_summary := _build_inventory_summary(player)
+	var time_text := "Time: %s" % TimeKeeper.get_time_string()
+	var autosave_summary := _build_autosave_summary()
+	var equipped_part_view_models := _build_equipped_part_view_models(player, _get_part_default_sprite_paths())
+	_last_view_model = {
+		"screen_id": "gameplay_shell",
+		"has_session": true,
+		"title": "Gameplay Shell",
+		"subtitle": "Engine-owned hub for exploration, saves, and session-level actions.",
+		"location": {
+			"id": GameState.current_location_id,
+			"display_name": location_name,
+			"description": location_description,
+			"meta_text": _build_location_meta(player),
+		},
+		"player": {
+			"entity_id": player.entity_id,
+			"display_name": player_name,
+			"portrait": player_portrait_view_model,
+			"currencies": currency_view_models,
+			"stat_sheet": stat_sheet_view_model,
+			"inventory_summary": inventory_summary,
+			"equipped_parts": equipped_part_view_models,
+		},
+		"time_text": time_text,
+		"autosave_summary": autosave_summary,
+		"status_text": _status_message,
+		"auto_open_location_view": _auto_open_location_view,
+		"opened_initial_location_view": _opened_initial_location_view,
+	}
 	_location_title_label.text = location_name
 	_location_description_label.text = location_description if not location_description.is_empty() else "No location description is available yet."
 	_location_meta_label.text = _build_location_meta(player)
-	_player_portrait.call("render", _build_player_portrait_view_model(player, player_template, player_name))
-	_render_currency_displays(_build_currency_view_models(player))
-	_player_stat_sheet.call("render", _build_stat_sheet_view_model(player))
-	_inventory_label.text = _build_inventory_summary(player)
-	_time_label.text = "Time: %s" % TimeKeeper.get_time_string()
-	_autosave_label.text = _build_autosave_summary()
+	_player_portrait.call("render", player_portrait_view_model)
+	_render_currency_displays(currency_view_models)
+	_player_stat_sheet.call("render", stat_sheet_view_model)
+	_inventory_label.text = inventory_summary
+	_time_label.text = time_text
+	_autosave_label.text = autosave_summary
 	_render_equipped_cards(player)
 	_status_label.text = _status_message
 	_set_buttons_enabled(true)
+
+
+func get_debug_snapshot() -> Dictionary:
+	return _last_view_model.duplicate(true)
 
 func _build_player_portrait_view_model(player: EntityInstance, player_template: Dictionary, player_name: String) -> Dictionary:
 	return {

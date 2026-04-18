@@ -13,6 +13,8 @@ const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 @onready var _quit_button: Button = $Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/QuitButton
 @onready var _status_label: Label = $Overlay/MarginContainer/PanelContainer/VBoxContainer/StatusLabel
 
+var _last_view_model: Dictionary = {}
+
 
 func initialize(_params: Dictionary = {}) -> void:
 	_refresh()
@@ -36,12 +38,24 @@ func _refresh() -> void:
 	if GameState.player == null:
 		_context_label.text = "No active session."
 		_status_label.text = "The game is paused."
+		_last_view_model = {
+			"screen_id": "pause_menu",
+			"has_session": false,
+			"context_text": _context_label.text,
+			"status_text": _status_label.text,
+		}
 		return
 	_context_label.text = "Location: %s\n%s" % [
 		GameState.current_location_id,
 		TimeKeeper.get_time_string(),
 	]
 	_status_label.text = "Gameplay timers and music stay paused until you resume."
+	_last_view_model = {
+		"screen_id": "pause_menu",
+		"has_session": true,
+		"context_text": _context_label.text,
+		"status_text": _status_label.text,
+	}
 
 
 func _on_resume_button_pressed() -> void:
@@ -65,3 +79,7 @@ func _on_main_menu_button_pressed() -> void:
 
 func _on_quit_button_pressed() -> void:
 	get_tree().quit()
+
+
+func get_debug_snapshot() -> Dictionary:
+	return _last_view_model.duplicate(true)

@@ -67,6 +67,7 @@ const RESOLUTION_PRESETS := [
 var _settings: Dictionary = {}
 var _is_initializing: bool = false
 var _is_dirty: bool = false
+var _last_debug_snapshot: Dictionary = {}
 
 
 func initialize(_params: Dictionary = {}) -> void:
@@ -107,6 +108,7 @@ func _load_settings_from_disk() -> void:
 	_update_dirty_state()
 	_update_ai_info()
 	_status_label.text = "Settings loaded from user://settings.cfg."
+	_capture_debug_snapshot()
 
 
 func _apply_settings_to_controls() -> void:
@@ -202,6 +204,7 @@ func _preview_current_settings() -> void:
 	_is_dirty = true
 	_update_dirty_state()
 	_status_label.text = "Previewing changes. Save to persist them."
+	_capture_debug_snapshot()
 
 
 func _persist_settings() -> bool:
@@ -216,6 +219,7 @@ func _persist_settings() -> bool:
 	_update_dirty_state()
 	_update_ai_info()
 	_status_label.text = "Settings saved."
+	_capture_debug_snapshot()
 	return true
 
 
@@ -237,6 +241,7 @@ func _update_ai_info() -> void:
 		AI_PROVIDER_ORDER,
 		APP_SETTINGS.AI_PROVIDER_DISABLED
 	))
+	_capture_debug_snapshot()
 
 
 func _update_ai_controls_state() -> void:
@@ -410,11 +415,14 @@ func _on_connect_ai_button_pressed() -> void:
 	var last_error := str(snapshot.get("last_error", ""))
 	if available:
 		_status_label.text = "AI connection updated from engine settings."
+		_capture_debug_snapshot()
 		return
 	if last_error.is_empty():
 		_status_label.text = "AI connection is configured but unavailable."
+		_capture_debug_snapshot()
 		return
 	_status_label.text = "AI connection failed: %s" % last_error
+	_capture_debug_snapshot()
 
 
 func _on_save_button_pressed() -> void:
@@ -428,3 +436,23 @@ func _on_back_button_pressed() -> void:
 		UIRouter.pop()
 		return
 	UIRouter.replace_all(SCREEN_MAIN_MENU)
+
+
+func get_debug_snapshot() -> Dictionary:
+	return _last_debug_snapshot.duplicate(true)
+
+
+func _capture_debug_snapshot() -> void:
+	var current_settings := _collect_settings_from_controls() if is_node_ready() else _settings
+	var ai_snapshot := AIManager.get_debug_snapshot()
+	_last_debug_snapshot = {
+		"screen_id": "settings",
+		"is_dirty": _is_dirty,
+		"status_text": _status_label.text if is_node_ready() else "",
+		"settings": current_settings.duplicate(true),
+		"ai": {
+			"provider_name": str(ai_snapshot.get("provider_name", AIManager.PROVIDER_DISABLED)),
+			"available": bool(ai_snapshot.get("available", false)),
+			"last_error": str(ai_snapshot.get("last_error", "")),
+		},
+	}
