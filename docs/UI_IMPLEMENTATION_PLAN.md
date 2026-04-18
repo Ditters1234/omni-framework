@@ -48,18 +48,21 @@ Recap of what exists today, so later sections can reference specific facts rathe
 ### Implemented
 
 - `UIRouter` (autoload) — screen stack, registration, theme propagation.
-- `ui/main.tscn` / `ui/main.gd` — boots mods, applies theme, registers five screen ids.
+- `ui/main.tscn` / `ui/main.gd` — boots mods, applies theme, registers the current engine-owned and backend-driven screen ids.
 - `omni_theme.tres` + `theme_applier.gd` — centralized theme with `OmniSemantic` color tokens driven by `config.json ui.theme`.
-- Screens: `main_menu`, `gameplay_shell`, `location_view`, `assembly_editor` (also aliased as `character_creator`).
-- Components: `currency_summary_panel`, `part_detail_panel`, `stat_delta_sheet`, `currency_display`, `stat_bar`, `stat_sheet`, `entity_portrait`, `part_card`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, `faction_badge`.
+- Screens: `main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, `gameplay_shell`, `location_view`, `assembly_editor` (also aliased as `character_creator`).
+- Components: `currency_summary_panel`, `part_detail_panel`, `stat_delta_sheet`, `assembly_slot_row`, `currency_display`, `stat_bar`, `stat_sheet`, `entity_portrait`, `part_card`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, `faction_badge`.
+- `OmniBackendBase` (`ui/screens/backends/backend_base.gd`) as the shared backend surface for moddable UI backends.
+- `OmniAssemblyEditorBackend` (`ui/screens/backends/assembly_editor_backend.gd`) as the extracted runtime/backend layer behind the assembly editor screen.
 - `AssemblySession` in `core/` as the draft layer `AssemblyEditorBackend` operates on.
+- `BackendContractRegistry` (`systems/backend_contract_registry.gd`) for load-time `backend_class` validation during mod loading.
 - `LocationViewScreen.BACKEND_SCREEN_MAP` — the central `backend_class → screen_id` dispatch table.
 
 ### Planned but not implemented
 
+Note: `BackendContractRegistry` and the `assembly_editor_screen.gd` / `assembly_editor_backend.gd` split are already implemented; the remaining planned work in this section is the unbuilt backend screen set below.
+
 - Backend screens: `exchange`, `list_view`, `challenge`, `task_provider`, `catalog_list`, `dialogue`, `world_map`.
-- `BackendContractRegistry` for load-time `backend_class` validation.
-- Any Backend/Screen separation — `assembly_editor_screen.gd` is currently both roles in one file.
 
 ---
 
@@ -134,7 +137,7 @@ These do not use `backend_class` because they do not interact with mod data. The
 | `save_slot_list` | Autosave + manual save/load/delete with playtime/day/location preview | Uses `SaveManager.get_slot_info(slot)` for engine autosave plus manual slots; destructive actions should require an in-screen confirmation step |
 | `pause_menu` | In-game pause overlay (Resume / Settings / Save / Main Menu) | Listens to an `Escape` action binding; emits `game_paused` / `game_resumed` |
 | `credits` | Attribution + mod list | Pulls from `ModLoader.loaded_mods` so loaded mods show up automatically |
-| `gameplay_shell` | Persistent gameplay hub for time controls, autosave, loadout, and exploration routing | Implemented as the current post-load/post-new-game shell; still a future consumer of the generic component library |
+| `gameplay_shell` | Persistent gameplay hub for time controls, autosave, loadout, and exploration routing | Implemented as the current post-load/post-new-game shell; now consumes shared components for profile, currencies, stats, and loadout snapshots |
 
 Rationale for keeping these out of the mod pipeline: they are about the application, not the game. Modders should not be able to replace the save-slot browser or settings menu without invasive script hooks. Aesthetics (theme, strings) still flow through config, but the structure is fixed.
 
@@ -173,9 +176,9 @@ Each component gets a docstring at the top of its `.gd` file declaring its view 
 
 ### 5.1 Components already implemented
 
-`currency_summary_panel`, `part_detail_panel`, and `stat_delta_sheet` stay as AssemblyEditor-specific widgets. They consume more specialized view models than the generic components above. Keep them; do not force them into the generic library.
+`currency_summary_panel`, `part_detail_panel`, and `stat_delta_sheet` stay as AssemblyEditor-specific widgets. They consume more specialized view models than the generic components above. `assembly_slot_row` is the reusable row-level component that keeps the editor's slot list inside the same render contract. Keep them; do not force them into the generic library.
 
-The generic library itself is now fully landed for the current plan: `currency_display`, `stat_bar`, `stat_sheet`, `part_card`, `entity_portrait`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, and `faction_badge` all exist as reusable scenes/scripts with `render(view_model)` contracts. `gameplay_shell` consumes the shared foundation widgets already, `entity_portrait` now composes `faction_badge`, and `notification_popup` is mounted globally under `ScreenLayer`.
+The generic library itself is now fully landed for the current plan: `currency_display`, `stat_bar`, `stat_sheet`, `part_card`, `entity_portrait`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, and `faction_badge` all exist as reusable scenes/scripts with `render(view_model)` contracts. `gameplay_shell` now consumes the shared foundation widgets for profile, currencies, stats, and equipped-part snapshots, `entity_portrait` composes `faction_badge`, and `notification_popup` is mounted globally under `ScreenLayer`.
 
 ---
 
@@ -335,7 +338,7 @@ The refactor of `assembly_editor_screen.gd` is an in-place edit per the AGENTS.m
 
 ### 8.2 `BackendContractRegistry`
 
-New file: `systems/backend_contract_registry.gd`. Called by `LocationGraph`, `EntityRegistry`, `TaskRegistry` during Phase 1 additions. Given a dictionary containing a `backend_class` field, returns a list of missing required fields. Loaders emit `mod_load_error` on `GameEvents` for each.
+New file: `systems/backend_contract_registry.gd`. The registry is populated by built-in backends at the start of `ModLoader.load_all_mods()`, then consulted during `DataManager.validate_loaded_content()`. Given a dictionary containing a `backend_class` field, it returns precise required-field and type-validation issues for screens and interactions.
 
 Contract entries are registered at engine boot by each backend script in a single `static func register_contract()` method. That keeps the contract next to the backend that enforces it.
 
@@ -348,7 +351,7 @@ static func register_contract() -> void:
     })
 ```
 
-Boot order: contracts register after autoloads are ready but before `ModLoader.load_all_mods()`. A one-line call in `ui/main.gd._ready()` drives it.
+Boot order: contracts register inside the content-loading pipeline before validation runs. That keeps headless tests, non-UI boot flows, and the main scene on the same path instead of making registration a `ui/main.gd` concern.
 
 ### 8.3 Typed view models (optional)
 
@@ -361,6 +364,8 @@ A `ViewModel` base resource with `to_dict()` / `from_dict()` would let tests sna
 
 ### Phase 1 — Pattern establishment (~1–2 days)
 
+Current status: complete. `OmniBackendBase`, `OmniAssemblyEditorBackend`, `BackendContractRegistry`, and load-time `AssemblyEditorBackend` contract validation are all in place, and `assembly_editor_screen.gd` now acts as a screen layer over the extracted backend.
+
 - Create `ui/screens/backends/backend_base.gd` with `OmniBackendBase`.
 - In-place refactor `assembly_editor_screen.gd` to split into `assembly_editor_backend.gd` + the screen script. No behavior changes. Tests must still pass.
 - Create `systems/backend_contract_registry.gd`.
@@ -371,6 +376,8 @@ Deliverable: one backend running the target pattern; the template for every subs
 ### Phase 2 — Component library (~2–3 days)
 
 Build in the order listed in §5. Each component is a `.tscn` + `.gd` + view model docstring.
+
+Current status: complete for the component set scoped by this plan. The shared library in §5 is implemented and already consumed by `gameplay_shell`, global notifications, and the refactored assembly/editor surfaces where appropriate.
 
 Priority order:
 1. `currency_display` (unblocks shell refactor)
@@ -383,9 +390,11 @@ Priority order:
 
 ### Phase 3 — Engine-owned screens (~2 days)
 
-- Refactor `gameplay_shell_screen.gd` in place to use components from Phase 2.
-- Build `settings_screen`, `save_slot_list_screen`, `pause_menu_screen`, `credits_screen`.
-- Wire them into `main_menu` and into an Escape-key pause handler in `main.gd`.
+Current status: functionally complete. The engine-owned route set is built, wired through `main_menu` and `ui_cancel`, and covered by smoke tests. The remaining work in this area is polish and future follow-on improvements, not missing Phase 3 route contracts.
+
+- Refactor `gameplay_shell_screen.gd` in place to use components from Phase 2. Done.
+- Build `settings_screen`, `save_slot_list_screen`, `pause_menu_screen`, `credits_screen`. Done.
+- Wire them into `main_menu` and into an Escape-key pause handler in `main.gd`. Done.
 
 Deliverable: full boot → menu → settings → save-slot → game shell loop using real components.
 

@@ -6,6 +6,7 @@ extends Node
 
 class_name OmniDataManager
 
+const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const LOAD_PHASE_IDLE := "idle"
 const LOAD_PHASE_ADDITIONS := "additions"
 const LOAD_PHASE_PATCHES := "patches"
@@ -378,6 +379,7 @@ func validate_loaded_content() -> Array[Dictionary]:
 	_validate_config_references()
 	_validate_entity_references()
 	_validate_location_references()
+	_validate_backend_contracts()
 	return get_load_issues(_load_issues.size() - issue_start)
 
 
@@ -626,6 +628,70 @@ func _validate_location_references() -> void:
 					_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' connection '%s' references unknown location '%s'." % [location_id, str(direction_value), target_location_id])
 		elif location.has("connections"):
 			_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' field 'connections' must be an object." % location_id)
+
+
+func _validate_backend_contracts() -> void:
+	for entity_value in entities.values():
+		if not entity_value is Dictionary:
+			continue
+		var entity: Dictionary = entity_value
+		var entity_id := str(entity.get("entity_id", ""))
+		var interactions_value: Variant = entity.get("interactions", [])
+		if interactions_value is Array:
+			var interactions: Array = interactions_value
+			for index in range(interactions.size()):
+				var interaction_value: Variant = interactions[index]
+				if not interaction_value is Dictionary:
+					_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' interactions[%d] must be an object." % [entity_id, index])
+					continue
+				var interaction: Dictionary = interaction_value
+				_record_backend_contract_issues(
+					entity_id,
+					OmniConstants.DATA_ENTITIES,
+					interactions[index],
+					"interactions[%d]" % index
+				)
+		elif entity.has("interactions"):
+			_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' field 'interactions' must be an array." % entity_id)
+
+	for location_value in locations.values():
+		if not location_value is Dictionary:
+			continue
+		var location: Dictionary = location_value
+		var location_id := str(location.get("location_id", ""))
+		var screens_value: Variant = location.get("screens", [])
+		if screens_value is Array:
+			var screens: Array = screens_value
+			for index in range(screens.size()):
+				var screen_value: Variant = screens[index]
+				if not screen_value is Dictionary:
+					_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' screens[%d] must be an object." % [location_id, index])
+					continue
+				_record_backend_contract_issues(
+					location_id,
+					OmniConstants.DATA_LOCATIONS,
+					screen_value,
+					"screens[%d]" % index
+				)
+		elif location.has("screens"):
+			_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' field 'screens' must be an array." % location_id)
+
+
+func _record_backend_contract_issues(entry_id: String, file_path: String, payload_value: Variant, field_path: String) -> void:
+	if not payload_value is Dictionary:
+		return
+	var payload: Dictionary = payload_value
+	if not payload.has("backend_class"):
+		return
+	var backend_class := str(payload.get("backend_class", ""))
+	var issues := BACKEND_CONTRACT_REGISTRY.validate_payload(backend_class, payload, field_path)
+	for issue_value in issues:
+		if not issue_value is Dictionary:
+			continue
+		var issue: Dictionary = issue_value
+		var issue_field_path := str(issue.get("field_path", field_path))
+		var message := str(issue.get("message", "Invalid backend contract payload."))
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s: %s" % [issue_field_path, message])
 
 
 func _begin_load_phase(phase: String) -> void:

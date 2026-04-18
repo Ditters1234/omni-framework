@@ -28,6 +28,10 @@ const SCREEN_CASES := [
 		"scene_path": "res://ui/screens/gameplay_shell/gameplay_shell_screen.tscn",
 		"params": {},
 	},
+	{
+		"scene_path": "res://ui/screens/location_view/location_view_screen.tscn",
+		"params": {},
+	},
 ]
 
 var _spawned_screens: Array[Control] = []

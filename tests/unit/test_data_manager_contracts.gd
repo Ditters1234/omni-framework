@@ -1,11 +1,15 @@
 extends GutTest
 
+const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
+const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
 
 const TEMP_ROOT := "user://data_manager_contracts"
 
 
 func before_each() -> void:
 	DataManager.clear_all()
+	BACKEND_CONTRACT_REGISTRY.clear()
+	ASSEMBLY_EDITOR_BACKEND.register_contract()
 
 
 func test_register_additions_rejects_wrong_section_type_without_mutating_registry() -> void:
@@ -111,6 +115,28 @@ func test_query_locations_filters_and_returns_copies() -> void:
 	assert_eq(str(DataManager.locations["base:market"].get("location_id", "")), "base:market")
 
 
+func test_validate_loaded_content_reports_unknown_backend_classes_and_contract_type_issues() -> void:
+	DataManager.locations["base:market"] = {
+		"location_id": "base:market",
+		"connections": {},
+		"screens": [
+			{
+				"backend_class": "AssemblyEditorBackend",
+				"target_entity_id": ["player"],
+			},
+			{
+				"backend_class": "UnknownBackend",
+			},
+		],
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "screens[0].target_entity_id"))
+	assert_true(_messages_contain(issue_messages, "Unknown backend_class 'UnknownBackend'"))
+
+
 func test_debug_snapshot_reports_issue_counts_and_file_activity() -> void:
 	var data_path := _write_data_file("snapshot_bad_json", OmniConstants.DATA_PARTS, "{bad json")
 
@@ -146,3 +172,10 @@ func _issue_messages(issues: Array[Dictionary]) -> Array[String]:
 	for issue in issues:
 		messages.append(str(issue.get("message", "")))
 	return messages
+
+
+func _messages_contain(messages: Array[String], expected_fragment: String) -> bool:
+	for message in messages:
+		if message.contains(expected_fragment):
+			return true
+	return false

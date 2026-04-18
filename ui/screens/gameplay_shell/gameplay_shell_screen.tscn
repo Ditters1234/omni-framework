@@ -250,10 +250,16 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Loadout Snapshot"
 
-[node name="EquippedLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer"]
+[node name="EquipmentScroll" type="ScrollContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-autowrap_mode = 3
-text = "Equipped"
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="EquippedCards" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer/EquipmentScroll"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2

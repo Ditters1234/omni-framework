@@ -17,7 +17,7 @@ The engine ships with:
 
 ### Current Implementation Snapshot
 
-As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, but the full target folder tree in this document is not implemented end-to-end yet. In particular, UI scenes, content mods, test coverage, schema tooling, and debug tooling are documented here as required architecture rather than fully landed code.
+As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-3 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, and the backend/screen split for `AssemblyEditorBackend`. The full target tree is still not implemented end-to-end, though, and several moddable backend screens and supporting systems remain future-facing in this document.
 
 Use this document as the "where we are going and what rules we must preserve" reference, not as a claim that every folder and subsystem below is feature-complete today.
 
@@ -116,7 +116,7 @@ res://
 │   │   ├── main_menu/           # ✅ Engine-owned boot/menu route
 │   │   │   ├── main_menu_screen.tscn
 │   │   │   └── main_menu_screen.gd
-│   │   ├── gameplay_shell/      # ✅ Engine-owned in-game shell / HUD route
+│   │   ├── gameplay_shell/      # ✅ Engine-owned in-game shell / HUD route built from shared summary/loadout components
 │   │   │   ├── gameplay_shell_screen.tscn
 │   │   │   └── gameplay_shell_screen.gd
 │   │   ├── settings/            # ✅ Engine-owned settings route with persisted app settings
@@ -142,6 +142,7 @@ res://
 │   │   ├── currency_summary_panel.tscn  # ✅ Budget display used by AssemblyEditor
 │   │   ├── part_detail_panel.tscn       # ✅ Part preview sidebar used by AssemblyEditor
 │   │   ├── stat_delta_sheet.tscn        # ✅ Before/after stat diff used by AssemblyEditor
+│   │   ├── assembly_slot_row.tscn       # ✅ Reusable AssemblyEditor slot selector row
 │   │   ├── part_card.tscn               # ✅ Generic part display card for shops, crafting, and inventory lists
 │   │   ├── entity_portrait.tscn         # ✅ Generic entity card used by gameplay_shell and future dialogue/task surfaces
 │   │   ├── currency_display.tscn        # ✅ Generic currency value + symbol/icon panel
@@ -506,13 +507,14 @@ These are not autoloads — they are classes instantiated and owned by the autol
 | `QuestTracker` | GameState | Quest progression runtime — evaluates objective blocks against `GameEvents`, applies stage/final rewards, and dispatches quest hooks |
 | `TaskRunner` | TimeKeeper | Advances active tasks on each tick, resolves travel completions, and applies shared reward/hook logic |
 | `ScriptHookLoader` | ModLoader | Loads, validates, and caches GDScript mod hooks |
+| `BackendContractRegistry` | ModLoader + DataManager | Registers built-in backend contracts at load start and validates `backend_class` payloads during `DataManager.validate_loaded_content()`. |
+| `OmniBackendBase` | UI backend layer | Shared backend interface for moddable routed UI backends (`initialize`, `build_view_model`, `confirm`, `get_required_params`). |
 
 ### Planned Hardening Systems
 
 The following support systems are important enough to be part of the documented architecture, even if they are still being implemented:
 
 - **SchemaValidator**: lightweight per-file schema checks for required fields, primitive types, enums, and reference validity.
-- **BackendContractRegistry**: maps `backend_class` values to required JSON fields and validates screens/interactions before UI construction.
 - **QueryService**: shared filtered lookup helpers used by UI, tasks, generators, and AI-safe content discovery. The current codebase has started this work inside `DataManager` with immutable `query_parts` / `query_entities` helpers.
 - **DebugOverlay / DebugPanel**: live inspection for loaded mods, emitted events, active quests/tasks, view models, and patch results.
 
@@ -583,7 +585,7 @@ Menu system requirements:
 - The creator should render the currently reachable assembly sockets from the player entity and equipped parts, not assume a fixed humanoid slot list.
 - Starting a new game should initialize runtime state first, then replace the current stack with the first gameplay screen.
 - Loading a save should complete `SaveManager.load_game(slot)` first, then replace the current stack with gameplay.
-- `gameplay_shell` is the current post-boot gameplay destination. It owns quick autosave, time advance, loadout access, and the jump into `location_view`.
+- `gameplay_shell` is the current post-boot gameplay destination. It owns quick autosave, time advance, loadout access, and the jump into `location_view`, and now renders its loadout snapshot through shared `part_card` components instead of raw labels.
 - `save_slot_list` now presents the engine autosave plus manual slots, and main-menu continue prefers the most recently updated available save.
 - Main menu presentation can be influenced by `config.json ui.main_menu`, but actions like `new_game`, `continue`, `load_slot`, and `quit` remain engine-owned commands.
 - Settings, save/load, pause, and credits are also engine-owned routes. Mods may contribute data they display later, but should not replace their core navigation contract through content JSON.
@@ -600,7 +602,7 @@ main.tscn (root, always present)
 
 | `backend_class` in JSON | Scene | Functionality |
 |---|---|---|
-| `AssemblyEditorBackend` | `assembly_editor_screen.tscn` ✅ | Attach/detach parts into sockets. Supports catalog mode (infinite stock from `PartsRegistry`) and inventory mode (`option_source_entity_id` draws from a live entity's inventory and depletes it on confirm). Supports entity-to-entity transactions via `budget_entity_id` (who pays) and `payment_recipient_id` (who earns). |
+| `AssemblyEditorBackend` | `assembly_editor_screen.tscn` ✅ | Attach/detach parts into sockets. Supports catalog mode (infinite stock from `PartsRegistry`) and inventory mode (`option_source_entity_id` draws from a live entity's inventory and depletes it on confirm). Uses specialized AssemblyEditor widgets plus `assembly_slot_row` for row rendering, and supports entity-to-entity transactions via `budget_entity_id` (who pays) and `payment_recipient_id` (who earns). |
 | `ExchangeBackend` | `exchange_screen.tscn` ⚠️ planned | Buy/sell part instances from entity inventory |
 | `ListBackend` | `list_screen.tscn` ⚠️ planned | Display filtered data lists |
 | `ChallengeBackend` | `challenge_screen.tscn` ⚠️ planned | Stat-check pass/fail |

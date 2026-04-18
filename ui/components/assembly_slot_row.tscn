@@ -1,0 +1,63 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/components/assembly_slot_row.gd" id="1_row"]
+
+[node name="AssemblySlotRow" type="PanelContainer"]
+size_flags_horizontal = 3
+script = ExtResource("1_row")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SlotLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Socket"
+
+[node name="SelectionStateLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+horizontal_alignment = 2
+text = "Available"
+
+[node name="CurrentLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Current: <empty>"
+
+[node name="PreviewLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Preview: <empty>"
+
+[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PreviousButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = "<"
+
+[node name="NextButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = ">"
+
+[node name="ApplyButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = "Apply"
+
+[node name="ClearButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = "Clear"

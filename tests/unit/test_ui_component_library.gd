@@ -10,6 +10,7 @@ const QUEST_CARD_SCENE := preload("res://ui/components/quest_card.tscn")
 const RECIPE_CARD_SCENE := preload("res://ui/components/recipe_card.tscn")
 const TAB_PANEL_SCENE := preload("res://ui/components/tab_panel.tscn")
 const NOTIFICATION_POPUP_SCENE := preload("res://ui/components/notification_popup.tscn")
+const ASSEMBLY_SLOT_ROW_SCENE := preload("res://ui/components/assembly_slot_row.tscn")
 const TAB_PANEL_FIRST_SCENE := preload("res://tests/fixtures/ui/tab_panel_test_first.tscn")
 const TAB_PANEL_SECOND_SCENE := preload("res://tests/fixtures/ui/tab_panel_test_second.tscn")
 
@@ -217,6 +218,36 @@ func test_tab_panel_switches_content_between_tabs() -> void:
 
 	var second_label := tab_panel.get_node("MarginContainer/VBoxContainer/ContentContainer/TabPanelTestSecond/Label") as Label
 	assert_eq(second_label.text, "Second Tab Content")
+
+
+func test_assembly_slot_row_renders_selection_state_and_button_availability() -> void:
+	var assembly_slot_row := _spawn_and_attach(ASSEMBLY_SLOT_ROW_SCENE)
+	assembly_slot_row.call("render", {
+		"slot_id": "left_arm",
+		"slot_label": "Left Arm",
+		"current_name": "Standard Arm",
+		"preview_name": "Reinforced Arm",
+		"has_options": true,
+		"can_apply": true,
+		"can_clear": true,
+		"selected": true,
+	})
+
+	await get_tree().process_frame
+
+	var slot_label := assembly_slot_row.get_node("MarginContainer/VBoxContainer/HeaderRow/SlotLabel") as Label
+	var selection_label := assembly_slot_row.get_node("MarginContainer/VBoxContainer/HeaderRow/SelectionStateLabel") as Label
+	var current_label := assembly_slot_row.get_node("MarginContainer/VBoxContainer/CurrentLabel") as Label
+	var preview_label := assembly_slot_row.get_node("MarginContainer/VBoxContainer/PreviewLabel") as Label
+	var apply_button := assembly_slot_row.get_node("MarginContainer/VBoxContainer/ButtonRow/ApplyButton") as Button
+	var clear_button := assembly_slot_row.get_node("MarginContainer/VBoxContainer/ButtonRow/ClearButton") as Button
+
+	assert_eq(slot_label.text, "Left Arm")
+	assert_eq(selection_label.text, "Selected")
+	assert_eq(current_label.text, "Current: Standard Arm")
+	assert_eq(preview_label.text, "Preview: Reinforced Arm")
+	assert_false(apply_button.disabled)
+	assert_false(clear_button.disabled)
 
 
 func _spawn_and_attach(scene: PackedScene) -> Control:

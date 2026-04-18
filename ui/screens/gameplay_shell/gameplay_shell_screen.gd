@@ -5,6 +5,7 @@ const SCREEN_LOCATION_VIEW := "location_view"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_PAUSE_MENU := "pause_menu"
 const CURRENCY_DISPLAY_SCENE := preload("res://ui/components/currency_display.tscn")
+const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 
 @onready var _title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/VBoxContainer/TitleLabel
 @onready var _subtitle_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/VBoxContainer/SubtitleLabel
@@ -18,7 +19,7 @@ const CURRENCY_DISPLAY_SCENE := preload("res://ui/components/currency_display.ts
 @onready var _time_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/TimeLabel
 @onready var _autosave_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AutosaveLabel
 @onready var _time_buttons_container: HFlowContainer = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/TimeAdvanceButtons
-@onready var _equipped_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer/EquippedLabel
+@onready var _equipped_cards: VBoxContainer = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer/EquipmentScroll/EquippedCards
 @onready var _explore_location_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/ExploreLocationButton
 @onready var _loadout_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/OpenLoadoutButton
 @onready var _save_browser_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/SaveBrowserButton
@@ -77,7 +78,7 @@ func _refresh() -> void:
 		_inventory_label.text = ""
 		_time_label.text = ""
 		_autosave_label.text = ""
-		_equipped_label.text = ""
+		_render_equipped_cards(null)
 		_status_label.text = "The gameplay shell becomes available once a runtime session exists."
 		_set_buttons_enabled(false)
 		return
@@ -101,7 +102,7 @@ func _refresh() -> void:
 	_inventory_label.text = _build_inventory_summary(player)
 	_time_label.text = "Time: %s" % TimeKeeper.get_time_string()
 	_autosave_label.text = _build_autosave_summary()
-	_equipped_label.text = _build_equipped_summary(player)
+	_render_equipped_cards(player)
 	_status_label.text = _status_message
 	_set_buttons_enabled(true)
 
@@ -135,9 +136,7 @@ func _build_currency_view_models(player: EntityInstance) -> Array[Dictionary]:
 
 
 func _render_currency_displays(view_models: Array[Dictionary]) -> void:
-	for child in _currency_list.get_children():
-		_currency_list.remove_child(child)
-		child.queue_free()
+	_clear_container_children(_currency_list)
 	if view_models.is_empty():
 		var empty_label := Label.new()
 		empty_label.text = "No currencies available."
@@ -150,6 +149,24 @@ func _render_currency_displays(view_models: Array[Dictionary]) -> void:
 		var display: Control = display_value
 		_currency_list.add_child(display)
 		display.call("render", view_model)
+
+
+func _render_equipped_cards(player: EntityInstance) -> void:
+	_clear_container_children(_equipped_cards)
+	if player == null or player.equipped.is_empty():
+		var empty_label := Label.new()
+		empty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty_label.text = "No equipped parts are active in this loadout yet."
+		_equipped_cards.add_child(empty_label)
+		return
+	var default_sprite_paths := _get_part_default_sprite_paths()
+	for view_model in _build_equipped_part_view_models(player, default_sprite_paths):
+		var part_card_value: Variant = PART_CARD_SCENE.instantiate()
+		if not part_card_value is Control:
+			continue
+		var part_card: Control = part_card_value
+		_equipped_cards.add_child(part_card)
+		part_card.call("render", view_model)
 
 
 func _build_stat_sheet_view_model(player: EntityInstance) -> Dictionary:
@@ -304,37 +321,6 @@ func _build_inventory_summary(player: EntityInstance) -> String:
 	]
 
 
-func _format_dictionary(values: Dictionary) -> String:
-	if values.is_empty():
-		return "{}"
-	var keys := values.keys()
-	keys.sort()
-	var items: Array[String] = []
-	for key in keys:
-		items.append("%s=%s" % [str(key), str(values[key])])
-	return "{%s}" % ", ".join(items)
-
-
-func _format_equipped(player: EntityInstance) -> String:
-	if player.equipped.is_empty():
-		return "{}"
-	var slots := player.equipped.keys()
-	slots.sort()
-	var items: Array[String] = []
-	for slot in slots:
-		var part := player.equipped.get(slot, null) as PartInstance
-		if part == null:
-			continue
-		var template := part.get_template()
-		var display_name := str(template.get("display_name", part.template_id))
-		items.append("%s=%s" % [str(slot), display_name])
-	return "{%s}" % ", ".join(items)
-
-
-func _build_equipped_summary(player: EntityInstance) -> String:
-	return "Equipped\n%s" % _format_equipped(player)
-
-
 func _build_location_meta(player: EntityInstance) -> String:
 	var screens_count := 0
 	var location_template := DataManager.get_location(GameState.current_location_id)
@@ -361,6 +347,52 @@ func _build_autosave_summary() -> String:
 	if not location_name.is_empty():
 		lines.append("Location: %s" % location_name)
 	return "\n".join(lines)
+
+
+func _build_equipped_part_view_models(player: EntityInstance, default_sprite_paths: Dictionary) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var slots: Array = player.equipped.keys()
+	slots.sort()
+	for slot_value in slots:
+		var slot_id := str(slot_value)
+		var equipped_value: Variant = player.equipped.get(slot_id, null)
+		var part := equipped_value as PartInstance
+		if part == null:
+			continue
+		var template_value: Variant = part.get_template()
+		if not template_value is Dictionary:
+			continue
+		var template_copy_value: Variant = template_value.duplicate(true)
+		if not template_copy_value is Dictionary:
+			continue
+		var template: Dictionary = template_copy_value
+		if template.is_empty():
+			continue
+		results.append({
+			"template": template,
+			"default_sprite_paths": default_sprite_paths,
+			"price_text": "",
+			"badges": [
+				{"label": _humanize_id(slot_id), "color_token": "primary"},
+				{"label": "Equipped", "color_token": "positive"},
+			],
+			"affordable": true,
+		})
+	return results
+
+
+func _get_part_default_sprite_paths() -> Dictionary:
+	var sprite_paths_data: Variant = DataManager.get_config_value("ui.default_sprites.parts", {})
+	if sprite_paths_data is Dictionary:
+		var sprite_paths: Dictionary = sprite_paths_data
+		return sprite_paths.duplicate(true)
+	return {}
+
+
+func _clear_container_children(container: Node) -> void:
+	for child in container.get_children():
+		container.remove_child(child)
+		child.queue_free()
 
 
 func _set_buttons_enabled(enabled: bool) -> void:

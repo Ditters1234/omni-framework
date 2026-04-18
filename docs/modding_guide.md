@@ -647,6 +647,7 @@ When defining a moddable screen in a location or an interaction on an NPC, you a
 **Backend Contract Rules:**
 - `backend_class` does more than pick a screen scene; it selects a contract the JSON must satisfy.
 - Required backend fields should be treated as mandatory load-time validation, not "best effort" runtime assumptions.
+- The engine now enforces those contracts through `BackendContractRegistry` during `ModLoader.load_all_mods()`, so invalid `backend_class` payloads fail before gameplay boot finishes.
 - Backends gather runtime data and build a view model; UI scenes render that view model. Do not make UI components responsible for fetching game state on their own.
 - Assembly-style backends should keep preview state in a draft session object instead of mutating live entities on every cursor move. That draft layer should answer "can this fit", "can I afford this", "what stats change", and "what gets committed".
 - Confirm-time currency transfers and stock deduction should go through a shared runtime transaction utility rather than being hardcoded directly into a screen scene.
