@@ -23,6 +23,7 @@ const CREDITS_SCENE := "res://ui/screens/credits/credits_screen.tscn"
 
 @onready var _screen_layer: CanvasLayer = $ScreenLayer
 @onready var _status_label: Label = $ScreenLayer/StatusLabel
+@onready var _notification_popup: Control = $ScreenLayer/NotificationPopup
 
 var _game_is_paused: bool = false
 var _timekeeper_was_running_before_pause: bool = false
@@ -76,6 +77,12 @@ func _connect_runtime_signals() -> void:
 	var on_screen_popped := Callable(self, "_on_ui_screen_stack_changed")
 	if not GameEvents.is_connected("ui_screen_popped", on_screen_popped):
 		GameEvents.ui_screen_popped.connect(_on_ui_screen_stack_changed)
+	var on_notification_requested := Callable(self, "_on_notification_requested")
+	if not GameEvents.is_connected("ui_notification_requested", on_notification_requested):
+		GameEvents.ui_notification_requested.connect(_on_notification_requested)
+	var on_legacy_notification_requested := Callable(self, "_on_legacy_notification_requested")
+	if not GameEvents.is_connected("notification_requested", on_legacy_notification_requested):
+		GameEvents.notification_requested.connect(_on_legacy_notification_requested)
 
 
 func _handle_cancel_navigation() -> bool:
@@ -121,6 +128,17 @@ func _route_stack_contains(screen_id: String) -> bool:
 
 func _on_ui_screen_stack_changed(_screen_id: String) -> void:
 	_sync_pause_state()
+
+
+func _on_notification_requested(message: String, level: String) -> void:
+	_notification_popup.call("render", {
+		"message": message,
+		"level": level,
+	})
+
+
+func _on_legacy_notification_requested(message: String, level: String) -> void:
+	_on_notification_requested(message, level)
 
 
 func _sync_pause_state() -> void:

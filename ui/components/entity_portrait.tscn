@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://ui/components/entity_portrait.gd" id="1_p9a0s"]
+[ext_resource type="PackedScene" path="res://ui/components/faction_badge.tscn" id="2_fb"]
 
 [node name="EntityPortrait" type="PanelContainer"]
 size_flags_horizontal = 3
@@ -38,10 +39,8 @@ autowrap_mode = 3
 theme_override_font_sizes/font_size = 20
 text = "Unknown Entity"
 
-[node name="FactionBadgeLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/IdentityColumn"]
+[node name="FactionBadge" parent="MarginContainer/VBoxContainer/TopRow/IdentityColumn" instance=ExtResource("2_fb")]
 layout_mode = 2
-autowrap_mode = 3
-text = ""
 
 [node name="DescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2

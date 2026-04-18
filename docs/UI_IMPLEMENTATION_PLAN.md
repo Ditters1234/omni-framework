@@ -51,14 +51,13 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - `ui/main.tscn` / `ui/main.gd` — boots mods, applies theme, registers five screen ids.
 - `omni_theme.tres` + `theme_applier.gd` — centralized theme with `OmniSemantic` color tokens driven by `config.json ui.theme`.
 - Screens: `main_menu`, `gameplay_shell`, `location_view`, `assembly_editor` (also aliased as `character_creator`).
-- Components: `currency_summary_panel`, `part_detail_panel`, `stat_delta_sheet`, `currency_display`, `stat_bar`, `stat_sheet`, `entity_portrait`.
+- Components: `currency_summary_panel`, `part_detail_panel`, `stat_delta_sheet`, `currency_display`, `stat_bar`, `stat_sheet`, `entity_portrait`, `part_card`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, `faction_badge`.
 - `AssemblySession` in `core/` as the draft layer `AssemblyEditorBackend` operates on.
 - `LocationViewScreen.BACKEND_SCREEN_MAP` — the central `backend_class → screen_id` dispatch table.
 
 ### Planned but not implemented
 
 - Backend screens: `exchange`, `list_view`, `challenge`, `task_provider`, `catalog_list`, `dialogue`, `world_map`.
-- Components: `part_card`, `tab_panel`, `notification_popup`.
 - `BackendContractRegistry` for load-time `backend_class` validation.
 - Any Backend/Screen separation — `assembly_editor_screen.gd` is currently both roles in one file.
 
@@ -176,7 +175,7 @@ Each component gets a docstring at the top of its `.gd` file declaring its view 
 
 `currency_summary_panel`, `part_detail_panel`, and `stat_delta_sheet` stay as AssemblyEditor-specific widgets. They consume more specialized view models than the generic components above. Keep them; do not force them into the generic library.
 
-The first generic foundation layer is now also in place: `currency_display`, `stat_bar`, `stat_sheet`, and `entity_portrait`. `gameplay_shell` now consumes those shared components instead of hand-building the full player summary as raw labels, which gives the library a live production consumer before the rest of the backend catalog lands.
+The generic library itself is now fully landed for the current plan: `currency_display`, `stat_bar`, `stat_sheet`, `part_card`, `entity_portrait`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, and `faction_badge` all exist as reusable scenes/scripts with `render(view_model)` contracts. `gameplay_shell` consumes the shared foundation widgets already, `entity_portrait` now composes `faction_badge`, and `notification_popup` is mounted globally under `ScreenLayer`.
 
 ---
 
@@ -500,7 +499,7 @@ Condensed for reference:
 
 **New engine screens to build:** Settings, SaveSlotList, PauseMenu, Credits. Refactor: GameplayShell.
 
-**New components to build:** currency_display, stat_bar, stat_sheet, part_card, entity_portrait, tab_panel, notification_popup, recipe_card, quest_card, faction_badge. (10 new.)
+**Component library status:** `currency_display`, `stat_bar`, `stat_sheet`, `part_card`, `entity_portrait`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, and `faction_badge` are now implemented as reusable UI components.
 
 **New systems:** BackendContractRegistry, RecipeRegistry (+ `recipes.json` schema), OmniBackendBase.
 

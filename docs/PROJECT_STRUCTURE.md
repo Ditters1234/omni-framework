@@ -142,13 +142,16 @@ res://
 │   │   ├── currency_summary_panel.tscn  # ✅ Budget display used by AssemblyEditor
 │   │   ├── part_detail_panel.tscn       # ✅ Part preview sidebar used by AssemblyEditor
 │   │   ├── stat_delta_sheet.tscn        # ✅ Before/after stat diff used by AssemblyEditor
-│   │   ├── part_card.tscn               # ⚠️ PLANNED — part display: icon, name, stats, price
+│   │   ├── part_card.tscn               # ✅ Generic part display card for shops, crafting, and inventory lists
 │   │   ├── entity_portrait.tscn         # ✅ Generic entity card used by gameplay_shell and future dialogue/task surfaces
 │   │   ├── currency_display.tscn        # ✅ Generic currency value + symbol/icon panel
 │   │   ├── stat_bar.tscn                # ✅ Generic labeled stat display with optional capacity bar
 │   │   ├── stat_sheet.tscn              # ✅ Grouped stat renderer built from stat_bar instances
-│   │   ├── tab_panel.tscn               # ⚠️ PLANNED — tabbed container (used by location_view)
-│   │   └── notification_popup.tscn      # ⚠️ PLANNED — achievement / quest update popups
+│   │   ├── tab_panel.tscn               # ✅ Generic tab host for multi-surface backend layouts
+│   │   ├── notification_popup.tscn      # ✅ Global toast popup mounted under ScreenLayer
+│   │   ├── recipe_card.tscn             # ✅ Crafting recipe summary card with requirement/status rendering
+│   │   ├── quest_card.tscn              # ✅ Quest summary card with objective checklist rendering
+│   │   └── faction_badge.tscn           # ✅ Faction identity badge with reputation tier/value
 │   └── debug/               # Dev-only debug tooling (excluded from export)
 │       └── dev_debug_overlay.gd         # ✅ Runtime overlay for registry/state inspection
 │

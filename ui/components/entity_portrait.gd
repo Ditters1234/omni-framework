@@ -14,7 +14,7 @@ const STAT_BAR_SCENE := preload("res://ui/components/stat_bar.tscn")
 
 @onready var _emblem_rect: TextureRect = $MarginContainer/VBoxContainer/TopRow/EmblemRect
 @onready var _display_name_label: Label = $MarginContainer/VBoxContainer/TopRow/IdentityColumn/DisplayNameLabel
-@onready var _faction_badge_label: Label = $MarginContainer/VBoxContainer/TopRow/IdentityColumn/FactionBadgeLabel
+@onready var _faction_badge: Control = $MarginContainer/VBoxContainer/TopRow/IdentityColumn/FactionBadge
 @onready var _description_label: Label = $MarginContainer/VBoxContainer/DescriptionLabel
 @onready var _stat_preview_container: VBoxContainer = $MarginContainer/VBoxContainer/StatPreviewContainer
 var _pending_view_model: Dictionary = {}
@@ -36,9 +36,7 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	_display_name_label.text = str(view_model.get("display_name", "Unknown Entity"))
 	_description_label.text = str(view_model.get("description", ""))
 
-	var faction_badge := _format_faction_badge(view_model.get("faction_badge", null))
-	_faction_badge_label.visible = not faction_badge.is_empty()
-	_faction_badge_label.text = faction_badge
+	_render_faction_badge(view_model.get("faction_badge", null))
 
 	_apply_emblem(str(view_model.get("emblem_path", "")))
 	_render_stat_preview(view_model.get("stat_preview", []))
@@ -73,16 +71,26 @@ func _render_stat_preview(stat_preview_value: Variant) -> void:
 		stat_bar.call("render", stat_line)
 
 
-func _format_faction_badge(faction_badge_value: Variant) -> String:
+func _render_faction_badge(faction_badge_value: Variant) -> void:
+	var faction_badge_view_model := _normalize_faction_badge(faction_badge_value)
+	_faction_badge.visible = not faction_badge_view_model.is_empty()
+	if faction_badge_view_model.is_empty():
+		return
+	_faction_badge.call("render", faction_badge_view_model)
+
+
+func _normalize_faction_badge(faction_badge_value: Variant) -> Dictionary:
 	if faction_badge_value is Dictionary:
 		var faction_badge: Dictionary = faction_badge_value
-		var label := str(faction_badge.get("label", faction_badge.get("faction_id", "")))
-		var reputation_text := str(faction_badge.get("reputation_tier", ""))
-		if label.is_empty():
-			return ""
-		if reputation_text.is_empty():
-			return label
-		return "%s • %s" % [label, reputation_text]
+		var badge_copy := faction_badge.duplicate(true)
+		if badge_copy.has("label") and not badge_copy.has("faction_id"):
+			badge_copy["faction_id"] = str(badge_copy.get("label", ""))
+		return badge_copy
 	if faction_badge_value == null:
-		return ""
-	return str(faction_badge_value)
+		return {}
+	var faction_badge_text := str(faction_badge_value)
+	if faction_badge_text.is_empty():
+		return {}
+	return {
+		"faction_id": faction_badge_text,
+	}
