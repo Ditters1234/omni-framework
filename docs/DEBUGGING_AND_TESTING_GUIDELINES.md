@@ -1,5 +1,7 @@
 # Omni-Framework Debugging And Testing Guidelines
 
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the systems and autoloads being tested, [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) for event signal inspection, and [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for content validation patterns.
+
 This document defines how Omni-Framework should use its development-time debugging and testing tools as implementation grows.
 
 The two core tools are:
@@ -291,55 +293,4 @@ Add or update tests when you change:
 - Missing template references fail clearly
 - Invalid runtime state is rejected before writing a save
 - Failed loads restore the prior live session instead of wiping it
-- Save/load success and failure signals are covered by regression tests
-
-### GameEvents
-
-- Key transitions emit the documented signal
-- Payload shape matches expectations
-
-### UIRouter
-
-- Push/pop/replace stack semantics
-- Hidden/revealed screen behavior across back-navigation
-- Invalid route and invalid scene-root failures stay non-destructive
-- Debug snapshot exposes current params, stack entries, and recent errors
-- Route events are emitted for both manual pops and `replace_all()` unwinds
-- Engine-owned routes (`main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, `gameplay_shell`, `location_view`) have smoke coverage just like backend-driven routes
-
-### UI Backends
-
-- Required backend contract fields enforced
-- View-model building does not mutate template data
-- Engine-owned screens are tested separately from backend contracts; they still need route smoke tests and production-path coverage
-
-## Good Testing Habits Early
-
-- Prefer deterministic data fixtures
-- Keep mod-loading fixtures small and purpose-built
-- Write regression tests when a bug is found
-- Test behavior, not private implementation details
-- Put content invariants in automated tests before the content surface grows
-
-## Anti-Patterns To Avoid
-
-- Relying only on manual runtime checks
-- Building a huge debug overlay before the first useful panel exists
-- Writing tests that depend on unrelated content files
-- Letting debug-only helpers leak into shipping gameplay logic
-- Treating a passing smoke boot as enough coverage for data-driven systems
-
-## Recommended First Steps
-
-1. Add a minimal ImGui debug root/panel architecture for boot, mods, and GameState.
-2. Add GUT tests for stat metadata parsing, ModLoader happy path, and save round trip.
-3. Add content invariant tests for IDs, references, and stat pairing.
-4. Keep every future loader and runtime system accountable to one debug panel and one test surface.
-
-## Current Baseline
-
-- `F3` toggles the current developer overlay in debug builds.
-- The current overlay focuses on boot status, registry counts, GameState, and recent high-value events.
-- The current overlay also surfaces the live `UIRouter` stack and recent router navigation errors.
-- GUT is configured through `res://.gutconfig.json`.
-- The current automated baseline lives under `res://tests/` and covers stat metadata, entity stat clamping, signal forwarding, router stack hardening, save/load flow, and base-content invariants.
+- Save/load success and failure signals are covered by reg

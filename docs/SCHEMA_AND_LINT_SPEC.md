@@ -1,6 +1,8 @@
 # Omni-Framework Schema And Content Lint Spec
 
-This document defines the minimum validation and linting behavior expected from the Omni-Framework data pipeline. It is the implementation companion to the architecture guardrails in `docs/PROJECT_STRUCTURE.md` and the data contracts in `docs/modding_guide.md`.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for architecture context, [`modding_guide.md`](modding_guide.md) for the data contracts modders must satisfy, [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) for stat field rules, and [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) for validation implementation patterns.
+
+This document defines the minimum validation and linting behavior expected from the Omni-Framework data pipeline. It is the implementation companion to the architecture guardrails in `PROJECT_STRUCTURE.md` and the data contracts in `modding_guide.md`.
 
 ## Purpose
 
@@ -216,24 +218,4 @@ These should start as warnings even if they do not block loading:
 - IDs that are not namespaced outside the base mod
 - Parts with no price and no explicit `unsellable` rule
 - Locations with no path back to the rest of the graph
-- Screens with labels but no descriptions where the UI expects tooltips
-- Resources with default current values that do not match default capacities
-- Stats assigned to UI groups that are never displayed
-- Mods overriding another mod's stat metadata without a declared dependency
-
-## Save Validation Boundary
-
-Template validation and save validation are related but separate.
-
-- Template validation checks authored content.
-- Save validation checks runtime persistence payloads.
-- Save migration should happen before strict save validation finalizes.
-
-## Minimum Tooling Target
-
-At minimum, Omni-Framework should eventually expose:
-
-- A boot-time validator
-- A standalone content lint command for development
-- A debug panel listing current warnings and errors
-- A way to trace each merged entry back to its source mod and file
+- Screens with labels but no descriptions where the UI expects tooltip

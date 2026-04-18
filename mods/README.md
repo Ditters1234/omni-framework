@@ -1,5 +1,7 @@
 # Mods
 
+![Omni-Framework Icon](../icon.svg)
+
 All game content lives here. The engine ships without content — `ModLoader` treats this folder as the source of truth and a missing `mods/base/` is a fatal boot error.
 
 ## Layout

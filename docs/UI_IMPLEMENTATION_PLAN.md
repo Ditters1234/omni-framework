@@ -1,5 +1,7 @@
 # Omni-Framework — UI Implementation Plan & Recommendations
 
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the UI framework architecture, [`modding_guide.md`](modding_guide.md) for the data contracts that drive UI backends, and [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) for backend implementation patterns.
+
 This document is a planning reference for the UI layer. It catalogs the backend screens, reusable components, engine-owned screens, new data schemas, and phased work required to bring the UI to parity with the data-first, genre-agnostic contract described in `PROJECT_STRUCTURE.md` and `modding_guide.md`.
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
@@ -490,37 +492,4 @@ Argument for engine-owned: modders shouldn't be able to break fundamental app se
 Modding guide §3.6 shows `DialogueBackend` as a leaf. But a common idiom is "NPC says 'show me your wares' → opens Exchange mid-conversation." Dialogue Manager has inline commands; we can extend `action_payload` to include `"push_screen"` with `screen_id` and `params`. Recommend: implement `push_screen` action payload as part of Phase 4 Dialogue work.
 
 **Q5. Do we need talent/skill trees in scope?**
-Not in this plan. Fantasy RPG meta-progression would want them. If/when needed, schema follows the same pattern as recipes: `talents.json` + `TalentRegistry` + `TalentTreeBackend`. Node-graph rendering is the hardest part; a simple vertical-column tree is a reasonable MVP.
-
-**Q6. How do we handle UI strings for localization?**
-`config.json ui.strings` exists. Right now individual screens hard-code fallback English strings. Long-term answer is a central `OmniStrings` autoload that every screen queries. Not in this plan; worth a follow-up doc.
-
-**Q7. Is the current `UIRouter` stack good enough for modal overlays?**
-Notification popups, confirmation dialogs, and inventory quick-pick overlays all want "float on top of the current screen without popping it." Current router always adds children to `_screen_container` as full-screen controls. Recommend: add an `overlay` stack to UIRouter that mounts above the main stack without replacing the current screen. Affects `notification_popup` and future confirmation dialogs.
-
----
-
-## 12. Summary of Deltas from Current State
-
-Condensed for reference:
-
-**New backends to build:** Exchange, CatalogList, Crafting, List, Challenge, TaskProvider, ActiveQuestLog, EntitySheet, FactionReputation, AchievementList, EventLog, Dialogue, WorldMap. (13 new + 1 refactored existing = 14 total.)
-
-**New engine screens to build:** Settings, SaveSlotList, PauseMenu, Credits. Refactor: GameplayShell.
-
-**Component library status:** `currency_display`, `stat_bar`, `stat_sheet`, `part_card`, `entity_portrait`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, and `faction_badge` are now implemented as reusable UI components.
-
-**New systems:** BackendContractRegistry, RecipeRegistry (+ `recipes.json` schema), OmniBackendBase.
-
-**New signals on GameEvents:** `recipe_crafted`, `combat_*` (deferred), `ui_overlay_pushed` / `ui_overlay_popped` (if Q7 is adopted).
-
-**Deferred entirely:** Combat backend, talent/skill trees, localization strings refactor, interactive world map beyond travel nodes.
-
----
-
-## 13. Revision History
-
-| Date | Author | Change |
-|---|---|---|
-| 2026-04-17 | Initial draft | First cut of the plan with crafting as its own backend and combat deferred |
-                                                                                                                                                                                                                                                                
+Not in this plan. Fantasy RPG meta-progression would want them. If/when needed, schema follows the same pattern as recipes: `talents.json` + `TalentRegistry` + `TalentTreeBackend`. Node-grap

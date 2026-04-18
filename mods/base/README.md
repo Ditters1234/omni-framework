@@ -1,5 +1,7 @@
 # Base Game Mod
 
+![Omni-Framework Icon](../../icon.svg)
+
 The shipped base content for Omni-Framework. It is a mod like any other, with one special property: `ModLoader` treats it as required and loads it first.
 
 - **ID:** `base`

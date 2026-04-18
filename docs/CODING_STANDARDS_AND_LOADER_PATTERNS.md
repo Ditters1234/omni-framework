@@ -1,6 +1,6 @@
 # Omni-Framework Coding Standards And Loader Patterns
 
-This document turns the architecture docs into implementation habits for GDScript systems, loaders, autoloads, and runtime classes.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the architecture and autoload layout, [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for validation patterns, and [`modding_guide.md`](modding_guide.md) for the data contracts these loaders enforce.
 
 ## Purpose
 

@@ -1,6 +1,8 @@
 # Omni-Framework GameEvents Taxonomy
 
-This document defines how `GameEvents` should be organized, named, and used as the engine grows. It complements the signal-bus role described in `docs/PROJECT_STRUCTURE.md`.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the signal-bus architecture, [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) for inspecting events at runtime, and [`modding_guide.md`](modding_guide.md) for script hooks that respond to events.
+
+This document defines how `GameEvents` should be organized, named, and used as the engine grows. It complements the signal-bus role described in `PROJECT_STRUCTURE.md`.
 
 ## Purpose
 
@@ -151,27 +153,4 @@ Do not add a new event when:
 Current implementation note:
 
 - `GameEvents` now maintains a central signal catalog plus a bounded in-memory event history for debug surfaces and tests.
-- Legacy signals such as `screen_pushed`, `screen_popped`, `notification_requested`, and `currency_changed` remain available for compatibility but should be treated as deprecated.
-
-## Debugging Recommendations
-
-The eventual debug overlay should support:
-
-- Filtering by event domain
-- Filtering by entity ID or quest ID
-- Time-ordered event history
-- Highlighting errors and warnings
-- Clicking through to the originating system
-
-Current implementation note:
-
-- The built-in dev overlay now reads its event feed from `GameEvents.get_event_history(...)` instead of maintaining a second parallel event log.
-
-## Suggested Near-Term Cleanup
-
-Based on the current docs direction, these are worth standardizing early:
-
-- Prefer `entity_currency_changed` over a global `currency_changed` when the owner matters.
-- Prefer `ui_screen_pushed` / `ui_screen_popped` over ambiguous UI names.
-- Add `quest_stage_advanced` explicitly since quest progression is a first-class system.
-- Add validation-related events only if the engine will surface them in tools or logs.
+- Legacy signals such as `screen_pushe

@@ -359,6 +359,9 @@ func get_debug_snapshot() -> Dictionary
 ```
 
 ### `UIRouter` (`autoloads/ui_router.gd`)
+
+See [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) for the backend catalog and full UI surface rollout plan.
+
 Manages the screen navigation stack. Screens push and pop; the router handles transitions and keeps history for back-navigation. All screen changes go through here — no scene switches happen directly.
 
 Key methods:
@@ -485,6 +488,8 @@ AI output is treated as untrusted input. The target architecture assumes:
 
 These are not autoloads — they are classes instantiated and owned by the autoloads above.
 
+See [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) for implementation patterns that all these loaders should follow.
+
 | Class | Owner | Purpose |
 |---|---|---|
 | `DefinitionLoader` | DataManager | Parses `definitions.json`, validates stat pairs |
@@ -497,116 +502,4 @@ These are not autoloads — they are classes instantiated and owned by the autol
 | `AchievementRegistry` | DataManager | Achievement template storage |
 | `ConfigLoader` | DataManager | Deep-merges `config.json` across all mods |
 | `AssemblySession` | `AssemblyEditorBackend` | Transactional draft wrapper for assembly edits — clones the target entity, tracks build cost against a budget, computes projected stats, and reports what would change on confirm. Supports a separate payer entity when the budget source differs from the target. |
-| `AssemblyCommitService` | Systems utility | Applies finalized assembly edits to runtime state, commits the updated entity, and emits equip/unequip events based on the final diff. |
-| `TransactionService` | Systems utility | Applies cross-entity transaction side effects such as currency transfers and inventory stock deduction so UI backends do not mutate runtime economy state ad hoc. |
-| `RewardService` | Systems utility | Applies reward dictionaries consistently across tasks, quests, and action payloads. |
-| `ScriptHookService` | Systems utility | Resolves template `script_path` hooks and dispatches lifecycle callbacks from runtime systems. |
-| `StatManager` | Systems utility | Stat calculation, modifier stacking, clamping |
-| `ConditionEvaluator` | Systems utility | Evaluates JSON `conditions` blocks (AND/OR trees) |
-| `ActionDispatcher` | Systems utility | Executes `action_payload` objects, emits events, and delegates reward payloads to shared runtime helpers |
-| `QuestTracker` | GameState | Quest progression runtime — evaluates objective blocks against `GameEvents`, applies stage/final rewards, and dispatches quest hooks |
-| `TaskRunner` | TimeKeeper | Advances active tasks on each tick, resolves travel completions, and applies shared reward/hook logic |
-| `ScriptHookLoader` | ModLoader | Loads, validates, and caches GDScript mod hooks |
-| `BackendContractRegistry` | ModLoader + DataManager | Registers built-in backend contracts at load start and validates `backend_class` payloads during `DataManager.validate_loaded_content()`. |
-| `OmniBackendBase` | UI backend layer | Shared backend interface for moddable routed UI backends (`initialize`, `build_view_model`, `confirm`, `get_required_params`). |
-
-### Planned Hardening Systems
-
-The following support systems are important enough to be part of the documented architecture, even if they are still being implemented:
-
-- **SchemaValidator**: lightweight per-file schema checks for required fields, primitive types, enums, and reference validity.
-- **QueryService**: shared filtered lookup helpers used by UI, tasks, generators, and AI-safe content discovery. The current codebase has started this work inside `DataManager` with immutable `query_parts` / `query_entities` helpers.
-- **DebugOverlay / DebugPanel**: live inspection for loaded mods, emitted events, active quests/tasks, view models, and patch results.
-
-### Debug And Test Tooling
-
-Development-time tooling is part of the architecture, not an afterthought.
-
-- **The built-in dev overlay is the current always-on runtime debug layer** for inspecting mods, registries, GameState, event flow, and save/migration behavior.
-- **`UIRouter` should feed the dev overlay through `get_debug_snapshot()`** so the live route stack, params, and recent router errors are visible without ad hoc logging.
-- **`imgui-godot` remains the preferred richer future debug layer** when immediate-mode tooling will materially help iteration speed.
-- **GUT is the preferred automated test layer** for unit, integration, and content invariant tests.
-- Debug and testing tools are dev-only and must not become required for normal gameplay.
-- New systems should ideally arrive with both:
-  - at least one useful debug inspection surface
-  - at least one automated test surface
-
-See `docs/DEBUGGING_AND_TESTING_GUIDELINES.md` for the working rules.
-
-### Base Classes (in `core/`)
-
-**`ScriptHook` (`core/script_hook.gd`)**
-The base class all mod script hooks must extend. Provides empty virtual methods; the engine calls into them at the appropriate moments.
-
-```gdscript
-class_name ScriptHook
-extends RefCounted
-
-func on_equip(entity: Dictionary, instance: Dictionary) -> void: pass
-func on_unequip(entity: Dictionary, instance: Dictionary) -> void: pass
-func on_part_attached(assembly: Dictionary, socket_id: String, instance: Dictionary) -> void: pass
-func on_tick(entity: Dictionary, tick: int) -> void: pass
-func on_day_start(entity: Dictionary, day: int) -> void: pass
-func get_buy_price(instance: Dictionary, buyer: Dictionary) -> int: return -1  # -1 = use default
-```
-
----
-
-## UI Framework
-
-The UI is built as a set of composable scenes. `UIRouter` loads and unloads screens; screens are composed from reusable components.
-
-Target UI data flow:
-
-```text
-JSON definition -> Backend -> ViewModel -> Screen -> Components -> Theme
-```
-
-That flow is the missing scalability layer between "backend-driven screens" and a truly moddable UI system. The rules are:
-
-- **Every routed screen is either engine-owned or backend-driven.** There is no third category hiding ad hoc UI state.
-- **Backends own logic and data gathering.**
-- **View models are pure dictionaries/resources prepared for rendering.**
-- **Screens are shells that render a view model and host reusable widgets.**
-- **Components are dumb widgets.** They should not query `DataManager`, `GameState`, or unrelated autoloads on their own.
-- **Themes style semantics, not business logic.**
-- **Engine-owned screens stay fixed.** Main menu, settings, save/load, pause, credits, gameplay shell, and location view are registered in code; mods can reskin and feed them data, but they do not replace those route contracts through JSON.
-- The shared `ui/theme/omni_theme.tres` resource is applied to routed screens after mod config loads, so `ui.theme` overrides propagate across menu and backend screens without per-scene palette edits.
-
-### Navigation Flow
-
-Menu system requirements:
-
-- Boot should land in a routed `main_menu` screen after mods and config finish loading.
-- `main_menu` is a normal `UIRouter` destination, not a separate boot scene.
-- A pre-world creator flow is a valid routed step between `New Game` and the first gameplay screen.
-- That flow should be a configured `AssemblyEditorBackend`/assembly editor screen, not a one-off scene contract.
-- If a `character_creator` route id exists, treat it as a convenience alias for a configured assembly editor, not a unique UI species.
-- The creator should render the currently reachable assembly sockets from the player entity and equipped parts, not assume a fixed humanoid slot list.
-- Starting a new game should initialize runtime state first, then replace the current stack with the first gameplay screen.
-- Loading a save should complete `SaveManager.load_game(slot)` first, then replace the current stack with gameplay.
-- `gameplay_shell` is the current post-boot gameplay destination. It owns quick autosave, time advance, loadout access, and the jump into `location_view`, and now renders its loadout snapshot through shared `part_card` components instead of raw labels.
-- `save_slot_list` now presents the engine autosave plus manual slots, and main-menu continue prefers the most recently updated available save.
-- Main menu presentation can be influenced by `config.json ui.main_menu`, but actions like `new_game`, `continue`, `load_slot`, and `quit` remain engine-owned commands.
-- Settings, save/load, pause, and credits are also engine-owned routes. Mods may contribute data they display later, but should not replace their core navigation contract through content JSON.
-
-```
-main.tscn (root, always present)
- ├── WorldMapScreen      (default view — shows the location graph)
- └── LocationViewScreen  (shows when player enters a location)
-      └── TabPanel       (one tab per screen defined in the location's `screens` array)
-           └── [Backend Screen]  (AssemblyEditorScreen, ExchangeScreen, etc.)
-```
-
-### Backend Screen → Backend Class Mapping
-
-| `backend_class` in JSON | Scene | Functionality |
-|---|---|---|
-| `AssemblyEditorBackend` | `assembly_editor_screen.tscn` ✅ | Attach/detach parts into sockets. Supports catalog mode (infinite stock from `PartsRegistry`) and inventory mode (`option_source_entity_id` draws from a live entity's inventory and depletes it on confirm). Uses specialized AssemblyEditor widgets plus `assembly_slot_row` for row rendering, and supports entity-to-entity transactions via `budget_entity_id` (who pays) and `payment_recipient_id` (who earns). |
-| `ExchangeBackend` | `exchange_screen.tscn` ⚠️ planned | Buy/sell part instances from entity inventory |
-| `ListBackend` | `list_screen.tscn` ⚠️ planned | Display filtered data lists |
-| `ChallengeBackend` | `challenge_screen.tscn` ⚠️ planned | Stat-check pass/fail |
-| `TaskProviderBackend` | `task_provider_screen.tscn` ⚠️ planned | Faction job board |
-| `CatalogListBackend` | `catalog_list_screen.tscn` ⚠️ planned | Infinite template vendor |
-| `DialogueBackend` | `dialogue_screen.tscn` ⚠️ planned | Branching NPC dialogue via Dialogue Manager |
-| `WorldMapBackend` | `world_map_screen.tscn` ⚠️ planned | Travel/discovery graph for discovered locations |
+| `AssemblyCommitService` | Systems utility | Applie

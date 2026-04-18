@@ -1,6 +1,8 @@
 # Omni-Framework Save Schema And Migration
 
-This document defines the persistence contract for Omni-Framework save data. It complements the runtime/save split already described in `docs/PROJECT_STRUCTURE.md`.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the runtime/save split, [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for save data validation rules, and [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) for testing save load/migration code.
+
+This document defines the persistence contract for Omni-Framework save data. It complements the runtime/save split already described in `PROJECT_STRUCTURE.md`.
 
 ## Core Rule
 
@@ -156,37 +158,4 @@ Recommended policy:
 - Missing optional presentation assets: recover with fallback
 - Missing mod content referenced by save state: fail with a clear "missing dependency mod" message unless a migrator explicitly handles it
 - Failed loads should roll back to the previous live `GameState` snapshot instead of clearing the session
-- Runtime validation should run before save as well as after load so bad state is caught at the source
-
-## A2J Registration Rules
-
-All runtime classes that appear in save data must be registered in `A2J.object_registry` before save or load:
-
-- `GameState`
-- `EntityInstance`
-- `PartInstance`
-- Any runtime task/quest state objects introduced later
-
-If a class is persisted without registration, that is a save-system bug, not a content bug.
-
-## Backward Compatibility Strategy
-
-Prefer compatibility through:
-
-- Explicit migrators
-- Stable runtime field names
-- Template references by ID
-- Additive data growth over destructive renames
-
-Avoid compatibility through:
-
-- Guessing missing fields silently
-- Keeping dead fields forever with unclear meaning
-- Embedding raw template blobs in saves
-
-## Suggested Future Additions
-
-- Save integrity hash for corruption detection
-- Optional screenshot preview path
-- Additional autosave/manual-save migration fixtures beyond the current metadata contract
-- Dev-only migration test fixtures in `tests/integration/`
+- Runtime validation should run before save as well as af

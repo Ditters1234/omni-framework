@@ -8,7 +8,7 @@ You do not need to know GDScript or Godot to add new items, magic systems, NPCs,
 
 This guide covers the core architecture, the system hierarchy, and provides practical examples for modifying every core game system.
 
-> **See also:** `docs/README.md` for the documentation map, `docs/PROJECT_STRUCTURE.md` for the engine architecture, and `docs/STAT_SYSTEM_IMPLEMENTATION.md` for the canonical stat rules.
+> **See also:** [`docs/README.md`](README.md) for the documentation map, [`docs/PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the engine architecture, [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for validation rules your JSON must satisfy, and [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) for the canonical stat rules.
 
 ---
 
@@ -1125,33 +1125,4 @@ The engine uses a smart, 4-step hierarchy to find the sprite for your part or lo
 This section covers advanced patterns for stat management that work within the omni-framework.
 
 **Stat Floors & Ceilings:**
-While not explicitly enforced in the JSON schema, implementations should:
-- Never allow base stats to exceed their capacity (e.g., `health` > `health_max`).
-- Never allow stats to go below 0 (clamp to 0).
-- Treat capacity reductions carefully: if `health_max` is reduced below current `health`, clamp `health` down.
-
-**Derived Stats & Stat Groups:**
-Some games need stats that depend on other stats (e.g., "defense = armor × 2 + strength / 2"). While the JSON system doesn't support computed properties, you can:
-- Define derived stats in `config.json`'s `stats.groups` to organize UI display.
-- Use script hooks to compute derived stats at runtime.
-- Store derived stats as regular stats and update them when dependencies change.
-
-**Scaling & Mod Conflicts:**
-When multiple parts modify the same stat, they stack additively:
-- Part A: `"strength": 5`
-- Part B: `"strength": 3`
-- Total: `strength += 8`
-
-If two mods both patch the same part, the later load_order overwrites the earlier one's `stats` field. To safely extend stats, use patch `set_stats` which merges instead of replacing.
-
-**Achievement Stat Names (Valid Values):**
-Achievements track game-wide statistics. Valid stat_name values include:
-- `gold_spent`: Total currency spent across all transactions.
-- `gold_earned`: Total currency earned from quests/tasks/sales.
-- `items_bought`: Count of items purchased.
-- `items_sold`: Count of items sold.
-- `locations_discovered`: Count of locations visited.
-- `quests_completed`: Count of quests finished.
-- `tasks_completed`: Count of tasks completed.
-- `distance_traveled`: Total ticks spent traveling.
-- Custom 
+While not explicitly enforced in the JSON schema, implementa
