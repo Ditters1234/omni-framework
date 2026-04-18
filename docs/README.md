@@ -11,6 +11,7 @@ This folder is the canonical reference for Omni-Framework. The main docs below a
 
 | File | Purpose |
 |---|---|
+| [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) | **Start here.** Complete inventory of all systems, subsystems, relationships, and links to relevant documentation. |
 | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | Engine architecture, target folder layout, autoload responsibilities, UI architecture, and cross-system guardrails |
 | [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) | UI rollout plan: backend catalog, engine-owned screens, component library, and phased implementation priorities |
 | [`modding_guide.md`](modding_guide.md) | The modder-facing contract: data schemas, patching rules, backend requirements, config keys, and safe extension patterns |
@@ -23,6 +24,7 @@ This folder is the canonical reference for Omni-Framework. The main docs below a
 
 ## Reading Order
 
+0. **Start here:** Read [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) for a high-level map of all systems and quick links to detailed docs.
 1. Read [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) to understand the engine's target architecture and implementation priorities.
 2. Read [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) before expanding the routed UI surface, adding a backend, or introducing engine-owned screens.
 3. Read [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) before building the first loaders, registries, or autoload orchestration.
@@ -37,6 +39,7 @@ This folder is the canonical reference for Omni-Framework. The main docs below a
 
 Each doc below is the source of truth for its domain:
 
+- [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) — complete inventory of all systems, subsystems, and their relationships; entry point for system discovery.
 - [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) — target architecture; explicitly calls out where hardening is still planned.
 - [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) — backend catalog, engine-owned screen catalog, component rollout, and UI build order.
 - [`modding_guide.md`](modding_guide.md) — the contracts modders must satisfy, even where enforcement is still being implemented.
