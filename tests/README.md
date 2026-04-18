@@ -28,6 +28,7 @@ Current baseline suites cover:
 - DataManager query helpers and immutability
 - DataManager load diagnostics, patch target validation, and cross-registry integrity checks
 - AI provider config selection
+- AudioManager bus fallback, config reload hooks, pause/resume signal wiring, and music transition hardening
 - mod dependency-aware load ordering
 - mod manifest validation and loader debug snapshot coverage
 - end-to-end boot pipeline contracts (load phases, new game bootstrap, repeated reloads, save/load flow)

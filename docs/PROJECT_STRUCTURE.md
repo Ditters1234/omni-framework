@@ -327,11 +327,21 @@ func get_debug_snapshot() -> Dictionary
 ### `AudioManager` (`autoloads/audio_manager.gd`)
 Wraps Godot `AudioStreamPlayer` pools for SFX and a dedicated player for music. Reads default sound paths from `config.json ui.sounds`. One-shot SFX calls from anywhere in the engine go here.
 
+Implementation hardening notes:
+
+- Missing custom audio buses should degrade cleanly to `Master` with a visible warning rather than silently assuming `Music` / `SFX` exist in the bus layout.
+- Music transitions must be interruption-safe. Starting a new crossfade while another is in flight must not let the older tween stop the newest track.
+- Per-call SFX gain offsets should survive master/SFX volume changes during playback.
+- The autoload should expose `get_debug_snapshot()` so the debug overlay and tests can inspect resolved buses, cached UI sounds, active transitions, and recent audio errors.
+
 Key methods:
 ```gdscript
 func play_sfx(path: String) -> void
 func play_music(path: String, crossfade: bool = true) -> void
 func stop_music() -> void
+func play_ui_sound(sound_key: String) -> void
+func reload_ui_sound_config() -> void
+func get_debug_snapshot() -> Dictionary
 ```
 
 ### `UIRouter` (`autoloads/ui_router.gd`)
