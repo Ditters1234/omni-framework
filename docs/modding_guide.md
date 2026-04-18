@@ -731,6 +731,7 @@ The condition runtime accepts both the legacy flat block shape and the newer rec
 *   `"unlock_location"`: Add location to discovered. Requires `location_id`.
 *   `"spawn_entity"`: Create new entity instance. Requires `entity_id`, `location_id`.
 *   `"reward"`: Grant rewards (gold, reputation, items). Dictionary of currencies and reputation gains.
+*   `"push_screen"`: Push a routed UI screen. Requires `screen_id`; optional `params` dictionary.
 
 *You can attach UI feedback to payloads via `success_sound`, `error_sound`, and `vfx` parameters.*
 

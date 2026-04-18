@@ -489,7 +489,7 @@ The guide describes location view as a hub. A tabbed version is more information
 Argument for engine-owned: modders shouldn't be able to break fundamental app settings. Argument for moddable: mods might want to add their own config toggles (e.g. "enable verbose AI logs"). Recommend: engine-owned for the base page, with a stable "Mods" tab inside it that mods can contribute rows to via a `systems/settings_contribution_registry.gd`. This is a sub-feature; don't build it in Phase 3.
 
 **Q4. How does dialogue chain into other backends?**
-Modding guide §3.6 shows `DialogueBackend` as a leaf. But a common idiom is "NPC says 'show me your wares' → opens Exchange mid-conversation." Dialogue Manager has inline commands; we can extend `action_payload` to include `"push_screen"` with `screen_id` and `params`. Recommend: implement `push_screen` action payload as part of Phase 4 Dialogue work.
+Resolved for the current runtime: `ActionDispatcher` now accepts `{"type": "push_screen", "screen_id": "...", "params": {...}}`, so dialogue and other content-authored action payloads can hand off to routed backends without special-case UI code. `DialogueBackend` should use that shared action path instead of inventing a separate navigation mechanism.
 
 **Q5. Do we need talent/skill trees in scope?**
 Not in this plan. Fantasy RPG meta-progression would want them. If/when needed, schema follows the same pattern as recipes: `talents.json` + `TalentRegistry` + `TalentTreeBackend`. Node-grap

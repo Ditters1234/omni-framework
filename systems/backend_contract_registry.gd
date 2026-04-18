@@ -3,14 +3,27 @@ extends RefCounted
 class_name BackendContractRegistry
 
 static var _contracts: Dictionary = {}
+static var _locked: bool = false
 
 
 static func clear() -> void:
 	_contracts.clear()
+	_locked = false
+
+
+static func lock() -> void:
+	_locked = true
+
+
+static func is_locked() -> bool:
+	return _locked
 
 
 static func register(backend_class: String, contract: Dictionary) -> void:
 	if backend_class.is_empty():
+		return
+	if _locked:
+		push_warning("BackendContractRegistry: attempted to register '%s' after the registry was locked." % backend_class)
 		return
 	_contracts[backend_class] = contract.duplicate(true)
 

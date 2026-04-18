@@ -108,6 +108,7 @@ func load_all_mods() -> void:
 func _register_backend_contracts() -> void:
 	BACKEND_CONTRACT_REGISTRY.clear()
 	ASSEMBLY_EDITOR_BACKEND.register_contract()
+	BACKEND_CONTRACT_REGISTRY.lock()
 
 
 # ---------------------------------------------------------------------------

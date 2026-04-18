@@ -26,6 +26,8 @@ base/
 
 Treat `base/` the same as any other mod — author JSON additions and patches under `data/`, follow the schemas in [`../../docs/modding_guide.md`](../../docs/modding_guide.md), and keep stat pairs consistent with [`../../docs/STAT_SYSTEM_IMPLEMENTATION.md`](../../docs/STAT_SYSTEM_IMPLEMENTATION.md).
 
+Reference fixtures now ship in `dialogue/sample_greeting.dialogue` and `scripts/sample_script_hook.gd` so Dialogue Manager integration and ScriptHook examples have a concrete base-mod starting point.
+
 For the overall mod pipeline and load phases, see [`../README.md`](../README.md).
 
 ## Contributing to Base Game Content

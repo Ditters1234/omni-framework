@@ -1,0 +1,11 @@
+~ start
+Guide: Welcome to Omni-Framework's sample dialogue.
+Guide: This file gives DialogueBackend and content tests a real base-mod resource to point at.
+Guide: Pick a response to continue.
+- What is this?
+	Guide: A minimal branching conversation shipped with the base mod.
+- Why ship a sample?
+	Guide: So mods and future UI integration tests have a known-good fixture instead of an empty folder.
+- End the conversation => END
+Guide: That's the whole sample.
+=> END

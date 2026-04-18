@@ -38,6 +38,7 @@ static func dispatch(action: Dictionary) -> void:
 		"reward":           _action_reward(action)
 		"unlock_achievement": _action_unlock_achievement(action)
 		"emit_signal":      _action_emit_signal(action)
+		"push_screen":      _action_push_screen(action)
 		_:
 			push_warning("ActionDispatcher: unknown action type '%s'" % action_type)
 
@@ -184,6 +185,22 @@ static func _action_emit_signal(action: Dictionary) -> void:
 	if args_data is Array:
 		args = args_data
 	GameEvents.emit_dynamic(signal_name, args)
+
+
+static func _action_push_screen(action: Dictionary) -> void:
+	var router := UIRouter as OmniUIRouter
+	if router == null:
+		return
+	var screen_id := str(action.get("screen_id", ""))
+	if screen_id.is_empty():
+		push_warning("ActionDispatcher: push_screen requires a non-empty screen_id.")
+		return
+	var params_data: Variant = action.get("params", {})
+	var params: Dictionary = {}
+	if params_data is Dictionary:
+		var raw_params: Dictionary = params_data
+		params = raw_params.duplicate(true)
+	router.push(screen_id, params)
 
 
 static func _resolve_entity(entity_id: String) -> EntityInstance:

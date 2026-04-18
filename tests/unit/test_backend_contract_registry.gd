@@ -36,6 +36,23 @@ func test_validate_payload_rejects_unknown_backend_class() -> void:
 	assert_true(_issues_contain(issues, "Unknown backend_class 'MissingBackend'"))
 
 
+func test_lock_prevents_late_contract_mutation() -> void:
+	BACKEND_CONTRACT_REGISTRY.register("TestBackend", {
+		"required": ["first_field"],
+	})
+	BACKEND_CONTRACT_REGISTRY.lock()
+	BACKEND_CONTRACT_REGISTRY.register("TestBackend", {
+		"required": ["second_field"],
+	})
+
+	var contract := BACKEND_CONTRACT_REGISTRY.get_contract("TestBackend")
+	var required_value: Variant = contract.get("required", [])
+	assert_true(required_value is Array)
+	var required: Array = required_value
+	assert_eq(required, ["first_field"])
+	assert_true(BACKEND_CONTRACT_REGISTRY.is_locked())
+
+
 func _issues_contain(issues: Array[Dictionary], expected_fragment: String) -> bool:
 	for issue in issues:
 		if str(issue.get("message", "")).contains(expected_fragment) or str(issue.get("field_path", "")).contains(expected_fragment):

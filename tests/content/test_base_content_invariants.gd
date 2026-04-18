@@ -89,3 +89,8 @@ func test_base_content_uses_known_stats_currencies_and_location_backends() -> vo
 				LOCATION_VIEW_SCREEN.BACKEND_SCREEN_MAP.has(backend_class),
 				"Unmapped backend_class '%s' in location data" % backend_class
 			)
+
+
+func test_base_mod_ships_reference_dialogue_and_script_hook_fixtures() -> void:
+	assert_true(FileAccess.file_exists("res://mods/base/dialogue/sample_greeting.dialogue"))
+	assert_true(FileAccess.file_exists("res://mods/base/scripts/sample_script_hook.gd"))
