@@ -2,6 +2,7 @@ extends GutTest
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
+const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 
 const TEMP_ROOT := "user://data_manager_contracts"
 
@@ -135,6 +136,60 @@ func test_validate_loaded_content_reports_unknown_backend_classes_and_contract_t
 
 	assert_true(_messages_contain(issue_messages, "screens[0].target_entity_id"))
 	assert_true(_messages_contain(issue_messages, "Unknown backend_class 'UnknownBackend'"))
+
+
+func test_validate_loaded_content_reports_unknown_push_screen_targets() -> void:
+	DataManager.locations["base:market"] = {
+		"location_id": "base:market",
+		"connections": {},
+		"screens": [
+			{
+				"backend_class": "AssemblyEditorBackend",
+				"action_payload": {
+					"type": "push_screen",
+					"screen_id": "exhcange",
+				},
+			},
+		],
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "screens[0].action_payload.screen_id"))
+	assert_true(_messages_contain(issue_messages, "unknown routed screen 'exhcange'"))
+
+
+func test_validate_loaded_content_accepts_known_push_screen_targets_in_quest_actions() -> void:
+	var known_screen_ids := UI_ROUTE_CATALOG.get_known_screen_ids()
+	assert_true(known_screen_ids.has("main_menu"))
+	DataManager.quests["base:test_quest"] = {
+		"quest_id": "base:test_quest",
+		"stages": [
+			{
+				"objectives": [],
+				"actions": [
+					{
+						"type": "push_screen",
+						"screen_id": "main_menu",
+						"params": {
+							"from": "quest_stage",
+						},
+					},
+				],
+			},
+		],
+		"action_payload": {
+			"type": "push_screen",
+			"screen_id": "assembly_editor",
+		},
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_false(_messages_contain(issue_messages, "unknown routed screen"))
+	assert_false(_messages_contain(issue_messages, "action_payload"))
 
 
 func test_debug_snapshot_reports_issue_counts_and_file_activity() -> void:

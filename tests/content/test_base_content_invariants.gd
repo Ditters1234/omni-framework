@@ -1,6 +1,6 @@
 extends GutTest
 
-const LOCATION_VIEW_SCREEN := preload("res://ui/screens/location_view/location_view_screen.gd")
+const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 
 
 func before_all() -> void:
@@ -86,7 +86,7 @@ func test_base_content_uses_known_stats_currencies_and_location_backends() -> vo
 			var backend_class := str(screen_entry.get("backend_class", ""))
 			assert_false(backend_class.is_empty(), "Location screen is missing backend_class")
 			assert_true(
-				LOCATION_VIEW_SCREEN.BACKEND_SCREEN_MAP.has(backend_class),
+				UI_ROUTE_CATALOG.has_backend_class(backend_class),
 				"Unmapped backend_class '%s' in location data" % backend_class
 			)
 

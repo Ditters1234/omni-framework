@@ -7,6 +7,7 @@ extends Node
 class_name OmniDataManager
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
+const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const LOAD_PHASE_IDLE := "idle"
 const LOAD_PHASE_ADDITIONS := "additions"
 const LOAD_PHASE_PATCHES := "patches"
@@ -380,6 +381,7 @@ func validate_loaded_content() -> Array[Dictionary]:
 	_validate_entity_references()
 	_validate_location_references()
 	_validate_backend_contracts()
+	_validate_action_payloads()
 	return get_load_issues(_load_issues.size() - issue_start)
 
 
@@ -677,6 +679,127 @@ func _validate_backend_contracts() -> void:
 			_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' field 'screens' must be an array." % location_id)
 
 
+func _validate_action_payloads() -> void:
+	for entity_value in entities.values():
+		if not entity_value is Dictionary:
+			continue
+		var entity: Dictionary = entity_value
+		var entity_id := str(entity.get("entity_id", ""))
+		var interactions_value: Variant = entity.get("interactions", [])
+		if not interactions_value is Array:
+			continue
+		var interactions: Array = interactions_value
+		for index in range(interactions.size()):
+			var interaction_value: Variant = interactions[index]
+			if not interaction_value is Dictionary:
+				continue
+			_validate_action_fields(
+				entity_id,
+				OmniConstants.DATA_ENTITIES,
+				interaction_value,
+				"interactions[%d]" % index
+			)
+
+	for location_value in locations.values():
+		if not location_value is Dictionary:
+			continue
+		var location: Dictionary = location_value
+		var location_id := str(location.get("location_id", ""))
+		var screens_value: Variant = location.get("screens", [])
+		if not screens_value is Array:
+			continue
+		var screens: Array = screens_value
+		for index in range(screens.size()):
+			var screen_value: Variant = screens[index]
+			if not screen_value is Dictionary:
+				continue
+			_validate_action_fields(
+				location_id,
+				OmniConstants.DATA_LOCATIONS,
+				screen_value,
+				"screens[%d]" % index
+			)
+
+	for quest_value in quests.values():
+		if not quest_value is Dictionary:
+			continue
+		var quest: Dictionary = quest_value
+		var quest_id := str(quest.get("quest_id", ""))
+		_validate_action_fields(quest_id, OmniConstants.DATA_QUESTS, quest, "")
+
+		var stages_value: Variant = quest.get("stages", [])
+		if not stages_value is Array:
+			continue
+		var stages: Array = stages_value
+		for stage_index in range(stages.size()):
+			var stage_value: Variant = stages[stage_index]
+			if not stage_value is Dictionary:
+				continue
+			_validate_action_fields(
+				quest_id,
+				OmniConstants.DATA_QUESTS,
+				stage_value,
+				"stages[%d]" % stage_index
+			)
+
+
+func _validate_action_fields(entry_id: String, file_path: String, payload_value: Variant, field_path: String) -> void:
+	if not payload_value is Dictionary:
+		return
+	var payload: Dictionary = payload_value
+
+	if payload.has("action_payload"):
+		var action_payload_value: Variant = payload.get("action_payload", null)
+		var action_field_path := _compose_field_path(field_path, "action_payload")
+		if not action_payload_value is Dictionary:
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s must be an object." % action_field_path)
+		else:
+			_validate_action_payload(entry_id, file_path, action_payload_value, action_field_path)
+
+	if payload.has("actions"):
+		var actions_value: Variant = payload.get("actions", [])
+		var actions_field_path := _compose_field_path(field_path, "actions")
+		if not actions_value is Array:
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s must be an array." % actions_field_path)
+			return
+		var actions: Array = actions_value
+		for action_index in range(actions.size()):
+			var action_value: Variant = actions[action_index]
+			var indexed_field_path := "%s[%d]" % [actions_field_path, action_index]
+			if not action_value is Dictionary:
+				_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s must be an object." % indexed_field_path)
+				continue
+			_validate_action_payload(entry_id, file_path, action_value, indexed_field_path)
+
+
+func _validate_action_payload(entry_id: String, file_path: String, action_value: Variant, field_path: String) -> void:
+	if not action_value is Dictionary:
+		return
+	var action: Dictionary = action_value
+	var action_type := str(action.get("type", ""))
+	if action_type.is_empty():
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.type must be a non-empty string." % field_path)
+		return
+
+	if action_type != "push_screen":
+		return
+
+	var screen_id := str(action.get("screen_id", ""))
+	if screen_id.is_empty():
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.screen_id must be a non-empty string." % field_path)
+	elif not UI_ROUTE_CATALOG.has_known_screen_id(screen_id):
+		var known_screen_ids := ", ".join(UI_ROUTE_CATALOG.get_known_screen_ids())
+		_record_issue(
+			entry_id,
+			file_path,
+			LOAD_PHASE_VALIDATION,
+			"%s.screen_id references unknown routed screen '%s'. Known screens: %s." % [field_path, screen_id, known_screen_ids]
+		)
+
+	if action.has("params") and not action.get("params", {}) is Dictionary:
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.params must be an object." % field_path)
+
+
 func _record_backend_contract_issues(entry_id: String, file_path: String, payload_value: Variant, field_path: String) -> void:
 	if not payload_value is Dictionary:
 		return
@@ -692,6 +815,12 @@ func _record_backend_contract_issues(entry_id: String, file_path: String, payloa
 		var issue_field_path := str(issue.get("field_path", field_path))
 		var message := str(issue.get("message", "Invalid backend contract payload."))
 		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s: %s" % [issue_field_path, message])
+
+
+func _compose_field_path(field_path: String, field_name: String) -> String:
+	if field_path.is_empty():
+		return field_name
+	return "%s.%s" % [field_path, field_name]
 
 
 func _begin_load_phase(phase: String) -> void:

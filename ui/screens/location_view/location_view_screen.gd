@@ -11,23 +11,10 @@ extends Control
 
 class_name LocationViewScreen
 
+const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const FALLBACK_MUTED_TEXT_COLOR := Color(0.6, 0.6, 0.6)
 const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
-
-# ---------------------------------------------------------------------------
-# Backend class → UIRouter screen_id mapping.
-# Add new entries here when new backends are registered.
-# ---------------------------------------------------------------------------
-const BACKEND_SCREEN_MAP: Dictionary = {
-	"AssemblyEditorBackend": "assembly_editor",
-	"ExchangeBackend": "exchange",
-	"ListBackend": "list_view",
-	"ChallengeBackend": "challenge",
-	"TaskProviderBackend": "task_provider",
-	"CatalogListBackend": "catalog_list",
-	"DialogueBackend": "dialogue",
-}
 
 const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
 
@@ -98,7 +85,7 @@ func _add_screen_button(screen_entry: Dictionary) -> void:
 	var display_name: String = str(screen_entry.get("display_name", "Unnamed"))
 	var description: String = str(screen_entry.get("description", ""))
 	var backend_class: String = str(screen_entry.get("backend_class", ""))
-	var screen_id: String = BACKEND_SCREEN_MAP.get(backend_class, "")
+	var screen_id: String = UI_ROUTE_CATALOG.get_screen_id_for_backend(backend_class)
 
 	var btn := Button.new()
 	btn.text = display_name

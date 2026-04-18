@@ -58,7 +58,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - `OmniAssemblyEditorBackend` (`ui/screens/backends/assembly_editor_backend.gd`) as the extracted runtime/backend layer behind the assembly editor screen.
 - `AssemblySession` in `core/` as the draft layer `AssemblyEditorBackend` operates on.
 - `BackendContractRegistry` (`systems/backend_contract_registry.gd`) for load-time `backend_class` validation during mod loading.
-- `LocationViewScreen.BACKEND_SCREEN_MAP` — the central `backend_class → screen_id` dispatch table.
+- `OmniUIRouteCatalog` (`ui/ui_route_catalog.gd`) — the shared route catalog for `backend_class → screen_id` mapping and known routed screen ids used by both UI code and content validation.
 
 ### Planned but not implemented
 
