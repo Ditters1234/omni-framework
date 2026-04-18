@@ -17,6 +17,8 @@ godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gselect=test_entity_in
 godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gdir=res://tests/unit -ginclude_subdirs
 ```
 
+UI-facing smoke/component suites mount scenes under offscreen `SubViewport` hosts so editor-driven runs keep the GUT result readout visible while controls and routed screens initialize.
+
 Current baseline suites cover:
 
 - stat definition normalization

@@ -11,12 +11,14 @@ const TEST_SAVE_DIR := "user://test_saves/test_engine_owned_ui_behaviors/"
 var _spawned_nodes: Array[Node] = []
 var _main_scene: Node = null
 var _screen_container: CanvasLayer = null
+var _test_viewport: SubViewport = null
 
 
 func before_each() -> void:
 	_delete_settings_file()
 	_cleanup_directory(TEST_SAVE_DIR)
 	SaveManager.set_save_directory_for_testing(TEST_SAVE_DIR)
+	_test_viewport = _create_test_viewport()
 	while UIRouter.stack_depth() > 0:
 		UIRouter.pop()
 	await get_tree().process_frame
@@ -32,6 +34,9 @@ func after_each() -> void:
 	_spawned_nodes.clear()
 	_main_scene = null
 	_screen_container = null
+	if _test_viewport != null and is_instance_valid(_test_viewport):
+		_test_viewport.queue_free()
+	_test_viewport = null
 	await get_tree().process_frame
 	SaveManager.reset_save_directory_for_testing()
 	_cleanup_directory(TEST_SAVE_DIR)
@@ -41,7 +46,8 @@ func after_each() -> void:
 func test_ui_cancel_pushes_and_pops_pause_menu_from_gameplay_shell() -> void:
 	_main_scene = MAIN_SCENE.instantiate()
 	_spawned_nodes.append(_main_scene)
-	get_tree().root.add_child(_main_scene)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_main_scene)
 	await get_tree().process_frame
 
 	GameState.new_game()
@@ -74,7 +80,8 @@ func test_save_slot_list_delete_requires_confirmation_before_removing_slot() -> 
 	assert_true(instance_value is Control)
 	var screen: Control = instance_value
 	_spawned_nodes.append(screen)
-	get_tree().root.add_child(screen)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(screen)
 	screen.call("initialize", {"mode": "load"})
 	await get_tree().process_frame
 
@@ -104,7 +111,8 @@ func test_save_slot_list_delete_requires_confirmation_before_removing_slot() -> 
 func test_settings_back_persists_dirty_changes_and_pops_to_previous_route() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)
-	get_tree().root.add_child(_screen_container)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
 	UIRouter.initialize(_screen_container)
 	UIRouter.register_screen("test_root", TEST_SCREEN_SCENE)
 	UIRouter.register_screen("settings", SETTINGS_SCENE_PATH)
@@ -138,7 +146,8 @@ func test_settings_back_persists_dirty_changes_and_pops_to_previous_route() -> v
 func test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)
-	get_tree().root.add_child(_screen_container)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
 	UIRouter.initialize(_screen_container)
 	UIRouter.register_screen("gameplay_shell", GAMEPLAY_SHELL_SCENE_PATH)
 	GameState.new_game()
@@ -183,3 +192,14 @@ func _cleanup_directory(path: String) -> void:
 			child_name = dir.get_next()
 		dir.list_dir_end()
 	DirAccess.remove_absolute(absolute_path)
+
+
+func _create_test_viewport() -> SubViewport:
+	var viewport := SubViewport.new()
+	viewport.name = "TestEngineOwnedUIViewport"
+	viewport.disable_3d = true
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.size = Vector2i(1920, 1080)
+	get_tree().root.add_child(viewport)
+	return viewport

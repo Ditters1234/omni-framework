@@ -14,6 +14,7 @@ var _is_running = false :
 var _gut_config = load('res://addons/gut/gut_config.gd').new()
 var _gut_config_gui = null
 var _gut_plugin = null
+var _editor_restore_pending = false
 var _light_color = Color(0, 0, 0, .5) :
 	set(val):
 		_light_color = val
@@ -113,11 +114,15 @@ func _process(_delta):
 			if(!is_instance_valid(_shell_out_panel)):
 				_is_running = false
 				show_me()
+		elif(_editor_restore_pending):
+			if(!_interface.is_playing_scene()):
+				_finish_editor_run_restore()
+		elif(_interface.is_playing_scene()):
+			if(_editor_run_results_ready()):
+				_editor_restore_pending = true
+				_interface.stop_playing_scene()
 		elif(!_interface.is_playing_scene()):
-			_is_running = false
-			results_text.add_text("\ndone")
-			load_result_output()
-			show_me()
+			_finish_editor_run_restore()
 
 
 # ---------------
@@ -212,6 +217,7 @@ func _run_tests():
 
 	clear_results()
 	GutEditorGlobals.create_temp_directory()
+	_editor_restore_pending = false
 	_light_color = Color.BLUE
 
 	var issues = _gut_config_gui.get_config_issues()
@@ -458,6 +464,25 @@ func load_result_text():
 func load_result_output():
 	load_result_text()
 	load_result_json()
+
+
+func _finish_editor_run_restore():
+	_is_running = false
+	_editor_restore_pending = false
+	results_text.add_text("\ndone")
+	load_result_output()
+	if(_gut_plugin != null):
+		_gut_plugin.make_bottom_panel_item_visible(self)
+	show_me()
+
+
+func _editor_run_results_ready():
+	var json_path = GutEditorGlobals.editor_run_json_results_path
+	if(!FileAccess.file_exists(json_path)):
+		return false
+
+	var json_text = get_file_as_text(json_path).strip_edges()
+	return json_text != ''
 
 
 func set_interface(value):

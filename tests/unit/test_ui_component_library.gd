@@ -15,6 +15,11 @@ const TAB_PANEL_FIRST_SCENE := preload("res://tests/fixtures/ui/tab_panel_test_f
 const TAB_PANEL_SECOND_SCENE := preload("res://tests/fixtures/ui/tab_panel_test_second.tscn")
 
 var _spawned_controls: Array[Control] = []
+var _test_viewport: SubViewport = null
+
+
+func before_each() -> void:
+	_test_viewport = _create_test_viewport()
 
 
 func after_each() -> void:
@@ -23,6 +28,9 @@ func after_each() -> void:
 			continue
 		control.queue_free()
 	_spawned_controls.clear()
+	if _test_viewport != null and is_instance_valid(_test_viewport):
+		_test_viewport.queue_free()
+	_test_viewport = null
 	await get_tree().process_frame
 
 
@@ -255,5 +263,17 @@ func _spawn_and_attach(scene: PackedScene) -> Control:
 	assert_true(instance_value is Control)
 	var control: Control = instance_value
 	_spawned_controls.append(control)
-	get_tree().root.add_child(control)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(control)
 	return control
+
+
+func _create_test_viewport() -> SubViewport:
+	var viewport := SubViewport.new()
+	viewport.name = "TestUIComponentViewport"
+	viewport.disable_3d = true
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.size = Vector2i(1920, 1080)
+	get_tree().root.add_child(viewport)
+	return viewport

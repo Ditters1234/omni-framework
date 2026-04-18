@@ -7,14 +7,17 @@ const TEST_INVALID_SCREEN_SCENE := "res://tests/fixtures/ui_router/test_invalid_
 
 var _router: OmniUIRouter = null
 var _screen_container: CanvasLayer = null
+var _test_viewport: SubViewport = null
 
 
 func before_each() -> void:
 	GameEvents.clear_event_history()
 	_router = UI_ROUTER_SCRIPT.new()
 	_screen_container = CanvasLayer.new()
-	get_tree().root.add_child(_screen_container)
-	get_tree().root.add_child(_router)
+	_test_viewport = _create_test_viewport()
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
+	_test_viewport.add_child(_router)
 
 
 func after_each() -> void:
@@ -22,6 +25,9 @@ func after_each() -> void:
 		_router.free()
 	if is_instance_valid(_screen_container):
 		_screen_container.free()
+	if _test_viewport != null and is_instance_valid(_test_viewport):
+		_test_viewport.queue_free()
+	_test_viewport = null
 
 
 func test_push_and_pop_manage_visibility_hooks_and_ui_events() -> void:
@@ -190,3 +196,14 @@ func _array_contains_text(values: Array, needle: String) -> bool:
 		if str(value).contains(needle):
 			return true
 	return false
+
+
+func _create_test_viewport() -> SubViewport:
+	var viewport := SubViewport.new()
+	viewport.name = "TestUIRouterViewport"
+	viewport.disable_3d = true
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.size = Vector2i(1920, 1080)
+	get_tree().root.add_child(viewport)
+	return viewport

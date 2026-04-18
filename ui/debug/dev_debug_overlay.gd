@@ -296,7 +296,11 @@ func _format_multiline_variant(value: Variant) -> Array[String]:
 	var rendered := _format_variant(value)
 	if rendered.is_empty():
 		return ["<empty>"]
-	return rendered.split("\n", false)
+	var lines := rendered.split("\n", false)
+	var result: Array[String] = []
+	for line_value in lines:
+		result.append(str(line_value))
+	return result
 
 
 func _extract_backend_contract_issues(recent_issues_value: Variant) -> Array[String]:

@@ -3,6 +3,7 @@ extends GutTest
 const TEST_SCREEN_SCENE := "res://tests/fixtures/ui_router/test_routed_screen.tscn"
 
 var _screen_container: CanvasLayer = null
+var _test_viewport: SubViewport = null
 
 
 func before_each() -> void:
@@ -10,7 +11,9 @@ func before_each() -> void:
 	while UIRouter.stack_depth() > 0:
 		UIRouter.pop()
 	_screen_container = CanvasLayer.new()
-	get_tree().root.add_child(_screen_container)
+	_test_viewport = _create_test_viewport()
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
 	UIRouter.initialize(_screen_container)
 	UIRouter.register_screen("test_action_push_screen", TEST_SCREEN_SCENE)
 
@@ -20,6 +23,9 @@ func after_each() -> void:
 		UIRouter.pop()
 	if is_instance_valid(_screen_container):
 		_screen_container.free()
+	if _test_viewport != null and is_instance_valid(_test_viewport):
+		_test_viewport.queue_free()
+	_test_viewport = null
 
 
 func test_emit_signal_forwards_args_positionally() -> void:
@@ -71,3 +77,14 @@ func test_push_screen_routes_through_ui_router_with_params() -> void:
 		assert_true(nested_value is Dictionary)
 		var nested: Dictionary = nested_value
 		assert_eq(int(nested.get("value", 0)), 7)
+
+
+func _create_test_viewport() -> SubViewport:
+	var viewport := SubViewport.new()
+	viewport.name = "TestActionDispatcherViewport"
+	viewport.disable_3d = true
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.size = Vector2i(1920, 1080)
+	get_tree().root.add_child(viewport)
+	return viewport
