@@ -110,7 +110,23 @@ func _refresh_text() -> void:
 		int(mod_snapshot.get("nonfatal_error_count", 0))
 	])
 	lines.append("  ImGuiRoot present: %s" % str(has_node("/root/ImGuiRoot")))
-	lines.append("  AI provider: %s available=%s" % [AIManager.get_provider_type(), str(AIManager.is_available())])
+	var ai_snapshot := AIManager.get_debug_snapshot()
+	lines.append("  AI provider: %s enabled=%s available=%s" % [
+		AIManager.get_provider_name(),
+		str(bool(ai_snapshot.get("enabled", false))),
+		str(bool(ai_snapshot.get("available", false)))
+	])
+	var ai_last_error := str(ai_snapshot.get("last_error", ""))
+	if not ai_last_error.is_empty():
+		lines.append("  AI last error: %s" % ai_last_error)
+	var ai_last_request_value: Variant = ai_snapshot.get("last_request", {})
+	if ai_last_request_value is Dictionary:
+		var ai_last_request: Dictionary = ai_last_request_value
+		if not ai_last_request.is_empty():
+			lines.append("  AI last request: %s status=%s" % [
+				str(ai_last_request.get("request_id", "")),
+				str(ai_last_request.get("status", ""))
+			])
 	var events_snapshot := GameEvents.get_debug_snapshot()
 	lines.append("  GameEvents signals=%d history=%d" % [
 		int(events_snapshot.get("signal_count", 0)),

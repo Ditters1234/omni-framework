@@ -151,7 +151,10 @@ Show:
 
 - Current provider
 - Availability state
+- Enabled/disabled state
 - Last request/response metadata
+- Recent request ids and statuses
+- Last provider or manager error
 - Validation errors on structured AI output
 
 ## Debug Overlay Rules

@@ -28,6 +28,7 @@
     }
   },
   "ai": {
+    "enabled": false,
     "provider": "disabled"
   }
 }

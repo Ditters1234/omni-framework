@@ -23,6 +23,7 @@ func after_each() -> void:
 func test_initialize_reads_nested_provider_block() -> void:
 	DataManager.config = {
 		"ai": {
+			"enabled": true,
 			"provider": AIManager.PROVIDER_OPENAI_COMPATIBLE,
 			"system_prompt": "Global system prompt",
 			"openai_compatible": {

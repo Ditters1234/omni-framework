@@ -1001,11 +1001,14 @@ Configure the AI backend for dynamic NPC dialogue, procedural descriptions, or a
 - `temperature` (number 0.0–1.0, default: 0.8): Response creativity. Lower = more deterministic.
 - `nobodywho_model_path` (string): Path to a `.gguf` model file for embedded local inference. Only used when `provider` is `"nobodywho"`. Example: `"user://models/llama3.2.gguf"`.
 
+`AIManager` will only activate when `enabled` is explicitly set to `true`. Setting a provider without enabling AI leaves the system disabled on purpose.
+
 **AI Safety Rules:**
 - Treat AI output like untrusted user input: validate format, clamp length, and reject malformed structures.
 - Keep AI-assisted features additive. Core progression, purchases, saves, and navigation should still work when AI is disabled.
 - Prefer system-owned prompt templates and narrow response formats over free-form "do anything" prompts.
 - Always provide a fallback path for script hooks that call `AIManager`.
+- If you need live UI updates for generation, subscribe to `GameEvents.ai_token_received`, `ai_response_received`, and `ai_error` using the request id returned by `AIManager.generate()` or `AIManager.generate_streaming()`.
 
 **Example `ai` config (Ollama local):**
 ```json
@@ -1110,6 +1113,21 @@ func on_equip(entity: Dictionary, instance: Dictionary) -> void:
     instance["dynamic_description"] = description
 ```
 If AI is disabled or unconfigured, `AIManager.is_available()` returns false and your hook should fall back to static data gracefully.
+
+For streaming UI, use the returned request id to filter `GameEvents`:
+```gdscript
+var request_id = AIManager.generate_streaming(prompt, [
+    {"role": "system", "content": "Keep it short and in character."}
+])
+GameEvents.ai_token_received.connect(func(id: String, token: String) -> void:
+    if id == request_id:
+        label.text += token
+)
+GameEvents.ai_error.connect(func(id: String, message: String) -> void:
+    if id == request_id:
+        label.text = "[AI unavailable] " + message
+)
+```
 
 *Note: Mods with GDScript files will trigger a security warning in the console when loaded, as they can execute arbitrary code.*
 

@@ -406,17 +406,20 @@ Supported providers (set via `config.json ai.provider`):
 Key methods:
 ```gdscript
 # Fire-and-forget with callback
-func generate(prompt: String, context: Array = [], callback: Callable = Callable()) -> String
+func generate(prompt: String, context: Variant = [], callback: Callable = Callable()) -> String  # returns request_id
 
 # Awaitable
-func generate_async(prompt: String, context: Array = []) -> String
+func generate_async(prompt: String, context: Variant = []) -> String
 
 # Streaming — emits ai_token_received on GameEvents per token, then ai_response_received when done
-func generate_streaming(prompt: String, context: Array = []) -> String  # returns request_id
+func generate_streaming(prompt: String, context: Variant = []) -> String  # returns request_id
 
-func is_available() -> bool   # Returns false if disabled or provider failed to init
+func is_available() -> bool   # Returns false if disabled, misconfigured, or provider failed to init
 func get_provider_name() -> String
+func get_debug_snapshot() -> Dictionary
 ```
+
+`context` accepts either the documented message-history `Array` form or a `Dictionary` with fields like `history` and `system_prompt`.
 
 Usage from a script hook or dialogue script:
 ```gdscript
@@ -431,6 +434,12 @@ GameEvents.ai_token_received.connect(func(id, token):
     if id == request_id: label.text += token
 )
 ```
+
+Implementation hardening notes:
+
+- `AIManager` owns request ids and emits `ai_response_received`, `ai_token_received`, and `ai_error` on `GameEvents`.
+- `is_available()` reflects provider readiness rather than only whether a provider node exists.
+- `AIManager.get_debug_snapshot()` exposes current provider state plus recent request metadata for the debug overlay and tests.
 
 AI output is treated as untrusted input. The target architecture assumes:
 
