@@ -353,9 +353,18 @@ func push(screen_id: String, params: Dictionary = {}) -> void
 func pop() -> void
 func replace_all(screen_id: String, params: Dictionary = {}) -> void
 func current_screen_id() -> String
+func current_screen_params() -> Dictionary
 func is_registered(screen_id: String) -> bool
 func register_screen(screen_id: String, scene_path: String) -> void
+func get_debug_snapshot() -> Dictionary
 ```
+
+Implementation hardening notes:
+
+- `replace_all()` should instantiate the target route before tearing down the current stack so a bad route cannot blank the UI.
+- Pushed screens should hide the previous top-of-stack screen and reveal it again on `pop()` so back-navigation is deterministic.
+- Replacing a stack should emit the same pop events a manual unwind would emit, so debug tools and listeners do not miss route removals.
+- The router should expose a structured debug snapshot containing registered routes, stack entries, current params, container health, and recent navigation errors.
 
 Registered screens (see `ui/main.gd`):
 
@@ -473,6 +482,7 @@ The following support systems are important enough to be part of the documented 
 Development-time tooling is part of the architecture, not an afterthought.
 
 - **The built-in dev overlay is the current always-on runtime debug layer** for inspecting mods, registries, GameState, event flow, and save/migration behavior.
+- **`UIRouter` should feed the dev overlay through `get_debug_snapshot()`** so the live route stack, params, and recent router errors are visible without ad hoc logging.
 - **`imgui-godot` remains the preferred richer future debug layer** when immediate-mode tooling will materially help iteration speed.
 - **GUT is the preferred automated test layer** for unit, integration, and content invariant tests.
 - Debug and testing tools are dev-only and must not become required for normal gameplay.

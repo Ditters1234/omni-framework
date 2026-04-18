@@ -149,7 +149,32 @@ func _refresh_text() -> void:
 
 	lines.append("")
 	lines.append("Runtime")
-	lines.append("  screen=%s depth=%d" % [UIRouter.current_screen_id(), UIRouter.stack_depth()])
+	var router_snapshot := UIRouter.get_debug_snapshot()
+	lines.append("  router screen=%s depth=%d container_valid=%s" % [
+		str(router_snapshot.get("current_screen_id", "")),
+		int(router_snapshot.get("stack_depth", 0)),
+		str(router_snapshot.get("container_valid", false))
+	])
+	var router_stack_value: Variant = router_snapshot.get("stack", [])
+	if router_stack_value is Array:
+		var router_stack: Array = router_stack_value
+		if not router_stack.is_empty():
+			lines.append("  stack:")
+			for stack_entry_value in router_stack:
+				if not stack_entry_value is Dictionary:
+					continue
+				var stack_entry: Dictionary = stack_entry_value
+				lines.append("    - %s visible=%s" % [
+					str(stack_entry.get("screen_id", "")),
+					str(stack_entry.get("visible", false))
+				])
+	var router_errors_value: Variant = router_snapshot.get("recent_errors", [])
+	if router_errors_value is Array:
+		var router_errors: Array = router_errors_value
+		if not router_errors.is_empty():
+			lines.append("  router errors:")
+			for error_value in router_errors:
+				lines.append("    - %s" % str(error_value))
 	lines.append("  location=%s day=%d tick=%d" % [GameState.current_location_id, GameState.current_day, GameState.current_tick])
 	var time_snapshot := TimeKeeper.get_debug_snapshot()
 	lines.append("  time_running=%s tick_rate=%.2f tick_in_day=%d/%d" % [

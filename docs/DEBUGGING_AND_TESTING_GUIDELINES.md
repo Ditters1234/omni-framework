@@ -130,6 +130,10 @@ Show:
 - Latest built view model
 - UI refresh or binding failures
 
+Implementation note:
+
+- `UIRouter.get_debug_snapshot()` should be the canonical source for route stack, current params, container health, and recent navigation errors.
+
 ### Save / Load
 
 Show:
@@ -291,6 +295,14 @@ Add or update tests when you change:
 - Key transitions emit the documented signal
 - Payload shape matches expectations
 
+### UIRouter
+
+- Push/pop/replace stack semantics
+- Hidden/revealed screen behavior across back-navigation
+- Invalid route and invalid scene-root failures stay non-destructive
+- Debug snapshot exposes current params, stack entries, and recent errors
+- Route events are emitted for both manual pops and `replace_all()` unwinds
+
 ### UI Backends
 
 - Required backend contract fields enforced
@@ -323,5 +335,6 @@ Add or update tests when you change:
 
 - `F3` toggles the current developer overlay in debug builds.
 - The current overlay focuses on boot status, registry counts, GameState, and recent high-value events.
+- The current overlay also surfaces the live `UIRouter` stack and recent router navigation errors.
 - GUT is configured through `res://.gutconfig.json`.
-- The current automated baseline lives under `res://tests/` and covers stat metadata, entity stat clamping, signal forwarding, save/load flow, and base-content invariants.
+- The current automated baseline lives under `res://tests/` and covers stat metadata, entity stat clamping, signal forwarding, router stack hardening, save/load flow, and base-content invariants.
