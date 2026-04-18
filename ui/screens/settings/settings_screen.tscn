@@ -26,166 +26,173 @@ theme_override_constants/margin_bottom = 40
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/PanelContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
-[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "Settings"
 
-[node name="SubtitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="SubtitleLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
 text = "Engine-owned application settings."
 
-[node name="AudioSectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="AudioSectionLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Audio"
 
-[node name="AudioGrid" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="AudioGrid" type="GridContainer" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 columns = 3
 
-[node name="MasterLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="MasterLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 text = "Master Volume"
 
-[node name="MasterSlider" type="HSlider" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="MasterSlider" type="HSlider" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
 step = 0.01
 value = 1.0
 
-[node name="MasterValueLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="MasterValueLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 text = "100%"
 
-[node name="MusicLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="MusicLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 text = "Music Volume"
 
-[node name="MusicSlider" type="HSlider" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="MusicSlider" type="HSlider" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
 step = 0.01
 value = 1.0
 
-[node name="MusicValueLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="MusicValueLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 text = "100%"
 
-[node name="SfxLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="SfxLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 text = "SFX Volume"
 
-[node name="SfxSlider" type="HSlider" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="SfxSlider" type="HSlider" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
 step = 0.01
 value = 1.0
 
-[node name="SfxValueLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AudioGrid"]
+[node name="SfxValueLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid"]
 layout_mode = 2
 text = "100%"
 
-[node name="DisplaySectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="DisplaySectionLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Display"
 
-[node name="DisplayGrid" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="DisplayGrid" type="GridContainer" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 columns = 2
 
-[node name="WindowModeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/DisplayGrid"]
+[node name="WindowModeLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid"]
 layout_mode = 2
 text = "Window Mode"
 
-[node name="WindowModeButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/DisplayGrid"]
+[node name="WindowModeButton" type="OptionButton" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ResolutionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/DisplayGrid"]
+[node name="ResolutionLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid"]
 layout_mode = 2
 text = "Resolution"
 
-[node name="ResolutionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/DisplayGrid"]
+[node name="ResolutionButton" type="OptionButton" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="AiSectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="AiSectionLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "AI"
 
-[node name="AiGrid" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="AiGrid" type="GridContainer" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 columns = 2
 
-[node name="AiProviderLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiProviderLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "Provider"
 
-[node name="AiProviderButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiProviderButton" type="OptionButton" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="AiEndpointLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiEndpointLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "Endpoint"
 
-[node name="AiEndpointEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiEndpointEdit" type="LineEdit" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "http://localhost:11434/v1/chat/completions"
 
-[node name="AiApiKeyLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiApiKeyLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "API Key"
 
-[node name="AiApiKeyEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiApiKeyEdit" type="LineEdit" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 secret = true
 
-[node name="AiModelLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiModelLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "Model"
 
-[node name="AiModelEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiModelEdit" type="LineEdit" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "llama3"
 
-[node name="AiModelPathLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiModelPathLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "Model Path"
 
-[node name="AiModelPathEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiModelPathEdit" type="LineEdit" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "user://models/model.gguf"
 
-[node name="AiSystemPromptLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiSystemPromptLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "System Prompt"
 
-[node name="AiSystemPromptEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiSystemPromptEdit" type="LineEdit" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Optional global prompt"
 
-[node name="AiMaxTokensLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiMaxTokensLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "Max Tokens"
 
-[node name="AiMaxTokensSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiMaxTokensSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
@@ -193,22 +200,22 @@ max_value = 8192.0
 step = 1.0
 value = 256.0
 
-[node name="AiTemperatureLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiTemperatureLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "Temperature"
 
-[node name="AiTemperatureSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiTemperatureSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
 step = 0.05
 value = 0.7
 
-[node name="AiContextWindowLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiContextWindowLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 text = "Context Window"
 
-[node name="AiContextWindowSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+[node name="AiContextWindowSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
@@ -216,57 +223,57 @@ max_value = 32768.0
 step = 1.0
 value = 2048.0
 
-[node name="AiHintLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="AiHintLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
 text = "Choose a server or on-disk provider here."
 
-[node name="AiInfoLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="AiInfoLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
 text = "AI Provider: disabled"
 
-[node name="AiButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="AiButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 alignment = 2
 theme_override_constants/separation = 8
 
-[node name="ConnectAiButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/AiButtonRow"]
+[node name="ConnectAiButton" type="Button" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiButtonRow"]
 layout_mode = 2
 text = "Connect AI"
 
-[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 alignment = 2
 theme_override_constants/separation = 8
 
-[node name="SaveButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
+[node name="SaveButton" type="Button" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2
 text = "Save"
 
-[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2
 text = "Back"
 
-[node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
 text = "Settings loaded."
 
-[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AudioGrid/MasterSlider" to="." method="_on_master_slider_value_changed"]
-[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AudioGrid/MusicSlider" to="." method="_on_music_slider_value_changed"]
-[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AudioGrid/SfxSlider" to="." method="_on_sfx_slider_value_changed"]
-[connection signal="item_selected" from="MarginContainer/PanelContainer/VBoxContainer/DisplayGrid/WindowModeButton" to="." method="_on_window_mode_button_item_selected"]
-[connection signal="item_selected" from="MarginContainer/PanelContainer/VBoxContainer/DisplayGrid/ResolutionButton" to="." method="_on_resolution_button_item_selected"]
-[connection signal="item_selected" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiProviderButton" to="." method="_on_ai_provider_button_item_selected"]
-[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiEndpointEdit" to="." method="_on_ai_endpoint_edit_text_changed"]
-[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiApiKeyEdit" to="." method="_on_ai_api_key_edit_text_changed"]
-[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiModelEdit" to="." method="_on_ai_model_edit_text_changed"]
-[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiModelPathEdit" to="." method="_on_ai_model_path_edit_text_changed"]
-[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiSystemPromptEdit" to="." method="_on_ai_system_prompt_edit_text_changed"]
-[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiMaxTokensSpinBox" to="." method="_on_ai_max_tokens_spinbox_value_changed"]
-[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiTemperatureSpinBox" to="." method="_on_ai_temperature_spinbox_value_changed"]
-[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiContextWindowSpinBox" to="." method="_on_ai_context_window_spinbox_value_changed"]
-[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/AiButtonRow/ConnectAiButton" to="." method="_on_connect_ai_button_pressed"]
-[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/SaveButton" to="." method="_on_save_button_pressed"]
-[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/MasterSlider" to="." method="_on_master_slider_value_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/MusicSlider" to="." method="_on_music_slider_value_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/SfxSlider" to="." method="_on_sfx_slider_value_changed"]
+[connection signal="item_selected" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid/WindowModeButton" to="." method="_on_window_mode_button_item_selected"]
+[connection signal="item_selected" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid/ResolutionButton" to="." method="_on_resolution_button_item_selected"]
+[connection signal="item_selected" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiProviderButton" to="." method="_on_ai_provider_button_item_selected"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiEndpointEdit" to="." method="_on_ai_endpoint_edit_text_changed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiApiKeyEdit" to="." method="_on_ai_api_key_edit_text_changed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiModelEdit" to="." method="_on_ai_model_edit_text_changed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiModelPathEdit" to="." method="_on_ai_model_path_edit_text_changed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiSystemPromptEdit" to="." method="_on_ai_system_prompt_edit_text_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiMaxTokensSpinBox" to="." method="_on_ai_max_tokens_spinbox_value_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiTemperatureSpinBox" to="." method="_on_ai_temperature_spinbox_value_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiContextWindowSpinBox" to="." method="_on_ai_context_window_spinbox_value_changed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiButtonRow/ConnectAiButton" to="." method="_on_connect_ai_button_pressed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/ButtonRow/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]
