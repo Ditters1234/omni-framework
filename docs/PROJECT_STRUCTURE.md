@@ -312,7 +312,7 @@ A2J.from_json(raw, _save_ruleset)  # Populates GameState in place
 ```
 
 ### `TimeKeeper` (`autoloads/time_keeper.gd`)
-The tick clock. Exposes methods for advancing time (manually or via UI buttons). Dispatches `tick_advanced` and `day_started` signals on `GameEvents`. Drives `TaskRunner` to advance in-progress tasks and resynchronizes its derived tick-within-day counter from `GameState` after load/reset.
+The tick clock. Exposes methods for advancing time (manually or via UI buttons). Dispatches `tick_advanced` and `day_advanced` signals on `GameEvents`. Drives `TaskRunner` to advance in-progress tasks, falls back to a safe default when `game.ticks_per_day` is invalid, and resynchronizes its derived tick-within-day counter from `GameState` after load/reset. `current_tick` is treated as the authoritative time source during resync; `current_day` is normalized from that tick value so corrupted or stale save state does not keep drifting at runtime.
 
 Key methods:
 ```gdscript
@@ -321,6 +321,7 @@ func advance_to_next_day() -> void
 func get_current_tick() -> int
 func get_current_day() -> int
 func get_time_string() -> String  # e.g., "Day 3, 14:00"
+func get_debug_snapshot() -> Dictionary
 ```
 
 ### `AudioManager` (`autoloads/audio_manager.gd`)

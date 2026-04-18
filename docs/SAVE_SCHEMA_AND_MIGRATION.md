@@ -131,7 +131,8 @@ Recommended load order:
 
 Current implementation note:
 
-- The runtime sanity pass should also resynchronize any derived clock state such as `TimeKeeper`'s tick-within-day accumulator after `GameState` is restored.
+- The runtime sanity pass should also resynchronize any derived clock state such as `TimeKeeper`'s tick-within-day accumulator after `GameState` is restored, and normalize `current_day` from `current_tick` if the saved values disagree.
+- Save operations should also normalize persisted time state before writing so slot metadata and `game_state` do not preserve a stale `current_day/current_tick` mismatch.
 
 ## Runtime Sanity Checks After Load
 

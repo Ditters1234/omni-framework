@@ -151,7 +151,17 @@ func _refresh_text() -> void:
 	lines.append("Runtime")
 	lines.append("  screen=%s depth=%d" % [UIRouter.current_screen_id(), UIRouter.stack_depth()])
 	lines.append("  location=%s day=%d tick=%d" % [GameState.current_location_id, GameState.current_day, GameState.current_tick])
-	lines.append("  time_running=%s tick_rate=%.2f tick_in_day=%d" % [str(TimeKeeper.is_running), TimeKeeper.tick_rate, TimeKeeper.get_ticks_into_day()])
+	var time_snapshot := TimeKeeper.get_debug_snapshot()
+	lines.append("  time_running=%s tick_rate=%.2f tick_in_day=%d/%d" % [
+		str(time_snapshot.get("is_running", false)),
+		float(time_snapshot.get("tick_rate", 0.0)),
+		int(time_snapshot.get("ticks_into_day", 0)),
+		int(time_snapshot.get("ticks_per_day", 0))
+	])
+	lines.append("  time_consistent=%s active_tasks=%d" % [
+		str(time_snapshot.get("is_time_consistent", false)),
+		int(time_snapshot.get("active_task_count", 0))
+	])
 	lines.append("  flags=%d unlocked_achievements=%d" % [GameState.flags.size(), GameState.unlocked_achievements.size()])
 
 	var player: EntityInstance = GameState.player

@@ -94,6 +94,7 @@ func save_game(slot: int) -> void:
 		}
 		GameEvents.save_failed.emit(slot, runtime_reason)
 		return
+	_sync_timekeeper_from_game_state()
 	var path := _slot_path(slot)
 	var existing_payload := _read_raw_payload(path)
 	var payload := _build_save_payload(existing_payload)
@@ -206,6 +207,7 @@ func load_game(slot: int) -> bool:
 		GameEvents.load_failed.emit(slot, deserialize_reason)
 		return false
 
+	_sync_timekeeper_from_game_state()
 	var previous_state_snapshot := GameState.to_dict()
 	var game_state_payload: Dictionary = state_data
 	GameState.from_dict(game_state_payload)

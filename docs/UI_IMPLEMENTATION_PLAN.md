@@ -131,7 +131,7 @@ These do not use `backend_class` because they do not interact with mod data. The
 | Screen id | Purpose | Notes |
 |---|---|---|
 | `main_menu` | Boot landing, new game / continue / load / quit / settings / credits | Exists; needs Settings + Load-Slot buttons wired |
-| `settings` | Audio volumes, resolution, keybinds, accessibility | Writes to `user://settings.cfg` via `ConfigFile`, independent of mod `config.json` |
+| `settings` | Audio volumes, llm settings, resolution, keybinds, accessibility | Writes to `user://settings.cfg` via `ConfigFile`, independent of mod `config.json` |
 | `save_slot_list` | Multi-slot save/load with playtime/day/preview | Uses existing `SaveManager.get_slot_info(slot)` and `MAX_SAVE_SLOTS = 5` |
 | `pause_menu` | In-game pause overlay (Resume / Settings / Save / Main Menu) | Listens to an `Escape` action binding; emits `game_paused` / `game_resumed` |
 | `credits` | Attribution + mod list | Pulls from `ModLoader.loaded_mods` so loaded mods show up automatically |

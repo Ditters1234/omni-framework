@@ -21,7 +21,7 @@ func test_save_round_trip_restores_game_state() -> void:
 	GameState.player.set_stat("health", 40.0)
 	GameState.add_currency("credits", 25.0)
 	GameState.set_flag("debug_test_flag", true)
-	GameState.current_tick = 7
+	GameState.current_tick = 31
 	GameState.current_day = 2
 
 	SaveManager.save_game(1)
@@ -37,5 +37,5 @@ func test_save_round_trip_restores_game_state() -> void:
 	assert_eq(GameState.player.get_stat("health"), 40.0)
 	assert_eq(GameState.get_currency("credits"), 125.0)
 	assert_eq(GameState.get_flag("debug_test_flag", null), true)
-	assert_eq(GameState.current_tick, 7)
+	assert_eq(GameState.current_tick, 31)
 	assert_eq(GameState.current_day, 2)

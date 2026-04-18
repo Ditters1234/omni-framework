@@ -15,7 +15,7 @@ func before_each() -> void:
 
 
 func test_save_game_rejects_invalid_runtime_state_without_overwriting_existing_slot() -> void:
-	GameState.current_day = 2
+	GameState.current_day = 1
 	GameState.current_tick = 17
 	SaveManager.save_game(SAVE_SLOT_INVALID_RUNTIME)
 	var slot_path := "user://saves/slot_%d.json" % SAVE_SLOT_INVALID_RUNTIME
@@ -37,7 +37,7 @@ func test_failed_load_restores_previous_runtime_state() -> void:
 	GameState.add_currency("credits", 15.0)
 	GameState.set_flag("rollback_guard", "live_state")
 	GameState.current_day = 6
-	GameState.current_tick = 23
+	GameState.current_tick = 143
 	var expected_snapshot := GameState.to_dict()
 
 	GameState.player.set_stat("health", 5.0)
@@ -70,7 +70,7 @@ func test_failed_load_restores_previous_runtime_state() -> void:
 	assert_eq(GameState.get_currency("credits"), 115.0)
 	assert_eq(GameState.get_flag("rollback_guard", ""), "live_state")
 	assert_eq(GameState.current_day, 6)
-	assert_eq(GameState.current_tick, 23)
+	assert_eq(GameState.current_tick, 143)
 
 
 func test_get_slot_info_returns_empty_dictionary_for_malformed_metadata() -> void:
@@ -93,7 +93,7 @@ func test_slot_exists_requires_required_save_fields() -> void:
 
 func test_load_game_migrates_legacy_payload_without_optional_metadata() -> void:
 	GameState.current_day = 4
-	GameState.current_tick = 9
+	GameState.current_tick = 81
 	var payload := {
 		"game_state": GameState.to_dict(),
 	}
@@ -103,7 +103,21 @@ func test_load_game_migrates_legacy_payload_without_optional_metadata() -> void:
 	var debug_snapshot := SaveManager.get_debug_snapshot()
 	assert_eq(int(debug_snapshot.get("schema_version", 0)), SaveManager.SCHEMA_VERSION)
 	assert_eq(GameState.current_day, 4)
+	assert_eq(GameState.current_tick, 81)
+
+
+func test_load_game_normalizes_inconsistent_saved_day_from_tick() -> void:
+	GameState.current_day = 4
+	GameState.current_tick = 9
+	var payload := {
+		"save_schema_version": SaveManager.SCHEMA_VERSION,
+		"game_state": GameState.to_dict(),
+	}
+	_write_slot_payload(SAVE_SLOT_METADATA, payload)
+
+	assert_true(SaveManager.load_game(SAVE_SLOT_METADATA))
 	assert_eq(GameState.current_tick, 9)
+	assert_eq(GameState.current_day, 1)
 
 
 func test_load_game_rejects_future_schema_versions() -> void:

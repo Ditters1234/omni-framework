@@ -102,6 +102,8 @@ Show:
 - Player entity state
 - Current location
 - Tick/day
+- Tick-within-day and configured ticks-per-day
+- Whether `TimeKeeper` considers runtime time state internally consistent
 - Active quests/tasks
 - Flags
 - Entity inventories and currencies
@@ -137,6 +139,7 @@ Show:
 - Migration path used
 - Post-load sanity check failures
 - Tick/day resync state after load
+- Any `TimeKeeper` day normalization that occurred after load
 
 ### AI
 
