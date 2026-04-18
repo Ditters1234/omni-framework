@@ -232,10 +232,13 @@ Scans `res://mods/` at startup. Reads each `mod.json`, resolves dependencies, bu
 
 Responsibilities:
 - Discover mod folders and validate manifests.
+- Enforce base-mod invariants (`id: "base"`, `load_order: 0`, not disabled, no dependencies).
 - Topological sort by `load_order` and dependency graph.
 - Phase 1: Pass all `data/*.json` addition files to `DataManager`.
 - Phase 2: Pass all `patches` blocks to `DataManager` for merging.
 - Emit `mod_load_error` on `GameEvents` for any failures (non-fatal).
+- Emit `mod_loaded` only after both phases and script-hook preloading complete, then emit `all_mods_loaded`.
+- Expose `get_debug_snapshot()` so debug tooling can inspect load status, timings, discovered-vs-loaded counts, and fatal/non-fatal error totals.
 
 ### `DataManager` (`autoloads/data_manager.gd`)
 The central template registry. After `ModLoader` runs, `DataManager` holds the final merged state of all loaded data. All runtime systems query `DataManager` for templates.

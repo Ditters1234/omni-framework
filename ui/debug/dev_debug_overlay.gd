@@ -88,19 +88,27 @@ func _refresh_text() -> void:
 		return
 
 	var lines: Array[String] = []
+	var mod_snapshot := ModLoader.get_debug_snapshot()
 	lines.append("Boot")
-	lines.append("  Mods loaded: %s" % str(ModLoader.is_loaded))
-	lines.append("  Loaded mods: %d" % ModLoader.loaded_mods.size())
-	lines.append("  Phase timings: additions=%sms patches=%sms" % [
-		str(ModLoader.load_report.get("phase_one_ms", 0)),
-		str(ModLoader.load_report.get("phase_two_ms", 0))
+	lines.append("  Loader status: %s loaded=%s" % [
+		str(mod_snapshot.get("status", "")),
+		str(mod_snapshot.get("is_loaded", false))
 	])
-	var load_errors_data: Variant = ModLoader.load_report.get("errors", [])
-	var load_error_count := 0
-	if load_errors_data is Array:
-		var load_errors: Array = load_errors_data
-		load_error_count = load_errors.size()
-	lines.append("  Load report errors: %d" % load_error_count)
+	lines.append("  Loaded mods: %d discovered=%d" % [
+		int(mod_snapshot.get("loaded_mod_count", 0)),
+		int(mod_snapshot.get("discovered_mod_count", 0))
+	])
+	lines.append("  Phase timings: additions=%sms patches=%sms hooks=%sms total=%sms" % [
+		str(mod_snapshot.get("phase_one_ms", 0)),
+		str(mod_snapshot.get("phase_two_ms", 0)),
+		str(mod_snapshot.get("script_hook_preload_ms", 0)),
+		str(mod_snapshot.get("total_ms", 0))
+	])
+	lines.append("  Load report errors: %d fatal=%d nonfatal=%d" % [
+		int(mod_snapshot.get("error_count", 0)),
+		int(mod_snapshot.get("fatal_error_count", 0)),
+		int(mod_snapshot.get("nonfatal_error_count", 0))
+	])
 	lines.append("  ImGuiRoot present: %s" % str(has_node("/root/ImGuiRoot")))
 	lines.append("  AI provider: %s available=%s" % [AIManager.get_provider_type(), str(AIManager.is_available())])
 	var events_snapshot := GameEvents.get_debug_snapshot()

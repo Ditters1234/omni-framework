@@ -28,4 +28,6 @@ Current baseline suites cover:
 - DataManager query helpers and immutability
 - AI provider config selection
 - mod dependency-aware load ordering
+- mod manifest validation and loader debug snapshot coverage
+- end-to-end boot pipeline contracts (load phases, new game bootstrap, repeated reloads, save/load flow)
 - base content invariants

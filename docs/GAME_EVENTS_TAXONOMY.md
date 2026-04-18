@@ -51,7 +51,7 @@ The event surface should stay grouped by domain.
 
 ### Boot And Mod Loading
 
-- `mod_loaded(mod_id)`
+- `mod_loaded(mod_id)` after the loader finishes both JSON phases and script-hook preloading for the current boot
 - `all_mods_loaded()`
 - `mod_load_error(mod_id, message)`
 - `data_validation_failed(mod_id, file_path, issue_count)`

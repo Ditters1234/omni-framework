@@ -12,6 +12,15 @@ const MODS_PATH := "res://mods/"
 const BASE_MOD_ID := "base"
 const BASE_MOD_PATH := "res://mods/base/"
 const MOD_MANIFEST := "mod.json"
+const REQUIRED_MANIFEST_FIELDS: Array[String] = ["id", "name", "version", "load_order"]
+const LOAD_STATUS_IDLE := "idle"
+const LOAD_STATUS_LOADING := "loading"
+const LOAD_STATUS_LOADED := "loaded"
+const LOAD_STATUS_FAILED := "failed"
+const ERROR_STAGE_DISCOVERY := "discovery"
+const ERROR_STAGE_VALIDATION := "validation"
+const ERROR_STAGE_DEPENDENCIES := "dependencies"
+const ERROR_STAGE_ORDERING := "ordering"
 
 ## Ordered list of loaded mod manifests: [{id, name, version, load_order, path, ...}]
 var loaded_mods: Array[Dictionary] = []
@@ -32,25 +41,33 @@ func _ready() -> void:
 ## Entry point called by the boot sequence.
 ## Scans, validates, sorts, then runs both load phases.
 func load_all_mods() -> void:
+	var started_ms := Time.get_ticks_msec()
 	is_loaded = false
 	loaded_mods.clear()
 	load_report = _create_empty_load_report()
+	load_report["status"] = LOAD_STATUS_LOADING
+	load_report["started_at"] = Time.get_datetime_string_from_system(true, true)
 	DataManager.clear_all()
 
 	var discovered := _discover_mods()
 	if discovered.is_empty():
-		_record_load_error(BASE_MOD_ID, "Failed to discover any valid mods.", true)
+		_record_load_error(BASE_MOD_ID, "Failed to discover any valid mods.", true, ERROR_STAGE_DISCOVERY)
+		_finalize_load(started_ms)
 		return
 
 	loaded_mods = _filter_loadable_mods(discovered)
 	if loaded_mods.is_empty():
-		_record_load_error(BASE_MOD_ID, "No loadable mods remained after validation.", true)
+		_record_load_error(BASE_MOD_ID, "No loadable mods remained after validation.", true, ERROR_STAGE_VALIDATION)
+		_finalize_load(started_ms)
 		return
 	loaded_mods = _resolve_load_order(loaded_mods)
 	if loaded_mods.is_empty():
-		_record_load_error(BASE_MOD_ID, "Unable to resolve a valid mod load order.", true)
+		_record_load_error(BASE_MOD_ID, "Unable to resolve a valid mod load order.", true, ERROR_STAGE_ORDERING)
+		_finalize_load(started_ms)
 		return
 	load_report["load_order"] = _manifest_id_list(loaded_mods)
+	load_report["loaded_mod_ids"] = _manifest_id_list(loaded_mods)
+	load_report["loaded_mod_count"] = loaded_mods.size()
 
 	var phase_one_started_ms := Time.get_ticks_msec()
 	_phase_one_additions(loaded_mods)
@@ -59,11 +76,17 @@ func load_all_mods() -> void:
 	var phase_two_started_ms := Time.get_ticks_msec()
 	_phase_two_patches(loaded_mods)
 	load_report["phase_two_ms"] = Time.get_ticks_msec() - phase_two_started_ms
+
+	var script_hook_started_ms := Time.get_ticks_msec()
 	if _script_hook_loader != null:
 		_script_hook_loader.clear_cache()
 		_script_hook_loader.preload_all()
+	load_report["script_hook_preload_ms"] = Time.get_ticks_msec() - script_hook_started_ms
 	is_loaded = true
-	GameEvents.all_mods_loaded.emit()
+	_emit_loaded_mod_events(loaded_mods)
+	if GameEvents:
+		GameEvents.all_mods_loaded.emit()
+	_finalize_load(started_ms)
 
 
 # ---------------------------------------------------------------------------
@@ -75,15 +98,14 @@ func load_all_mods() -> void:
 func _discover_mods() -> Array[Dictionary]:
 	var mods: Array[Dictionary] = []
 	var base_manifest := _read_manifest(BASE_MOD_PATH)
-	if base_manifest.is_empty() or not _validate_manifest(base_manifest):
-		_record_load_error(BASE_MOD_ID, "Missing or invalid base mod at %s." % BASE_MOD_PATH, true)
+	if base_manifest.is_empty() or not _validate_manifest(base_manifest) or not _validate_base_manifest(base_manifest):
+		_record_load_error(BASE_MOD_ID, "Missing or invalid base mod at %s." % BASE_MOD_PATH, true, ERROR_STAGE_DISCOVERY)
 		return []
-	if bool(base_manifest.get("enabled", true)):
-		mods.append(base_manifest)
+	mods.append(base_manifest)
 
 	var mods_dir := DirAccess.open(MODS_PATH)
 	if mods_dir == null:
-		_record_load_error(BASE_MOD_ID, "Unable to open mods directory at %s." % MODS_PATH, true)
+		_record_load_error(BASE_MOD_ID, "Unable to open mods directory at %s." % MODS_PATH, true, ERROR_STAGE_DISCOVERY)
 		return []
 
 	mods_dir.list_dir_begin()
@@ -106,6 +128,7 @@ func _discover_mods() -> Array[Dictionary]:
 		author_id = mods_dir.get_next()
 	mods_dir.list_dir_end()
 	load_report["discovered_mod_ids"] = _manifest_id_list(mods)
+	load_report["discovered_mod_count"] = mods.size()
 
 	return mods
 
@@ -114,12 +137,14 @@ func _discover_mods() -> Array[Dictionary]:
 func _read_manifest(mod_path: String) -> Dictionary:
 	var manifest_path := mod_path.path_join(MOD_MANIFEST)
 	if not FileAccess.file_exists(manifest_path):
+		var manifest_owner := mod_path.trim_suffix("/").get_file()
+		_record_load_error(manifest_owner, "Missing manifest at '%s'." % manifest_path, false, ERROR_STAGE_DISCOVERY)
 		return {}
 	var raw_text := FileAccess.get_file_as_string(manifest_path)
 	var parsed = JSON.parse_string(raw_text)
 	if not parsed is Dictionary:
 		var manifest_owner := mod_path.trim_suffix("/").get_file()
-		_record_load_error(manifest_owner, "Invalid manifest JSON at '%s'." % manifest_path)
+		_record_load_error(manifest_owner, "Invalid manifest JSON at '%s'." % manifest_path, false, ERROR_STAGE_DISCOVERY)
 		return {}
 	var manifest: Dictionary = parsed
 	manifest["path"] = mod_path
@@ -128,21 +153,100 @@ func _read_manifest(mod_path: String) -> Dictionary:
 
 ## Validates required manifest fields. Returns true if valid.
 func _validate_manifest(manifest: Dictionary) -> bool:
-	var required_fields := ["id", "name", "version", "load_order"]
 	var manifest_id := str(manifest.get("id", manifest.get("name", "<unknown>")))
-	for field_name in required_fields:
+	for field_name in REQUIRED_MANIFEST_FIELDS:
 		if not manifest.has(field_name):
-			_record_load_error(manifest_id, "Manifest missing required field '%s'." % field_name)
+			_record_load_error(manifest_id, "Manifest missing required field '%s'." % field_name, false, ERROR_STAGE_VALIDATION)
 			return false
-	if str(manifest.get("id", "")).is_empty():
-		_record_load_error(manifest_id, "Manifest field 'id' must be a non-empty string.")
+	var id_value: Variant = manifest.get("id", "")
+	if not id_value is String:
+		_record_load_error(manifest_id, "Manifest field 'id' must be a string.", false, ERROR_STAGE_VALIDATION)
 		return false
-	if str(manifest.get("name", "")).is_empty():
-		_record_load_error(manifest_id, "Manifest field 'name' must be a non-empty string.")
+	var normalized_id := str(id_value).strip_edges()
+	if normalized_id.is_empty():
+		_record_load_error(manifest_id, "Manifest field 'id' must be a non-empty string.", false, ERROR_STAGE_VALIDATION)
 		return false
+	manifest["id"] = normalized_id
+	manifest_id = normalized_id
+
+	var name_value: Variant = manifest.get("name", "")
+	if not name_value is String:
+		_record_load_error(manifest_id, "Manifest field 'name' must be a string.", false, ERROR_STAGE_VALIDATION)
+		return false
+	var normalized_name := str(name_value).strip_edges()
+	if normalized_name.is_empty():
+		_record_load_error(manifest_id, "Manifest field 'name' must be a non-empty string.", false, ERROR_STAGE_VALIDATION)
+		return false
+	manifest["name"] = normalized_name
+
+	var version_value: Variant = manifest.get("version", "")
+	if not version_value is String:
+		_record_load_error(manifest_id, "Manifest field 'version' must be a string.", false, ERROR_STAGE_VALIDATION)
+		return false
+	var normalized_version := str(version_value).strip_edges()
+	if normalized_version.is_empty():
+		_record_load_error(manifest_id, "Manifest field 'version' must be a non-empty string.", false, ERROR_STAGE_VALIDATION)
+		return false
+	manifest["version"] = normalized_version
+
+	var load_order_value: Variant = manifest.get("load_order", null)
+	if not _is_integral_number(load_order_value):
+		_record_load_error(manifest_id, "Manifest field 'load_order' must be an integer.", false, ERROR_STAGE_VALIDATION)
+		return false
+	manifest["load_order"] = int(load_order_value)
+
+	var enabled_value: Variant = manifest.get("enabled", true)
+	if not enabled_value is bool:
+		_record_load_error(manifest_id, "Manifest field 'enabled' must be a bool when present.", false, ERROR_STAGE_VALIDATION)
+		return false
+	manifest["enabled"] = bool(enabled_value)
+
+	if manifest.has("schema_version"):
+		var schema_version_value: Variant = manifest.get("schema_version", null)
+		if not _is_integral_number(schema_version_value):
+			_record_load_error(manifest_id, "Manifest field 'schema_version' must be an integer when present.", false, ERROR_STAGE_VALIDATION)
+			return false
+		manifest["schema_version"] = int(schema_version_value)
+
 	var dependencies_data: Variant = manifest.get("dependencies", [])
 	if not dependencies_data is Array:
-		_record_load_error(manifest_id, "Manifest field 'dependencies' must be an array when present.")
+		_record_load_error(manifest_id, "Manifest field 'dependencies' must be an array when present.", false, ERROR_STAGE_VALIDATION)
+		return false
+	var dependencies: Array[String] = []
+	var seen_dependencies: Dictionary = {}
+	var dependencies_array: Array = dependencies_data
+	for dependency_value in dependencies_array:
+		if not dependency_value is String:
+			_record_load_error(manifest_id, "Manifest dependencies must contain only non-empty strings.", false, ERROR_STAGE_VALIDATION)
+			return false
+		var dependency_id := str(dependency_value).strip_edges()
+		if dependency_id.is_empty():
+			_record_load_error(manifest_id, "Manifest dependencies must contain only non-empty strings.", false, ERROR_STAGE_VALIDATION)
+			return false
+		if dependency_id == normalized_id:
+			_record_load_error(manifest_id, "Manifest cannot depend on itself.", false, ERROR_STAGE_VALIDATION)
+			return false
+		if seen_dependencies.has(dependency_id):
+			continue
+		seen_dependencies[dependency_id] = true
+		dependencies.append(dependency_id)
+	manifest["dependencies"] = dependencies
+	return true
+
+
+func _validate_base_manifest(manifest: Dictionary) -> bool:
+	var manifest_id := str(manifest.get("id", ""))
+	if manifest_id != BASE_MOD_ID:
+		_record_load_error(manifest_id, "Base mod manifest must use id '%s'." % BASE_MOD_ID, true, ERROR_STAGE_VALIDATION)
+		return false
+	if not bool(manifest.get("enabled", true)):
+		_record_load_error(manifest_id, "Base mod cannot be disabled.", true, ERROR_STAGE_VALIDATION)
+		return false
+	if int(manifest.get("load_order", -1)) != 0:
+		_record_load_error(manifest_id, "Base mod must use load_order 0.", true, ERROR_STAGE_VALIDATION)
+		return false
+	if not _get_dependencies(manifest).is_empty():
+		_record_load_error(manifest_id, "Base mod cannot declare dependencies.", true, ERROR_STAGE_VALIDATION)
 		return false
 	return true
 
@@ -160,7 +264,7 @@ func _filter_loadable_mods(mods: Array[Dictionary]) -> Array[Dictionary]:
 	for manifest in _sort_by_load_order(mods):
 		var mod_id := str(manifest.get("id", ""))
 		if seen_ids.has(mod_id):
-			_record_load_error(mod_id, "Duplicate mod id '%s' detected. Skipping later manifest." % mod_id)
+			_record_load_error(mod_id, "Duplicate mod id '%s' detected. Skipping later manifest." % mod_id, false, ERROR_STAGE_VALIDATION)
 			continue
 		seen_ids[mod_id] = true
 		unique_mods.append(manifest)
@@ -179,7 +283,9 @@ func _filter_loadable_mods(mods: Array[Dictionary]) -> Array[Dictionary]:
 			removed_any = true
 			_record_load_error(
 				str(manifest.get("id", "")),
-				"Skipping mod because dependencies are unavailable: %s." % ", ".join(missing_dependencies)
+				"Skipping mod because dependencies are unavailable: %s." % ", ".join(missing_dependencies),
+				false,
+				ERROR_STAGE_DEPENDENCIES
 			)
 		filtered = next_filtered
 	return filtered
@@ -208,7 +314,9 @@ func _resolve_load_order(mods: Array[Dictionary]) -> Array[Dictionary]:
 		for manifest in pending:
 			_record_load_error(
 				str(manifest.get("id", "")),
-				"Unable to resolve mod ordering because dependency requirements could not be satisfied."
+				"Unable to resolve mod ordering because dependency requirements could not be satisfied.",
+				false,
+				ERROR_STAGE_ORDERING
 			)
 	return resolved
 
@@ -222,7 +330,6 @@ func _phase_one_additions(mods: Array[Dictionary]) -> void:
 	for manifest in mods:
 		var data_path := str(manifest.get("path", "")).path_join("data")
 		DataManager.register_additions(str(manifest.get("id", "")), data_path)
-		GameEvents.mod_loaded.emit(str(manifest.get("id", "")))
 
 
 ## Phase 2: iterate mods in order, call DataManager.apply_patches() for each.
@@ -255,6 +362,43 @@ func get_script_hook(script_path: String) -> ScriptHook:
 	return _script_hook_loader.get_hook(script_path)
 
 
+func get_load_errors(include_fatal: bool = true) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var errors_data: Variant = load_report.get("errors", [])
+	if not errors_data is Array:
+		return result
+	var errors: Array = errors_data
+	for error_value in errors:
+		if not error_value is Dictionary:
+			continue
+		var error_entry: Dictionary = error_value
+		if not include_fatal and bool(error_entry.get("fatal", false)):
+			continue
+		result.append(error_entry.duplicate(true))
+	return result
+
+
+func get_debug_snapshot() -> Dictionary:
+	return {
+		"status": str(load_report.get("status", LOAD_STATUS_IDLE)),
+		"is_loaded": is_loaded,
+		"loaded_mod_count": loaded_mods.size(),
+		"loaded_mod_ids": _manifest_id_list(loaded_mods),
+		"discovered_mod_count": int(load_report.get("discovered_mod_count", 0)),
+		"discovered_mod_ids": _duplicate_string_array(load_report.get("discovered_mod_ids", [])),
+		"load_order": _duplicate_string_array(load_report.get("load_order", [])),
+		"error_count": int(load_report.get("error_count", 0)),
+		"fatal_error_count": int(load_report.get("fatal_error_count", 0)),
+		"nonfatal_error_count": int(load_report.get("nonfatal_error_count", 0)),
+		"phase_one_ms": int(load_report.get("phase_one_ms", 0)),
+		"phase_two_ms": int(load_report.get("phase_two_ms", 0)),
+		"script_hook_preload_ms": int(load_report.get("script_hook_preload_ms", 0)),
+		"total_ms": int(load_report.get("total_ms", 0)),
+		"started_at": str(load_report.get("started_at", "")),
+		"finished_at": str(load_report.get("finished_at", "")),
+	}
+
+
 func _compare_manifests(a: Dictionary, b: Dictionary) -> bool:
 	var a_id := str(a.get("id", ""))
 	var b_id := str(b.get("id", ""))
@@ -273,11 +417,22 @@ func _compare_manifests(a: Dictionary, b: Dictionary) -> bool:
 
 func _create_empty_load_report() -> Dictionary:
 	return {
+		"status": LOAD_STATUS_IDLE,
+		"started_at": "",
+		"finished_at": "",
+		"total_ms": 0,
+		"discovered_mod_count": 0,
 		"discovered_mod_ids": [],
+		"loaded_mod_ids": [],
+		"loaded_mod_count": 0,
 		"load_order": [],
 		"errors": [],
+		"error_count": 0,
+		"fatal_error_count": 0,
+		"nonfatal_error_count": 0,
 		"phase_one_ms": 0,
 		"phase_two_ms": 0,
+		"script_hook_preload_ms": 0,
 	}
 
 
@@ -323,7 +478,28 @@ func _dependencies_resolved(dependencies: Array[String], resolved_ids: Dictionar
 	return true
 
 
-func _record_load_error(mod_id: String, message: String, is_fatal: bool = false) -> void:
+func _emit_loaded_mod_events(mods: Array[Dictionary]) -> void:
+	if not GameEvents:
+		return
+	for manifest in mods:
+		GameEvents.mod_loaded.emit(str(manifest.get("id", "")))
+
+
+func _finalize_load(started_ms: int) -> void:
+	load_report["finished_at"] = Time.get_datetime_string_from_system(true, true)
+	load_report["total_ms"] = Time.get_ticks_msec() - started_ms
+	var fatal_error_count := 0
+	var errors := get_load_errors()
+	for error_entry in errors:
+		if bool(error_entry.get("fatal", false)):
+			fatal_error_count += 1
+	load_report["error_count"] = errors.size()
+	load_report["fatal_error_count"] = fatal_error_count
+	load_report["nonfatal_error_count"] = errors.size() - fatal_error_count
+	load_report["status"] = LOAD_STATUS_LOADED if is_loaded and fatal_error_count == 0 else LOAD_STATUS_FAILED
+
+
+func _record_load_error(mod_id: String, message: String, is_fatal: bool = false, stage: String = "") -> void:
 	var errors_data: Variant = load_report.get("errors", [])
 	var errors: Array = []
 	if errors_data is Array:
@@ -332,6 +508,7 @@ func _record_load_error(mod_id: String, message: String, is_fatal: bool = false)
 		"mod_id": mod_id,
 		"message": message,
 		"fatal": is_fatal,
+		"stage": stage,
 	})
 	load_report["errors"] = errors
 	if GameEvents:
@@ -340,3 +517,22 @@ func _record_load_error(mod_id: String, message: String, is_fatal: bool = false)
 		push_error("ModLoader: %s" % message)
 	else:
 		push_warning("ModLoader: %s" % message)
+
+
+func _is_integral_number(value: Variant) -> bool:
+	if value is int:
+		return true
+	if value is float:
+		var numeric_value := float(value)
+		return is_equal_approx(numeric_value, roundf(numeric_value))
+	return false
+
+
+func _duplicate_string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not value is Array:
+		return result
+	var values: Array = value
+	for entry in values:
+		result.append(str(entry))
+	return result
