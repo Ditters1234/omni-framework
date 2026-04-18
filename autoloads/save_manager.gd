@@ -249,7 +249,11 @@ func get_slot_info(slot: int) -> Dictionary:
 	var slot_metadata_value: Variant = raw_payload.get("slot_metadata", {})
 	if slot_metadata_value is Dictionary:
 		var slot_metadata: Dictionary = slot_metadata_value
-		return slot_metadata
+		var result := slot_metadata.duplicate(true)
+		result["created_at"] = str(raw_payload.get("created_at", ""))
+		result["updated_at"] = str(raw_payload.get("updated_at", ""))
+		result["save_schema_version"] = int(raw_payload.get("save_schema_version", SCHEMA_VERSION))
+		return result
 	return {}
 
 

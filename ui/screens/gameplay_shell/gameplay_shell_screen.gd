@@ -1,7 +1,8 @@
 extends Control
 
-const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_LOCATION_VIEW := "location_view"
+const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
+const SCREEN_PAUSE_MENU := "pause_menu"
 
 @onready var _title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
 @onready var _location_label: Label = $MarginContainer/VBoxContainer/LocationLabel
@@ -32,6 +33,10 @@ func _ready() -> void:
 	GameEvents.part_unequipped.connect(_on_part_unequipped)
 	_refresh()
 	_maybe_open_initial_location_view()
+
+
+func on_route_revealed() -> void:
+	_refresh()
 
 
 func _refresh() -> void:
@@ -83,16 +88,18 @@ func _on_advance_tick_button_pressed() -> void:
 
 
 func _on_save_button_pressed() -> void:
-	SaveManager.save_game(1)
-	_status_label.text = "Saved to slot 1."
+	UIRouter.push(SCREEN_SAVE_SLOT_LIST, {
+		"mode": "save",
+		"close_on_save": true,
+	})
 
 
 func _on_explore_location_button_pressed() -> void:
 	UIRouter.push(SCREEN_LOCATION_VIEW)
 
 
-func _on_main_menu_button_pressed() -> void:
-	UIRouter.replace_all(SCREEN_MAIN_MENU)
+func _on_pause_menu_button_pressed() -> void:
+	UIRouter.push(SCREEN_PAUSE_MENU)
 
 
 func _on_tick_advanced(_tick: int) -> void:

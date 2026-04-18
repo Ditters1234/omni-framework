@@ -119,10 +119,10 @@ res://
 │   │   ├── gameplay_shell/      # ✅ Engine-owned in-game shell / HUD route
 │   │   │   ├── gameplay_shell_screen.tscn
 │   │   │   └── gameplay_shell_screen.gd
-│   │   ├── settings/            # ⚠️ PLANNED engine-owned settings route
-│   │   ├── save_slot_list/      # ⚠️ PLANNED engine-owned save/load browser
-│   │   ├── pause_menu/          # ⚠️ PLANNED engine-owned pause route
-│   │   ├── credits/             # ⚠️ PLANNED engine-owned credits route
+│   │   ├── settings/            # ✅ Engine-owned settings route with persisted app settings
+│   │   ├── save_slot_list/      # ✅ Engine-owned save/load browser for slots 1..MAX_SAVE_SLOTS
+│   │   ├── pause_menu/          # ✅ Engine-owned pause route layered through the router stack
+│   │   ├── credits/             # ✅ Engine-owned attribution and loaded-mod route
 │   │   ├── world_map/           # ⚠️ PLANNED
 │   │   │   ├── world_map_screen.tscn
 │   │   │   └── world_map_screen.gd
@@ -388,10 +388,10 @@ Engine-owned routed screens:
 | screen_id | Scene | Status |
 |---|---|---|
 | `main_menu` | `main_menu_screen.tscn` | ✅ |
-| `settings` | `settings_screen.tscn` | ⚠️ PLANNED |
-| `save_slot_list` | `save_slot_list_screen.tscn` | ⚠️ PLANNED |
-| `pause_menu` | `pause_menu_screen.tscn` | ⚠️ PLANNED |
-| `credits` | `credits_screen.tscn` | ⚠️ PLANNED |
+| `settings` | `settings_screen.tscn` | ✅ |
+| `save_slot_list` | `save_slot_list_screen.tscn` | ✅ |
+| `pause_menu` | `pause_menu_screen.tscn` | ✅ |
+| `credits` | `credits_screen.tscn` | ✅ |
 | `gameplay_shell` | `gameplay_shell_screen.tscn` | ✅ |
 | `location_view` | `location_view_screen.tscn` | ✅ |
  

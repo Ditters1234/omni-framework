@@ -1,0 +1,90 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/screens/pause_menu/pause_menu_screen.gd" id="1_868p0"]
+
+[node name="PauseMenuScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_868p0")
+
+[node name="Overlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="MarginContainer" type="MarginContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -180.0
+offset_right = 220.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Overlay/MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Overlay/MarginContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Paused"
+horizontal_alignment = 1
+
+[node name="ContextLabel" type="Label" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+horizontal_alignment = 1
+text = "Location"
+
+[node name="ButtonColumn" type="VBoxContainer" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ResumeButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
+layout_mode = 2
+text = "Resume"
+
+[node name="SaveButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
+layout_mode = 2
+text = "Save Game"
+
+[node name="SettingsButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
+layout_mode = 2
+text = "Settings"
+
+[node name="MainMenuButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
+layout_mode = 2
+text = "Return to Main Menu"
+
+[node name="QuitButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
+layout_mode = 2
+text = "Quit Desktop"
+
+[node name="StatusLabel" type="Label" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+horizontal_alignment = 1
+text = "Paused."
+
+[connection signal="pressed" from="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/ResumeButton" to="." method="_on_resume_button_pressed"]
+[connection signal="pressed" from="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
+[connection signal="pressed" from="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/QuitButton" to="." method="_on_quit_button_pressed"]

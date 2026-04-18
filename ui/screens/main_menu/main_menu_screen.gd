@@ -2,12 +2,17 @@ extends Control
 
 const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
 const SCREEN_LOCATION_VIEW := "location_view"
+const SCREEN_SETTINGS := "settings"
+const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
+const SCREEN_CREDITS := "credits"
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _subtitle_label: Label = $MarginContainer/PanelContainer/VBoxContainer/SubtitleLabel
 @onready var _continue_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/ContinueButton
 @onready var _new_game_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/NewGameButton
 @onready var _load_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/LoadButton
+@onready var _settings_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/SettingsButton
+@onready var _credits_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/CreditsButton
 @onready var _quit_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/QuitButton
 @onready var _status_label: Label = $MarginContainer/PanelContainer/VBoxContainer/StatusLabel
 
@@ -22,6 +27,10 @@ func _ready() -> void:
 	_refresh_buttons()
 
 
+func on_route_revealed() -> void:
+	_refresh_buttons()
+
+
 func _apply_menu_config() -> void:
 	var menu_config_data: Variant = DataManager.get_config_value("ui.main_menu", {})
 	if not menu_config_data is Dictionary:
@@ -31,22 +40,35 @@ func _apply_menu_config() -> void:
 	_subtitle_label.text = str(menu_config.get("subtitle", "A data-driven sandbox waiting for content."))
 	_new_game_button.text = str(menu_config.get("new_game_label", "New Game"))
 	_continue_button.text = str(menu_config.get("continue_label", "Continue"))
-	_load_button.text = str(menu_config.get("load_label", "Load Slot 1"))
+	_load_button.text = str(menu_config.get("load_label", "Load Game"))
+	_settings_button.text = str(menu_config.get("settings_label", "Settings"))
+	_credits_button.text = str(menu_config.get("credits_label", "Credits"))
 	_quit_button.text = str(menu_config.get("quit_label", "Quit"))
 
 
 func _refresh_buttons() -> void:
-	var has_slot_one := SaveManager.slot_exists(1)
-	_continue_button.disabled = not has_slot_one
-	_load_button.disabled = not has_slot_one
-	if has_slot_one:
-		var slot_info := SaveManager.get_slot_info(1)
+	var preferred_slot := _find_first_available_slot()
+	var has_save := preferred_slot >= 1
+	_continue_button.disabled = not has_save
+	_load_button.disabled = not has_save
+	if has_save:
+		var slot_info := SaveManager.get_slot_info(preferred_slot)
 		if not slot_info.is_empty():
-			_status_label.text = "Slot 1 ready: %s" % str(slot_info.get("display_name", "Save found"))
+			_status_label.text = "Continue from slot %d: %s" % [
+				preferred_slot,
+				str(slot_info.get("display_name", "Save found"))
+			]
 		else:
-			_status_label.text = "Slot 1 ready."
+			_status_label.text = "Continue from slot %d." % preferred_slot
 	else:
-		_status_label.text = "No save found in slot 1."
+		_status_label.text = "No save slots found."
+
+
+func _find_first_available_slot() -> int:
+	for slot in range(1, SaveManager.MAX_SAVE_SLOTS + 1):
+		if SaveManager.slot_exists(slot):
+			return slot
+	return -1
 
 
 func _transition_to_gameplay() -> void:
@@ -76,11 +98,25 @@ func _on_new_game_button_pressed() -> void:
 
 
 func _on_continue_button_pressed() -> void:
-	_attempt_load_slot(1)
+	var preferred_slot := _find_first_available_slot()
+	if preferred_slot < 0:
+		_status_label.text = "No save slots available."
+		return
+	_attempt_load_slot(preferred_slot)
 
 
 func _on_load_button_pressed() -> void:
-	_attempt_load_slot(1)
+	UIRouter.push(SCREEN_SAVE_SLOT_LIST, {
+		"mode": "load",
+	})
+
+
+func _on_settings_button_pressed() -> void:
+	UIRouter.push(SCREEN_SETTINGS)
+
+
+func _on_credits_button_pressed() -> void:
+	UIRouter.push(SCREEN_CREDITS)
 
 
 func _attempt_load_slot(slot: int) -> void:
