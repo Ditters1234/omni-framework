@@ -4,9 +4,11 @@ extends GutTest
 const SAVE_SLOT_ROLLBACK := 3
 const SAVE_SLOT_INVALID_RUNTIME := 4
 const SAVE_SLOT_METADATA := 5
+const TEST_SAVE_DIR := "user://test_saves/test_save_manager_hardening/"
 
 
 func before_each() -> void:
+	_prepare_test_save_directory()
 	ModLoader.load_all_mods()
 	AIManager.initialize()
 	GameState.new_game()
@@ -14,11 +16,16 @@ func before_each() -> void:
 	GameEvents.clear_event_history()
 
 
+func after_each() -> void:
+	_clear_directory(TEST_SAVE_DIR)
+	SaveManager.reset_save_directory_for_testing()
+
+
 func test_save_game_rejects_invalid_runtime_state_without_overwriting_existing_slot() -> void:
 	GameState.current_day = 1
 	GameState.current_tick = 17
 	SaveManager.save_game(SAVE_SLOT_INVALID_RUNTIME)
-	var slot_path := "user://saves/slot_%d.json" % SAVE_SLOT_INVALID_RUNTIME
+	var slot_path := SaveManager.get_slot_path(SAVE_SLOT_INVALID_RUNTIME)
 	var baseline_contents := FileAccess.get_file_as_string(slot_path)
 
 	watch_signals(GameEvents)
@@ -163,7 +170,7 @@ func test_autosave_slot_metadata_and_recency_are_visible() -> void:
 
 
 func _read_slot_payload(slot: int) -> Dictionary:
-	var raw_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("user://saves/slot_%d.json" % slot))
+	var raw_data: Variant = JSON.parse_string(FileAccess.get_file_as_string(SaveManager.get_slot_path(slot)))
 	if raw_data is Dictionary:
 		var payload: Dictionary = raw_data
 		return payload
@@ -171,8 +178,30 @@ func _read_slot_payload(slot: int) -> Dictionary:
 
 
 func _write_slot_payload(slot: int, payload: Dictionary) -> void:
-	var file := FileAccess.open("user://saves/slot_%d.json" % slot, FileAccess.WRITE)
+	var file := FileAccess.open(SaveManager.get_slot_path(slot), FileAccess.WRITE)
 	assert_true(file != null)
 	file.store_string(JSON.stringify(payload, "\t"))
 	file.flush()
 	file.close()
+
+
+func _prepare_test_save_directory() -> void:
+	_clear_directory(TEST_SAVE_DIR)
+	assert_true(SaveManager.set_save_directory_for_testing(TEST_SAVE_DIR))
+
+
+func _clear_directory(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir != null:
+		dir.list_dir_begin()
+		var entry := dir.get_next()
+		while not entry.is_empty():
+			if not entry.begins_with("."):
+				var child_path := path.path_join(entry)
+				if dir.current_is_dir():
+					_clear_directory(child_path)
+				else:
+					DirAccess.remove_absolute(ProjectSettings.globalize_path(child_path))
+			entry = dir.get_next()
+		dir.list_dir_end()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

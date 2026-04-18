@@ -6,9 +6,8 @@ extends Node
 
 class_name OmniSaveManager
 
-const SAVE_DIR := "user://saves/"
-const AUTOSAVE_FILE_PATH := "user://saves/autosave.json"
-const SAVE_FILE_TEMPLATE := "user://saves/slot_%d.json"
+const DEFAULT_SAVE_DIR := "user://saves/"
+const TEST_SAVE_DIR_PREFIX := "user://test_saves/"
 const AUTOSAVE_SLOT := 0
 const MAX_SAVE_SLOTS := 5
 const SCHEMA_VERSION := 1
@@ -20,6 +19,7 @@ const SLOT_KIND_MANUAL := "manual"
 
 var last_operation_summary: Dictionary = {}
 var _registered_runtime_classes: Array[String] = []
+var _save_dir: String = DEFAULT_SAVE_DIR
 var _save_dir_ready: bool = false
 
 # ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ func _ready() -> void:
 	last_operation_summary = {
 		"kind": "boot",
 		"status": "ok" if _save_dir_ready else "failed",
-		"save_dir": SAVE_DIR,
+		"save_dir": get_save_directory(),
 		"registered_runtime_classes": _registered_runtime_classes.duplicate(),
 		"missing_runtime_classes": _get_missing_runtime_classes(),
 	}
@@ -40,8 +40,49 @@ func _ready() -> void:
 
 ## Creates the save directory if it doesn't exist.
 func _ensure_save_dir() -> bool:
-	var make_result := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(SAVE_DIR))
+	var make_result := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_save_dir))
 	return make_result == OK
+
+
+func get_save_directory() -> String:
+	return _save_dir
+
+
+func get_slot_path(slot: int) -> String:
+	return _slot_path(slot)
+
+
+func set_save_directory_for_testing(path: String) -> bool:
+	if not OS.is_debug_build():
+		last_operation_summary = {
+			"kind": "config",
+			"status": "failed",
+			"reason": "Save directory overrides are only available in debug builds.",
+			"save_dir": get_save_directory(),
+		}
+		return false
+	var normalized_path := _normalize_save_dir(path)
+	if not normalized_path.begins_with(TEST_SAVE_DIR_PREFIX):
+		last_operation_summary = {
+			"kind": "config",
+			"status": "failed",
+			"reason": "Test save directories must live under %s." % TEST_SAVE_DIR_PREFIX,
+			"save_dir": get_save_directory(),
+		}
+		return false
+	_save_dir = normalized_path
+	_save_dir_ready = _ensure_save_dir()
+	last_operation_summary = {
+		"kind": "config",
+		"status": "ok" if _save_dir_ready else "failed",
+		"save_dir": get_save_directory(),
+	}
+	return _save_dir_ready
+
+
+func reset_save_directory_for_testing() -> void:
+	_save_dir = DEFAULT_SAVE_DIR
+	_save_dir_ready = _ensure_save_dir()
 
 
 ## Registers all runtime classes with A2J.object_registry so A2J can
@@ -219,7 +260,6 @@ func load_game(slot: int) -> bool:
 		GameEvents.load_failed.emit(slot, deserialize_reason)
 		return false
 
-	_sync_timekeeper_from_game_state()
 	var previous_state_snapshot := GameState.to_dict()
 	var game_state_payload: Dictionary = state_data
 	GameState.from_dict(game_state_payload)
@@ -312,9 +352,19 @@ func delete_game(slot: int) -> bool:
 # ---------------------------------------------------------------------------
 
 func _slot_path(slot: int) -> String:
+	var normalized_save_dir := _save_dir.trim_suffix("/")
 	if slot == AUTOSAVE_SLOT:
-		return AUTOSAVE_FILE_PATH
-	return SAVE_FILE_TEMPLATE % slot
+		return "%s/autosave.json" % normalized_save_dir
+	return "%s/slot_%d.json" % [normalized_save_dir, slot]
+
+
+func _normalize_save_dir(path: String) -> String:
+	var normalized_path := path.strip_edges().replace("\\", "/")
+	if normalized_path.is_empty():
+		return DEFAULT_SAVE_DIR
+	if not normalized_path.ends_with("/"):
+		normalized_path += "/"
+	return normalized_path
 
 
 ## Checks schema version and runs any needed migrations before loading.
@@ -452,6 +502,8 @@ func _get_missing_runtime_classes() -> Array[String]:
 
 func get_debug_snapshot() -> Dictionary:
 	var snapshot := last_operation_summary.duplicate(true)
+	snapshot["save_dir"] = get_save_directory()
+	snapshot["default_save_dir"] = DEFAULT_SAVE_DIR
 	snapshot["save_dir_ready"] = _save_dir_ready
 	snapshot["registered_runtime_classes"] = _registered_runtime_classes.duplicate()
 	snapshot["missing_runtime_classes"] = _get_missing_runtime_classes()

@@ -1,8 +1,16 @@
 extends GutTest
 
+const TEST_SAVE_DIR := "user://test_saves/test_game_events_contracts/"
+
 
 func before_each() -> void:
 	GameEvents.clear_event_history()
+	_prepare_test_save_directory()
+
+
+func after_each() -> void:
+	_clear_directory(TEST_SAVE_DIR)
+	SaveManager.reset_save_directory_for_testing()
 
 
 func test_signal_catalog_exposes_expected_domains_and_filters_deprecated_entries() -> void:
@@ -196,3 +204,25 @@ func test_save_and_load_flow_matches_boot_suites() -> void:
 	assert_true(SaveManager.load_game(1))
 	assert_eq(GameState.player.get_stat("health"), 40.0)
 	assert_eq(GameState.get_currency("credits"), 125.0)
+
+
+func _prepare_test_save_directory() -> void:
+	_clear_directory(TEST_SAVE_DIR)
+	assert_true(SaveManager.set_save_directory_for_testing(TEST_SAVE_DIR))
+
+
+func _clear_directory(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir != null:
+		dir.list_dir_begin()
+		var entry := dir.get_next()
+		while not entry.is_empty():
+			if not entry.begins_with("."):
+				var child_path := path.path_join(entry)
+				if dir.current_is_dir():
+					_clear_directory(child_path)
+				else:
+					DirAccess.remove_absolute(ProjectSettings.globalize_path(child_path))
+			entry = dir.get_next()
+		dir.list_dir_end()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

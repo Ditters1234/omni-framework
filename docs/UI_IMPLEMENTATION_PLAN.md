@@ -332,7 +332,7 @@ extends RefCounted
 
 func initialize(params: Dictionary) -> void: pass
 func build_view_model() -> Dictionary: return {}
-func confirm(selected: Dictionary) -> Dictionary: return {"status": "ok"}
+func confirm() -> Dictionary: return {"status": "ok"}
 func get_required_params() -> Array[String]: return []
 ```
 

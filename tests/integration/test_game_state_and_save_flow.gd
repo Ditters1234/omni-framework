@@ -1,10 +1,18 @@
 extends GutTest
 
+const TEST_SAVE_DIR := "user://test_saves/test_game_state_and_save_flow/"
+
 
 func before_each() -> void:
+	_prepare_test_save_directory()
 	ModLoader.load_all_mods()
 	AIManager.initialize()
 	GameState.new_game()
+
+
+func after_each() -> void:
+	_clear_directory(TEST_SAVE_DIR)
+	SaveManager.reset_save_directory_for_testing()
 
 
 func test_player_currency_is_owned_by_player_entity() -> void:
@@ -39,3 +47,25 @@ func test_save_round_trip_restores_game_state() -> void:
 	assert_eq(GameState.get_flag("debug_test_flag", null), true)
 	assert_eq(GameState.current_tick, 31)
 	assert_eq(GameState.current_day, 2)
+
+
+func _prepare_test_save_directory() -> void:
+	_clear_directory(TEST_SAVE_DIR)
+	assert_true(SaveManager.set_save_directory_for_testing(TEST_SAVE_DIR))
+
+
+func _clear_directory(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir != null:
+		dir.list_dir_begin()
+		var entry := dir.get_next()
+		while not entry.is_empty():
+			if not entry.begins_with("."):
+				var child_path := path.path_join(entry)
+				if dir.current_is_dir():
+					_clear_directory(child_path)
+				else:
+					DirAccess.remove_absolute(ProjectSettings.globalize_path(child_path))
+			entry = dir.get_next()
+		dir.list_dir_end()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

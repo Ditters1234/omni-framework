@@ -296,7 +296,7 @@ Contains:
 - `achievement_stats: Dictionary` — global tracking stats (gold_spent, etc.).
 
 ### `SaveManager` (`autoloads/save_manager.gd`)
-Reads and writes `GameState` as human-readable JSON to `user://saves/`. Uses `A2J` for lossless typed serialization of all runtime objects. Handles schema versioning so old saves can be migrated forward, validates runtime state before save, and revalidates runtime references after load. Failed loads must restore the previous live runtime state instead of leaving `GameState` partially mutated or reset.
+Reads and writes `GameState` as human-readable JSON to `user://saves/` by default. Uses `A2J` for lossless typed serialization of all runtime objects. Handles schema versioning so old saves can be migrated forward, validates runtime state before save, and revalidates runtime references after load. Failed loads must restore the previous live runtime state instead of leaving `GameState` partially mutated or reset. Debug/test code can temporarily redirect saves under `user://test_saves/`, but production and release flows should continue to use the default save directory.
 
 All custom runtime classes that appear in save data (`EntityInstance`, `PartInstance`, `GameState`, etc.) must be registered in `A2J.object_registry` during `_ready()` before any save/load can occur.
 
@@ -306,6 +306,9 @@ func save_game(slot: int) -> void
 func load_game(slot: int) -> bool
 func get_slot_info(slot: int) -> Dictionary
 func slot_exists(slot: int) -> bool
+func get_slot_path(slot: int) -> String
+func set_save_directory_for_testing(path: String) -> bool
+func reset_save_directory_for_testing() -> void
 func get_debug_snapshot() -> Dictionary
 func _register_runtime_classes() -> void
 ```
@@ -314,13 +317,13 @@ Usage pattern:
 ```gdscript
 # Saving
 var raw: Dictionary = A2J.to_json(GameState, _save_ruleset)
-FileAccess.open("user://saves/slot_%d.json" % slot, FileAccess.WRITE).store_string(
+FileAccess.open(SaveManager.get_slot_path(slot), FileAccess.WRITE).store_string(
     JSON.stringify(raw, "\t")
 )
 
 # Loading
 var raw: Dictionary = JSON.parse_string(
-    FileAccess.get_file_as_string("user://saves/slot_%d.json" % slot)
+    FileAccess.get_file_as_string(SaveManager.get_slot_path(slot))
 )
 A2J.from_json(raw, _save_ruleset)  # Populates GameState in place
 ```
