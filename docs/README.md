@@ -1,7 +1,6 @@
-<div style="display: flex; align-items: center; gap: 20px;">
-  <img src="../icon.svg" alt="Omni-Framework Icon" width="100"/>
-  <h1>Omni-Framework Documentation</h1>
-</div>
+<img src="../icon.svg" alt="Omni-Framework Icon" width="100" align="left" style="margin-right: 20px;">
+
+# Omni-Framework Documentation
 
 Omni-Framework is a data-driven, genre-agnostic game engine built on Godot 4.
 

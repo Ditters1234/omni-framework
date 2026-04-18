@@ -1,7 +1,6 @@
-<div style="display: flex; align-items: center; gap: 20px;">
-  <img src="../../icon.svg" alt="Omni-Framework Icon" width="100"/>
-  <h1>Base Game Mod</h1>
-</div>
+<img src="../../icon.svg" alt="Omni-Framework Icon" width="100" align="left" style="margin-right: 20px;">
+
+# Base Game Mod
 
 The shipped base content for Omni-Framework. It is a mod like any other, with one special property: `ModLoader` treats it as required and loads it first.
 
