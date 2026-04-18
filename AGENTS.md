@@ -80,7 +80,23 @@ res://
 | `UIRouter` | `autoloads/ui_router.gd` | Screen navigation stack |
 | `AIManager` | `autoloads/ai_manager.gd` | LLM abstraction over local/remote providers |
 
-**Boot order matters:** GameEvents → ModLoader → DataManager → GameState → SaveManager → TimeKeeper → AudioManager → UIRouter → AIManager
+**Boot sequence:**
+
+1. `GameEvents` — Signal bus initialized first; all other systems depend on it.
+2. `ModLoader` — Discovers and loads mods, applies patches, registers backend contracts via `BackendContractRegistry`.
+3. `DataManager` — Populates registries (PartsRegistry, EntityRegistry, etc.) and calls loaders for all JSON data.
+4. `GameState` — Initializes player, location, and active runtime state; calls `SaveManager` to load existing saves if present.
+5. `SaveManager` — Registers A2J runtime classes, loads autosave or boots a new game.
+6. `TimeKeeper` — Starts tick clock; dispatches tick signals every frame.
+7. `AudioManager` — Initializes SFX pools and music channels.
+8. `UIRouter` — Pushes initial screen (main menu or gameplay) onto the stack.
+9. `AIManager` — Initializes configured AI provider (OpenAI, Anthropic, NobodyWho, or disabled).
+
+**Helper systems availability:**
+- `ActionDispatcher`, `ConditionEvaluator`, `StatManager` — Stateless; available immediately after DataManager.
+- `RewardService`, `TransactionService`, `ScriptHookService` — Available after SaveManager (depend on GameState).
+- `BackendContractRegistry` — Locked after ModLoader phase completes; no new contracts can be registered after boot.
+- `AppSettings` — Loaded and available after UIRouter initializes.
 
 ---
 
@@ -146,6 +162,22 @@ Each `backend_class` value in JSON maps to a scene in `ui/screens/backends/`:
 | `CatalogListBackend` | `catalog_list_screen.tscn` | Infinite template vendor |
 | `DialogueBackend` | `dialogue_screen.tscn` | NPC branching dialogue |
 
+### Backend Contract System
+
+Each backend class is validated against a **contract** — a schema that defines which fields and action types it supports. Contracts are registered during the mod load phase and locked before gameplay starts.
+
+**How it works:**
+1. When `ModLoader` boots, it calls `mod.register_backend_contracts()` for each loaded mod.
+2. Each backend registers its contract with `BackendContractRegistry.register(backend_class, contract)`.
+3. After all mods load, `BackendContractRegistry.lock()` is called — no new contracts can be registered.
+4. At runtime, when a screen uses a `backend_class`, the registry validates that the backend exists and the payload matches the contract.
+
+**Modders extending backends:**
+- Backends are defined in JSON with a `backend_class` string and a `backend_config` dict.
+- The backend config must match the contract registered for that class.
+- Custom backends can be registered in mod scripts — see `docs/modding_guide.md` for schema examples.
+- All official backends use the `phase4_backend_helpers.gd` utility module for common operations.
+
 ---
 
 ## AI Architecture
@@ -157,6 +189,27 @@ Each `backend_class` value in JSON maps to a scene in `ui/screens/backends/`:
 - `"disabled"` → all calls silently no-op
 
 Modders call `AIManager.generate_async(prompt, context)` from script hooks. Always guard with `AIManager.is_available()`.
+
+---
+
+## Runtime Helper Systems
+
+These systems provide core runtime functionality but are not autoloads. They're instantiated or called by autoloads and other systems:
+
+| System | File | Purpose |
+|---|---|---|
+| `ActionDispatcher` | `systems/action_dispatcher.gd` | Executes JSON action blocks from quests/tasks (give_currency, travel, spawn_entity, start_quest, etc.) |
+| `BackendContractRegistry` | `systems/backend_contract_registry.gd` | Central registry managing backend screen contracts; validates `backend_class` IDs and contract schemas |
+| `AssemblyCommitService` | `systems/assembly_commit_service.gd` | Handles assembly editor part attachment/detachment logic and state commits |
+| `RewardService` | `systems/reward_service.gd` | Processes quest/task completion rewards and distributes currency, items, and unlocks |
+| `ScriptHookService` | `systems/script_hook_service.gd` | Manages lifecycle of mod script hooks and their execution callbacks |
+| `TransactionService` | `systems/transaction_service.gd` | Handles currency exchanges and transaction validation (buy/sell, exchanges, trades) |
+| `ConditionEvaluator` | `systems/condition_evaluator.gd` | Evaluates JSON condition blocks (AND/OR trees) used in quests, tasks, and UI logic |
+| `StatManager` | `systems/stat_manager.gd` | Calculates stat modifiers, applies stat changes, and enforces clamping rules |
+
+**Helper utilities:**
+- `phase4_backend_helpers.gd` — Shared utility functions used by all Phase 4 backend screens (catalog, exchange, list, challenge, task provider, dialogue)
+- `AppSettings` (`core/app_settings.gd`) — Persistent app-level settings (audio, graphics, accessibility)
 
 ---
 

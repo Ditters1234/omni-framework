@@ -134,12 +134,15 @@ res://
 │   │   └── backends/        # One scene per backend_class type
 │   │       ├── assembly_editor_screen.tscn   # ✅ AssemblyEditorBackend — implemented
 │   │       ├── assembly_editor_screen.gd
-│   │       ├── exchange_screen.tscn          # ⚠️ PLANNED — ExchangeBackend
-│   │       ├── list_screen.tscn              # ⚠️ PLANNED — ListBackend
-│   │       ├── challenge_screen.tscn         # ⚠️ PLANNED — ChallengeBackend
-│   │       ├── task_provider_screen.tscn     # ⚠️ PLANNED — TaskProviderBackend
-│   │       ├── catalog_list_screen.tscn      # ⚠️ PLANNED — CatalogListBackend
-│   │       └── dialogue_screen.tscn          # ⚠️ PLANNED — DialogueBackend (wraps Dialogue Manager)
+│   │       ├── exchange_screen.tscn          # ✅ ExchangeBackend — implemented
+│   │       ├── list_screen.tscn              # ✅ ListBackend — implemented
+│   │       ├── challenge_screen.tscn         # ✅ ChallengeBackend — implemented
+│   │       ├── task_provider_screen.tscn     # ✅ TaskProviderBackend — implemented
+│   │       ├── catalog_list_screen.tscn      # ✅ CatalogListBackend — implemented
+│   │       ├── dialogue_screen.tscn          # ✅ DialogueBackend — implemented (wraps Dialogue Manager)
+│   │       ├── backend_base.gd               # ✅ Base class for all backend implementations
+│   │       ├── phase4_backend_helpers.gd     # ✅ Shared utilities used by Phase 4 backend screens
+│   │       └── [backend_*.gd files]          # Backend implementation classes (one per backend_class type)
 │   ├── components/          # Reusable UI widgets (used inside screens)
 │   │   ├── currency_summary_panel.tscn  # ✅ Budget display used by AssemblyEditor
 │   │   ├── part_detail_panel.tscn       # ✅ Part preview sidebar used by AssemblyEditor
@@ -499,12 +502,4 @@ See [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATT
 |---|---|---|
 | `DefinitionLoader` | DataManager | Parses `definitions.json`, validates stat pairs |
 | `PartsRegistry` | DataManager | Part template storage and patch application |
-| `EntityRegistry` | DataManager | Entity template storage and patch application |
-| `LocationGraph` | DataManager | Location template storage; `get_location(id)`, `get_connections(id)`, `get_all_locations()` |
-| `FactionRegistry` | DataManager | Faction data + reputation threshold queries |
-| `QuestRegistry` | DataManager | Quest template storage |
-| `TaskRegistry` | DataManager | Task template storage |
-| `AchievementRegistry` | DataManager | Achievement template storage |
-| `ConfigLoader` | DataManager | Deep-merges `config.json` across all mods |
-| `AssemblySession` | `AssemblyEditorBackend` | Transactional draft wrapper for assembly edits — clones the target entity, tracks build cost against a budget, computes projected stats, and reports what would change on confirm. Supports a separate payer entity when the budget source differs from the target. |
-| `AssemblyCommitService` | Systems utility | Applie
+| `EntityRegistry` | DataManager | Entity template storage and patch appli

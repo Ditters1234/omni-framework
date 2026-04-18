@@ -79,18 +79,18 @@ Implementation note: the repository has now completed the Phase 4 "round 1" back
 | `backend_class` | Screen id | Status | Purpose |
 |---|---|---|---|
 | `AssemblyEditorBackend` | `assembly_editor` | ✅ Implemented | Slot+part editor — character creator, workbench, ripperdoc, shipyard, cyberware install |
-| `ExchangeBackend` | `exchange` | ⚠️ Planned | Two-sided trade: move instances between two entity inventories with currency transfer |
-| `CatalogListBackend` | `catalog_list` | ⚠️ Planned | Infinite vendor — buy fresh `PartInstance`s minted from `PartsRegistry` |
+| `ExchangeBackend` | `exchange` | ✅ Implemented | Two-sided trade: move instances between two entity inventories with currency transfer |
+| `CatalogListBackend` | `catalog_list` | ✅ Implemented | Infinite vendor — buy fresh `PartInstance`s minted from `PartsRegistry` |
 | `CraftingBackend` | `crafting` | 🆕 **Proposed** | Recipe-driven: consume N inputs from an inventory, produce 1 output template |
-| `ListBackend` | `list_view` | ⚠️ Planned | Generic filtered list with pluggable row templates and `action_payload` dispatch |
-| `ChallengeBackend` | `challenge` | ⚠️ Planned | Single stat check → branch to `reward` or `action_payload` |
-| `TaskProviderBackend` | `task_provider` | ⚠️ Planned | Faction job board — accept tasks from `faction.quest_pool` |
+| `ListBackend` | `list_view` | ✅ Implemented | Generic filtered list with pluggable row templates and `action_payload` dispatch |
+| `ChallengeBackend` | `challenge` | ✅ Implemented | Single stat check → branch to `reward` or `action_payload` |
+| `TaskProviderBackend` | `task_provider` | ✅ Implemented | Faction job board — accept tasks from `faction.quest_pool` |
 | `ActiveQuestLogBackend` | `quest_log` | 🆕 **Proposed** | Read active quests + stages + objectives + rewards from `GameState` |
 | `EntitySheetBackend` | `entity_sheet` | 🆕 **Proposed** | Read-only full entity view: stats, modifiers, equipped parts, inventory summary, faction standings |
 | `FactionReputationBackend` | `faction_rep` | 🆕 **Proposed** | Grid/list of factions with reputation tier + emblem + territory summary |
 | `AchievementListBackend` | `achievement_list` | 🆕 **Proposed** | Browse achievement progress including locked/unlocked state and thresholds |
 | `EventLogBackend` | `event_log` | 🆕 **Proposed** | Rolling history from `GameEvents._event_history` |
-| `DialogueBackend` | `dialogue` | ⚠️ Planned | Wraps Dialogue Manager with entity portrait and `dialogue_blip` SFX |
+| `DialogueBackend` | `dialogue` | ✅ Implemented | Wraps Dialogue Manager with entity portrait and `dialogue_blip` SFX |
 | `WorldMapBackend` | `world_map` | ⚠️ Planned | Graph of discovered locations with faction-tinted nodes |
 
 Notes on the new proposals:
@@ -405,6 +405,20 @@ Deliverable: full boot → menu → settings → save-slot → game shell loop u
 
 ### Phase 4 — Moddable backends, round 1 (~4–5 days)
 
+**Phase 4 completion note (April 2026):** All six Phase 4 backends are now implemented with a consistent pattern:
+
+- **Backend script** (`*_backend.gd`) — Extends `OmniBackendBase`, implements `initialize()`, `build_view_model()`, and `confirm()`.
+- **Screen script** (`*_screen.gd`) — Thin controller layer; owns scene refs and dispatches to backend.
+- **Scene file** (`*_screen.tscn`) — UI layout; components receive view model dicts from the screen controller.
+- **Shared helper** (`phase4_backend_helpers.gd`) — Utility functions extracted from common patterns across backends to reduce duplication.
+- **Route catalog entry** — Backend registered in `ui/ui_route_catalog.gd` with screen id mapping.
+- **Contract registration** — Backend registers its param contract during `ModLoader` phase.
+
+**Assembly editor improvements added during Phase 4:**
+- `assembly_editor_config.gd` — Configuration and state management helper.
+- `assembly_editor_option_provider.gd` — Part option sourcing and filtering logic.
+- These follow the same helper pattern; future backends should extract similar reusable utilities instead of keeping everything inside the backend.
+
 Build in dependency order — screens that depend on fewer new components come first.
 
 1. `DialogueBackend` (depends on `entity_portrait`; high modder priority since Dialogue Manager integration unblocks writable content).
@@ -486,16 +500,5 @@ Per `PROJECT_STRUCTURE.md §Debug And Test Tooling`, every new system gets a deb
 Items this plan cannot resolve without more information from the project owner.
 
 **Q1. Should `tab_panel` replace the current button list in `LocationViewScreen`?**
-The guide describes location view as a hub. A tabbed version is more information-dense but harder to mod (mods adding a tab vs. adding a button). Current implementation favors modder simplicity. Recommend: keep the button list as the default; make `tab_panel` available for mods that want tabbed sub-screens inside their own backend.
 
-**Q2. Does `EventLogBackend` show all events or a filtered subset?**
-`GameEvents._event_history` is bounded at 200. A player-facing log would want filtering (quest-only, combat-only when combat lands, economic-only). Recommend: ship a minimum-viable version showing all events; add filter params if modders ask.
-
-**Q3. Should `SettingsBackend` be engine-owned or moddable?**
-Argument for engine-owned: modders shouldn't be able to break fundamental app settings. Argument for moddable: mods might want to add their own config toggles (e.g. "enable verbose AI logs"). Recommend: engine-owned for the base page, with a stable "Mods" tab inside it that mods can contribute rows to via a `systems/settings_contribution_registry.gd`. This is a sub-feature; don't build it in Phase 3.
-
-**Q4. How does dialogue chain into other backends?**
-Resolved for the current runtime: `ActionDispatcher` now accepts `{"type": "push_screen", "screen_id": "...", "params": {...}}`, so dialogue and other content-authored action payloads can hand off to routed backends without special-case UI code. `DialogueBackend` should use that shared action path instead of inventing a separate navigation mechanism.
-
-**Q5. Do we need talent/skill trees in scope?**
-Not in this plan. Fantasy RPG meta-progression would want them. If/when needed, schema follows the same pattern as recipes: `talents.json` + `TalentRegistry` + `TalentTreeBackend`. Node-grap
+**Answer (deferred):** The current button list is simpler and more modder-friendly (easier to reason about ordering, no hidden state). `tab_panel` is lower priority and best left for Phase 5 if needed. If a mod wants tabs, they can currently compose their own layout using a custom backend. Upgrade LocationViewScreen to optionally use `tab_panel` only if modders request it.
