@@ -35,3 +35,35 @@ func test_build_view_model_returns_rows_and_sidebar_data_for_player_loadout() ->
 	assert_true(row_count > 0)
 	assert_true(part_detail_value is Dictionary)
 	assert_true(currency_summary_value is Dictionary)
+
+
+func test_build_cancel_action_returns_pop_when_cancel_screen_is_empty() -> void:
+	var backend := ASSEMBLY_EDITOR_BACKEND.new()
+	backend.initialize({
+		"target_entity_id": "player",
+		"cancel_screen_id": "",
+	})
+
+	var action := backend.build_cancel_action()
+
+	assert_eq(str(action.get("type", "")), "pop")
+
+
+func test_confirm_returns_configured_next_screen_action() -> void:
+	var backend := ASSEMBLY_EDITOR_BACKEND.new()
+	backend.initialize({
+		"target_entity_id": "player",
+		"next_screen_id": "gameplay_shell",
+		"next_screen_params": {
+			"source": "assembly_editor_test",
+		},
+	})
+
+	var action := backend.confirm()
+
+	assert_eq(str(action.get("type", "")), "replace_all")
+	assert_eq(str(action.get("screen_id", "")), "gameplay_shell")
+	var params_value: Variant = action.get("params", {})
+	assert_true(params_value is Dictionary)
+	var params: Dictionary = params_value
+	assert_eq(str(params.get("source", "")), "assembly_editor_test")

@@ -366,7 +366,7 @@ A `ViewModel` base resource with `to_dict()` / `from_dict()` would let tests sna
 
 ### Phase 1 — Pattern establishment (~1–2 days)
 
-Current status: complete. `OmniBackendBase`, `OmniAssemblyEditorBackend`, `BackendContractRegistry`, and load-time `AssemblyEditorBackend` contract validation are all in place, and `assembly_editor_screen.gd` now acts as a screen layer over the extracted backend.
+Current status: complete. `OmniBackendBase`, `OmniAssemblyEditorBackend`, `BackendContractRegistry`, and load-time `AssemblyEditorBackend` contract validation are all in place, and `assembly_editor_screen.gd` now acts as a screen layer over the extracted backend. The backend has also been trimmed so parameter/navigation parsing and slot option sourcing live in dedicated helper scripts, reducing the amount of monolithic code future backend authors need to copy.
 
 - Create `ui/screens/backends/backend_base.gd` with `OmniBackendBase`.
 - In-place refactor `assembly_editor_screen.gd` to split into `assembly_editor_backend.gd` + the screen script. No behavior changes. Tests must still pass.
