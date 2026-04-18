@@ -4,15 +4,16 @@ const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
 const SCREEN_LOCATION_VIEW := "location_view"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_PAUSE_MENU := "pause_menu"
+const CURRENCY_DISPLAY_SCENE := preload("res://ui/components/currency_display.tscn")
 
 @onready var _title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/VBoxContainer/TitleLabel
 @onready var _subtitle_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/VBoxContainer/SubtitleLabel
 @onready var _location_title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationTitleLabel
 @onready var _location_description_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationDescriptionLabel
 @onready var _location_meta_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationMetaLabel
-@onready var _player_name_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/PlayerNameLabel
-@onready var _currency_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/CurrencyLabel
-@onready var _stats_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/StatsLabel
+@onready var _player_portrait: Control = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/PlayerPortrait
+@onready var _currency_list: HFlowContainer = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/CurrencyList
+@onready var _player_stat_sheet: Control = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/PlayerStatSheet
 @onready var _inventory_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/InventoryLabel
 @onready var _time_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/TimeLabel
 @onready var _autosave_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AutosaveLabel
@@ -63,9 +64,16 @@ func _refresh() -> void:
 		_location_title_label.text = "No Active Session"
 		_location_description_label.text = "Start or load a game to enter the shell."
 		_location_meta_label.text = ""
-		_player_name_label.text = "No player entity is loaded."
-		_currency_label.text = ""
-		_stats_label.text = ""
+		_player_portrait.call("render", {
+			"display_name": "No Active Session",
+			"description": "Start or load a game to render the current runtime profile.",
+			"stat_preview": [],
+		})
+		_render_currency_displays([])
+		_player_stat_sheet.call("render", {
+			"title": "Player Stats",
+			"groups": {},
+		})
 		_inventory_label.text = ""
 		_time_label.text = ""
 		_autosave_label.text = ""
@@ -87,9 +95,9 @@ func _refresh() -> void:
 	_location_title_label.text = location_name
 	_location_description_label.text = location_description if not location_description.is_empty() else "No location description is available yet."
 	_location_meta_label.text = _build_location_meta(player)
-	_player_name_label.text = "%s\nEntity: %s" % [player_name, player.entity_id]
-	_currency_label.text = _build_currency_summary(player)
-	_stats_label.text = _build_stat_summary(player)
+	_player_portrait.call("render", _build_player_portrait_view_model(player, player_template, player_name))
+	_render_currency_displays(_build_currency_view_models(player))
+	_player_stat_sheet.call("render", _build_stat_sheet_view_model(player))
 	_inventory_label.text = _build_inventory_summary(player)
 	_time_label.text = "Time: %s" % TimeKeeper.get_time_string()
 	_autosave_label.text = _build_autosave_summary()
@@ -97,29 +105,196 @@ func _refresh() -> void:
 	_status_label.text = _status_message
 	_set_buttons_enabled(true)
 
-func _build_currency_summary(player: EntityInstance) -> String:
+func _build_player_portrait_view_model(player: EntityInstance, player_template: Dictionary, player_name: String) -> Dictionary:
+	return {
+		"display_name": player_name,
+		"description": str(player_template.get("description", "No player description is available.")),
+		"emblem_path": _resolve_entity_emblem_path(player_template),
+		"faction_badge": {"label": "Runtime Profile"},
+		"stat_preview": _build_priority_stat_preview(player),
+	}
+
+
+func _build_currency_view_models(player: EntityInstance) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
 	if player.currencies.is_empty():
-		return "Currencies\nNone"
-	var lines: Array[String] = ["Currencies"]
-	var keys := player.currencies.keys()
-	keys.sort()
+		return results
 	var currency_symbol := str(DataManager.get_config_value("ui.currency_symbol", "$"))
+	var keys: Array = player.currencies.keys()
+	keys.sort()
 	for key_value in keys:
 		var currency_key := str(key_value)
-		lines.append("%s %s: %s" % [currency_symbol, currency_key.capitalize(), str(player.currencies[key_value])])
-	return "\n".join(lines)
+		results.append({
+			"currency_id": currency_key,
+			"label": _humanize_id(currency_key),
+			"amount": float(player.currencies.get(currency_key, 0.0)),
+			"symbol": currency_symbol,
+			"color_token": "primary",
+		})
+	return results
 
 
-func _build_stat_summary(player: EntityInstance) -> String:
-	if player.stats.is_empty():
-		return "Stats\nNone"
-	var lines: Array[String] = ["Stats"]
-	var keys := player.stats.keys()
-	keys.sort()
-	for key_value in keys:
-		var stat_key := str(key_value)
-		lines.append("%s: %s" % [stat_key.capitalize(), str(player.stats[key_value])])
-	return "\n".join(lines)
+func _render_currency_displays(view_models: Array[Dictionary]) -> void:
+	for child in _currency_list.get_children():
+		_currency_list.remove_child(child)
+		child.queue_free()
+	if view_models.is_empty():
+		var empty_label := Label.new()
+		empty_label.text = "No currencies available."
+		_currency_list.add_child(empty_label)
+		return
+	for view_model in view_models:
+		var display_value: Variant = CURRENCY_DISPLAY_SCENE.instantiate()
+		if not display_value is Control:
+			continue
+		var display: Control = display_value
+		_currency_list.add_child(display)
+		display.call("render", view_model)
+
+
+func _build_stat_sheet_view_model(player: EntityInstance) -> Dictionary:
+	var groups: Dictionary = {}
+	var added_stat_ids: Dictionary = {}
+	var stat_definitions: Array = DataManager.get_definitions("stats")
+	for stat_definition_value in stat_definitions:
+		if not stat_definition_value is Dictionary:
+			continue
+		var stat_definition: Dictionary = stat_definition_value
+		var stat_id := str(stat_definition.get("id", ""))
+		if stat_id.is_empty():
+			continue
+		var kind := str(stat_definition.get("kind", "flat"))
+		if kind == "capacity":
+			continue
+		var line := _build_stat_line(player, stat_definition)
+		if line.is_empty():
+			continue
+		var group_name := str(stat_definition.get("ui_group", "other"))
+		if not groups.has(group_name):
+			groups[group_name] = []
+		var group_lines_value: Variant = groups.get(group_name, [])
+		if group_lines_value is Array:
+			var group_lines: Array = group_lines_value
+			group_lines.append(line)
+			groups[group_name] = group_lines
+		added_stat_ids[stat_id] = true
+
+	var extra_keys: Array = player.stats.keys()
+	extra_keys.sort()
+	for stat_key_value in extra_keys:
+		var stat_key := str(stat_key_value)
+		if stat_key.ends_with("_max") or added_stat_ids.has(stat_key):
+			continue
+		if not groups.has("other"):
+			groups["other"] = []
+		var extra_line := {
+			"stat_id": stat_key,
+			"label": _humanize_id(stat_key),
+			"value": float(player.stats.get(stat_key, 0.0)),
+			"color_token": "info",
+		}
+		var other_group_value: Variant = groups.get("other", [])
+		if other_group_value is Array:
+			var other_group: Array = other_group_value
+			other_group.append(extra_line)
+			groups["other"] = other_group
+
+	return {
+		"title": "Player Stats",
+		"groups": groups,
+	}
+
+
+func _build_stat_line(player: EntityInstance, stat_definition: Dictionary) -> Dictionary:
+	var stat_id := str(stat_definition.get("id", ""))
+	if stat_id.is_empty() or not player.stats.has(stat_id):
+		return {}
+	var kind := str(stat_definition.get("kind", "flat"))
+	var color_token := _color_token_for_group(str(stat_definition.get("ui_group", "other")))
+	if kind == "resource":
+		var capacity_id := str(stat_definition.get("paired_capacity_id", ""))
+		return {
+			"stat_id": stat_id,
+			"label": _humanize_id(stat_id),
+			"value": float(player.stats.get(stat_id, 0.0)),
+			"max_value": float(player.stats.get(capacity_id, 0.0)),
+			"color_token": color_token,
+		}
+	return {
+		"stat_id": stat_id,
+		"label": _humanize_id(stat_id),
+		"value": float(player.stats.get(stat_id, 0.0)),
+		"color_token": color_token,
+	}
+
+
+func _build_priority_stat_preview(player: EntityInstance) -> Array[Dictionary]:
+	var preview_lines: Array[Dictionary] = []
+	var stat_definitions: Array = DataManager.get_definitions("stats")
+	for stat_definition_value in stat_definitions:
+		if not stat_definition_value is Dictionary:
+			continue
+		var stat_definition: Dictionary = stat_definition_value
+		if str(stat_definition.get("kind", "flat")) != "resource":
+			continue
+		var line := _build_stat_line(player, stat_definition)
+		if line.is_empty():
+			continue
+		preview_lines.append(line)
+		if preview_lines.size() >= 2:
+			return preview_lines
+	if preview_lines.is_empty():
+		var stat_keys: Array = player.stats.keys()
+		stat_keys.sort()
+		for stat_key_value in stat_keys:
+			var stat_key := str(stat_key_value)
+			if stat_key.ends_with("_max"):
+				continue
+			preview_lines.append({
+				"stat_id": stat_key,
+				"label": _humanize_id(stat_key),
+				"value": float(player.stats.get(stat_key, 0.0)),
+				"color_token": "info",
+			})
+			break
+	return preview_lines
+
+
+func _resolve_entity_emblem_path(player_template: Dictionary) -> String:
+	var emblem_keys := ["emblem_path", "portrait", "sprite"]
+	for emblem_key_value in emblem_keys:
+		var emblem_key := str(emblem_key_value)
+		var resource_path := str(player_template.get(emblem_key, ""))
+		if resource_path.is_empty():
+			continue
+		if ResourceLoader.exists(resource_path):
+			return resource_path
+	return ""
+
+
+func _color_token_for_group(group_name: String) -> String:
+	match group_name:
+		"combat":
+			return "warning"
+		"survival":
+			return "positive"
+		"economy":
+			return "primary"
+		_:
+			return "info"
+
+
+func _humanize_id(value: String) -> String:
+	if value.is_empty():
+		return ""
+	var words := value.split("_", false)
+	var formatted_words: Array[String] = []
+	for word_value in words:
+		var word := str(word_value)
+		if word.is_empty():
+			continue
+		formatted_words.append(word.left(1).to_upper() + word.substr(1))
+	return " ".join(formatted_words)
 
 
 func _build_inventory_summary(player: EntityInstance) -> String:

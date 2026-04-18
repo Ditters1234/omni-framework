@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://ui/screens/gameplay_shell/gameplay_shell_screen.gd" id="1_226q4"]
+[ext_resource type="PackedScene" path="res://ui/components/entity_portrait.tscn" id="2_73mfp"]
+[ext_resource type="PackedScene" path="res://ui/components/stat_sheet.tscn" id="3_okc2s"]
 
 [node name="GameplayShellScreen" type="Control"]
 layout_mode = 3
@@ -115,21 +117,22 @@ theme_override_constants/margin_bottom = 16
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="PlayerNameLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
+[node name="PlayerPortrait" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer" instance=ExtResource("2_73mfp")]
 layout_mode = 2
-autowrap_mode = 3
-theme_override_font_sizes/font_size = 20
-text = "Player"
 
-[node name="CurrencyLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
+[node name="CurrencySectionLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-autowrap_mode = 3
+theme_override_font_sizes/font_size = 18
 text = "Currencies"
 
-[node name="StatsLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
+[node name="CurrencyList" type="HFlowContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-autowrap_mode = 3
-text = "Stats"
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="PlayerStatSheet" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer" instance=ExtResource("3_okc2s")]
+layout_mode = 2
 
 [node name="InventoryLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2

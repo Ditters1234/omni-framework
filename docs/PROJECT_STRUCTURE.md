@@ -143,10 +143,10 @@ res://
 │   │   ├── part_detail_panel.tscn       # ✅ Part preview sidebar used by AssemblyEditor
 │   │   ├── stat_delta_sheet.tscn        # ✅ Before/after stat diff used by AssemblyEditor
 │   │   ├── part_card.tscn               # ⚠️ PLANNED — part display: icon, name, stats, price
-│   │   ├── entity_portrait.tscn         # ⚠️ PLANNED — entity avatar, name, description
-│   │   ├── currency_display.tscn        # ⚠️ PLANNED — currency value + symbol/icon
-│   │   ├── stat_bar.tscn                # ⚠️ PLANNED — labeled progress bar
-│   │   ├── stat_sheet.tscn              # ⚠️ PLANNED — full stat list for an entity
+│   │   ├── entity_portrait.tscn         # ✅ Generic entity card used by gameplay_shell and future dialogue/task surfaces
+│   │   ├── currency_display.tscn        # ✅ Generic currency value + symbol/icon panel
+│   │   ├── stat_bar.tscn                # ✅ Generic labeled stat display with optional capacity bar
+│   │   ├── stat_sheet.tscn              # ✅ Grouped stat renderer built from stat_bar instances
 │   │   ├── tab_panel.tscn               # ⚠️ PLANNED — tabbed container (used by location_view)
 │   │   └── notification_popup.tscn      # ⚠️ PLANNED — achievement / quest update popups
 │   └── debug/               # Dev-only debug tooling (excluded from export)
