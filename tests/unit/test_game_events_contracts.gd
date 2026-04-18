@@ -48,6 +48,33 @@ func test_emit_dynamic_rejects_unknown_signal_or_wrong_arity() -> void:
 	assert_eq(GameEvents.get_event_history().size(), 0)
 
 
+func test_save_and_load_emit_documented_success_and_failure_signals() -> void:
+	ModLoader.load_all_mods()
+	AIManager.initialize()
+	GameState.new_game()
+	TimeKeeper.stop()
+
+	watch_signals(GameEvents)
+	SaveManager.save_game(1)
+	assert_signal_emitted(GameEvents, "save_started")
+	assert_signal_emitted(GameEvents, "save_completed")
+	assert_signal_not_emitted(GameEvents, "save_failed")
+
+	watch_signals(GameEvents)
+	assert_true(SaveManager.load_game(1))
+	assert_signal_emitted(GameEvents, "load_started")
+	assert_signal_emitted(GameEvents, "load_completed")
+	assert_signal_not_emitted(GameEvents, "load_failed")
+
+	watch_signals(GameEvents)
+	SaveManager.save_game(99)
+	assert_signal_emitted(GameEvents, "save_failed")
+
+	watch_signals(GameEvents)
+	assert_false(SaveManager.load_game(99))
+	assert_signal_emitted(GameEvents, "load_failed")
+
+
 # ---------------------------------------------------------------------------
 # Boot pipeline contracts
 # ---------------------------------------------------------------------------

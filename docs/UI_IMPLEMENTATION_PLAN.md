@@ -1,0 +1,517 @@
+# Omni-Framework — UI Implementation Plan & Recommendations
+
+This document is a planning reference for the UI layer. It catalogs the backend screens, reusable components, engine-owned screens, new data schemas, and phased work required to bring the UI to parity with the data-first, genre-agnostic contract described in `PROJECT_STRUCTURE.md` and `modding_guide.md`.
+
+It is written to be revised. Treat it as the current best thinking, not a frozen spec.
+
+**Companion document:** `UI_DESIGN_GUIDE.md` defines *how* UI is built — component contracts, layout patterns, authoring templates, naming, and anti-patterns. This plan defines *what* to build and *when*. When the two disagree, the design guide wins for conventions; this plan wins for priorities.
+
+Decisions this document assumes:
+
+- **Crafting is a first-class backend.** It gets its own `backend_class` (`CraftingBackend`), its own JSON data type (`recipes.json`), and its own registry (`RecipeRegistry`). It is not crammed into `AssemblyEditorBackend`.
+- **Turn-based combat is deferred.** The architecture should not paint itself into a corner, but no combat backend ships in the initial UI rollout. The engine's current tick-and-location model is preserved.
+- **Every UI screen either comes through the mod data pipeline (`backend_class`) or is an engine-owned fixed screen.** There is no third category.
+
+---
+
+## 1. Guiding Principles
+
+The UI contract from `PROJECT_STRUCTURE.md §UI Framework` is the source of truth:
+
+```
+JSON definition → Backend → ViewModel → Screen → Components → Theme
+```
+
+What each layer is responsible for:
+
+| Layer | Responsibility | What it must not do |
+|---|---|---|
+| **JSON definition** | Describe what the player sees and what `backend_class` handles it | Contain GDScript, reference runtime state |
+| **Backend** | Validate params, query `DataManager` / `GameState`, produce a view model, commit side effects on confirm | Render UI, hold `@onready` refs |
+| **ViewModel** | Pure `Dictionary` (or typed Resource) built once per refresh | Reference back into autoloads |
+| **Screen** | Own a `.tscn`, receive the view model, distribute it to components | Query `DataManager` / `GameState` directly |
+| **Component** | Accept a dictionary and render — dumb widget | Talk to autoloads, mutate runtime state |
+| **Theme** | Style semantics via `omni_theme.tres` + `OmniSemantic` color tokens | Carry business logic |
+
+Implications this document respects:
+
+- Adding a new kind of screen means adding a new `backend_class`, a backend script, a screen script, and a scene — not a new global system.
+- Adding a new data type (recipes, talents, etc.) means adding a loader under `systems/loaders/` and a matching `get_*` method on `DataManager`. The schema and patch shape follow the same two-phase pattern as parts/entities.
+- Every `backend_class` the mod pipeline accepts has a registered contract (required fields, optional fields) that validation rejects at load time, not at first render.
+
+---
+
+## 2. Current State Summary
+
+Recap of what exists today, so later sections can reference specific facts rather than re-deriving them.
+
+### Implemented
+
+- `UIRouter` (autoload) — screen stack, registration, theme propagation.
+- `ui/main.tscn` / `ui/main.gd` — boots mods, applies theme, registers five screen ids.
+- `omni_theme.tres` + `theme_applier.gd` — centralized theme with `OmniSemantic` color tokens driven by `config.json ui.theme`.
+- Screens: `main_menu`, `gameplay_shell`, `location_view`, `assembly_editor` (also aliased as `character_creator`).
+- Components: `currency_summary_panel`, `part_detail_panel`, `stat_delta_sheet`.
+- `AssemblySession` in `core/` as the draft layer `AssemblyEditorBackend` operates on.
+- `LocationViewScreen.BACKEND_SCREEN_MAP` — the central `backend_class → screen_id` dispatch table.
+
+### Planned but not implemented
+
+- Backend screens: `exchange`, `list_view`, `challenge`, `task_provider`, `catalog_list`, `dialogue`, `world_map`.
+- Components: `part_card`, `entity_portrait`, `currency_display`, `stat_bar`, `stat_sheet`, `tab_panel`, `notification_popup`.
+- `BackendContractRegistry` for load-time `backend_class` validation.
+- Any Backend/Screen separation — `assembly_editor_screen.gd` is currently both roles in one file.
+
+---
+
+## 3. Recommended Final Backend Catalog
+
+Target end state once this plan is fully executed. Fourteen backends plus engine-owned screens.
+
+### 3.1 Interactive Backends (moddable, selected via `backend_class`)
+
+| `backend_class` | Screen id | Status | Purpose |
+|---|---|---|---|
+| `AssemblyEditorBackend` | `assembly_editor` | ✅ Implemented | Slot+part editor — character creator, workbench, ripperdoc, shipyard, cyberware install |
+| `ExchangeBackend` | `exchange` | ⚠️ Planned | Two-sided trade: move instances between two entity inventories with currency transfer |
+| `CatalogListBackend` | `catalog_list` | ⚠️ Planned | Infinite vendor — buy fresh `PartInstance`s minted from `PartsRegistry` |
+| `CraftingBackend` | `crafting` | 🆕 **Proposed** | Recipe-driven: consume N inputs from an inventory, produce 1 output template |
+| `ListBackend` | `list_view` | ⚠️ Planned | Generic filtered list with pluggable row templates and `action_payload` dispatch |
+| `ChallengeBackend` | `challenge` | ⚠️ Planned | Single stat check → branch to `reward` or `action_payload` |
+| `TaskProviderBackend` | `task_provider` | ⚠️ Planned | Faction job board — accept tasks from `faction.quest_pool` |
+| `ActiveQuestLogBackend` | `quest_log` | 🆕 **Proposed** | Read active quests + stages + objectives + rewards from `GameState` |
+| `EntitySheetBackend` | `entity_sheet` | 🆕 **Proposed** | Read-only full entity view: stats, modifiers, equipped parts, inventory summary, faction standings |
+| `FactionReputationBackend` | `faction_rep` | 🆕 **Proposed** | Grid/list of factions with reputation tier + emblem + territory summary |
+| `AchievementListBackend` | `achievement_list` | 🆕 **Proposed** | Browse achievement progress including locked/unlocked state and thresholds |
+| `EventLogBackend` | `event_log` | 🆕 **Proposed** | Rolling history from `GameEvents._event_history` |
+| `DialogueBackend` | `dialogue` | ⚠️ Planned | Wraps Dialogue Manager with entity portrait and `dialogue_blip` SFX |
+| `WorldMapBackend` | `world_map` | ⚠️ Planned | Graph of discovered locations with faction-tinted nodes |
+
+Notes on the new proposals:
+
+**`CraftingBackend`** is fundamentally different from `AssemblyEditorBackend`. Assembly is "pick one part per socket from a filtered catalog." Crafting is "consume a multiset of inventory instances to produce a new template instance, gated on optional stat checks and discovered recipes." Forcing it into AssemblyEditor would require inventing socket semantics that don't exist (stack-count sockets, multi-instance sockets) and would make the modding JSON confusing. Separate backend.
+
+**`ActiveQuestLogBackend`** is not just `ListBackend` with quest rows because it needs to render per-stage objective state (`"Deliver the package" ✓`, `"Return to Gina"` → active). That objective rendering reads from `QuestTracker` output, not just the quest template. A generic list cannot encode that shape cleanly.
+
+**`EntitySheetBackend`** is the read-only complement to AssemblyEditor. Every genre needs this — "press C to open character sheet" is a universal UI idiom. It aggregates stats, per-part modifier breakdowns, inventory summary, and faction standings into one view.
+
+**`FactionReputationBackend`** could in theory live inside EntitySheet, but factions in this engine are a first-class relational database (see `modding_guide.md §3.6`). A dedicated view is cleaner, and it composes better with the faction emblem and territory data that already exist on faction templates.
+
+**`AchievementListBackend`** + **`EventLogBackend`** both consume existing engine state that currently has no UI surface. `AchievementRegistry` has full templates. `GameEvents` already maintains a bounded `_event_history`. Both are near-free to build once `ListBackend` is robust, but their contracts are simple enough that distinct backends are easier to validate than overloading `ListBackend` with `data_source: "achievements"` magic strings.
+
+### 3.2 Do we really need this many backends?
+
+Reasonable question. Three of the new backends (`ActiveQuestLog`, `AchievementList`, `EventLog`) are list-shaped and could collapse into a richer `ListBackend` with pluggable row templates. That would look like:
+
+```json
+{
+  "backend_class": "ListBackend",
+  "data_source": "game_state.active_quests",
+  "row_template": "quest_card",
+  "empty_label": "No active quests."
+}
+```
+
+The argument for collapsing: fewer backends to maintain, fewer contract registrations, modders learn one pattern.
+
+The argument against collapsing: the data source strings become a DSL, and every valid source has to be documented somewhere. It trades backend proliferation for string proliferation. It also makes load-time validation harder — `BackendContractRegistry` can check "does this field exist" but not "is `game_state.active_quests` a legal source."
+
+**Recommendation: start with distinct backends, converge only if maintenance pain materializes.** Each new backend is ~100–200 lines; none of them are expensive to keep separate. The distinct contract surface is also easier to document for modders, since they can look at §3.6 of the modding guide and see "AchievementListBackend takes these three fields" rather than chasing data-source strings.
+
+### 3.3 Combat placeholder
+
+No combat backend ships in this plan. See §6 for the deferral strategy.
+
+---
+
+## 4. Engine-Owned (Non-Moddable) Screens
+
+These do not use `backend_class` because they do not interact with mod data. They are fixed engine screens registered directly in `ui/main.gd`.
+
+| Screen id | Purpose | Notes |
+|---|---|---|
+| `main_menu` | Boot landing, new game / continue / load / quit / settings / credits | Exists; needs Settings + Load-Slot buttons wired |
+| `settings` | Audio volumes, resolution, keybinds, accessibility | Writes to `user://settings.cfg` via `ConfigFile`, independent of mod `config.json` |
+| `save_slot_list` | Multi-slot save/load with playtime/day/preview | Uses existing `SaveManager.get_slot_info(slot)` and `MAX_SAVE_SLOTS = 5` |
+| `pause_menu` | In-game pause overlay (Resume / Settings / Save / Main Menu) | Listens to an `Escape` action binding; emits `game_paused` / `game_resumed` |
+| `credits` | Attribution + mod list | Pulls from `ModLoader.loaded_mods` so loaded mods show up automatically |
+| `gameplay_shell` | Persistent HUD + hub for pushing screens | Exists; needs refactor onto reusable components (§5) |
+
+Rationale for keeping these out of the mod pipeline: they are about the application, not the game. Modders should not be able to replace the save-slot browser or settings menu without invasive script hooks. Aesthetics (theme, strings) still flow through config, but the structure is fixed.
+
+### 4.1 Gameplay Shell specifics
+
+The `gameplay_shell_screen.gd` as it stands renders `_format_dictionary(player.currencies)` into raw `Label` nodes. That is not up to standard. The refactored shell should include:
+
+- **Top bar:** row of `currency_display` components, `time_label` ("Day 3, Tick 14:00"), time-advance buttons from `config.ui.time_advance_buttons`, quick-save button.
+- **Left panel:** `entity_portrait` (player) + compact `stat_sheet`.
+- **Center button column:** "Explore Location" (pushes `location_view`), "Character" (pushes `entity_sheet`), "Quests" (pushes `quest_log`), "World Map" (pushes `world_map`), "Inventory" (pushes `list_view` with `data_source: "player:inventory"`).
+- **Notification slot:** `notification_popup` mounts here, not inside each screen.
+
+The shell is where the engine-owned screens connect back into the moddable ones. Its buttons delegate to existing `UIRouter.push` calls; no new infrastructure required.
+
+---
+
+## 5. Component Library
+
+Components are dumb widgets. Contract: `class_name`, `@onready` members, single `render(view_model: Dictionary) -> void`, no autoload access.
+
+Prioritized by number of downstream consumers. Build in this order.
+
+| Component | View model fields | Used by |
+|---|---|---|
+| `currency_display` | `{currency_id, amount, symbol, color_token}` | `gameplay_shell`, `exchange`, `catalog_list`, `part_card`, `crafting` |
+| `stat_bar` | `{stat_id, label, value, max_value, color_token}` | `entity_portrait`, `stat_sheet`, `challenge`, gameplay shell |
+| `stat_sheet` | `{groups: Dict[group_name → Array[stat_line]]}` | `entity_sheet`, `gameplay_shell`, `dialogue` |
+| `part_card` | `{template, default_sprite_paths, price_text, badges, affordable}` | `exchange`, `catalog_list`, `list_view`, `crafting` (inputs and outputs) |
+| `entity_portrait` | `{display_name, emblem_path, description, faction_badge, stat_preview}` | `dialogue`, `exchange`, `task_provider`, `entity_sheet` |
+| `tab_panel` | `{tabs: Array[{id, label, content_scene}]}` | `location_view` (optional), `entity_sheet`, modder-built multi-tab shops |
+| `notification_popup` | `{message, level, icon, duration_ms}` | Global — mounts under `ScreenLayer` in `main.tscn` |
+| `recipe_card` | `{recipe, input_status: [{template_id, required, have, satisfied}], output_template}` | `crafting` |
+| `quest_card` | `{quest_id, display_name, current_stage, objectives: [{label, satisfied}], rewards}` | `quest_log`, potentially `dialogue` inline |
+| `faction_badge` | `{faction_id, emblem_path, reputation_tier, reputation_value, color}` | `faction_rep`, `entity_portrait`, `dialogue` |
+
+Each component gets a docstring at the top of its `.gd` file declaring its view model contract, matching the existing pattern in `currency_summary_panel.gd`.
+
+### 5.1 Components already implemented
+
+`currency_summary_panel`, `part_detail_panel`, and `stat_delta_sheet` stay as AssemblyEditor-specific widgets. They consume more specialized view models than the generic components above. Keep them; do not force them into the generic library.
+
+---
+
+## 6. Combat Deferral Strategy
+
+The goal is: build the UI layer today without combat, while preserving the ability to add a `CombatBackend` later without reworking the architecture.
+
+### 6.1 What combat would eventually need
+
+Whenever combat lands, the UI shape will be some combination of:
+
+- A turn queue / initiative tracker.
+- Per-combatant action selection (attack / ability / item / defend / flee).
+- Target selection (single, area, self).
+- Animated or discrete damage/heal/status resolution per action.
+- Combat log (already handled by `EventLogBackend` if combat uses `GameEvents`).
+- End-of-combat rewards screen (XP, loot, currency).
+
+All of that is "another backend" in the mod pipeline, selected via `backend_class: "CombatBackend"` with params like `"encounter_id": "base:goblin_ambush"`. There is nothing in the current architecture that prevents this.
+
+### 6.2 What we must not do now
+
+To keep the door open:
+
+- **Do not assume non-real-time everywhere in the UIRouter.** The router already takes params and pushes scenes; that's fine for combat later. Don't bake "turn" or "tick" assumptions into the router API.
+- **Do not hardcode the stat system around non-combat semantics.** Stats are already pair-based (`health` / `health_max`) per `STAT_SYSTEM_IMPLEMENTATION.md`. Damage is a stat delta. Nothing needs to change.
+- **Do not assume `ChallengeBackend` is how all uncertainty resolves.** `ChallengeBackend` is a single gated roll. Combat rolls repeatedly under a turn structure. Keep them as sibling backends when combat lands; resist the urge to make Challenge "do combat too."
+- **Avoid `ActionDispatcher` coupling that assumes all actions resolve instantly.** `action_payload` types today are atomic (set_flag, add_currency, start_task). A future combat action payload (`"begin_encounter"`) may hand control to a combat backend that runs for many ticks. Treat action payloads as potentially asynchronous — ActionDispatcher should already tolerate that, but it's worth noting in comments when that file is next edited.
+
+### 6.3 What to do when combat is ready
+
+Sketch, not spec:
+
+- New data type: `encounters.json` → `EncounterRegistry`. Template fields include enemy roster, environment conditions, starting stance, victory conditions, rewards.
+- New backend: `CombatBackend` with `encounter_id` as the required field.
+- New scene: `ui/screens/backends/combat_screen.tscn` with initiative tracker, action panels, target picker.
+- New components: `combatant_card` (variant of `entity_portrait` with initiative indicator and HP bar), `action_button_grid`.
+- Events: `combat_started`, `combat_turn_started`, `combat_action_resolved`, `combat_ended` on `GameEvents`.
+
+None of that contradicts anything in this plan. It slots in alongside the other backends.
+
+---
+
+## 7. New Data Schemas Required
+
+Crafting needs `recipes.json` today. Talent/skill trees are a separate follow-up (not in this plan) but would need `talents.json` by the same pattern.
+
+### 7.1 `recipes.json`
+
+Lives in `mods/<author>/<mod>/data/recipes.json`. Loaded by a new `RecipeRegistry` under `systems/loaders/`. Registered on `DataManager` as `get_recipe(id)` / `query_recipes(...)`.
+
+Minimal schema sketch:
+
+```json
+{
+  "recipes": [
+    {
+      "recipe_id": "base:iron_sword",
+      "display_name": "Iron Sword",
+      "description": "A plain but reliable blade.",
+      "output_template_id": "base:iron_sword_part",
+      "output_count": 1,
+      "inputs": [
+        { "template_id": "base:iron_ingot", "count": 2 },
+        { "template_id": "base:leather_strip", "count": 1 }
+      ],
+      "required_stations": ["base:forge"],
+      "required_stats": { "smithing": 5 },
+      "required_flags": ["base:learned_iron_sword"],
+      "craft_time_ticks": 4,
+      "discovery": "learned_on_flag",
+      "tags": ["weapon", "tier_1"],
+      "sprite": "res://mods/base/assets/icons/iron_sword.png"
+    }
+  ],
+  "patches": []
+}
+```
+
+Schema notes:
+
+- `inputs` is a multiset of `{template_id, count}`. The crafting backend consumes `count` instances per input.
+- `required_stations` lets mods gate recipes to specific location screens — e.g. only craftable when `crafting` is opened from a `base:forge` location. Empty/absent = craftable anywhere.
+- `required_stats` and `required_flags` reuse existing condition shapes.
+- `discovery` is one of `"always"` (visible from the start), `"learned_on_flag"` (visible when `learned:<recipe_id>` flag is set on the player), or `"auto_on_ingredient_owned"` (visible once the player has all inputs at least once).
+- `craft_time_ticks: 0` = instant (default); >0 routes through `TaskRunner` as a timed production task.
+
+### 7.2 `CraftingBackend` params
+
+Mod JSON shape for placing a crafting station at a location:
+
+```json
+{
+  "tab_id": "forge_crafting",
+  "display_name": "Craft at Forge",
+  "backend_class": "CraftingBackend",
+  "station_id": "base:forge",
+  "recipe_tags": ["weapon", "armor"],
+  "recipe_ids": [],
+  "crafter_entity_id": "player",
+  "input_source_entity_id": "player",
+  "output_destination_entity_id": "player",
+  "screen_title": "Forge"
+}
+```
+
+Contract:
+
+| Param | Required | Default | Purpose |
+|---|---|---|---|
+| `station_id` | ✓ | — | Matches against `recipe.required_stations` |
+| `recipe_tags` | optional | `[]` | Filter visible recipes by tag |
+| `recipe_ids` | optional | `[]` | Explicit recipe whitelist (stacks with tags) |
+| `crafter_entity_id` | optional | `"player"` | Whose stats are checked against `required_stats` |
+| `input_source_entity_id` | optional | same as crafter | Inventory to consume from |
+| `output_destination_entity_id` | optional | same as crafter | Inventory that receives the output |
+| `screen_title` / `screen_description` | optional | defaults | Presentation |
+
+The separate `crafter`, `input_source`, `output_destination` fields mirror the target/payer/recipient split already in AssemblyEditor, so a modder could model "apprentice crafts at master's forge using guild materials, output goes to guild stockpile."
+
+### 7.3 Where crafting integrates with existing systems
+
+- Consumes and produces via `TransactionService` (already planned in `PROJECT_STRUCTURE.md §Core Systems`) — no direct inventory mutation from the backend.
+- Timed recipes create a task via `TimeKeeper.accept_task` with a synthetic task template — no new code path, just a `recipe_craft` task template type.
+- Recipe discovery flags flow through existing `flag_changed` on `GameEvents`. Nothing new.
+
+---
+
+## 8. Architecture Improvements Before Backend Proliferation
+
+Before writing seven new backends, the current single backend should be refactored to establish the pattern. Skipping this step means the seven will duplicate the current screen's mixing of concerns.
+
+### 8.1 Split Backend from Screen
+
+Target file layout per backend:
+
+```
+ui/screens/backends/exchange/
+├── exchange_screen.tscn
+├── exchange_screen.gd              # @onready refs, signal forwarding, render dispatch
+└── exchange_backend.gd             # class_name OmniExchangeBackend extends OmniBackendBase
+```
+
+`OmniBackendBase` (new file in `ui/screens/backends/backend_base.gd`):
+
+```gdscript
+class_name OmniBackendBase
+extends RefCounted
+
+func initialize(params: Dictionary) -> void: pass
+func build_view_model() -> Dictionary: return {}
+func confirm(selected: Dictionary) -> Dictionary: return {"status": "ok"}
+func get_required_params() -> Array[String]: return []
+```
+
+The refactor of `assembly_editor_screen.gd` is an in-place edit per the AGENTS.md rule: extract data-gathering methods into a new `assembly_editor_backend.gd` without deleting the original; then trim the screen to `@onready` refs and `_on_*` handlers that call into the backend.
+
+### 8.2 `BackendContractRegistry`
+
+New file: `systems/backend_contract_registry.gd`. Called by `LocationGraph`, `EntityRegistry`, `TaskRegistry` during Phase 1 additions. Given a dictionary containing a `backend_class` field, returns a list of missing required fields. Loaders emit `mod_load_error` on `GameEvents` for each.
+
+Contract entries are registered at engine boot by each backend script in a single `static func register_contract()` method. That keeps the contract next to the backend that enforces it.
+
+```gdscript
+# In exchange_backend.gd
+static func register_contract() -> void:
+    BackendContractRegistry.register("ExchangeBackend", {
+        "required": ["source_inventory", "destination_inventory", "currency_id"],
+        "optional": ["transaction_sound", "list_icon", "price_modifier"]
+    })
+```
+
+Boot order: contracts register after autoloads are ready but before `ModLoader.load_all_mods()`. A one-line call in `ui/main.gd._ready()` drives it.
+
+### 8.3 Typed view models (optional)
+
+A `ViewModel` base resource with `to_dict()` / `from_dict()` would let tests snapshot backend output without instantiating scenes. This is a nice-to-have, not a blocker. Components still accept `Dictionary` at the render boundary; the typed resource is a backend-side convenience.
+
+---
+
+## 9. Phased Implementation Plan
+
+
+### Phase 1 — Pattern establishment (~1–2 days)
+
+- Create `ui/screens/backends/backend_base.gd` with `OmniBackendBase`.
+- In-place refactor `assembly_editor_screen.gd` to split into `assembly_editor_backend.gd` + the screen script. No behavior changes. Tests must still pass.
+- Create `systems/backend_contract_registry.gd`.
+- Register the `AssemblyEditorBackend` contract (mostly optional fields; validates parameter types).
+
+Deliverable: one backend running the target pattern; the template for every subsequent backend is defined.
+
+### Phase 2 — Component library (~2–3 days)
+
+Build in the order listed in §5. Each component is a `.tscn` + `.gd` + view model docstring.
+
+Priority order:
+1. `currency_display` (unblocks shell refactor)
+2. `stat_bar` → `stat_sheet` (unblocks shell refactor and entity sheet)
+3. `part_card` (unblocks exchange, catalog_list, crafting)
+4. `entity_portrait` (unblocks dialogue, task_provider)
+5. `notification_popup` (global — mounts in main.tscn)
+6. `recipe_card`, `quest_card`, `faction_badge` (backend-specific; build alongside their backends)
+7. `tab_panel` (lowest priority; used by `location_view` only if we want tabs instead of a button list)
+
+### Phase 3 — Engine-owned screens (~2 days)
+
+- Refactor `gameplay_shell_screen.gd` in place to use components from Phase 2.
+- Build `settings_screen`, `save_slot_list_screen`, `pause_menu_screen`, `credits_screen`.
+- Wire them into `main_menu` and into an Escape-key pause handler in `main.gd`.
+
+Deliverable: full boot → menu → settings → save-slot → game shell loop using real components.
+
+### Phase 4 — Moddable backends, round 1 (~4–5 days)
+
+Build in dependency order — screens that depend on fewer new components come first.
+
+1. `DialogueBackend` (depends on `entity_portrait`; high modder priority since Dialogue Manager integration unblocks writable content).
+2. `ExchangeBackend` (depends on `part_card`, `currency_display`).
+3. `CatalogListBackend` (shares most of Exchange's shape).
+4. `ListBackend` (generic, depends on `part_card` + pluggable row templates).
+5. `ChallengeBackend` (depends on `stat_bar`, `entity_portrait`).
+6. `TaskProviderBackend` (depends on `entity_portrait`, `quest_card`).
+
+Each follows the Phase 1 pattern: scene, screen script, backend script, contract registration. Register each in `ui/main.gd` alongside existing screens.
+
+### Phase 5 — Moddable backends, round 2 (~3–4 days)
+
+The "read-only view" backends that depend on existing runtime state.
+
+1. `EntitySheetBackend` + `stat_sheet` integration.
+2. `ActiveQuestLogBackend` + `quest_card`.
+3. `FactionReputationBackend` + `faction_badge`.
+4. `AchievementListBackend`.
+5. `EventLogBackend`.
+
+### Phase 6 — Crafting (~3–4 days)
+
+1. New data type: `recipes.json` schema + `RecipeRegistry` loader + `DataManager.get_recipe` / `query_recipes` / `query_recipes_by_tag`.
+2. `CraftingBackend` + `crafting_screen` + `recipe_card` integration.
+3. Timed-craft task type wired through `TaskRunner` for `craft_time_ticks > 0`.
+4. Base mod ships at least one example recipe and one `base:forge` crafting station on a test location for the integration test.
+
+### Phase 7 — World Map (~2 days)
+
+`WorldMapBackend` with a graph render of `LocationGraph.get_all_locations()`, faction-tinted nodes, travel-on-click. Keep it simple — no fog-of-war, no region overlays. Those can be later additions.
+
+### Phase 8 — Combat placeholder (deferred)
+
+Not built in this plan. When combat lands, it follows the same pattern as every other backend. See §6.
+
+**Total estimated effort for Phases 1–7: ~17–22 engineering days.**
+
+---
+
+## 10. Testing and Verification
+
+Every phase produces testable surface. Tests land alongside implementation, not as a follow-up.
+
+### 10.1 Unit tests (GUT)
+
+- Each backend: given params X and a known `GameState`, `build_view_model()` returns dictionary Y. Backends are `RefCounted` and need no scene setup.
+- `BackendContractRegistry`: fixtures with missing required fields fail validation; fixtures with all required fields pass.
+- `RecipeRegistry`: recipe loading, patch application, reference validation (inputs reference real parts).
+- `ConditionEvaluator` extensions for recipe gating (if any).
+
+### 10.2 Integration tests
+
+- Full mod load with a fixture mod that declares one of each backend_class — all must validate at load time.
+- Save/load round-trip after pushing each backend screen and committing a side effect — no state corruption.
+- Theme override — load a fixture mod that sets `ui.theme.primary_color`, verify `OmniSemantic.primary` matches on a freshly pushed screen.
+
+### 10.3 Smoke tests
+
+- GUT scene runner pushes each screen with canonical params and asserts no `push_error` during first render.
+- Dialogue screen runs a fixture `.dialogue` file start-to-finish without errors.
+
+### 10.4 Debug surfaces
+
+Per `PROJECT_STRUCTURE.md §Debug And Test Tooling`, every new system gets a debug inspection surface. Add a "UI State" tab to `dev_debug_overlay.gd` showing:
+
+- Current router stack.
+- Each screen's most recently built view model (via a weakref — don't retain).
+- Registered backend contracts.
+- Backend contract validation failures from the last `ModLoader` run.
+
+---
+
+## 11. Open Questions
+
+Items this plan cannot resolve without more information from the project owner.
+
+**Q1. Should `tab_panel` replace the current button list in `LocationViewScreen`?**
+The guide describes location view as a hub. A tabbed version is more information-dense but harder to mod (mods adding a tab vs. adding a button). Current implementation favors modder simplicity. Recommend: keep the button list as the default; make `tab_panel` available for mods that want tabbed sub-screens inside their own backend.
+
+**Q2. Does `EventLogBackend` show all events or a filtered subset?**
+`GameEvents._event_history` is bounded at 200. A player-facing log would want filtering (quest-only, combat-only when combat lands, economic-only). Recommend: ship a minimum-viable version showing all events; add filter params if modders ask.
+
+**Q3. Should `SettingsBackend` be engine-owned or moddable?**
+Argument for engine-owned: modders shouldn't be able to break fundamental app settings. Argument for moddable: mods might want to add their own config toggles (e.g. "enable verbose AI logs"). Recommend: engine-owned for the base page, with a stable "Mods" tab inside it that mods can contribute rows to via a `systems/settings_contribution_registry.gd`. This is a sub-feature; don't build it in Phase 3.
+
+**Q4. How does dialogue chain into other backends?**
+Modding guide §3.6 shows `DialogueBackend` as a leaf. But a common idiom is "NPC says 'show me your wares' → opens Exchange mid-conversation." Dialogue Manager has inline commands; we can extend `action_payload` to include `"push_screen"` with `screen_id` and `params`. Recommend: implement `push_screen` action payload as part of Phase 4 Dialogue work.
+
+**Q5. Do we need talent/skill trees in scope?**
+Not in this plan. Fantasy RPG meta-progression would want them. If/when needed, schema follows the same pattern as recipes: `talents.json` + `TalentRegistry` + `TalentTreeBackend`. Node-graph rendering is the hardest part; a simple vertical-column tree is a reasonable MVP.
+
+**Q6. How do we handle UI strings for localization?**
+`config.json ui.strings` exists. Right now individual screens hard-code fallback English strings. Long-term answer is a central `OmniStrings` autoload that every screen queries. Not in this plan; worth a follow-up doc.
+
+**Q7. Is the current `UIRouter` stack good enough for modal overlays?**
+Notification popups, confirmation dialogs, and inventory quick-pick overlays all want "float on top of the current screen without popping it." Current router always adds children to `_screen_container` as full-screen controls. Recommend: add an `overlay` stack to UIRouter that mounts above the main stack without replacing the current screen. Affects `notification_popup` and future confirmation dialogs.
+
+---
+
+## 12. Summary of Deltas from Current State
+
+Condensed for reference:
+
+**New backends to build:** Exchange, CatalogList, Crafting, List, Challenge, TaskProvider, ActiveQuestLog, EntitySheet, FactionReputation, AchievementList, EventLog, Dialogue, WorldMap. (13 new + 1 refactored existing = 14 total.)
+
+**New engine screens to build:** Settings, SaveSlotList, PauseMenu, Credits. Refactor: GameplayShell.
+
+**New components to build:** currency_display, stat_bar, stat_sheet, part_card, entity_portrait, tab_panel, notification_popup, recipe_card, quest_card, faction_badge. (10 new.)
+
+**New systems:** BackendContractRegistry, RecipeRegistry (+ `recipes.json` schema), OmniBackendBase.
+
+**New signals on GameEvents:** `recipe_crafted`, `combat_*` (deferred), `ui_overlay_pushed` / `ui_overlay_popped` (if Q7 is adopted).
+
+**Deferred entirely:** Combat backend, talent/skill trees, localization strings refactor, interactive world map beyond travel nodes.
+
+---
+
+## 13. Revision History
+
+| Date | Author | Change |
+|---|---|---|
+| 2026-04-17 | Initial draft | First cut of the plan with crafting as its own backend and combat deferred |
+                                                                                                                                                                                                                                                                

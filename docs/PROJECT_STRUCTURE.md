@@ -282,7 +282,7 @@ Contains:
 - `achievement_stats: Dictionary` — global tracking stats (gold_spent, etc.).
 
 ### `SaveManager` (`autoloads/save_manager.gd`)
-Reads and writes `GameState` as human-readable JSON to `user://saves/`. Uses `A2J` for lossless typed serialization of all runtime objects. Handles schema versioning so old saves can be migrated forward and revalidates runtime references after load.
+Reads and writes `GameState` as human-readable JSON to `user://saves/`. Uses `A2J` for lossless typed serialization of all runtime objects. Handles schema versioning so old saves can be migrated forward, validates runtime state before save, and revalidates runtime references after load. Failed loads must restore the previous live runtime state instead of leaving `GameState` partially mutated or reset.
 
 All custom runtime classes that appear in save data (`EntityInstance`, `PartInstance`, `GameState`, etc.) must be registered in `A2J.object_registry` during `_ready()` before any save/load can occur.
 

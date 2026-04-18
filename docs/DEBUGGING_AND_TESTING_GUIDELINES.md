@@ -279,6 +279,9 @@ Add or update tests when you change:
 - Save round trip
 - Migration from previous schema version
 - Missing template references fail clearly
+- Invalid runtime state is rejected before writing a save
+- Failed loads restore the prior live session instead of wiping it
+- Save/load success and failure signals are covered by regression tests
 
 ### GameEvents
 

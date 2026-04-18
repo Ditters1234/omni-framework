@@ -154,6 +154,8 @@ Recommended policy:
 - Missing critical templates that block deserialization: hard load failure
 - Missing optional presentation assets: recover with fallback
 - Missing mod content referenced by save state: fail with a clear "missing dependency mod" message unless a migrator explicitly handles it
+- Failed loads should roll back to the previous live `GameState` snapshot instead of clearing the session
+- Runtime validation should run before save as well as after load so bad state is caught at the source
 
 ## A2J Registration Rules
 
