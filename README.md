@@ -2,6 +2,8 @@
 
 # Omni-Framework
 
+<div style="clear: both;"></div>
+
 A single-player, data-driven, genre-agnostic game engine built on **Godot 4** (GDScript).
 
 The engine provides the systems; JSON provides the content. The same runtime can power a fantasy RPG, a sci-fi colony sim, or a cyberpunk trading game without code changes — swap the mod, swap the game.

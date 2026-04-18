@@ -2,6 +2,8 @@
 
 # Base Game Mod
 
+<div style="clear: both;"></div>
+
 The shipped base content for Omni-Framework. It is a mod like any other, with one special property: `ModLoader` treats it as required and loads it first.
 
 - **ID:** `base`

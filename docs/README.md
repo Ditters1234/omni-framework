@@ -2,6 +2,8 @@
 
 # Omni-Framework Documentation
 
+<div style="clear: both;"></div>
+
 Omni-Framework is a data-driven, genre-agnostic game engine built on Godot 4.
 
 This folder is the canonical reference for Omni-Framework. The main docs below are the single source of truth for the architecture direction, modding rules, and implementation guardrails.
