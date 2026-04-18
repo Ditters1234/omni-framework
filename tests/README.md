@@ -26,6 +26,7 @@ Current baseline suites cover:
 - basic GameState/save flow
 - save/load time resynchronization
 - DataManager query helpers and immutability
+- DataManager load diagnostics, patch target validation, and cross-registry integrity checks
 - AI provider config selection
 - mod dependency-aware load ordering
 - mod manifest validation and loader debug snapshot coverage

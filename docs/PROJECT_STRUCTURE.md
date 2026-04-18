@@ -265,6 +265,7 @@ Hardening rules for `DataManager`:
 - Every loader should validate additions and patches before mutating the merged registry.
 - `DataManager` should expose query helpers for common lookups (`query_parts`, `query_entities`, `query_locations`) so systems and UI do not re-implement filtering logic ad hoc.
 - Unknown references should fail fast during loading rather than surfacing as null lookups later in gameplay.
+- `DataManager` should retain a debug snapshot of processed files, registry counts, and load issues so the dev overlay and tests can inspect data health without re-parsing mod files.
 
 ### `GameState` (`autoloads/game_state.gd`)
 Holds the active runtime state of the game session. This is what gets serialized to a save file by `SaveManager` via `A2J.to_json()`.

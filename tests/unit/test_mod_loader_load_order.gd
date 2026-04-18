@@ -85,6 +85,7 @@ func test_validate_base_manifest_requires_enabled_base_with_zero_load_order() ->
 	}
 
 	assert_false(ModLoader._validate_base_manifest(base_manifest))
+	assert_push_error("Base mod cannot be disabled.")
 
 	var errors := ModLoader.get_load_errors()
 	assert_eq(errors.size(), 1)

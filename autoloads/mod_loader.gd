@@ -52,17 +52,20 @@ func load_all_mods() -> void:
 	var discovered := _discover_mods()
 	if discovered.is_empty():
 		_record_load_error(BASE_MOD_ID, "Failed to discover any valid mods.", true, ERROR_STAGE_DISCOVERY)
+		DataManager.finish_load(false)
 		_finalize_load(started_ms)
 		return
 
 	loaded_mods = _filter_loadable_mods(discovered)
 	if loaded_mods.is_empty():
 		_record_load_error(BASE_MOD_ID, "No loadable mods remained after validation.", true, ERROR_STAGE_VALIDATION)
+		DataManager.finish_load(false)
 		_finalize_load(started_ms)
 		return
 	loaded_mods = _resolve_load_order(loaded_mods)
 	if loaded_mods.is_empty():
 		_record_load_error(BASE_MOD_ID, "Unable to resolve a valid mod load order.", true, ERROR_STAGE_ORDERING)
+		DataManager.finish_load(false)
 		_finalize_load(started_ms)
 		return
 	load_report["load_order"] = _manifest_id_list(loaded_mods)
@@ -77,11 +80,21 @@ func load_all_mods() -> void:
 	_phase_two_patches(loaded_mods)
 	load_report["phase_two_ms"] = Time.get_ticks_msec() - phase_two_started_ms
 
+	var data_validation_started_ms := Time.get_ticks_msec()
+	var data_issues := DataManager.validate_loaded_content()
+	load_report["data_validation_ms"] = Time.get_ticks_msec() - data_validation_started_ms
+	_record_data_manager_issues(data_issues)
+	if not data_issues.is_empty():
+		DataManager.finish_load(false)
+		_finalize_load(started_ms)
+		return
+
 	var script_hook_started_ms := Time.get_ticks_msec()
 	if _script_hook_loader != null:
 		_script_hook_loader.clear_cache()
 		_script_hook_loader.preload_all()
 	load_report["script_hook_preload_ms"] = Time.get_ticks_msec() - script_hook_started_ms
+	DataManager.finish_load(true)
 	is_loaded = true
 	_emit_loaded_mod_events(loaded_mods)
 	if GameEvents:
@@ -329,14 +342,14 @@ func _resolve_load_order(mods: Array[Dictionary]) -> Array[Dictionary]:
 func _phase_one_additions(mods: Array[Dictionary]) -> void:
 	for manifest in mods:
 		var data_path := str(manifest.get("path", "")).path_join("data")
-		DataManager.register_additions(str(manifest.get("id", "")), data_path)
+		_record_data_manager_issues(DataManager.register_additions(str(manifest.get("id", "")), data_path))
 
 
 ## Phase 2: iterate mods in order, call DataManager.apply_patches() for each.
 func _phase_two_patches(mods: Array[Dictionary]) -> void:
 	for manifest in mods:
 		var data_path := str(manifest.get("path", "")).path_join("data")
-		DataManager.apply_patches(str(manifest.get("id", "")), data_path)
+		_record_data_manager_issues(DataManager.apply_patches(str(manifest.get("id", "")), data_path))
 
 
 # ---------------------------------------------------------------------------
@@ -392,6 +405,7 @@ func get_debug_snapshot() -> Dictionary:
 		"nonfatal_error_count": int(load_report.get("nonfatal_error_count", 0)),
 		"phase_one_ms": int(load_report.get("phase_one_ms", 0)),
 		"phase_two_ms": int(load_report.get("phase_two_ms", 0)),
+		"data_validation_ms": int(load_report.get("data_validation_ms", 0)),
 		"script_hook_preload_ms": int(load_report.get("script_hook_preload_ms", 0)),
 		"total_ms": int(load_report.get("total_ms", 0)),
 		"started_at": str(load_report.get("started_at", "")),
@@ -432,6 +446,7 @@ func _create_empty_load_report() -> Dictionary:
 		"nonfatal_error_count": 0,
 		"phase_one_ms": 0,
 		"phase_two_ms": 0,
+		"data_validation_ms": 0,
 		"script_hook_preload_ms": 0,
 	}
 
@@ -483,6 +498,17 @@ func _emit_loaded_mod_events(mods: Array[Dictionary]) -> void:
 		return
 	for manifest in mods:
 		GameEvents.mod_loaded.emit(str(manifest.get("id", "")))
+
+
+func _record_data_manager_issues(issues: Array[Dictionary]) -> void:
+	for issue in issues:
+		var mod_id := str(issue.get("mod_id", "data_manager"))
+		var file_path := str(issue.get("file_path", ""))
+		var message := str(issue.get("message", "Unknown DataManager issue."))
+		var phase := str(issue.get("phase", ERROR_STAGE_VALIDATION))
+		if not file_path.is_empty():
+			message = "%s (%s)" % [message, file_path]
+		_record_load_error(mod_id, message, true, phase)
 
 
 func _finalize_load(started_ms: int) -> void:

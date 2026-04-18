@@ -123,11 +123,29 @@ func _refresh_text() -> void:
 			lines.append("    - %s (%s)" % [str(manifest.get("id", "")), str(manifest.get("version", ""))])
 
 	var registry_counts := DataManager.get_registry_counts()
+	var data_snapshot := DataManager.get_debug_snapshot()
 	lines.append("")
 	lines.append("Registries")
+	lines.append("  DataManager: %s loaded=%s issues=%d files=%d invalid=%d" % [
+		str(data_snapshot.get("status", "")),
+		str(data_snapshot.get("is_loaded", false)),
+		int(data_snapshot.get("issue_count", 0)),
+		int(data_snapshot.get("processed_file_count", 0)),
+		int(data_snapshot.get("invalid_file_count", 0))
+	])
 	lines.append("  stats=%d currencies=%d" % [int(registry_counts.get("stats", 0)), int(registry_counts.get("currencies", 0))])
 	lines.append("  parts=%d entities=%d locations=%d" % [int(registry_counts.get("parts", 0)), int(registry_counts.get("entities", 0)), int(registry_counts.get("locations", 0))])
 	lines.append("  factions=%d quests=%d tasks=%d achievements=%d" % [int(registry_counts.get("factions", 0)), int(registry_counts.get("quests", 0)), int(registry_counts.get("tasks", 0)), int(registry_counts.get("achievements", 0))])
+	var recent_issues_value: Variant = data_snapshot.get("recent_issues", [])
+	if recent_issues_value is Array:
+		var recent_issues: Array = recent_issues_value
+		if not recent_issues.is_empty():
+			lines.append("  Recent data issues:")
+			for issue_value in recent_issues:
+				if not issue_value is Dictionary:
+					continue
+				var issue: Dictionary = issue_value
+				lines.append("    - [%s] %s" % [str(issue.get("phase", "")), str(issue.get("message", ""))])
 
 	lines.append("")
 	lines.append("Runtime")
