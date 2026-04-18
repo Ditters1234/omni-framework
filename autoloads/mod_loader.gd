@@ -8,6 +8,12 @@ class_name OmniModLoader
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
+const EXCHANGE_BACKEND := preload("res://ui/screens/backends/exchange_backend.gd")
+const LIST_BACKEND := preload("res://ui/screens/backends/list_backend.gd")
+const CHALLENGE_BACKEND := preload("res://ui/screens/backends/challenge_backend.gd")
+const TASK_PROVIDER_BACKEND := preload("res://ui/screens/backends/task_provider_backend.gd")
+const CATALOG_LIST_BACKEND := preload("res://ui/screens/backends/catalog_list_backend.gd")
+const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
 const SCRIPT_HOOK_LOADER := preload("res://systems/script_hook_loader.gd")
 
 const MODS_PATH := "res://mods/"
@@ -108,6 +114,12 @@ func load_all_mods() -> void:
 func _register_backend_contracts() -> void:
 	BACKEND_CONTRACT_REGISTRY.clear()
 	ASSEMBLY_EDITOR_BACKEND.register_contract()
+	EXCHANGE_BACKEND.register_contract()
+	LIST_BACKEND.register_contract()
+	CHALLENGE_BACKEND.register_contract()
+	TASK_PROVIDER_BACKEND.register_contract()
+	CATALOG_LIST_BACKEND.register_contract()
+	DIALOGUE_BACKEND.register_contract()
 	BACKEND_CONTRACT_REGISTRY.lock()
 
 

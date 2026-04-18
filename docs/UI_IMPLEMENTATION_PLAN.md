@@ -72,6 +72,8 @@ Note: `BackendContractRegistry` and the `assembly_editor_screen.gd` / `assembly_
 
 Target end state once this plan is fully executed. Fourteen backends plus engine-owned screens.
 
+Implementation note: the repository has now completed the Phase 4 "round 1" backend set. `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` all exist as routed screens with backend scripts, contract registration, and route-catalog entries. Later sections in this document still describe the original rollout order so the remaining Phase 5+ work keeps its intended shape.
+
 ### 3.1 Interactive Backends (moddable, selected via `backend_class`)
 
 | `backend_class` | Screen id | Status | Purpose |
@@ -442,6 +444,8 @@ Not built in this plan. When combat lands, it follows the same pattern as every 
 **Total estimated effort for Phases 1–7: ~17–22 engineering days.**
 
 ---
+
+Phase 4 status update: the round-1 moddable backend set is now in the repository. `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` all have backend scripts, routed screen scenes, route-catalog entries, and load-time contract registration.
 
 ## 10. Testing and Verification
 

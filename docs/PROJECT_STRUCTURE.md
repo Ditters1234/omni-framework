@@ -17,7 +17,7 @@ The engine ships with:
 
 ### Current Implementation Snapshot
 
-As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-3 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, and the backend/screen split for `AssemblyEditorBackend`. The full target tree is still not implemented end-to-end, though, and several moddable backend screens and supporting systems remain future-facing in this document.
+As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-4 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, the backend/screen split for `AssemblyEditorBackend`, and the first round of moddable backend screens (`DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`). The full target tree is still not implemented end-to-end, though, and later read-only backends plus world-map/crafting support remain future-facing in this document.
 
 Use this document as the "where we are going and what rules we must preserve" reference, not as a claim that every folder and subsystem below is feature-complete today.
 
@@ -63,6 +63,8 @@ var safe_ruleset := {
 }
 var state = A2J.from_json(raw_data, safe_ruleset)
 ```
+
+Phase 4 note: the first round of moddable backend scenes now exists under `ui/screens/backends/` for exchange, catalog vending, generic list rendering, challenge checks, faction task boards, and dialogue. Some comments in the legacy tree diagram still say "planned", but the routed scene files, backend scripts, and route registrations are now present in the repository.
 
 ---
 

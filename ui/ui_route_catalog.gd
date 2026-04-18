@@ -11,6 +11,12 @@ const SCREEN_SETTINGS := "settings"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_PAUSE_MENU := "pause_menu"
 const SCREEN_CREDITS := "credits"
+const SCREEN_EXCHANGE := "exchange"
+const SCREEN_LIST_VIEW := "list_view"
+const SCREEN_CHALLENGE := "challenge"
+const SCREEN_TASK_PROVIDER := "task_provider"
+const SCREEN_CATALOG_LIST := "catalog_list"
+const SCREEN_DIALOGUE := "dialogue"
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu/main_menu_screen.tscn"
 const ASSEMBLY_EDITOR_SCENE := "res://ui/screens/backends/assembly_editor_screen.tscn"
@@ -20,6 +26,12 @@ const SETTINGS_SCENE := "res://ui/screens/settings/settings_screen.tscn"
 const SAVE_SLOT_LIST_SCENE := "res://ui/screens/save_slot_list/save_slot_list_screen.tscn"
 const PAUSE_MENU_SCENE := "res://ui/screens/pause_menu/pause_menu_screen.tscn"
 const CREDITS_SCENE := "res://ui/screens/credits/credits_screen.tscn"
+const EXCHANGE_SCENE := "res://ui/screens/backends/exchange_screen.tscn"
+const LIST_VIEW_SCENE := "res://ui/screens/backends/list_screen.tscn"
+const CHALLENGE_SCENE := "res://ui/screens/backends/challenge_screen.tscn"
+const TASK_PROVIDER_SCENE := "res://ui/screens/backends/task_provider_screen.tscn"
+const CATALOG_LIST_SCENE := "res://ui/screens/backends/catalog_list_screen.tscn"
+const DIALOGUE_SCENE := "res://ui/screens/backends/dialogue_screen.tscn"
 
 const ENGINE_SCREEN_IDS := [
 	SCREEN_MAIN_MENU,
@@ -31,6 +43,12 @@ const ENGINE_SCREEN_IDS := [
 	SCREEN_SAVE_SLOT_LIST,
 	SCREEN_PAUSE_MENU,
 	SCREEN_CREDITS,
+	SCREEN_EXCHANGE,
+	SCREEN_LIST_VIEW,
+	SCREEN_CHALLENGE,
+	SCREEN_TASK_PROVIDER,
+	SCREEN_CATALOG_LIST,
+	SCREEN_DIALOGUE,
 ]
 
 const BACKEND_SCREEN_MAP := {
@@ -53,6 +71,12 @@ const RUNTIME_SCREEN_REGISTRY := {
 	SCREEN_SAVE_SLOT_LIST: SAVE_SLOT_LIST_SCENE,
 	SCREEN_PAUSE_MENU: PAUSE_MENU_SCENE,
 	SCREEN_CREDITS: CREDITS_SCENE,
+	SCREEN_EXCHANGE: EXCHANGE_SCENE,
+	SCREEN_LIST_VIEW: LIST_VIEW_SCENE,
+	SCREEN_CHALLENGE: CHALLENGE_SCENE,
+	SCREEN_TASK_PROVIDER: TASK_PROVIDER_SCENE,
+	SCREEN_CATALOG_LIST: CATALOG_LIST_SCENE,
+	SCREEN_DIALOGUE: DIALOGUE_SCENE,
 }
 
 
