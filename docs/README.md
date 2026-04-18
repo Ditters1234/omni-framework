@@ -47,6 +47,16 @@ Each doc below is the source of truth for its domain:
 - [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) — early implementation patterns.
 - [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) — dev-only debug tooling and automated testing expectations.
 
+## Contributing to Omni-Framework
+
+When making changes to the engine or base game:
+
+1. **Code changes** must follow [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md)
+2. **Data changes** must satisfy [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md)
+3. **Tests** should cover your changes — run the test suite before submitting
+4. **Documentation** must be updated if you change architecture or contracts
+5. **Backwards compatibility** is expected — use migration patterns from [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md)
+
 ## Architecture Priorities
 
 The current documentation set assumes these 

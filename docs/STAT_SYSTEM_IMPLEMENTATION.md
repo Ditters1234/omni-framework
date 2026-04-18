@@ -552,4 +552,20 @@ entity.stats["health"] = min(entity.stats["health"], effective_health_max)
 
 ---
 
-## Edge Cases & Gotcha
+## Edge Cases & Common Pitfalls
+
+**Negative capacity stats**
+- If modifiers reduce `health_max` below 0, treat it as 0 — never allow negative capacity
+- Clamp current health against the effective max immediately
+
+**Stat pairs must be explicit**
+- Do not assume a stat has a capacity pair — validate in schema before load
+- Stat definitions should declare both members of the pair together
+
+**Order of operations matters**
+- Apply all stat modifications before any clamping
+- Clamp after all sources of change have been processed
+
+**Floating point precision**
+- For non-integer stats, use `Variant::FLOAT` and handle comparison carefully
+- Avoid direct equality checks; use epsilon-based comparison when needed
