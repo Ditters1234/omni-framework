@@ -1,6 +1,6 @@
 extends Control
 
-const SCREEN_LOCATION_VIEW := "location_view"
+const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
 const SCREEN_MAIN_MENU := "main_menu"
 const MODE_LOAD := "load"
 const MODE_SAVE := "save"
@@ -35,15 +35,15 @@ func on_route_revealed() -> void:
 func _refresh() -> void:
 	_title_label.text = "Load Game" if _mode == MODE_LOAD else "Save Game"
 	_subtitle_label.text = (
-		"Choose a save slot to restore the current session."
+		"Choose a save slot to restore the current session. Autosave is engine-owned and appears first when available."
 		if _mode == MODE_LOAD
-		else "Choose a save slot for the current runtime state."
+		else "Choose a destination for the current runtime state. Autosave is the quick-recovery slot used by the gameplay shell."
 	)
 	for child in _slots_container.get_children():
 		_slots_container.remove_child(child)
 		child.queue_free()
 
-	for slot in range(1, SaveManager.MAX_SAVE_SLOTS + 1):
+	for slot in SaveManager.get_visible_slots():
 		var slot_info := SaveManager.get_slot_info(slot)
 		var slot_entry := _build_slot_entry(slot, slot_info)
 		_slots_container.add_child(slot_entry)
@@ -103,6 +103,12 @@ func _build_slot_entry(slot: int, slot_info: Dictionary) -> Control:
 
 
 func _get_slot_button_label(slot: int, is_occupied: bool) -> String:
+	if slot == SaveManager.AUTOSAVE_SLOT:
+		if _mode == MODE_SAVE:
+			return "Write Autosave"
+		if is_occupied:
+			return "Load Autosave"
+		return "Autosave Empty"
 	if _mode == MODE_SAVE:
 		if is_occupied:
 			return "Overwrite Slot %d" % slot
@@ -114,6 +120,8 @@ func _get_slot_button_label(slot: int, is_occupied: bool) -> String:
 
 func _build_slot_summary(slot: int, slot_info: Dictionary) -> String:
 	if slot_info.is_empty():
+		if slot == SaveManager.AUTOSAVE_SLOT:
+			return "Autosave is empty. Use Quick Autosave from the gameplay shell or write one here."
 		return "Slot %d is empty and ready for a new save." % slot
 
 	var display_name := str(slot_info.get("display_name", "Saved Game"))
@@ -122,10 +130,14 @@ func _build_slot_summary(slot: int, slot_info: Dictionary) -> String:
 	var playtime_seconds := int(slot_info.get("playtime_seconds", 0))
 	var created_at := str(slot_info.get("created_at", ""))
 	var updated_at := str(slot_info.get("updated_at", ""))
+	var location_name := str(slot_info.get("location_name", ""))
+	var slot_label := str(slot_info.get("slot_label", SaveManager.get_slot_label(slot)))
 	var metadata_lines: Array[String] = [
-		display_name,
+		"%s - %s" % [slot_label, display_name],
 		"Day %d, Tick %d" % [day, tick],
 	]
+	if not location_name.is_empty():
+		metadata_lines.append("Location: %s" % location_name)
 	if playtime_seconds > 0:
 		metadata_lines.append("Playtime: %s" % _format_playtime(playtime_seconds))
 	if not created_at.is_empty():
@@ -138,6 +150,8 @@ func _build_slot_summary(slot: int, slot_info: Dictionary) -> String:
 func _get_delete_button_label(slot: int) -> String:
 	if _pending_delete_slot == slot:
 		return "Confirm Delete"
+	if slot == SaveManager.AUTOSAVE_SLOT:
+		return "Delete Autosave"
 	return "Delete"
 
 
@@ -148,10 +162,7 @@ func _normalize_mode(mode: String) -> String:
 
 
 func _first_available_slot() -> int:
-	for slot in range(1, SaveManager.MAX_SAVE_SLOTS + 1):
-		if SaveManager.slot_exists(slot):
-			return slot
-	return -1
+	return SaveManager.get_most_recent_loadable_slot()
 
 
 func _on_slot_selected(slot: int) -> void:
@@ -168,7 +179,7 @@ func _save_to_slot(slot: int) -> void:
 		_status_label.text = str(summary.get("reason", "Unable to save slot %d." % slot))
 		return
 	_refresh()
-	_status_label.text = "Saved to slot %d." % slot
+	_status_label.text = "Saved to %s." % SaveManager.get_slot_label(slot)
 	if _close_on_save and UIRouter.stack_depth() > 1:
 		UIRouter.pop()
 
@@ -178,10 +189,8 @@ func _load_from_slot(slot: int) -> void:
 		var summary: Dictionary = SaveManager.last_operation_summary
 		_status_label.text = str(summary.get("reason", "Unable to load slot %d." % slot))
 		return
-	_status_label.text = "Loaded slot %d." % slot
-	UIRouter.replace_all(SCREEN_LOCATION_VIEW, {
-		"location_id": GameState.current_location_id,
-	})
+	_status_label.text = "Loaded %s." % SaveManager.get_slot_label(slot)
+	UIRouter.replace_all(SCREEN_GAMEPLAY_SHELL)
 
 
 func _on_delete_pressed(slot: int) -> void:
@@ -197,7 +206,7 @@ func _on_delete_pressed(slot: int) -> void:
 		return
 	_pending_delete_slot = -1
 	_refresh()
-	_status_label.text = "Deleted save slot %d." % slot
+	_status_label.text = "Deleted %s." % SaveManager.get_slot_label(slot)
 
 
 func _format_playtime(playtime_seconds: int) -> String:

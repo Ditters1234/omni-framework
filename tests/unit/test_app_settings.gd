@@ -88,6 +88,37 @@ func test_apply_settings_updates_audio_manager_and_window_mode() -> void:
 	assert_eq(window.size, Vector2i(1600, 900))
 
 
+func test_ai_settings_round_trip_normalizes_engine_owned_connection_fields() -> void:
+	var save_error := APP_SETTINGS.save_settings({
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: true,
+			APP_SETTINGS.AI_PROVIDER: APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE,
+			APP_SETTINGS.AI_ENDPOINT: "  http://127.0.0.1:11434/v1/chat/completions  ",
+			APP_SETTINGS.AI_API_KEY: "secret",
+			APP_SETTINGS.AI_MODEL: "omni-local",
+			APP_SETTINGS.AI_SYSTEM_PROMPT: "  Keep it terse.  ",
+			APP_SETTINGS.AI_MAX_TOKENS: 0,
+			APP_SETTINGS.AI_TEMPERATURE: 1.4,
+			APP_SETTINGS.AI_MODEL_PATH: " user://models/test.gguf ",
+			APP_SETTINGS.AI_CONTEXT_WINDOW: -5,
+		},
+	})
+
+	assert_eq(save_error, OK)
+
+	var ai_settings := APP_SETTINGS.get_ai_settings(APP_SETTINGS.load_settings())
+	assert_eq(bool(ai_settings.get(APP_SETTINGS.AI_ENABLED, false)), true)
+	assert_eq(str(ai_settings.get(APP_SETTINGS.AI_PROVIDER, "")), APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE)
+	assert_eq(str(ai_settings.get(APP_SETTINGS.AI_ENDPOINT, "")), "http://127.0.0.1:11434/v1/chat/completions")
+	assert_eq(str(ai_settings.get(APP_SETTINGS.AI_API_KEY, "")), "secret")
+	assert_eq(str(ai_settings.get(APP_SETTINGS.AI_MODEL, "")), "omni-local")
+	assert_eq(str(ai_settings.get(APP_SETTINGS.AI_SYSTEM_PROMPT, "")), "Keep it terse.")
+	assert_eq(int(ai_settings.get(APP_SETTINGS.AI_MAX_TOKENS, 0)), APP_SETTINGS.DEFAULT_AI_MAX_TOKENS)
+	assert_almost_eq(float(ai_settings.get(APP_SETTINGS.AI_TEMPERATURE, 0.0)), 1.0, 0.001)
+	assert_eq(str(ai_settings.get(APP_SETTINGS.AI_MODEL_PATH, "")), "user://models/test.gguf")
+	assert_eq(int(ai_settings.get(APP_SETTINGS.AI_CONTEXT_WINDOW, 0)), APP_SETTINGS.DEFAULT_AI_CONTEXT_WINDOW)
+
+
 func _delete_settings_file() -> void:
 	if not FileAccess.file_exists(APP_SETTINGS.SETTINGS_PATH):
 		return

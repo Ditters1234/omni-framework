@@ -1,7 +1,7 @@
 extends Control
 
 const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
-const SCREEN_LOCATION_VIEW := "location_view"
+const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
 const SCREEN_SETTINGS := "settings"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_CREDITS := "credits"
@@ -47,34 +47,26 @@ func _apply_menu_config() -> void:
 
 
 func _refresh_buttons() -> void:
-	var preferred_slot := _find_first_available_slot()
-	var has_save := preferred_slot >= 1
+	var preferred_slot := SaveManager.get_most_recent_loadable_slot()
+	var has_save := preferred_slot >= SaveManager.AUTOSAVE_SLOT
 	_continue_button.disabled = not has_save
 	_load_button.disabled = not has_save
 	if has_save:
 		var slot_info := SaveManager.get_slot_info(preferred_slot)
+		var slot_label := str(slot_info.get("slot_label", SaveManager.get_slot_label(preferred_slot)))
 		if not slot_info.is_empty():
-			_status_label.text = "Continue from slot %d: %s" % [
-				preferred_slot,
+			_status_label.text = "Continue from %s: %s" % [
+				slot_label,
 				str(slot_info.get("display_name", "Save found"))
 			]
 		else:
-			_status_label.text = "Continue from slot %d." % preferred_slot
+			_status_label.text = "Continue from %s." % slot_label
 	else:
-		_status_label.text = "No save slots found."
-
-
-func _find_first_available_slot() -> int:
-	for slot in range(1, SaveManager.MAX_SAVE_SLOTS + 1):
-		if SaveManager.slot_exists(slot):
-			return slot
-	return -1
+		_status_label.text = "No saves or autosaves found."
 
 
 func _transition_to_gameplay() -> void:
-	UIRouter.replace_all(SCREEN_LOCATION_VIEW, {
-		"location_id": GameState.current_location_id
-	})
+	UIRouter.replace_all(SCREEN_GAMEPLAY_SHELL)
 
 
 func _on_new_game_button_pressed() -> void:
@@ -91,16 +83,16 @@ func _on_new_game_button_pressed() -> void:
 		"option_tag": "character_creator_option",
 		"confirm_label": "Begin",
 		"cancel_label": "Back",
-		"next_screen_id": SCREEN_LOCATION_VIEW,
+		"next_screen_id": SCREEN_GAMEPLAY_SHELL,
 		"cancel_screen_id": "main_menu",
 		"reset_game_state_on_cancel": true
 	})
 
 
 func _on_continue_button_pressed() -> void:
-	var preferred_slot := _find_first_available_slot()
-	if preferred_slot < 0:
-		_status_label.text = "No save slots available."
+	var preferred_slot := SaveManager.get_most_recent_loadable_slot()
+	if preferred_slot < SaveManager.AUTOSAVE_SLOT:
+		_status_label.text = "No saves or autosaves are available."
 		return
 	_attempt_load_slot(preferred_slot)
 
@@ -121,10 +113,10 @@ func _on_credits_button_pressed() -> void:
 
 func _attempt_load_slot(slot: int) -> void:
 	if not SaveManager.slot_exists(slot):
-		_status_label.text = "No save found in slot %d." % slot
+		_status_label.text = "No save found in %s." % SaveManager.get_slot_label(slot)
 		return
 	if not SaveManager.load_game(slot):
-		_status_label.text = "Unable to load slot %d." % slot
+		_status_label.text = "Unable to load %s." % SaveManager.get_slot_label(slot)
 		return
 	_transition_to_gameplay()
 

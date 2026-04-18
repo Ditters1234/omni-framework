@@ -1,11 +1,13 @@
 ## AIManager — LLM abstraction layer.
-## Reads config.json ai.provider and routes all generation calls
+## Reads engine-owned app settings and routes all generation calls
 ## to the correct backend provider.
 ## Modders access AI via: AIManager.generate_async(prompt, context)
 ## Always guard with: if not AIManager.is_available(): return
 extends Node
 
 class_name OmniAIManager
+
+const APP_SETTINGS := preload("res://core/app_settings.gd")
 
 const PROVIDER_OPENAI_COMPATIBLE := "openai_compatible"
 const PROVIDER_ANTHROPIC := "anthropic"
@@ -39,19 +41,14 @@ func _ready() -> void:
 	return
 
 
-## Called after DataManager is loaded so we can read config.
-## Instantiates and configures the appropriate provider.
-func initialize() -> void:
+## Called after application settings are available.
+## Instantiates and configures the appropriate provider from engine-owned settings.
+func initialize(settings_override: Dictionary = {}) -> void:
 	_reset_runtime_state()
-
-	var ai_config_value: Variant = DataManager.config.get("ai", {})
-	var ai_config: Dictionary = {}
-	if ai_config_value is Dictionary:
-		ai_config = ai_config_value
-	_ai_enabled = bool(ai_config.get("enabled", false))
-	_provider_type = str(ai_config.get("provider", PROVIDER_DISABLED))
-
 	_teardown_provider()
+	var ai_config := _extract_ai_settings(settings_override)
+	_ai_enabled = bool(ai_config.get(APP_SETTINGS.AI_ENABLED, false))
+	_provider_type = str(ai_config.get(APP_SETTINGS.AI_PROVIDER, PROVIDER_DISABLED))
 
 	if not _ai_enabled:
 		_provider_type = PROVIDER_DISABLED
@@ -68,7 +65,7 @@ func initialize() -> void:
 
 	add_child(_provider)
 	if _provider.has_method("initialize"):
-		var provider_config := _build_provider_config(ai_config, _provider_type)
+		var provider_config := _build_provider_config(ai_config)
 		_provider.call("initialize", provider_config)
 	var provider_error := _peek_provider_error()
 	if not provider_error.is_empty():
@@ -183,26 +180,30 @@ func _load_provider(provider_type: String) -> Node:
 	return script.new()
 
 
-func _build_provider_config(ai_config: Dictionary, provider_type: String) -> Dictionary:
-	var result: Dictionary = {}
-	for key_value in ai_config.keys():
-		var key := str(key_value)
-		if key == "provider":
-			continue
-		var value: Variant = ai_config.get(key_value, null)
-		if value is Dictionary and (
-				key == PROVIDER_OPENAI_COMPATIBLE
-				or key == PROVIDER_ANTHROPIC
-				or key == PROVIDER_NOBODYWHO):
-			continue
-		result[key] = value
-
-	var nested_config_value: Variant = ai_config.get(provider_type, {})
-	if nested_config_value is Dictionary:
-		var nested_config: Dictionary = nested_config_value
-		for key_value in nested_config.keys():
-			result[str(key_value)] = nested_config.get(key_value, null)
+func _build_provider_config(ai_config: Dictionary) -> Dictionary:
+	var result := ai_config.duplicate(true)
+	result.erase(APP_SETTINGS.AI_ENABLED)
+	result.erase(APP_SETTINGS.AI_PROVIDER)
 	return result
+
+
+func _extract_ai_settings(settings_override: Dictionary) -> Dictionary:
+	if settings_override.is_empty():
+		return APP_SETTINGS.get_ai_settings()
+	var ai_source: Dictionary = settings_override.duplicate(true)
+	if settings_override.has(APP_SETTINGS.SECTION_AI):
+		var ai_section_value: Variant = settings_override.get(APP_SETTINGS.SECTION_AI, {})
+		if ai_section_value is Dictionary:
+			ai_source = (ai_section_value as Dictionary).duplicate(true)
+	var normalized := APP_SETTINGS.get_ai_settings({
+		APP_SETTINGS.SECTION_AI: ai_source
+	})
+	for key_value in ai_source.keys():
+		var key := str(key_value)
+		if normalized.has(key):
+			continue
+		normalized[key] = ai_source.get(key_value, null)
+	return normalized
 
 
 func set_provider_script_override(provider_type: String, script_path: String) -> void:

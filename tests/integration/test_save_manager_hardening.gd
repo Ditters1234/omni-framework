@@ -146,6 +146,22 @@ func test_delete_game_removes_existing_slot_and_rejects_repeat_delete() -> void:
 	assert_eq(str(SaveManager.last_operation_summary.get("status", "")), "failed")
 
 
+func test_autosave_slot_metadata_and_recency_are_visible() -> void:
+	GameState.current_day = 2
+	GameState.current_tick = 12
+	SaveManager.save_game(SAVE_SLOT_ROLLBACK)
+	GameState.current_day = 4
+	GameState.current_tick = 77
+	SaveManager.save_game(SaveManager.AUTOSAVE_SLOT)
+
+	var autosave_info := SaveManager.get_slot_info(SaveManager.AUTOSAVE_SLOT)
+	assert_eq(str(autosave_info.get("slot_label", "")), "Autosave")
+	assert_eq(str(autosave_info.get("slot_kind", "")), SaveManager.SLOT_KIND_AUTOSAVE)
+	assert_true(SaveManager.slot_exists(SaveManager.AUTOSAVE_SLOT))
+	assert_eq(SaveManager.get_visible_slots()[0], SaveManager.AUTOSAVE_SLOT)
+	assert_eq(SaveManager.get_most_recent_loadable_slot(), SaveManager.AUTOSAVE_SLOT)
+
+
 func _read_slot_payload(slot: int) -> Dictionary:
 	var raw_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("user://saves/slot_%d.json" % slot))
 	if raw_data is Dictionary:

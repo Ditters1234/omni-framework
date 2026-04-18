@@ -188,5 +188,5 @@ Avoid compatibility through:
 
 - Save integrity hash for corruption detection
 - Optional screenshot preview path
-- Autosave vs manual-save metadata
+- Additional autosave/manual-save migration fixtures beyond the current metadata contract
 - Dev-only migration test fixtures in `tests/integration/`

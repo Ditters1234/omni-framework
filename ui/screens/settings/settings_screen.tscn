@@ -124,10 +124,116 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "AI"
 
+[node name="AiGrid" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+columns = 2
+
+[node name="AiProviderLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Provider"
+
+[node name="AiProviderButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AiEndpointLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Endpoint"
+
+[node name="AiEndpointEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "http://localhost:11434/v1/chat/completions"
+
+[node name="AiApiKeyLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "API Key"
+
+[node name="AiApiKeyEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+secret = true
+
+[node name="AiModelLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Model"
+
+[node name="AiModelEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "llama3"
+
+[node name="AiModelPathLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Model Path"
+
+[node name="AiModelPathEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "user://models/model.gguf"
+
+[node name="AiSystemPromptLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "System Prompt"
+
+[node name="AiSystemPromptEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Optional global prompt"
+
+[node name="AiMaxTokensLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Max Tokens"
+
+[node name="AiMaxTokensSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 8192.0
+step = 1.0
+value = 256.0
+
+[node name="AiTemperatureLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Temperature"
+
+[node name="AiTemperatureSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.05
+value = 0.7
+
+[node name="AiContextWindowLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Context Window"
+
+[node name="AiContextWindowSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 32768.0
+step = 1.0
+value = 2048.0
+
+[node name="AiHintLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Choose a server or on-disk provider here."
+
 [node name="AiInfoLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
 text = "AI Provider: disabled"
+
+[node name="AiButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 8
+
+[node name="ConnectAiButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/AiButtonRow"]
+layout_mode = 2
+text = "Connect AI"
 
 [node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
@@ -152,5 +258,15 @@ text = "Settings loaded."
 [connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AudioGrid/SfxSlider" to="." method="_on_sfx_slider_value_changed"]
 [connection signal="item_selected" from="MarginContainer/PanelContainer/VBoxContainer/DisplayGrid/WindowModeButton" to="." method="_on_window_mode_button_item_selected"]
 [connection signal="item_selected" from="MarginContainer/PanelContainer/VBoxContainer/DisplayGrid/ResolutionButton" to="." method="_on_resolution_button_item_selected"]
+[connection signal="item_selected" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiProviderButton" to="." method="_on_ai_provider_button_item_selected"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiEndpointEdit" to="." method="_on_ai_endpoint_edit_text_changed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiApiKeyEdit" to="." method="_on_ai_api_key_edit_text_changed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiModelEdit" to="." method="_on_ai_model_edit_text_changed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiModelPathEdit" to="." method="_on_ai_model_path_edit_text_changed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiSystemPromptEdit" to="." method="_on_ai_system_prompt_edit_text_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiMaxTokensSpinBox" to="." method="_on_ai_max_tokens_spinbox_value_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiTemperatureSpinBox" to="." method="_on_ai_temperature_spinbox_value_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiContextWindowSpinBox" to="." method="_on_ai_context_window_spinbox_value_changed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/AiButtonRow/ConnectAiButton" to="." method="_on_connect_ai_button_pressed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]

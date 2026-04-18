@@ -120,7 +120,7 @@ res://
 │   │   │   ├── gameplay_shell_screen.tscn
 │   │   │   └── gameplay_shell_screen.gd
 │   │   ├── settings/            # ✅ Engine-owned settings route with persisted app settings
-│   │   ├── save_slot_list/      # ✅ Engine-owned save/load/delete browser for slots 1..MAX_SAVE_SLOTS
+│   │   ├── save_slot_list/      # ✅ Engine-owned autosave + manual save/load/delete browser
 │   │   ├── pause_menu/          # ✅ Engine-owned pause route layered through the router stack
 │   │   ├── credits/             # ✅ Engine-owned attribution and loaded-mod route
 │   │   ├── world_map/           # ⚠️ PLANNED
@@ -417,11 +417,11 @@ Backend-driven routed screens:
 - Future dynamic layouts should still pass through the router so mod-defined UI stays inspectable and debuggable.
 
 ### `AIManager` (`autoloads/ai_manager.gd`)
-Abstracts all LLM calls behind a single interface. Reads the `ai` block from the merged `config.json` at startup and instantiates the appropriate provider. Modders and script hooks call `AIManager` directly — they never reference a specific provider.
+Abstracts all LLM calls behind a single interface. Reads the engine-owned AI section from `user://settings.cfg` at startup and instantiates the appropriate provider. Modders and script hooks call `AIManager` directly — they never reference a specific provider or initiate the connection themselves.
 
-If `ai.enabled` is `false` or the `ai` block is absent, all calls silently no-op and return empty strings. This means games that don't use AI work without any configuration.
+If AI is disabled in app settings, all calls silently no-op and return empty strings. This means games that don't use AI work without any configuration.
 
-Supported providers (set via `config.json ai.provider`):
+Supported providers (set via engine settings):
 
 | Value | Backend | Notes |
 |---|---|---|
@@ -580,8 +580,8 @@ Menu system requirements:
 - The creator should render the currently reachable assembly sockets from the player entity and equipped parts, not assume a fixed humanoid slot list.
 - Starting a new game should initialize runtime state first, then replace the current stack with the first gameplay screen.
 - Loading a save should complete `SaveManager.load_game(slot)` first, then replace the current stack with gameplay.
-- A lightweight `gameplay_shell` screen is an acceptable early routed gameplay destination while world-map and location flows are still being built.
-- The current base-game flow lands directly in `location_view` after new-game confirmation and save loading so the first location does not sit on top of a shell screen.
+- `gameplay_shell` is the current post-boot gameplay destination. It owns quick autosave, time advance, loadout access, and the jump into `location_view`.
+- `save_slot_list` now presents the engine autosave plus manual slots, and main-menu continue prefers the most recently updated available save.
 - Main menu presentation can be influenced by `config.json ui.main_menu`, but actions like `new_game`, `continue`, `load_slot`, and `quit` remain engine-owned commands.
 - Settings, save/load, pause, and credits are also engine-owned routes. Mods may contribute data they display later, but should not replace their core navigation contract through content JSON.
 

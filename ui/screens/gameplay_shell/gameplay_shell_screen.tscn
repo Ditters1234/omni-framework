@@ -18,67 +18,241 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 28
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 
-[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="HeaderPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/HeaderPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Gameplay Shell"
 
-[node name="LocationLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Location:"
-
-[node name="TickLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Day 1, Tick 0"
-
-[node name="CurrenciesLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Currencies:"
-
-[node name="StatsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="SubtitleLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
-text = "Stats:"
+text = "Engine-owned hub for the current session."
 
-[node name="EquippedLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="ContentColumns" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-autowrap_mode = 3
-text = "Equipped:"
+size_flags_vertical = 3
+theme_override_constants/separation = 14
 
-[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="LeftColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="LocationPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ExploreLocationButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+[node name="LocationTitleLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Location"
+
+[node name="LocationDescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Location description."
+
+[node name="LocationMetaLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Location metadata."
+
+[node name="PlayerPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PlayerNameLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 20
+text = "Player"
+
+[node name="CurrencyLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Currencies"
+
+[node name="StatsLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Stats"
+
+[node name="InventoryLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Inventory"
+
+[node name="RightColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="ActionsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SectionLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Quick Actions"
+
+[node name="ExploreLocationButton" type="Button" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Explore Location"
 
-[node name="AdvanceTickButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+[node name="OpenLoadoutButton" type="Button" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+text = "Open Loadout"
+
+[node name="SaveBrowserButton" type="Button" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save Browser"
+
+[node name="QuickAutosaveButton" type="Button" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Quick Autosave"
+
+[node name="PauseMenuButton" type="Button" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pause Menu"
+
+[node name="TimePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TimeSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Time & Recovery"
+
+[node name="TimeLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Time"
+
+[node name="AutosaveLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Autosave"
+
+[node name="AdvanceTickButton" type="Button" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Advance Tick"
 
-[node name="SaveButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+[node name="TimeAdvanceButtons" type="HBoxContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-text = "Save Game"
+theme_override_constants/separation = 8
 
-[node name="PauseMenuButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+[node name="EquipmentPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn"]
 layout_mode = 2
-text = "Pause Menu"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EquipmentSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Loadout Snapshot"
+
+[node name="EquippedLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Equipped"
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+autowrap_mode = 3
 text = "Ready."
 
-[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonRow/ExploreLocationButton" to="." method="_on_explore_location_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonRow/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonRow/SaveButton" to="." method="_on_save_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonRow/PauseMenuButton" to="." method="_on_pause_menu_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/ExploreLocationButton" to="." method="_on_explore_location_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/OpenLoadoutButton" to="." method="_on_open_loadout_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/SaveBrowserButton" to="." method="_on_save_browser_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/QuickAutosaveButton" to="." method="_on_quick_autosave_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/PauseMenuButton" to="." method="_on_pause_menu_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]

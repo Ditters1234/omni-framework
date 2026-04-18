@@ -7,10 +7,22 @@ const WINDOW_MODE_ORDER := [
 	APP_SETTINGS.WINDOW_MODE_FULLSCREEN,
 	APP_SETTINGS.WINDOW_MODE_MAXIMIZED,
 ]
+const AI_PROVIDER_ORDER := [
+	APP_SETTINGS.AI_PROVIDER_DISABLED,
+	APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE,
+	APP_SETTINGS.AI_PROVIDER_ANTHROPIC,
+	APP_SETTINGS.AI_PROVIDER_NOBODYWHO,
+]
 const WINDOW_MODE_LABELS := {
 	APP_SETTINGS.WINDOW_MODE_WINDOWED: "Windowed",
 	APP_SETTINGS.WINDOW_MODE_FULLSCREEN: "Fullscreen",
 	APP_SETTINGS.WINDOW_MODE_MAXIMIZED: "Maximized",
+}
+const AI_PROVIDER_LABELS := {
+	APP_SETTINGS.AI_PROVIDER_DISABLED: "Disabled",
+	APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE: "Server (OpenAI-Compatible)",
+	APP_SETTINGS.AI_PROVIDER_ANTHROPIC: "Server (Anthropic)",
+	APP_SETTINGS.AI_PROVIDER_NOBODYWHO: "On-Disk Model",
 }
 const RESOLUTION_PRESETS := [
 	Vector2i(1280, 720),
@@ -28,7 +40,26 @@ const RESOLUTION_PRESETS := [
 @onready var _sfx_value_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AudioGrid/SfxValueLabel
 @onready var _window_mode_button: OptionButton = $MarginContainer/PanelContainer/VBoxContainer/DisplayGrid/WindowModeButton
 @onready var _resolution_button: OptionButton = $MarginContainer/PanelContainer/VBoxContainer/DisplayGrid/ResolutionButton
+@onready var _ai_provider_button: OptionButton = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiProviderButton
+@onready var _ai_endpoint_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiEndpointLabel
+@onready var _ai_endpoint_edit: LineEdit = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiEndpointEdit
+@onready var _ai_api_key_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiApiKeyLabel
+@onready var _ai_api_key_edit: LineEdit = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiApiKeyEdit
+@onready var _ai_model_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiModelLabel
+@onready var _ai_model_edit: LineEdit = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiModelEdit
+@onready var _ai_model_path_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiModelPathLabel
+@onready var _ai_model_path_edit: LineEdit = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiModelPathEdit
+@onready var _ai_system_prompt_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiSystemPromptLabel
+@onready var _ai_system_prompt_edit: LineEdit = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiSystemPromptEdit
+@onready var _ai_max_tokens_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiMaxTokensLabel
+@onready var _ai_max_tokens_spinbox: SpinBox = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiMaxTokensSpinBox
+@onready var _ai_temperature_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiTemperatureLabel
+@onready var _ai_temperature_spinbox: SpinBox = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiTemperatureSpinBox
+@onready var _ai_context_window_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiContextWindowLabel
+@onready var _ai_context_window_spinbox: SpinBox = $MarginContainer/PanelContainer/VBoxContainer/AiGrid/AiContextWindowSpinBox
+@onready var _ai_hint_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiHintLabel
 @onready var _ai_info_label: Label = $MarginContainer/PanelContainer/VBoxContainer/AiInfoLabel
+@onready var _connect_ai_button: Button = $MarginContainer/PanelContainer/VBoxContainer/AiButtonRow/ConnectAiButton
 @onready var _save_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/SaveButton
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton
 @onready var _status_label: Label = $MarginContainer/PanelContainer/VBoxContainer/StatusLabel
@@ -61,6 +92,10 @@ func _ensure_option_items() -> void:
 		for preset_value in RESOLUTION_PRESETS:
 			var preset: Vector2i = preset_value
 			_resolution_button.add_item("%d x %d" % [preset.x, preset.y])
+	if _ai_provider_button.item_count == 0:
+		for provider_value in AI_PROVIDER_ORDER:
+			var provider := str(provider_value)
+			_ai_provider_button.add_item(str(AI_PROVIDER_LABELS.get(provider, provider)))
 
 
 func _load_settings_from_disk() -> void:
@@ -96,8 +131,20 @@ func _apply_settings_to_controls() -> void:
 	if resolution_index < 0:
 		resolution_index = 0
 	_resolution_button.select(resolution_index)
+	var ai := APP_SETTINGS.get_ai_settings(_settings)
+	var ai_provider := str(ai.get(APP_SETTINGS.AI_PROVIDER, APP_SETTINGS.AI_PROVIDER_DISABLED))
+	_select_option_by_value(_ai_provider_button, AI_PROVIDER_ORDER, ai_provider)
+	_ai_endpoint_edit.text = str(ai.get(APP_SETTINGS.AI_ENDPOINT, APP_SETTINGS.DEFAULT_AI_ENDPOINT))
+	_ai_api_key_edit.text = str(ai.get(APP_SETTINGS.AI_API_KEY, ""))
+	_ai_model_edit.text = str(ai.get(APP_SETTINGS.AI_MODEL, APP_SETTINGS.DEFAULT_AI_MODEL))
+	_ai_model_path_edit.text = str(ai.get(APP_SETTINGS.AI_MODEL_PATH, ""))
+	_ai_system_prompt_edit.text = str(ai.get(APP_SETTINGS.AI_SYSTEM_PROMPT, ""))
+	_ai_max_tokens_spinbox.value = float(int(ai.get(APP_SETTINGS.AI_MAX_TOKENS, APP_SETTINGS.DEFAULT_AI_MAX_TOKENS)))
+	_ai_temperature_spinbox.value = float(ai.get(APP_SETTINGS.AI_TEMPERATURE, APP_SETTINGS.DEFAULT_AI_TEMPERATURE))
+	_ai_context_window_spinbox.value = float(int(ai.get(APP_SETTINGS.AI_CONTEXT_WINDOW, APP_SETTINGS.DEFAULT_AI_CONTEXT_WINDOW)))
 	_title_label.text = "Settings"
 	_subtitle_label.text = "Engine-owned application settings stored outside the mod data pipeline."
+	_update_ai_controls_state()
 
 
 func _collect_settings_from_controls() -> Dictionary:
@@ -112,6 +159,12 @@ func _collect_settings_from_controls() -> Dictionary:
 		var resolution_value: Variant = RESOLUTION_PRESETS[resolution_index]
 		if resolution_value is Vector2i:
 			resolution = resolution_value
+	var ai_provider := _get_selected_order_value(
+		_ai_provider_button,
+		AI_PROVIDER_ORDER,
+		APP_SETTINGS.AI_PROVIDER_DISABLED
+	)
+	var ai_is_enabled := ai_provider != APP_SETTINGS.AI_PROVIDER_DISABLED
 
 	return APP_SETTINGS.normalize_settings({
 		APP_SETTINGS.SECTION_AUDIO: {
@@ -124,6 +177,18 @@ func _collect_settings_from_controls() -> Dictionary:
 			APP_SETTINGS.DISPLAY_WINDOW_WIDTH: resolution.x,
 			APP_SETTINGS.DISPLAY_WINDOW_HEIGHT: resolution.y,
 		},
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: ai_is_enabled,
+			APP_SETTINGS.AI_PROVIDER: ai_provider,
+			APP_SETTINGS.AI_ENDPOINT: _ai_endpoint_edit.text,
+			APP_SETTINGS.AI_API_KEY: _ai_api_key_edit.text,
+			APP_SETTINGS.AI_MODEL: _ai_model_edit.text,
+			APP_SETTINGS.AI_MODEL_PATH: _ai_model_path_edit.text,
+			APP_SETTINGS.AI_SYSTEM_PROMPT: _ai_system_prompt_edit.text,
+			APP_SETTINGS.AI_MAX_TOKENS: int(_ai_max_tokens_spinbox.value),
+			APP_SETTINGS.AI_TEMPERATURE: _ai_temperature_spinbox.value,
+			APP_SETTINGS.AI_CONTEXT_WINDOW: int(_ai_context_window_spinbox.value),
+		},
 	})
 
 
@@ -133,6 +198,7 @@ func _preview_current_settings() -> void:
 	_music_value_label.text = _format_percentage(_music_slider.value)
 	_sfx_value_label.text = _format_percentage(_sfx_slider.value)
 	APP_SETTINGS.apply_settings(get_window(), _settings)
+	_update_ai_controls_state()
 	_is_dirty = true
 	_update_dirty_state()
 	_status_label.text = "Previewing changes. Save to persist them."
@@ -145,8 +211,10 @@ func _persist_settings() -> bool:
 		_status_label.text = "Unable to save settings: %s" % error_string(save_error)
 		return false
 	APP_SETTINGS.apply_settings(get_window(), _settings)
+	AIManager.initialize(_settings)
 	_is_dirty = false
 	_update_dirty_state()
+	_update_ai_info()
 	_status_label.text = "Settings saved."
 	return true
 
@@ -163,7 +231,41 @@ func _update_ai_info() -> void:
 	var status_text := "Available" if available else "Unavailable"
 	if not last_error.is_empty():
 		status_text += " (%s)" % last_error
-	_ai_info_label.text = "AI Provider: %s\nStatus: %s" % [provider_name, status_text]
+	_ai_info_label.text = "AI Provider: %s\nStatus: %s\nConnection Owner: Engine Settings" % [provider_name, status_text]
+	_ai_hint_label.text = _build_ai_hint_text(_get_selected_order_value(
+		_ai_provider_button,
+		AI_PROVIDER_ORDER,
+		APP_SETTINGS.AI_PROVIDER_DISABLED
+	))
+
+
+func _update_ai_controls_state() -> void:
+	var provider := _get_selected_order_value(
+		_ai_provider_button,
+		AI_PROVIDER_ORDER,
+		APP_SETTINGS.AI_PROVIDER_DISABLED
+	)
+	var uses_server_fields := provider == APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE
+	var uses_anthropic_fields := provider == APP_SETTINGS.AI_PROVIDER_ANTHROPIC
+	var uses_disk_fields := provider == APP_SETTINGS.AI_PROVIDER_NOBODYWHO
+	var uses_any_model := provider != APP_SETTINGS.AI_PROVIDER_DISABLED
+	_ai_endpoint_label.visible = uses_server_fields
+	_ai_endpoint_edit.visible = uses_server_fields
+	_ai_api_key_label.visible = uses_server_fields or uses_anthropic_fields
+	_ai_api_key_edit.visible = uses_server_fields or uses_anthropic_fields
+	_ai_model_label.visible = uses_any_model
+	_ai_model_edit.visible = uses_any_model
+	_ai_model_path_label.visible = uses_disk_fields
+	_ai_model_path_edit.visible = uses_disk_fields
+	_ai_system_prompt_label.visible = uses_any_model
+	_ai_system_prompt_edit.visible = uses_any_model
+	_ai_max_tokens_label.visible = uses_any_model
+	_ai_max_tokens_spinbox.visible = uses_any_model
+	_ai_temperature_label.visible = uses_server_fields or uses_disk_fields
+	_ai_temperature_spinbox.visible = uses_server_fields or uses_disk_fields
+	_ai_context_window_label.visible = uses_disk_fields
+	_ai_context_window_spinbox.visible = uses_disk_fields
+	_connect_ai_button.disabled = provider == APP_SETTINGS.AI_PROVIDER_DISABLED
 
 
 func _get_section_dict(source: Dictionary, section_name: String) -> Dictionary:
@@ -187,6 +289,30 @@ func _find_resolution_index(target_resolution: Vector2i) -> int:
 		if preset == target_resolution:
 			return index
 	return -1
+
+
+func _select_option_by_value(button: OptionButton, order: Array, selected_value: String) -> void:
+	var selected_index := order.find(selected_value)
+	button.select(maxi(selected_index, 0))
+
+
+func _get_selected_order_value(button: OptionButton, order: Array, fallback: String) -> String:
+	var selected_index := button.get_selected_id()
+	if selected_index >= 0 and selected_index < order.size():
+		return str(order[selected_index])
+	return fallback
+
+
+func _build_ai_hint_text(provider: String) -> String:
+	match provider:
+		APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE:
+			return "Server connection for Ollama, LM Studio, OpenAI, or any compatible endpoint."
+		APP_SETTINGS.AI_PROVIDER_ANTHROPIC:
+			return "Hosted server connection using Anthropic's Messages API."
+		APP_SETTINGS.AI_PROVIDER_NOBODYWHO:
+			return "On-disk model connection. Provide a local .gguf path and connect from engine settings."
+		_:
+			return "Choose a server or on-disk provider here. Mods can use AIManager, but they do not configure the engine connection."
 
 
 func _on_master_slider_value_changed(_value: float) -> void:
@@ -217,6 +343,78 @@ func _on_resolution_button_item_selected(_index: int) -> void:
 	if _is_initializing:
 		return
 	_preview_current_settings()
+
+
+func _on_ai_provider_button_item_selected(_index: int) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_endpoint_edit_text_changed(_new_text: String) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_api_key_edit_text_changed(_new_text: String) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_model_edit_text_changed(_new_text: String) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_model_path_edit_text_changed(_new_text: String) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_system_prompt_edit_text_changed(_new_text: String) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_max_tokens_spinbox_value_changed(_value: float) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_temperature_spinbox_value_changed(_value: float) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_context_window_spinbox_value_changed(_value: float) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_connect_ai_button_pressed() -> void:
+	_settings = _collect_settings_from_controls()
+	AIManager.initialize(_settings)
+	_update_ai_info()
+	_is_dirty = true
+	_update_dirty_state()
+	var snapshot := AIManager.get_debug_snapshot()
+	var available := bool(snapshot.get("available", false))
+	var last_error := str(snapshot.get("last_error", ""))
+	if available:
+		_status_label.text = "AI connection updated from engine settings."
+		return
+	if last_error.is_empty():
+		_status_label.text = "AI connection is configured but unavailable."
+		return
+	_status_label.text = "AI connection failed: %s" % last_error
 
 
 func _on_save_button_pressed() -> void:

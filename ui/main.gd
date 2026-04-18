@@ -45,8 +45,9 @@ func _ready() -> void:
 	UIRouter.register_screen(SCREEN_PAUSE_MENU, PAUSE_MENU_SCENE)
 	UIRouter.register_screen(SCREEN_CREDITS, CREDITS_SCENE)
 	ModLoader.load_all_mods()
-	AIManager.initialize()
-	APP_SETTINGS.apply_settings(get_window(), APP_SETTINGS.load_settings())
+	var app_settings := APP_SETTINGS.load_settings()
+	APP_SETTINGS.apply_settings(get_window(), app_settings)
+	AIManager.initialize(app_settings)
 	var ui_theme: Theme = THEME_APPLIER.build_theme()
 	UIRouter.set_screen_theme(ui_theme)
 	_status_label.theme = ui_theme

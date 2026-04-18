@@ -7,12 +7,16 @@ extends Node
 class_name OmniSaveManager
 
 const SAVE_DIR := "user://saves/"
+const AUTOSAVE_FILE_PATH := "user://saves/autosave.json"
 const SAVE_FILE_TEMPLATE := "user://saves/slot_%d.json"
+const AUTOSAVE_SLOT := 0
 const MAX_SAVE_SLOTS := 5
 const SCHEMA_VERSION := 1
 const REQUIRED_SAVE_FIELDS := ["game_state"]
 const OPTIONAL_SAVE_FIELDS := ["save_schema_version", "created_at", "updated_at", "slot_metadata"]
 const REQUIRED_RUNTIME_CLASSES := ["EntityInstance", "PartInstance"]
+const SLOT_KIND_AUTOSAVE := "autosave"
+const SLOT_KIND_MANUAL := "manual"
 
 var last_operation_summary: Dictionary = {}
 var _registered_runtime_classes: Array[String] = []
@@ -59,7 +63,7 @@ func _register_runtime_classes() -> void:
 ## Emits GameEvents.save_started / save_completed / save_failed.
 func save_game(slot: int) -> void:
 	if not _is_valid_slot(slot):
-		var reason := "Save slot must be between 1 and %d." % MAX_SAVE_SLOTS
+		var reason := _get_invalid_slot_reason()
 		last_operation_summary = {"kind": "save", "slot": slot, "status": "failed", "reason": reason}
 		GameEvents.save_failed.emit(slot, reason)
 		return
@@ -97,7 +101,7 @@ func save_game(slot: int) -> void:
 	_sync_timekeeper_from_game_state()
 	var path := _slot_path(slot)
 	var existing_payload := _read_raw_payload(path)
-	var payload := _build_save_payload(existing_payload)
+	var payload := _build_save_payload(existing_payload, slot)
 	var payload_error := _validate_raw_payload(payload)
 	if not payload_error.is_empty():
 		last_operation_summary = {"kind": "save", "slot": slot, "status": "failed", "reason": payload_error}
@@ -121,6 +125,7 @@ func save_game(slot: int) -> void:
 	last_operation_summary = {
 		"kind": "save",
 		"slot": slot,
+		"slot_label": get_slot_label(slot),
 		"status": "ok",
 		"schema_version": SCHEMA_VERSION,
 		"updated_at": str(payload.get("updated_at", "")),
@@ -130,22 +135,29 @@ func save_game(slot: int) -> void:
 
 
 ## Builds the full save payload dictionary from GameState.
-func _build_save_payload(previous_payload: Dictionary = {}) -> Dictionary:
+func _build_save_payload(previous_payload: Dictionary = {}, slot: int = 1) -> Dictionary:
 	var state_payload: Variant = GameState.to_dict()
 	state_payload = A2J.to_json(state_payload)
 	var created_at := str(previous_payload.get("created_at", ""))
 	if created_at.is_empty():
 		created_at = Time.get_datetime_string_from_system(true, true)
+	var location_id := GameState.current_location_id
+	var location_name := _get_current_location_display_name(location_id)
+	var slot_label := get_slot_label(slot)
 	return {
 		"save_schema_version": SCHEMA_VERSION,
 		"engine_version": ProjectSettings.get_setting("application/config/version", "0.1.0"),
 		"created_at": created_at,
 		"updated_at": Time.get_datetime_string_from_system(true, true),
 		"slot_metadata": {
-			"display_name": "Day %d" % GameState.current_day,
+			"display_name": _get_default_display_name(slot),
 			"day": GameState.current_day,
 			"tick": GameState.current_tick,
-			"playtime_seconds": 0,
+			"playtime_seconds": _estimate_playtime_seconds(),
+			"slot_kind": SLOT_KIND_AUTOSAVE if slot == AUTOSAVE_SLOT else SLOT_KIND_MANUAL,
+			"slot_label": slot_label,
+			"location_id": location_id,
+			"location_name": location_name,
 		},
 		"game_state": state_payload,
 	}
@@ -160,7 +172,7 @@ func _build_save_payload(previous_payload: Dictionary = {}) -> Dictionary:
 ## Returns true on success.
 func load_game(slot: int) -> bool:
 	if not _is_valid_slot(slot):
-		var invalid_reason := "Save slot must be between 1 and %d." % MAX_SAVE_SLOTS
+		var invalid_reason := _get_invalid_slot_reason()
 		last_operation_summary = {"kind": "load", "slot": slot, "status": "failed", "reason": invalid_reason}
 		GameEvents.load_failed.emit(slot, invalid_reason)
 		return false
@@ -228,6 +240,7 @@ func load_game(slot: int) -> bool:
 	last_operation_summary = {
 		"kind": "load",
 		"slot": slot,
+		"slot_label": get_slot_label(slot),
 		"status": "ok",
 		"schema_version": int(migrated.get("save_schema_version", SCHEMA_VERSION)),
 		"updated_at": str(migrated.get("updated_at", "")),
@@ -250,6 +263,9 @@ func get_slot_info(slot: int) -> Dictionary:
 	if slot_metadata_value is Dictionary:
 		var slot_metadata: Dictionary = slot_metadata_value
 		var result := slot_metadata.duplicate(true)
+		result["slot"] = slot
+		result["slot_label"] = str(result.get("slot_label", get_slot_label(slot)))
+		result["slot_kind"] = str(result.get("slot_kind", SLOT_KIND_AUTOSAVE if slot == AUTOSAVE_SLOT else SLOT_KIND_MANUAL))
 		result["created_at"] = str(raw_payload.get("created_at", ""))
 		result["updated_at"] = str(raw_payload.get("updated_at", ""))
 		result["save_schema_version"] = int(raw_payload.get("save_schema_version", SCHEMA_VERSION))
@@ -269,7 +285,7 @@ func slot_exists(slot: int) -> bool:
 
 func delete_game(slot: int) -> bool:
 	if not _is_valid_slot(slot):
-		var invalid_reason := "Save slot must be between 1 and %d." % MAX_SAVE_SLOTS
+		var invalid_reason := _get_invalid_slot_reason()
 		last_operation_summary = {"kind": "delete", "slot": slot, "status": "failed", "reason": invalid_reason}
 		return false
 	var path := _slot_path(slot)
@@ -285,6 +301,7 @@ func delete_game(slot: int) -> bool:
 	last_operation_summary = {
 		"kind": "delete",
 		"slot": slot,
+		"slot_label": get_slot_label(slot),
 		"status": "ok",
 	}
 	return true
@@ -295,6 +312,8 @@ func delete_game(slot: int) -> bool:
 # ---------------------------------------------------------------------------
 
 func _slot_path(slot: int) -> String:
+	if slot == AUTOSAVE_SLOT:
+		return AUTOSAVE_FILE_PATH
 	return SAVE_FILE_TEMPLATE % slot
 
 
@@ -317,7 +336,76 @@ func _migrate_if_needed(data: Dictionary) -> Dictionary:
 
 
 func _is_valid_slot(slot: int) -> bool:
-	return slot >= 1 and slot <= MAX_SAVE_SLOTS
+	return slot == AUTOSAVE_SLOT or (slot >= 1 and slot <= MAX_SAVE_SLOTS)
+
+
+func get_visible_slots() -> Array[int]:
+	var slots: Array[int] = []
+	slots.append(AUTOSAVE_SLOT)
+	for slot in range(1, MAX_SAVE_SLOTS + 1):
+		slots.append(slot)
+	return slots
+
+
+func get_most_recent_loadable_slot() -> int:
+	var candidates := get_loadable_slots_sorted_by_recency()
+	if candidates.is_empty():
+		return -1
+	return candidates[0]
+
+
+func get_loadable_slots_sorted_by_recency() -> Array[int]:
+	var slots: Array[int] = []
+	for slot in get_visible_slots():
+		if slot_exists(slot):
+			slots.append(slot)
+	slots.sort_custom(Callable(self, "_compare_slots_by_recency"))
+	return slots
+
+
+func _compare_slots_by_recency(left_slot: int, right_slot: int) -> bool:
+	var left_updated_at := _get_slot_updated_at(left_slot)
+	var right_updated_at := _get_slot_updated_at(right_slot)
+	if left_updated_at == right_updated_at:
+		return left_slot < right_slot
+	return left_updated_at > right_updated_at
+
+
+func _get_slot_updated_at(slot: int) -> String:
+	var slot_info := get_slot_info(slot)
+	return str(slot_info.get("updated_at", ""))
+
+
+func _get_default_display_name(slot: int) -> String:
+	if slot == AUTOSAVE_SLOT:
+		return "Autosave"
+	return "Day %d" % GameState.current_day
+
+
+func get_slot_label(slot: int) -> String:
+	if slot == AUTOSAVE_SLOT:
+		return "Autosave"
+	return "Slot %d" % slot
+
+
+func _get_invalid_slot_reason() -> String:
+	return "Save slot must be Autosave or between 1 and %d." % MAX_SAVE_SLOTS
+
+
+func _get_current_location_display_name(location_id: String) -> String:
+	if location_id.is_empty():
+		return ""
+	var location_template := DataManager.get_location(location_id)
+	if location_template.is_empty():
+		return location_id
+	return str(location_template.get("display_name", location_id))
+
+
+func _estimate_playtime_seconds() -> int:
+	var ticks_per_day := 24
+	if TimeKeeper != null and TimeKeeper.has_method("get_ticks_per_day"):
+		ticks_per_day = maxi(int(TimeKeeper.get_ticks_per_day()), 1)
+	return int(round(float(GameState.current_tick) * (86400.0 / float(ticks_per_day))))
 
 
 func _read_raw_payload(path: String) -> Dictionary:

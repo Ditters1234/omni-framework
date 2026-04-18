@@ -1001,20 +1001,13 @@ Your `config.json` is **deep-merged** into the base game config. This allows you
 **`stats` (Stat System Configuration):**
 - `groups` (object): Organize stats into display categories. Example: `{ "combat": ["strength", "power"], "survival": ["stamina", "health_max"] }`.
 
-**`ai` (AI Provider Configuration):**
-Configure the AI backend for dynamic NPC dialogue, procedural descriptions, or any other AI-driven feature your mod needs. All AI calls go through `AIManager` — if this block is absent or `enabled` is false, everything silently no-ops and non-AI gameplay is unaffected.
+**AI Connection Ownership:**
+AI provider setup is **not moddable**. Mods do not declare provider endpoints, API keys, or model paths inside `config.json`.
 
-- `enabled` (boolean, default: false): Master switch. Set to `true` to activate the AI backend.
-- `provider` (string): Which backend to use. Options: `"openai_compatible"`, `"anthropic"`, `"nobodywho"`, `"disabled"`.
-- `endpoint` (string): Base URL for the API. For Ollama: `"http://localhost:11434"`. For OpenAI: `"https://api.openai.com"`. Unused for `"nobodywho"`.
-- `api_key` (string): API key. Leave empty `""` for local providers (Ollama, LM Studio, NobodyWho).
-- `model` (string): Model name. Examples: `"llama3.2"`, `"gpt-4o-mini"`, `"claude-haiku-4-5-20251001"`.
-- `system_prompt` (string): Default system prompt injected into every call. Describe the game world and expected AI behavior here.
-- `max_tokens` (number, default: 150): Maximum response length in tokens.
-- `temperature` (number 0.0–1.0, default: 0.8): Response creativity. Lower = more deterministic.
-- `nobodywho_model_path` (string): Path to a `.gguf` model file for embedded local inference. Only used when `provider` is `"nobodywho"`. Example: `"user://models/llama3.2.gguf"`.
-
-`AIManager` will only activate when `enabled` is explicitly set to `true`. Setting a provider without enabling AI leaves the system disabled on purpose.
+- The engine owns connection setup through the `settings` screen and stores it in `user://settings.cfg`.
+- Mods and script hooks may call `AIManager`, but they must treat provider availability as optional runtime state.
+- If the player never enables AI, `AIManager.is_available()` stays false and calls should fall back cleanly.
+- Typical engine-owned AI settings include `provider`, `endpoint`, `api_key`, `model`, `system_prompt`, `max_tokens`, `temperature`, `model_path`, and `n_ctx`.
 
 **AI Safety Rules:**
 - Treat AI output like untrusted user input: validate format, clamp length, and reject malformed structures.
@@ -1023,37 +1016,7 @@ Configure the AI backend for dynamic NPC dialogue, procedural descriptions, or a
 - Always provide a fallback path for script hooks that call `AIManager`.
 - If you need live UI updates for generation, subscribe to `GameEvents.ai_token_received`, `ai_response_received`, and `ai_error` using the request id returned by `AIManager.generate()` or `AIManager.generate_streaming()`.
 
-**Example `ai` config (Ollama local):**
-```json
-{
-  "ai": {
-    "enabled": true,
-    "provider": "openai_compatible",
-    "endpoint": "http://localhost:11434",
-    "api_key": "",
-    "model": "llama3.2",
-    "system_prompt": "You are an NPC in a gritty cyberpunk trading game. Keep responses under 2 sentences. Stay in character.",
-    "max_tokens": 150,
-    "temperature": 0.8
-  }
-}
-```
-
-**Example `ai` config (embedded local, no server):**
-```json
-{
-  "ai": {
-    "enabled": true,
-    "provider": "nobodywho",
-    "nobodywho_model_path": "user://models/llama3.2.gguf",
-    "system_prompt": "You are an NPC. Keep responses short and in character.",
-    "max_tokens": 100,
-    "temperature": 0.7
-  }
-}
-```
-
-> **Security note:** Never hard-code API keys in a mod you distribute. Instruct your players to add their own key to their local `config.json` override, or leave the provider as `"openai_compatible"` pointing to a local Ollama instance.
+> **Security note:** Never hard-code API keys in a mod you distribute. Instruct your players to configure any hosted AI provider in the engine `settings` screen on their own machine.
 
 **Example `config.json` patch:**
 ```json
@@ -1115,7 +1078,7 @@ If you need an item, quest, or NPC to execute unique logic that JSON can't handl
 *   `get_buy_price(instance, buyer) -> int` (Override market economy)
 
 **Calling AIManager from a Script Hook:**
-All autoloads are globally accessible inside script hooks. If the player has AI enabled in their config, you can call `AIManager` directly to generate dynamic text:
+All autoloads are globally accessible inside script hooks. If the player has AI enabled in engine settings, you can call `AIManager` directly to generate dynamic text:
 ```gdscript
 # Example: generate a dynamic item description on equip
 func on_equip(entity: Dictionary, instance: Dictionary) -> void:
@@ -1125,7 +1088,7 @@ func on_equip(entity: Dictionary, instance: Dictionary) -> void:
     var description = await AIManager.generate_async(prompt)
     instance["dynamic_description"] = description
 ```
-If AI is disabled or unconfigured, `AIManager.is_available()` returns false and your hook should fall back to static data gracefully.
+If AI is disabled or unconfigured in engine settings, `AIManager.is_available()` returns false and your hook should fall back to static data gracefully.
 
 For streaming UI, use the returned request id to filter `GameEvents`:
 ```gdscript

@@ -1,41 +1,33 @@
 extends GutTest
 
+const APP_SETTINGS := preload("res://core/app_settings.gd")
+
 
 func before_each() -> void:
 	DataManager.clear_all()
-	DataManager.config = {
-		"ai": {
-			"provider": AIManager.PROVIDER_DISABLED
-		}
-	}
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: false,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
+	}))
 
 
 func after_each() -> void:
-	DataManager.config = {
-		"ai": {
-			"provider": AIManager.PROVIDER_DISABLED
-		}
-	}
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: false,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
+	}))
 
 
 func test_initialize_reads_nested_provider_block() -> void:
-	DataManager.config = {
-		"ai": {
-			"enabled": true,
-			"provider": AIManager.PROVIDER_OPENAI_COMPATIBLE,
-			"system_prompt": "Global system prompt",
-			"openai_compatible": {
-				"endpoint": "http://127.0.0.1:8080/v1/chat/completions",
-				"model": "omni-test",
-				"temperature": 0.25,
-				"max_tokens": 64
-			}
-		}
-	}
-
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: true,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_OPENAI_COMPATIBLE,
+		APP_SETTINGS.AI_ENDPOINT: "http://127.0.0.1:8080/v1/chat/completions",
+		APP_SETTINGS.AI_MODEL: "omni-test",
+		APP_SETTINGS.AI_TEMPERATURE: 0.25,
+		APP_SETTINGS.AI_MAX_TOKENS: 64,
+		APP_SETTINGS.AI_SYSTEM_PROMPT: "Global system prompt",
+	}))
 
 	var provider := AIManager._provider as OpenAIProvider
 	assert_true(provider != null)
@@ -46,3 +38,12 @@ func test_initialize_reads_nested_provider_block() -> void:
 	assert_eq(provider._max_tokens, 64)
 	assert_eq(provider._system_prompt, "Global system prompt")
 	assert_true(AIManager.is_available())
+
+
+func _make_settings(ai_overrides: Dictionary) -> Dictionary:
+	var settings := APP_SETTINGS.get_default_settings()
+	var ai_settings := APP_SETTINGS.get_ai_settings(settings)
+	for key_value in ai_overrides.keys():
+		ai_settings[str(key_value)] = ai_overrides.get(key_value, null)
+	settings[APP_SETTINGS.SECTION_AI] = ai_settings
+	return settings

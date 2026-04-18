@@ -130,23 +130,22 @@ These do not use `backend_class` because they do not interact with mod data. The
 
 | Screen id | Purpose | Notes |
 |---|---|---|
-| `main_menu` | Boot landing, new game / continue / load / quit / settings / credits | Exists; needs Settings + Load-Slot buttons wired |
-| `settings` | Audio volumes, llm settings, resolution, keybinds, accessibility | Writes to `user://settings.cfg` via `ConfigFile`, independent of mod `config.json` |
-| `save_slot_list` | Multi-slot save/load/delete with playtime/day/preview | Uses existing `SaveManager.get_slot_info(slot)` and `MAX_SAVE_SLOTS = 5`; destructive actions should require an in-screen confirmation step |
+| `main_menu` | Boot landing, new game / continue / load / quit / settings / credits | Implemented with continue/load routing through the current save surfaces |
+| `settings` | Audio volumes, AI connection setup, resolution, keybinds, accessibility | Writes to `user://settings.cfg` via `ConfigFile`, independent of mod `config.json`; AI provider ownership lives here rather than in mod data |
+| `save_slot_list` | Autosave + manual save/load/delete with playtime/day/location preview | Uses `SaveManager.get_slot_info(slot)` for engine autosave plus manual slots; destructive actions should require an in-screen confirmation step |
 | `pause_menu` | In-game pause overlay (Resume / Settings / Save / Main Menu) | Listens to an `Escape` action binding; emits `game_paused` / `game_resumed` |
 | `credits` | Attribution + mod list | Pulls from `ModLoader.loaded_mods` so loaded mods show up automatically |
-| `gameplay_shell` | Persistent HUD + hub for pushing screens | Exists; needs refactor onto reusable components (§5) |
+| `gameplay_shell` | Persistent gameplay hub for time controls, autosave, loadout, and exploration routing | Implemented as the current post-load/post-new-game shell; still a future consumer of the generic component library |
 
 Rationale for keeping these out of the mod pipeline: they are about the application, not the game. Modders should not be able to replace the save-slot browser or settings menu without invasive script hooks. Aesthetics (theme, strings) still flow through config, but the structure is fixed.
 
 ### 4.1 Gameplay Shell specifics
 
-The `gameplay_shell_screen.gd` as it stands renders `_format_dictionary(player.currencies)` into raw `Label` nodes. That is not up to standard. The refactored shell should include:
+The gameplay shell is now the current engine-owned gameplay hub. Its current responsibilities are:
 
-- **Top bar:** row of `currency_display` components, `time_label` ("Day 3, Tick 14:00"), time-advance buttons from `config.ui.time_advance_buttons`, quick-save button.
-- **Left panel:** `entity_portrait` (player) + compact `stat_sheet`.
-- **Center button column:** "Explore Location" (pushes `location_view`), "Character" (pushes `entity_sheet`), "Quests" (pushes `quest_log`), "World Map" (pushes `world_map`), "Inventory" (pushes `list_view` with `data_source: "player:inventory"`).
-- **Notification slot:** `notification_popup` mounts here, not inside each screen.
+- **Session summary:** current location, description, interaction count, player identity, currencies, stats, inventory, and equipped loadout snapshot.
+- **Time controls:** current time string, buttons derived from `config.ui.time_advance_buttons`, and a quick autosave surface.
+- **Action hub:** "Explore Location", direct loadout access, save browser access, and pause routing.
 
 The shell is where the engine-owned screens connect back into the moddable ones. Its buttons delegate to existing `UIRouter.push` calls; no new infrastructure required.
 

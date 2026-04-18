@@ -1,5 +1,6 @@
 extends GutTest
 
+const APP_SETTINGS := preload("res://core/app_settings.gd")
 
 const FAKE_PROVIDER_SCRIPT_PATH := "res://tests/doubles/fake_ai_provider.gd"
 
@@ -9,39 +10,27 @@ func before_each() -> void:
 	DataManager.clear_all()
 	AIManager.clear_provider_script_overrides()
 	AIManager.set_provider_script_override(AIManager.PROVIDER_OPENAI_COMPATIBLE, FAKE_PROVIDER_SCRIPT_PATH)
-	DataManager.config = {
-		"ai": {
-			"enabled": false,
-			"provider": AIManager.PROVIDER_DISABLED
-		}
-	}
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: false,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
+	}))
 
 
 func after_each() -> void:
 	AIManager.clear_provider_script_overrides()
-	DataManager.config = {
-		"ai": {
-			"enabled": false,
-			"provider": AIManager.PROVIDER_DISABLED
-		}
-	}
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: false,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
+	}))
 
 
 func test_initialize_respects_enabled_flag_even_with_real_provider_value() -> void:
-	DataManager.config = {
-		"ai": {
-			"enabled": false,
-			"provider": AIManager.PROVIDER_OPENAI_COMPATIBLE,
-			"openai_compatible": {
-				"endpoint": "http://127.0.0.1:8080/v1/chat/completions",
-				"model": "ignored"
-			}
-		}
-	}
-
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: false,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_OPENAI_COMPATIBLE,
+		APP_SETTINGS.AI_ENDPOINT: "http://127.0.0.1:8080/v1/chat/completions",
+		APP_SETTINGS.AI_MODEL: "ignored",
+	}))
 
 	assert_eq(AIManager.get_provider_name(), AIManager.PROVIDER_DISABLED)
 	assert_false(AIManager.is_available())
@@ -63,17 +52,11 @@ func test_generate_async_noops_without_ai_error_when_disabled() -> void:
 
 
 func test_invalid_provider_config_stays_unavailable_and_reports_error() -> void:
-	DataManager.config = {
-		"ai": {
-			"enabled": true,
-			"provider": AIManager.PROVIDER_ANTHROPIC,
-			"anthropic": {
-				"model": "claude-test"
-			}
-		}
-	}
-
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: true,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_ANTHROPIC,
+		APP_SETTINGS.AI_MODEL: "claude-test",
+	}))
 
 	assert_eq(AIManager.get_provider_name(), AIManager.PROVIDER_ANTHROPIC)
 	assert_false(AIManager.is_available())
@@ -182,13 +165,10 @@ func test_initialize_resets_debug_history_between_boot_cycles() -> void:
 	var before_snapshot := AIManager.get_debug_snapshot()
 	assert_eq(int(before_snapshot.get("request_count", 0)), 1)
 
-	DataManager.config = {
-		"ai": {
-			"enabled": false,
-			"provider": AIManager.PROVIDER_DISABLED
-		}
-	}
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: false,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
+	}))
 
 	var after_snapshot := AIManager.get_debug_snapshot()
 	assert_eq(int(after_snapshot.get("request_count", 0)), 0)
@@ -200,13 +180,18 @@ func test_initialize_resets_debug_history_between_boot_cycles() -> void:
 
 
 func _configure_fake_provider() -> void:
-	DataManager.config = {
-		"ai": {
-			"enabled": true,
-			"provider": AIManager.PROVIDER_OPENAI_COMPATIBLE,
-			"openai_compatible": {
-				"ready": true
-			}
-		}
-	}
-	AIManager.initialize()
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: true,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_OPENAI_COMPATIBLE,
+		APP_SETTINGS.AI_MODEL: "fake-model",
+		"ready": true,
+	}))
+
+
+func _make_settings(ai_overrides: Dictionary) -> Dictionary:
+	var settings := APP_SETTINGS.get_default_settings()
+	var ai_settings := APP_SETTINGS.get_ai_settings(settings)
+	for key_value in ai_overrides.keys():
+		ai_settings[str(key_value)] = ai_overrides.get(key_value, null)
+	settings[APP_SETTINGS.SECTION_AI] = ai_settings
+	return settings
