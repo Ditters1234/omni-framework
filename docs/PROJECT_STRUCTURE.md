@@ -120,7 +120,7 @@ res://
 │   │   │   ├── gameplay_shell_screen.tscn
 │   │   │   └── gameplay_shell_screen.gd
 │   │   ├── settings/            # ✅ Engine-owned settings route with persisted app settings
-│   │   ├── save_slot_list/      # ✅ Engine-owned save/load browser for slots 1..MAX_SAVE_SLOTS
+│   │   ├── save_slot_list/      # ✅ Engine-owned save/load/delete browser for slots 1..MAX_SAVE_SLOTS
 │   │   ├── pause_menu/          # ✅ Engine-owned pause route layered through the router stack
 │   │   ├── credits/             # ✅ Engine-owned attribution and loaded-mod route
 │   │   ├── world_map/           # ⚠️ PLANNED

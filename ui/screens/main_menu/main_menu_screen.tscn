@@ -39,6 +39,7 @@ horizontal_alignment = 1
 [node name="SubtitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "A data-driven sandbox waiting for content."
+autowrap_mode = 3
 horizontal_alignment = 1
 
 [node name="ButtonColumn" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
@@ -72,6 +73,7 @@ text = "Quit"
 [node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Checking save slots..."
+autowrap_mode = 3
 horizontal_alignment = 1
 
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/ContinueButton" to="." method="_on_continue_button_pressed"]

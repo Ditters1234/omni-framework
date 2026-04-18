@@ -10,7 +10,7 @@ const SHIPPED_DEPENDENCIES := [
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _subtitle_label: Label = $MarginContainer/PanelContainer/VBoxContainer/SubtitleLabel
-@onready var _credits_label: Label = $MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/CreditsLabel
+@onready var _credits_label: Label = $MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/ContentMargin/CreditsLabel
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton
 
 

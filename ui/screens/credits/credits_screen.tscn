@@ -43,9 +43,20 @@ text = "Attribution"
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="CreditsLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer"]
+[node name="ContentMargin" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(720, 0)
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 6
+
+[node name="CreditsLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/ContentMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
 autowrap_mode = 3
 text = "Credits"
 

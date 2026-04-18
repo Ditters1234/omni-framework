@@ -267,6 +267,29 @@ func slot_exists(slot: int) -> bool:
 	return _validate_raw_payload(payload).is_empty()
 
 
+func delete_game(slot: int) -> bool:
+	if not _is_valid_slot(slot):
+		var invalid_reason := "Save slot must be between 1 and %d." % MAX_SAVE_SLOTS
+		last_operation_summary = {"kind": "delete", "slot": slot, "status": "failed", "reason": invalid_reason}
+		return false
+	var path := _slot_path(slot)
+	if not FileAccess.file_exists(path):
+		var missing_reason := "Save slot is already empty."
+		last_operation_summary = {"kind": "delete", "slot": slot, "status": "failed", "reason": missing_reason}
+		return false
+	var delete_error := DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	if delete_error != OK:
+		var delete_reason := "Unable to delete save slot %d: %s" % [slot, error_string(delete_error)]
+		last_operation_summary = {"kind": "delete", "slot": slot, "status": "failed", "reason": delete_reason}
+		return false
+	last_operation_summary = {
+		"kind": "delete",
+		"slot": slot,
+		"status": "ok",
+	}
+	return true
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

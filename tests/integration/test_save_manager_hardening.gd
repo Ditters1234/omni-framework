@@ -133,6 +133,19 @@ func test_load_game_rejects_future_schema_versions() -> void:
 	assert_signal_not_emitted(GameEvents, "load_completed")
 
 
+func test_delete_game_removes_existing_slot_and_rejects_repeat_delete() -> void:
+	GameState.current_day = 3
+	GameState.current_tick = 42
+	SaveManager.save_game(SAVE_SLOT_METADATA)
+
+	assert_true(SaveManager.slot_exists(SAVE_SLOT_METADATA))
+	assert_true(SaveManager.delete_game(SAVE_SLOT_METADATA))
+	assert_false(SaveManager.slot_exists(SAVE_SLOT_METADATA))
+	assert_eq(str(SaveManager.last_operation_summary.get("status", "")), "ok")
+	assert_false(SaveManager.delete_game(SAVE_SLOT_METADATA))
+	assert_eq(str(SaveManager.last_operation_summary.get("status", "")), "failed")
+
+
 func _read_slot_payload(slot: int) -> Dictionary:
 	var raw_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("user://saves/slot_%d.json" % slot))
 	if raw_data is Dictionary:

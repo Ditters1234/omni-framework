@@ -132,7 +132,7 @@ These do not use `backend_class` because they do not interact with mod data. The
 |---|---|---|
 | `main_menu` | Boot landing, new game / continue / load / quit / settings / credits | Exists; needs Settings + Load-Slot buttons wired |
 | `settings` | Audio volumes, llm settings, resolution, keybinds, accessibility | Writes to `user://settings.cfg` via `ConfigFile`, independent of mod `config.json` |
-| `save_slot_list` | Multi-slot save/load with playtime/day/preview | Uses existing `SaveManager.get_slot_info(slot)` and `MAX_SAVE_SLOTS = 5` |
+| `save_slot_list` | Multi-slot save/load/delete with playtime/day/preview | Uses existing `SaveManager.get_slot_info(slot)` and `MAX_SAVE_SLOTS = 5`; destructive actions should require an in-screen confirmation step |
 | `pause_menu` | In-game pause overlay (Resume / Settings / Save / Main Menu) | Listens to an `Escape` action binding; emits `game_paused` / `game_resumed` |
 | `credits` | Attribution + mod list | Pulls from `ModLoader.loaded_mods` so loaded mods show up automatically |
 | `gameplay_shell` | Persistent HUD + hub for pushing screens | Exists; needs refactor onto reusable components (§5) |
