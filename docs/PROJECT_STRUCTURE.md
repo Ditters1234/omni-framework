@@ -11,7 +11,7 @@ This document is the canonical reference for the engine's folder layout, autoloa
 The engine ships with:
 - A **data loading pipeline** that processes JSON templates and mod patches at startup.
 - A set of **core runtime systems** (stats, quests, tasks, factions, etc.) driven entirely by that data.
-- A **UI framework** composed of reusable screen components wired to backend classes.
+- A **UI framework** composed of engine-owned routed screens plus reusable backend-driven screens wired to backend classes.
 - A **centralized Godot Theme** that can be reskinned at runtime via `config.json`.
 - A **mod loader** that handles discovery, dependency resolution, and two-phase patching.
 
@@ -113,10 +113,20 @@ res://
 │   │   ├── omni_theme.tres  # ✅ Centralized Godot Theme resource (the UI source of truth)
 │   │   └── theme_applier.gd # ✅ Reads config.json ui.theme overrides and patches the theme at runtime
 │   ├── screens/             # Full-screen views (managed by UIRouter)
+│   │   ├── main_menu/           # ✅ Engine-owned boot/menu route
+│   │   │   ├── main_menu_screen.tscn
+│   │   │   └── main_menu_screen.gd
+│   │   ├── gameplay_shell/      # ✅ Engine-owned in-game shell / HUD route
+│   │   │   ├── gameplay_shell_screen.tscn
+│   │   │   └── gameplay_shell_screen.gd
+│   │   ├── settings/            # ⚠️ PLANNED engine-owned settings route
+│   │   ├── save_slot_list/      # ⚠️ PLANNED engine-owned save/load browser
+│   │   ├── pause_menu/          # ⚠️ PLANNED engine-owned pause route
+│   │   ├── credits/             # ⚠️ PLANNED engine-owned credits route
 │   │   ├── world_map/           # ⚠️ PLANNED
 │   │   │   ├── world_map_screen.tscn
 │   │   │   └── world_map_screen.gd
-│   │   ├── location_view/       # ✅ Hub screen — shows location name, description, and interactive screens as buttons
+│   │   ├── location_view/       # ✅ Engine-owned hub screen — shows location name, description, and interactive screens as buttons
 │   │   │   ├── location_view_screen.tscn
 │   │   │   └── location_view_screen.gd
 │   │   └── backends/        # One scene per backend_class type
@@ -366,21 +376,38 @@ Implementation hardening notes:
 - Replacing a stack should emit the same pop events a manual unwind would emit, so debug tools and listeners do not miss route removals.
 - The router should expose a structured debug snapshot containing registered routes, stack entries, current params, container health, and recent navigation errors.
 
+Every routed screen should fall into exactly one of two categories:
+
+- **Engine-owned screens**: fixed application routes registered directly by the engine. Mods may influence theme, strings, and the data rendered inside them, but they do not replace these route contracts through JSON.
+- **Backend-driven screens**: routed views selected from mod data via `backend_class`. These are the moddable interaction surfaces.
+
 Registered screens (see `ui/main.gd`):
+
+Engine-owned routed screens:
 
 | screen_id | Scene | Status |
 |---|---|---|
 | `main_menu` | `main_menu_screen.tscn` | ✅ |
-| `assembly_editor` | `assembly_editor_screen.tscn` | ✅ |
-| `character_creator` | `assembly_editor_screen.tscn` (alias) | ✅ |
+| `settings` | `settings_screen.tscn` | ⚠️ PLANNED |
+| `save_slot_list` | `save_slot_list_screen.tscn` | ⚠️ PLANNED |
+| `pause_menu` | `pause_menu_screen.tscn` | ⚠️ PLANNED |
+| `credits` | `credits_screen.tscn` | ⚠️ PLANNED |
 | `gameplay_shell` | `gameplay_shell_screen.tscn` | ✅ |
 | `location_view` | `location_view_screen.tscn` | ✅ |
+ 
+Backend-driven routed screens:
+
+| screen_id | Scene | Status |
+|---|---|---|
+| `assembly_editor` | `assembly_editor_screen.tscn` | ✅ |
+| `character_creator` | `assembly_editor_screen.tscn` (alias) | ✅ |
 | `exchange` | `exchange_screen.tscn` | ⚠️ PLANNED |
 | `list_view` | `list_screen.tscn` | ⚠️ PLANNED |
 | `challenge` | `challenge_screen.tscn` | ⚠️ PLANNED |
 | `task_provider` | `task_provider_screen.tscn` | ⚠️ PLANNED |
 | `catalog_list` | `catalog_list_screen.tscn` | ⚠️ PLANNED |
 | `dialogue` | `dialogue_screen.tscn` | ⚠️ PLANNED |
+| `world_map` | `world_map_screen.tscn` | ⚠️ PLANNED |
 
 `UIRouter` is also the boundary where the UI should evolve from simple screen navigation into a state router:
 
@@ -532,11 +559,13 @@ JSON definition -> Backend -> ViewModel -> Screen -> Components -> Theme
 
 That flow is the missing scalability layer between "backend-driven screens" and a truly moddable UI system. The rules are:
 
+- **Every routed screen is either engine-owned or backend-driven.** There is no third category hiding ad hoc UI state.
 - **Backends own logic and data gathering.**
 - **View models are pure dictionaries/resources prepared for rendering.**
 - **Screens are shells that render a view model and host reusable widgets.**
 - **Components are dumb widgets.** They should not query `DataManager`, `GameState`, or unrelated autoloads on their own.
 - **Themes style semantics, not business logic.**
+- **Engine-owned screens stay fixed.** Main menu, settings, save/load, pause, credits, gameplay shell, and location view are registered in code; mods can reskin and feed them data, but they do not replace those route contracts through JSON.
 - The shared `ui/theme/omni_theme.tres` resource is applied to routed screens after mod config loads, so `ui.theme` overrides propagate across menu and backend screens without per-scene palette edits.
 
 ### Navigation Flow
@@ -554,6 +583,7 @@ Menu system requirements:
 - A lightweight `gameplay_shell` screen is an acceptable early routed gameplay destination while world-map and location flows are still being built.
 - The current base-game flow lands directly in `location_view` after new-game confirmation and save loading so the first location does not sit on top of a shell screen.
 - Main menu presentation can be influenced by `config.json ui.main_menu`, but actions like `new_game`, `continue`, `load_slot`, and `quit` remain engine-owned commands.
+- Settings, save/load, pause, and credits are also engine-owned routes. Mods may contribute data they display later, but should not replace their core navigation contract through content JSON.
 
 ```
 main.tscn (root, always present)
@@ -574,3 +604,4 @@ main.tscn (root, always present)
 | `TaskProviderBackend` | `task_provider_screen.tscn` ⚠️ planned | Faction job board |
 | `CatalogListBackend` | `catalog_list_screen.tscn` ⚠️ planned | Infinite template vendor |
 | `DialogueBackend` | `dialogue_screen.tscn` ⚠️ planned | Branching NPC dialogue via Dialogue Manager |
+| `WorldMapBackend` | `world_map_screen.tscn` ⚠️ planned | Travel/discovery graph for discovered locations |

@@ -181,6 +181,8 @@ Each `backend_class` should have a contract definition with:
 - Allowed field types
 - Reference validation rules
 
+Backend contract validation applies only to JSON-authored screens and interactions that carry a `backend_class`. Engine-owned routes such as `main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, `gameplay_shell`, and `location_view` are registered in code and should be covered by router smoke tests instead of content schema validation.
+
 Minimum required contracts:
 
 - `ExchangeBackend`: `source_inventory`, `destination_inventory`, `currency_id`

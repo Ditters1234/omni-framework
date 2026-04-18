@@ -125,7 +125,7 @@ Implementation note:
 
 Show:
 
-- Current screen stack
+- Current route stack, including engine-owned screens and backend-driven screens
 - Current backend params
 - Latest built view model
 - UI refresh or binding failures
@@ -305,11 +305,13 @@ Add or update tests when you change:
 - Invalid route and invalid scene-root failures stay non-destructive
 - Debug snapshot exposes current params, stack entries, and recent errors
 - Route events are emitted for both manual pops and `replace_all()` unwinds
+- Engine-owned routes (`main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, `gameplay_shell`, `location_view`) have smoke coverage just like backend-driven routes
 
 ### UI Backends
 
 - Required backend contract fields enforced
 - View-model building does not mutate template data
+- Engine-owned screens are tested separately from backend contracts; they still need route smoke tests and production-path coverage
 
 ## Good Testing Habits Early
 

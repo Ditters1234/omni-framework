@@ -477,6 +477,8 @@ To make your new location accessible, you must patch an existing location to con
 
 `LocationViewScreen` is the hub screen rendered when a player enters or explores a location. It is pushed by the gameplay shell via `UIRouter.push("location_view")` (optionally with `{ "location_id": "..." }`).
 
+`LocationViewScreen` itself is an engine-owned route, not a moddable backend. Mods control the location data and the `screens` entries rendered inside it, but they do not replace the hub screen contract through JSON.
+
 **What it displays:**
 - The location's `display_name` and `description`.
 - One button per entry in the location's `screens` array. Buttons are enabled if the backend is registered; unbuilt backends show a disabled button with a tooltip.
@@ -518,8 +520,17 @@ To make your new location accessible, you must patch an existing location to con
 
 **Navigation:** Pressing a screen button pushes the backend on top of `LocationViewScreen`. The user returns with the backend's back button (or by pressing Back inside LocationViewScreen to return to the gameplay shell). Travel buttons call `GameState.travel_to(dest_id)` and refresh the view in-place.
 
+### 3.5.1. Engine-Owned Screens vs Moddable Backends
+
+Not every routed screen in Omni-Framework comes from mod JSON.
+
+- **Engine-owned screens** are fixed routes registered directly by the engine. They cover application and shell concerns such as `main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, `gameplay_shell`, and `location_view`.
+- **Moddable backend screens** are the routes selected through `backend_class` entries inside `locations[].screens` and `entities[].interactions`.
+- `backend_class` is not a general-purpose route id. A mod cannot declare `"backend_class": "settings"` or replace the save browser by writing JSON.
+- Mods can still influence engine-owned screens through `config.json ui.*`, theme overrides, string overrides, and the content those screens render from runtime state.
+
 ### 3.6. UI Screens & Action Payloads
-When defining a screen in a location or an interaction on an NPC, you assign a `backend_class` to dictate its functionality.
+When defining a moddable screen in a location or an interaction on an NPC, you assign a `backend_class` to dictate its functionality. Engine-owned routes are registered by the engine and are outside this JSON contract.
 
 **Backend Classes (Screen Types):**
 *   **`AssemblyEditorBackend` (Workbenches / Assembly / Clinics / Shipyards):** Lets players modify any target entity by browsing and applying parts into its sockets. The same screen handles character creation, upgrade workbenches, ripperdoc clinics, shipyard refits, and any other "slot-and-part" editor — driven entirely by JSON params. Supports two distinct part-sourcing modes and full entity-to-entity (payer ≠ target) transactions.
@@ -675,6 +686,8 @@ For creator/workbench/shop UIs, it is valid to treat part prices as a draft tran
   "conditions": { "AND": [] }
 }
 ```
+
+These fields apply to moddable backend entries only. Engine-owned routes such as `main_menu`, `settings`, and `pause_menu` are not authored through this JSON shape.
 
 **Action Payloads & The Condition System (Modifying State via JSON):**
 Many screens and quest rewards support an `action_payload` object. This is how you manipulate game state or trigger events strictly through JSON. You can gate actions using a nested `conditions` block.
