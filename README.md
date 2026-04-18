@@ -1,6 +1,7 @@
-# Omni-Framework
-
-![Omni-Framework Icon](icon.svg)
+<div style="display: flex; align-items: center; gap: 20px;">
+  <img src="icon.svg" alt="Omni-Framework Icon" width="100"/>
+  <h1>Omni-Framework</h1>
+</div>
 
 A single-player, data-driven, genre-agnostic game engine built on **Godot 4** (GDScript).
 

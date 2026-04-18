@@ -1,6 +1,7 @@
-# Mods
-
-![Omni-Framework Icon](../icon.svg)
+<div style="display: flex; align-items: center; gap: 20px;">
+  <img src="../icon.svg" alt="Omni-Framework Icon" width="100"/>
+  <h1>Mods</h1>
+</div>
 
 All game content lives here. The engine ships without content — `ModLoader` treats this folder as the source of truth and a missing `mods/base/` is a fatal boot error.
 
