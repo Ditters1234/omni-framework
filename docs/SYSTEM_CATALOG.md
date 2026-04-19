@@ -161,6 +161,10 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager .dialogue file ref | NPC branching dialogue (wraps Dialogue Manager). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Read-only entity stats, equipment, inventory, and faction standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `ActiveQuestLogBackend` | `ui/screens/backends/active_quest_log_screen.tscn` | Optional completed quest display | Active quest cards with stages, objectives, and rewards. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `AchievementListBackend` | `ui/screens/backends/achievement_list_screen.tscn` | Optional locked/unlocked filters | Achievement unlock state and stat progress. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `EventLogBackend` | `ui/screens/backends/event_log_screen.tscn` | Optional event limit/domain/signal filters | Recent `GameEvents` history. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 
 **How it works:**
 1. Modders define a location/NPC with a `backend_class` and `backend_config` dict in JSON.

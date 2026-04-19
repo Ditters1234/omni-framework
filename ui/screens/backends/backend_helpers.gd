@@ -318,6 +318,43 @@ static func build_task_card_view_model(task_template: Dictionary) -> Dictionary:
 	}
 
 
+static func build_quest_card_view_model(quest_template: Dictionary, stage_index: int = 0, completed: bool = false) -> Dictionary:
+	var quest_id := str(quest_template.get("quest_id", ""))
+	var objectives: Array[Dictionary] = []
+	var current_stage_text := "Completed" if completed else ""
+	var stages_value: Variant = quest_template.get("stages", [])
+	if stages_value is Array:
+		var stages: Array = stages_value
+		if stage_index >= 0 and stage_index < stages.size():
+			var current_stage_value: Variant = stages[stage_index]
+			if current_stage_value is Dictionary:
+				var current_stage: Dictionary = current_stage_value
+				current_stage_text = str(current_stage.get("description", current_stage.get("title", "")))
+				var objective_values: Variant = current_stage.get("objectives", [])
+				if objective_values is Array:
+					var raw_objectives: Array = objective_values
+					for objective_value in raw_objectives:
+						if not objective_value is Dictionary:
+							continue
+						var objective: Dictionary = objective_value
+						objectives.append({
+							"label": str(objective.get("description", objective.get("type", "Objective"))),
+							"satisfied": completed or ConditionEvaluator.evaluate(objective),
+						})
+	if objectives.is_empty() and completed:
+		objectives.append({
+			"label": "Quest complete.",
+			"satisfied": true,
+		})
+	return {
+		"quest_id": quest_id,
+		"display_name": str(quest_template.get("display_name", quest_template.get("title", humanize_id(quest_id)))),
+		"current_stage": current_stage_text,
+		"objectives": objectives,
+		"rewards": _duplicate_dictionary(quest_template.get("reward", {})),
+	}
+
+
 static func _build_task_objective_label(task_template: Dictionary) -> String:
 	var target := str(task_template.get("target", ""))
 	if target.is_empty():

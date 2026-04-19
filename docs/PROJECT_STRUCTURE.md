@@ -17,7 +17,7 @@ The engine ships with:
 
 ### Current Implementation Snapshot
 
-As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-4 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, the backend/screen split for `AssemblyEditorBackend`, phase-neutral backend helpers, the first round of moddable backend screens (`DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`), and the Phase 5 pass 1 read-only `EntitySheetBackend`. The full target tree is still not implemented end-to-end, though, and later read-only backends plus world-map/crafting support remain future-facing in this document.
+As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-4 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, the backend/screen split for `AssemblyEditorBackend`, phase-neutral backend helpers, the first round of moddable backend screens (`DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`), and the Phase 5 basic read-only backend set (`EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`). The full target tree is still not implemented end-to-end, though, and world-map/crafting support remain future-facing in this document.
 
 Use this document as the "where we are going and what rules we must preserve" reference, not as a claim that every folder and subsystem below is feature-complete today.
 
@@ -141,6 +141,10 @@ res://
 │   │       ├── catalog_list_screen.tscn      # ✅ CatalogListBackend — implemented
 │   │       ├── dialogue_screen.tscn          # ✅ DialogueBackend — implemented (wraps Dialogue Manager)
 │   │       ├── entity_sheet_screen.tscn      # ✅ EntitySheetBackend — implemented
+│   │       ├── active_quest_log_screen.tscn  # ✅ ActiveQuestLogBackend — implemented
+│   │       ├── faction_reputation_screen.tscn # ✅ FactionReputationBackend — implemented
+│   │       ├── achievement_list_screen.tscn  # ✅ AchievementListBackend — implemented
+│   │       ├── event_log_screen.tscn         # ✅ EventLogBackend — implemented
 │   │       ├── backend_base.gd               # ✅ Base class for all backend implementations
 │   │       ├── backend_helpers.gd            # ✅ Phase-neutral utilities shared by backend screens
 │   │       └── [backend_*.gd files]          # Backend implementation classes (one per backend_class type)
@@ -424,6 +428,10 @@ Backend-driven routed screens:
 | `catalog_list` | `catalog_list_screen.tscn` | ✅ |
 | `dialogue` | `dialogue_screen.tscn` | ✅ |
 | `entity_sheet` | `entity_sheet_screen.tscn` | ✅ |
+| `quest_log` | `active_quest_log_screen.tscn` | ✅ |
+| `faction_rep` | `faction_reputation_screen.tscn` | ✅ |
+| `achievement_list` | `achievement_list_screen.tscn` | ✅ |
+| `event_log` | `event_log_screen.tscn` | ✅ |
 | `world_map` | `world_map_screen.tscn` | ⚠️ PLANNED |
 
 `UIRouter` is also the boundary where the UI should evolve from simple screen navigation into a state router:

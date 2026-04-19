@@ -630,6 +630,10 @@ When defining a moddable screen in a location or an interaction on an NPC, you a
 *   **`TaskProviderBackend` (Job Boards):** Shows repeatable tasks from a Faction's `quest_pool`. Requires `faction_id` field.
 *   **`CatalogListBackend` (Infinite Vending):** Acts as an infinite vending machine. Sells raw `Part` templates directly from the database (like an MMO vendor). Requires `data_source: "catalog"` and `action_payload: {"type": "buy_item"}`.
 *   **`EntitySheetBackend` (Character / Ship / NPC Sheets):** Shows a read-only sheet for a live entity. Defaults to the player and renders the entity portrait, grouped stat sheet, equipped parts, inventory stack summary, and faction standing. Optional params include `target_entity_id`, `screen_title`, `screen_description`, `stat_title`, `show_equipped`, `show_inventory`, `show_reputation`, and `inventory_limit`.
+*   **`ActiveQuestLogBackend` (Quest Log):** Shows active quest cards from `GameState.active_quests`, including current stage, objective state, and rewards. Optional params include `include_completed`, `screen_title`, `screen_description`, and `empty_label`.
+*   **`FactionReputationBackend` (Faction List):** Shows factions with `faction_badge` rows, reputation values, descriptions, and territory summaries. Optional params include `target_entity_id`, `known_only`, `screen_title`, and `empty_label`.
+*   **`AchievementListBackend` (Achievements):** Shows achievement templates with locked/unlocked state and progress from `GameState.achievement_stats`. Optional params include `show_locked`, `show_unlocked`, `screen_title`, and `empty_label`.
+*   **`EventLogBackend` (Event History):** Shows recent `GameEvents` history, newest first. Optional params include `limit`, `domain`, `signal_name`, `screen_title`, and `empty_label`.
 *   **`DialogueBackend` (NPC Conversations):** Plays a branching dialogue written in a `.dialogue` file (Dialogue Manager format). The entity's `dialogue_blip` audio is played automatically for each spoken line. Supports conditions and action payloads within the dialogue script itself.
     *   *Required:* `"dialogue_resource"` — path to a `.dialogue` file (e.g., `"res://mods/my_name/my_mod/dialogue/bob.dialogue"`).
     *   *Optional:* `"dialogue_start"` — the title entry point within the file (defaults to the first title if omitted).
@@ -663,6 +667,10 @@ When defining a moddable screen in a location or an interaction on an NPC, you a
 - `ChallengeBackend`: `required_stat`, `required_value`
 - `CatalogListBackend`: `data_source`, `action_payload`
 - `EntitySheetBackend`: no required fields; defaults to `target_entity_id: "player"`
+- `ActiveQuestLogBackend`: no required fields
+- `FactionReputationBackend`: no required fields; defaults to the player and all loaded factions
+- `AchievementListBackend`: no required fields
+- `EventLogBackend`: no required fields
 
 **Currency & Pricing Rules:**
 A Part's `"price"` property is a dictionary of currencies and their respective values. This allows items to natively cost multiple currencies simultaneously!

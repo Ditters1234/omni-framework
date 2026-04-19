@@ -196,6 +196,10 @@ Minimum required contracts:
 - `ChallengeBackend`: `required_stat`, `required_value`
 - `CatalogListBackend`: `data_source`, `action_payload`
 - `EntitySheetBackend`: no required fields; optional params are type-checked at load time
+- `ActiveQuestLogBackend`: no required fields; optional params are type-checked at load time
+- `FactionReputationBackend`: no required fields; optional params are type-checked at load time
+- `AchievementListBackend`: no required fields; optional params are type-checked at load time
+- `EventLogBackend`: no required fields; optional params are type-checked at load time
 
 ## Patch Validation
 

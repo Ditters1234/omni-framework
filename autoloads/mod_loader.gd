@@ -15,6 +15,10 @@ const TASK_PROVIDER_BACKEND := preload("res://ui/screens/backends/task_provider_
 const CATALOG_LIST_BACKEND := preload("res://ui/screens/backends/catalog_list_backend.gd")
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
 const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_backend.gd")
+const ACTIVE_QUEST_LOG_BACKEND := preload("res://ui/screens/backends/active_quest_log_backend.gd")
+const FACTION_REPUTATION_BACKEND := preload("res://ui/screens/backends/faction_reputation_backend.gd")
+const ACHIEVEMENT_LIST_BACKEND := preload("res://ui/screens/backends/achievement_list_backend.gd")
+const EVENT_LOG_BACKEND := preload("res://ui/screens/backends/event_log_backend.gd")
 const SCRIPT_HOOK_LOADER := preload("res://systems/script_hook_loader.gd")
 
 const MODS_PATH := "res://mods/"
@@ -122,6 +126,10 @@ func _register_backend_contracts() -> void:
 	CATALOG_LIST_BACKEND.register_contract()
 	DIALOGUE_BACKEND.register_contract()
 	ENTITY_SHEET_BACKEND.register_contract()
+	ACTIVE_QUEST_LOG_BACKEND.register_contract()
+	FACTION_REPUTATION_BACKEND.register_contract()
+	ACHIEVEMENT_LIST_BACKEND.register_contract()
+	EVENT_LOG_BACKEND.register_contract()
 	BACKEND_CONTRACT_REGISTRY.lock()
 
 

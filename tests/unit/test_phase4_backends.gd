@@ -28,6 +28,10 @@ func test_mod_loader_registers_phase4_backend_contracts() -> void:
 	assert_true(registered_backend_classes.has("CatalogListBackend"))
 	assert_true(registered_backend_classes.has("DialogueBackend"))
 	assert_true(registered_backend_classes.has("EntitySheetBackend"))
+	assert_true(registered_backend_classes.has("ActiveQuestLogBackend"))
+	assert_true(registered_backend_classes.has("FactionReputationBackend"))
+	assert_true(registered_backend_classes.has("AchievementListBackend"))
+	assert_true(registered_backend_classes.has("EventLogBackend"))
 
 
 func test_exchange_backend_moves_stocked_part_and_transfers_currency() -> void:

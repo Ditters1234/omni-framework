@@ -70,6 +70,31 @@ const SCREEN_CASES := [
 			"screen_title": "Smoke Entity Sheet",
 		},
 	},
+	{
+		"scene_path": UI_ROUTE_CATALOG.QUEST_LOG_SCENE,
+		"params": {
+			"screen_title": "Smoke Quest Log",
+		},
+	},
+	{
+		"scene_path": UI_ROUTE_CATALOG.FACTION_REP_SCENE,
+		"params": {
+			"screen_title": "Smoke Factions",
+		},
+	},
+	{
+		"scene_path": UI_ROUTE_CATALOG.ACHIEVEMENT_LIST_SCENE,
+		"params": {
+			"screen_title": "Smoke Achievements",
+		},
+	},
+	{
+		"scene_path": UI_ROUTE_CATALOG.EVENT_LOG_SCENE,
+		"params": {
+			"screen_title": "Smoke Events",
+			"limit": 10,
+		},
+	},
 ]
 
 var _spawned_screens: Array[Control] = []
@@ -155,6 +180,31 @@ func _seed_backend_screen_runtime() -> void:
 		"reward": {"credits": 1},
 		"repeatable": true,
 	}
+	DataManager.quests["base:screen_smoke_quest"] = {
+		"quest_id": "base:screen_smoke_quest",
+		"display_name": "Smoke Quest",
+		"stages": [
+			{
+				"title": "Start",
+				"description": "Check the smoke route.",
+				"objectives": [],
+			},
+		],
+		"reward": {"credits": 1},
+	}
+	GameState.active_quests["base:screen_smoke_quest"] = {
+		"quest_id": "base:screen_smoke_quest",
+		"stage_index": 0,
+	}
+	DataManager.achievements["base:screen_smoke_achievement"] = {
+		"achievement_id": "base:screen_smoke_achievement",
+		"display_name": "Smoke Signal",
+		"description": "Used by backend smoke tests.",
+		"stat_name": "smoke_events",
+		"requirement": 1,
+	}
+	GameState.achievement_stats["smoke_events"] = 1.0
+	GameEvents.ui_notification_requested.emit("Smoke event", "info")
 
 
 func _create_test_viewport() -> SubViewport:
