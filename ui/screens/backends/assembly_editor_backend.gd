@@ -42,6 +42,7 @@ static func register_contract() -> void:
 			"cancel_screen_params",
 			"reset_game_state_on_cancel",
 			"pop_on_confirm",
+			"allow_confirm_without_changes",
 		],
 		"field_types": {
 			"target_entity_id": TYPE_STRING,
@@ -63,6 +64,7 @@ static func register_contract() -> void:
 			"cancel_screen_params": TYPE_DICTIONARY,
 			"reset_game_state_on_cancel": TYPE_BOOL,
 			"pop_on_confirm": TYPE_BOOL,
+			"allow_confirm_without_changes": TYPE_BOOL,
 		},
 		"array_element_types": {
 			"option_tags": TYPE_STRING,
@@ -197,10 +199,24 @@ func confirm() -> Dictionary:
 	if session == null:
 		return {}
 
+	if not _can_confirm():
+		_status_override = "This build is not ready to confirm yet."
+		return {}
+
 	var committed_entity: EntityInstance = session.get_committed_entity()
+	var committed_payer: EntityInstance = session.get_committed_payer()
 	var previous_entity: EntityInstance = session.original_entity
 
 	if committed_entity == null:
+		_status_override = "No target entity is available for confirmation."
+		return {}
+
+	if not _consume_source_inventory():
+		_status_override = "Unable to consume the required source inventory for that build."
+		return {}
+
+	if not _apply_confirm_transaction_effects(committed_entity, committed_payer):
+		_status_override = "Unable to apply the currency changes for that build."
 		return {}
 
 	AssemblyCommitService.commit_entity(
@@ -209,6 +225,10 @@ func confirm() -> Dictionary:
 		config.target_entity_lookup_id
 	)
 
+	if committed_payer != null:
+		_commit_entity_to_game_state(committed_payer, _config.budget_entity_lookup_id)
+
+	_status_override = ""
 	return config.build_confirm_navigation_action()
 
 
@@ -686,9 +706,13 @@ func _commit_payment_recipient(buyer: EntityInstance, amount: float) -> bool:
 func _can_confirm() -> bool:
 	if _session == null:
 		return false
+	if not _has_sufficient_source_inventory():
+		return false
+	if _config.allow_confirm_without_changes:
+		return true
 	if not _session.has_pending_changes():
 		return false
-	return _has_sufficient_source_inventory()
+	return true
 
 
 func _has_sufficient_source_inventory() -> bool:

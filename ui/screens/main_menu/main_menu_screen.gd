@@ -1,6 +1,7 @@
 extends Control
 
 const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
+const SCREEN_CHARACTER_CREATOR := "character_creator"
 const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
 const SCREEN_SETTINGS := "settings"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
@@ -84,19 +85,28 @@ func _on_new_game_button_pressed() -> void:
 	if GameState.player == null:
 		_status_label.text = "Unable to start a new game."
 		return
-	UIRouter.replace_all(SCREEN_ASSEMBLY_EDITOR, {
-		"screen_title": "Character Creator",
-		"screen_description": "Choose a starter core, extend into any open sockets you want, and spend from your starting credits before you enter the world.",
-		"screen_summary": "Preview a part on the left, inspect its price and stats on the right, then apply it to your starting build. Any credits you do not spend carry into the game.",
-		"target_entity_id": "player",
-		"budget_currency_id": "credits",
-		"option_tag": "character_creator_option",
-		"confirm_label": "Begin",
-		"cancel_label": "Back",
-		"next_screen_id": SCREEN_GAMEPLAY_SHELL,
-		"cancel_screen_id": "main_menu",
-		"reset_game_state_on_cancel": true
-	})
+
+	var flow_data: Variant = DataManager.get_config_value("game.new_game_flow", {})
+	var flow: Dictionary = {}
+	if flow_data is Dictionary:
+		flow = flow_data
+
+	var screen_id := str(flow.get("screen_id", SCREEN_GAMEPLAY_SHELL))
+	var params: Dictionary = {}
+	var params_data: Variant = flow.get("params", {})
+	if params_data is Dictionary:
+		var flow_params: Dictionary = params_data
+		params = flow_params.duplicate(true)
+
+	if screen_id.is_empty():
+		screen_id = SCREEN_GAMEPLAY_SHELL
+
+	if screen_id == SCREEN_ASSEMBLY_EDITOR and not params.has("next_screen_id"):
+		params["next_screen_id"] = SCREEN_GAMEPLAY_SHELL
+	elif screen_id == SCREEN_CHARACTER_CREATOR and not params.has("next_screen_id"):
+		params["next_screen_id"] = SCREEN_GAMEPLAY_SHELL
+
+	UIRouter.replace_all(screen_id, params)
 
 
 func _on_continue_button_pressed() -> void:

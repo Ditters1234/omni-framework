@@ -3,7 +3,6 @@ extends RefCounted
 class_name OmniAssemblyEditorConfig
 
 const SCREEN_MAIN_MENU := "main_menu"
-const DEFAULT_OPTION_TAG := "character_creator_option"
 
 var target_entity_lookup_id: String = "player"
 var budget_entity_lookup_id: String = ""
@@ -16,6 +15,7 @@ var next_screen_id: String = ""
 var cancel_screen_id: String = SCREEN_MAIN_MENU
 var reset_game_state_on_cancel: bool = false
 var pop_on_confirm: bool = false
+var allow_confirm_without_changes: bool = false
 var confirm_screen_params: Dictionary = {}
 var cancel_screen_params: Dictionary = {}
 var screen_title: String = "Assembly Editor"
@@ -35,6 +35,7 @@ func apply_params(params: Dictionary) -> void:
 	cancel_screen_id = _read_string(params, "cancel_screen_id", SCREEN_MAIN_MENU)
 	reset_game_state_on_cancel = _read_bool(params, "reset_game_state_on_cancel", false)
 	pop_on_confirm = _read_bool(params, "pop_on_confirm", false)
+	allow_confirm_without_changes = _read_bool(params, "allow_confirm_without_changes", false)
 	screen_title = _read_string(params, "screen_title", screen_title)
 	screen_description = _read_string(params, "screen_description", screen_description)
 	screen_summary = _read_string(params, "screen_summary", screen_summary)
@@ -56,10 +57,9 @@ func apply_params(params: Dictionary) -> void:
 		cancel_screen_params = {}
 
 	option_tags = _to_string_array(params.get("option_tags", []))
-	if option_tags.is_empty():
-		var option_tag := _read_string(params, "option_tag", DEFAULT_OPTION_TAG)
-		if not option_tag.is_empty():
-			option_tags.append(option_tag)
+	var option_tag := _read_string(params, "option_tag", "")
+	if option_tags.is_empty() and not option_tag.is_empty():
+		option_tags.append(option_tag)
 	option_template_ids = _to_string_array(params.get("option_template_ids", []))
 
 

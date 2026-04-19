@@ -11,7 +11,27 @@
       "credits": 500,
       "data_shards": 3
     },
-    "starting_player_id": "base:player"
+    "starting_player_id": "base:player",
+    "new_game_flow": {
+      "screen_id": "character_creator",
+      "params": {
+        "screen_title": "Character Creator",
+        "screen_description": "Choose a starter core, extend into any open sockets you want, and spend from your starting credits before you enter the world.",
+        "screen_summary": "Preview a part on the left, inspect its price and stats on the right, then apply it to your starting build. Any credits you do not spend carry into the game.",
+        "target_entity_id": "player",
+        "budget_currency_id": "credits",
+        "option_tags": [
+          "starter_anchor",
+          "test_module"
+        ],
+        "confirm_label": "Begin",
+        "cancel_label": "Back",
+        "next_screen_id": "gameplay_shell",
+        "cancel_screen_id": "main_menu",
+        "reset_game_state_on_cancel": true,
+        "allow_confirm_without_changes": true
+      }
+    }
   },
   "ui": {
     "strings": {
