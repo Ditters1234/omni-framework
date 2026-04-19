@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://n6yp8otcvek7"]
 
-[ext_resource type="Script" path="res://ui/screens/backends/task_provider_screen.gd" id="1_screen"]
+[ext_resource type="Script" uid="uid://ds1uy30hxyro7" path="res://ui/screens/backends/task_provider_screen.gd" id="1_screen"]
 
-[node name="TaskProviderScreen" type="Control"]
+[node name="TaskProviderScreen" type="Control" unique_id=520046484]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_screen")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=582110079]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,72 +23,69 @@ theme_override_constants/margin_top = 32
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 
-[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer" unique_id=2103878230]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer" unique_id=136964361]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1425550503]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "Task Provider"
 
-[node name="DescriptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="DescriptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1093479399]
 layout_mode = 2
 autowrap_mode = 3
-text = ""
 
-[node name="SummaryLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="SummaryLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=926082526]
 layout_mode = 2
 autowrap_mode = 3
-text = ""
 
-[node name="MainContent" type="HSplitContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="MainContent" type="HSplitContainer" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=440671818]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="RowsScroll" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent"]
+[node name="RowsScroll" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent" unique_id=1796150371]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="RowsContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/RowsScroll"]
+[node name="RowsContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/RowsScroll" unique_id=1396392675]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Sidebar" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent"]
+[node name="Sidebar" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent" unique_id=496620215]
 custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="PortraitHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/Sidebar"]
+[node name="PortraitHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/Sidebar" unique_id=1317264170]
 layout_mode = 2
 
-[node name="QuestCardHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/Sidebar"]
+[node name="QuestCardHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/Sidebar" unique_id=1430763965]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1693257617]
 layout_mode = 2
 autowrap_mode = 3
-text = ""
 
-[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer" unique_id=1268278655]
 layout_mode = 2
-alignment = 2
 theme_override_constants/separation = 8
+alignment = 2
 
-[node name="ConfirmButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
+[node name="ConfirmButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow" unique_id=1977692762]
 layout_mode = 2
 text = "Accept Selected"
 
-[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow" unique_id=1552449390]
 layout_mode = 2
 text = "Back"
 

@@ -1,3 +1,25 @@
 {
-  "factions": []
+  "factions": [
+    {
+      "faction_id": "base:test_faction",
+      "display_name": "Systems Audit Collective",
+      "description": "A purely administrative faction used to validate reputation, territory, and task board integration.",
+      "faction_color": "#4dc3ff",
+      "territory": [
+        "base:test_hub"
+      ],
+      "roster": [
+        "base:test_vendor"
+      ],
+      "reputation_thresholds": {
+        "allied": 100,
+        "friendly": 25,
+        "neutral": 0,
+        "hostile": -25
+      },
+      "quest_pool": [
+        "base:deliver_report"
+      ]
+    }
+  ]
 }

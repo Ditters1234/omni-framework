@@ -1,3 +1,18 @@
 {
-  "achievements": []
+  "achievements": [
+    {
+      "achievement_id": "base:first_purchase",
+      "display_name": "Procurement Confirmed",
+      "description": "Buy your first test item.",
+      "stat_name": "items_bought",
+      "requirement": 1
+    },
+    {
+      "achievement_id": "base:first_trip",
+      "display_name": "Field Verified",
+      "description": "Discover one new location in the starter flow.",
+      "stat_name": "locations_discovered",
+      "requirement": 1
+    }
+  ]
 }

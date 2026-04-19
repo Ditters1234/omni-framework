@@ -8,6 +8,10 @@ You do not need to know GDScript or Godot to add new items, magic systems, NPCs,
 
 This guide covers the core architecture, the system hierarchy, and provides practical examples for modifying every core game system.
 
+
+> **Runtime alignment note:** This guide has been updated to match the current loader and validation behavior used by the engine. In particular: `mod.json` requires an `id` field; the base content pack must use `id: "base"`; `game.starting_player_id` must reference a valid entity id; `locations.connections` should use the object form `{ "location_id": travel_cost }`; and backend payloads are validated strictly at load time, so optional fields should be omitted unless you need them and can provide the exact expected type.
+
+
 > **See also:** [`docs/README.md`](README.md) for the documentation map, [`docs/PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the engine architecture, [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for validation rules your JSON must satisfy, and [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) for the canonical stat rules.
 
 ---
@@ -99,6 +103,7 @@ mods/<author_id>/<mod_id>/
 Every mod must have a manifest at its root:
 ```json
 {
+  "id": "my_name:my_mod",
   "name": "My Cool Mod",
   "version": "1.0.0",
   "schema_version": 1,
@@ -108,14 +113,17 @@ Every mod must have a manifest at its root:
 }
 ```
 **Field Descriptions:**
+- `id` (required, string): Unique mod identifier used by the loader and dependency resolver. For regular mods, use your mod id (for example `my_name:my_mod` if you are following the full namespace convention). The built-in base content pack must use exactly `base`.
 - `name` (required, string): Human-readable mod name displayed to players.
 - `version` (required, string): Semantic versioning for your mod (e.g., "1.0.0", "1.2.3-beta").
 - `schema_version` (recommended, integer): Version of the data schema your mod targets. Use this so future migration tooling can upgrade or reject incompatible content intentionally.
 - `load_order` (required, number): Integer controlling load sequence. Lower values load first. Use 0-50 for foundational content mods, 51-100 for feature mods, 101+ for balance overhauls. Mods with equal load_order are sorted alphabetically by directory name.
 - `enabled` (optional, boolean, default: true): If false, this mod will not load.
-- `dependencies` (optional, array): List of other mods this one requires, formatted as `"author_id:mod_id"`. The system will error if dependencies are missing.
+- `dependencies` (optional, array): List of other mod ids this one requires. Use `"base"` to depend on the built-in base content pack. For non-base dependencies, use the exact mod `id` declared by that mod's `mod.json`. The system will error if dependencies are missing.
 
 *Mods with a lower `load_order` load first. Higher `load_order` mods will override lower ones in the event of a config conflict.*
+
+**Base mod requirement:** The base game content lives at `mods/base/`, but it is still validated like any other mod. Its manifest must include `"id": "base"` and should use `load_order: 0`.
 
 ### Namespacing Convention
 
@@ -125,6 +133,7 @@ Every mod must have a manifest at its root:
 - Use **underscores** (`_`) for multi-word names within a component (e.g., `my_name:my_mod:flaming_sword`).
 - IDs are case-sensitive and should use lowercase alphanumerics.
 - Do NOT use the `base:` prefix - that's reserved for the base game.
+- **Runtime-safe recommendation:** Use explicit namespaced ids everywhere, including references. Some older snippets in this guide use abbreviated ids like `hub_safehouse`; for current content, prefer explicit ids such as `base:hub_safehouse`.
 
 ---
 
@@ -422,7 +431,7 @@ Locations represent nodes in a topological graph. While they form the "World Map
       "background_image": "res://mods/my_name/my_mod/assets/lab_bg.png",
       "music_track": "res://mods/my_name/my_mod/assets/music/spooky_lab.ogg",
       "ambient_sound": "res://mods/my_name/my_mod/assets/sfx/machinery_hum.wav",
-      "connections": { "hub_safehouse": 5 },
+      "connections": { "base:hub_safehouse": 5 },
       "screens": []
     }
   ]
@@ -437,8 +446,8 @@ Locations represent nodes in a topological graph. While they form the "World Map
 - `background_image` (optional, string): PNG path for location background/wallpaper.
 - `music_track` (optional, string): OGG/WAV path for ambient music (loops on visit).
 - `ambient_sound` (optional, string): OGG/WAV path for background sound effects.
-- `connections` (optional, object): Map of connected location IDs to their travel cost in ticks. Preferred format: `{ "loc1": 5, "loc2": 3 }`. A simple array `["loc1", "loc2"]` is also accepted (costs default to `balance.default_travel_cost_ticks` from config).
-- `connection_costs` (optional, object): ⚠️ **DEPRECATED** — use the object format in `connections` instead. Will be removed in a future schema version.
+- `connections` (optional, object): Map of connected location IDs to their travel cost in ticks. Current runtime-required format: `{ "loc1": 5, "loc2": 3 }`. Use location ids as the keys and travel costs as the values.
+- `connection_costs` (optional, object): ⚠️ **DEPRECATED** — use the object format in `connections` instead. Kept only for older content paths; new content should not rely on it.
 - `screens` (optional, array): Array of interaction/UI screen objects available at this location.
 - `flags` (optional, object): Dictionary of persistent booleans for this location (e.g., `"discovered": true`).
 - `entities_present` (optional, array): List of entity IDs that spawn here by default.
@@ -633,7 +642,7 @@ When defining a moddable screen in a location or an interaction on an NPC, you a
 *   **`ActiveQuestLogBackend` (Quest Log):** Shows active quest cards from `GameState.active_quests`, including current stage, objective state, and rewards. Optional params include `include_completed`, `screen_title`, `screen_description`, and `empty_label`.
 *   **`FactionReputationBackend` (Faction List):** Shows factions with `faction_badge` rows, reputation values, descriptions, and territory summaries. Optional params include `target_entity_id`, `known_only`, `screen_title`, and `empty_label`.
 *   **`AchievementListBackend` (Achievements):** Shows achievement templates with locked/unlocked state and progress from `GameState.achievement_stats`. Optional params include `show_locked`, `show_unlocked`, `screen_title`, and `empty_label`.
-*   **`EventLogBackend` (Event History):** Shows recent `GameEvents` history, newest first. Optional params include `limit`, `domain`, `signal_name`, `screen_title`, and `empty_label`.
+*   **`EventLogBackend` (Event History):** Shows recent `GameEvents` history, newest first. Optional params include `limit` (integer), `domain`, `signal_name`, `screen_title`, and `empty_label`.
 *   **`DialogueBackend` (NPC Conversations):** Plays a branching dialogue written in a `.dialogue` file (Dialogue Manager format). The entity's `dialogue_blip` audio is played automatically for each spoken line. Supports conditions and action payloads within the dialogue script itself.
     *   *Required:* `"dialogue_resource"` — path to a `.dialogue` file (e.g., `"res://mods/my_name/my_mod/dialogue/bob.dialogue"`).
     *   *Optional:* `"dialogue_start"` — the title entry point within the file (defaults to the first title if omitted).
@@ -653,6 +662,7 @@ When defining a moddable screen in a location or an interaction on an NPC, you a
 **Backend Contract Rules:**
 - `backend_class` does more than pick a screen scene; it selects a contract the JSON must satisfy.
 - Required backend fields should be treated as mandatory load-time validation, not "best effort" runtime assumptions.
+- Backend payloads are type-checked strictly at load time. Optional fields should be omitted unless needed, and when present they must use the exact type expected by the backend contract.
 - The engine now enforces those contracts through `BackendContractRegistry` during `ModLoader.load_all_mods()`, so invalid `backend_class` payloads fail before gameplay boot finishes.
 - Backends gather runtime data and build a view model; UI scenes render that view model. Do not make UI components responsible for fetching game state on their own.
 - Assembly-style backends should keep preview state in a draft session object instead of mutating live entities on every cursor move. That draft layer should answer "can this fit", "can I afford this", "what stats change", and "what gets committed".
@@ -986,6 +996,7 @@ Your `config.json` is **deep-merged** into the base game config. This allows you
 **`game` (Core Game Settings):**
 - `title` (string): Game name displayed in UI header.
 - `tagline` (string): Subtitle/tagline.
+- `starting_player_id` (string): **Required for base content and recommended for game-defining total conversions.** Must reference a valid entity id, such as `base:player`.
 - `starting_money` (object): Initial player currency. Example: `{ "gold": 1000 }`.
 - `starting_location` (string): Location ID where player begins.
 - `starting_discovered_locations` (array): List of location IDs player starts knowing about.
@@ -1037,7 +1048,9 @@ AI provider setup is **not moddable**. Mods do not declare provider endpoints, A
   "game": {
     "title": "Fantasy Syndicate",
     "tagline": "Upgrade your magic and survive.",
-    "starting_money": 1000
+    "starting_player_id": "base:player",
+    "starting_location": "base:hub_safehouse",
+    "starting_money": { "gold": 1000 }
   },
   "balance": {
     "sell_price_ratio": 0.8

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://d3ux1avn7dgos"
+path="res://.godot/imported/quartermaster_theta.dialogue-d5b812d7b60927f574ee914db106f867.tres"
+
+[deps]
+
+source_file="res://mods/base/dialogue/quartermaster_theta.dialogue"
+dest_files=["res://.godot/imported/quartermaster_theta.dialogue-d5b812d7b60927f574ee914db106f867.tres"]
+
+[params]
+
+defaults=true

@@ -1,0 +1,10 @@
+~ start
+Quartermaster Theta: Systems check online. Welcome to the Diagnostics Hub.
+- Ask about the hub
+	=> hub
+- End conversation
+	=> END
+
+~ hub
+Quartermaster Theta: This base pack exists to test inventory, travel, dialogue, quests, tasks, factions, and achievements.
+=> END

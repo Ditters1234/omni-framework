@@ -1,25 +1,115 @@
 {
   "locations": [
     {
-      "location_id": "base:start",
-      "display_name": "Start",
-      "description": "Bootstrap location for the base project.",
-      "connections": {},
+      "location_id": "base:hub_safehouse",
+      "display_name": "Safehouse",
+      "description": "A minimal starting location that anchors the base pack and links into the diagnostics area.",
+      "connections": {
+        "base:test_hub": 1
+      },
       "screens": [
         {
-          "tab_id": "base:start:inventory",
-          "display_name": "Inspect Gear",
-          "description": "Review the parts and equipment in your current loadout.",
+          "tab_id": "safehouse_sheet",
+          "display_name": "Player Sheet",
+          "description": "Review current player stats, equipment, and inventory.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "player",
+          "screen_title": "Player Diagnostic Sheet"
+        },
+        {
+          "tab_id": "safehouse_quests",
+          "display_name": "Quest Log",
+          "description": "Review active quest state.",
+          "backend_class": "ActiveQuestLogBackend",
+          "screen_title": "Quest Log"
+        }
+      ]
+    },
+    {
+      "location_id": "base:test_hub",
+      "display_name": "Diagnostics Hub",
+      "description": "A compact validation zone that exposes location screens, travel, factions, quests, and NPC interactions.",
+      "connections": {
+        "base:hub_safehouse": 1
+      },
+      "screens": [
+        {
+          "tab_id": "hub_inventory",
+          "display_name": "Inventory View",
+          "description": "Open a simple list view of the player's inventory.",
+          "backend_class": "ListBackend",
+          "data_source": "player:inventory"
+        },
+        {
+          "tab_id": "hub_catalog",
+          "display_name": "Infinite Vendor",
+          "description": "Buy test parts from the catalog.",
+          "backend_class": "CatalogListBackend",
+          "data_source": "catalog",
+          "currency_id": "credits",
+          "action_payload": {
+            "type": "buy_item"
+          }
+        },
+        {
+          "tab_id": "hub_sheet",
+          "display_name": "Player Sheet",
+          "description": "Review current player stats, equipment, and inventory.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "player",
+          "screen_title": "Player Diagnostic Sheet"
+        },
+        {
+          "tab_id": "hub_quests",
+          "display_name": "Quest Log",
+          "description": "Review active quest state.",
+          "backend_class": "ActiveQuestLogBackend",
+          "screen_title": "Quest Log"
+        },
+        {
+          "tab_id": "hub_factions",
+          "display_name": "Faction Standing",
+          "description": "Inspect test faction reputation.",
+          "backend_class": "FactionReputationBackend",
+          "target_entity_id": "player"
+        },
+        {
+          "tab_id": "hub_achievements",
+          "display_name": "Achievements",
+          "description": "Inspect test achievement state.",
+          "backend_class": "AchievementListBackend"
+        },
+        {
+          "tab_id": "hub_events",
+          "display_name": "Event Log",
+          "description": "View recent event history.",
+          "backend_class": "EventLogBackend"
+        },
+        {
+          "tab_id": "hub_tasks",
+          "display_name": "Syndicate Jobs",
+          "description": "Pull repeatable tasks from the test faction.",
+          "backend_class": "TaskProviderBackend",
+          "faction_id": "base:test_faction"
+        },
+        {
+          "tab_id": "hub_assembly",
+          "display_name": "Assembly Bench",
+          "description": "Open a basic assembly screen for the player.",
           "backend_class": "AssemblyEditorBackend",
           "target_entity_id": "player",
-          "screen_title": "Inspect Gear",
-          "screen_description": "Review your current build, preview alternate fits, and make any changes available from this location.",
-          "screen_summary": "Use Done or Back to return to the location when you finish reviewing your loadout.",
-          "confirm_label": "Done",
-          "cancel_label": "Back",
-          "cancel_screen_id": "",
-          "pop_on_confirm": true
+          "budget_entity_id": "player",
+          "budget_currency_id": "credits",
+          "option_tags": [
+            "starter_anchor",
+            "test_module",
+            "weapon"
+          ],
+          "screen_title": "Diagnostic Bench"
         }
+      ],
+      "entities_present": [
+        "base:test_vendor"
       ]
     }
   ]

@@ -3,33 +3,132 @@
     {
       "entity_id": "base:player",
       "display_name": "Player",
-      "description": "Bootstrap player entity.",
-      "location_id": "base:start",
+      "description": "Starter player entity for validating inventory, equipment, quests, factions, and location travel.",
+      "location_id": "base:hub_safehouse",
       "currencies": {
-        "credits": 100
+        "credits": 500,
+        "data_shards": 3
       },
       "stats": {
+        "power": 1,
+        "charisma": 1,
         "health": 100,
         "health_max": 100,
-        "strength": 5
+        "stamina": 50,
+        "stamina_max": 50
       },
+      "flags": {
+        "tutorial_complete": false
+      },
+      "discovered_locations": [
+        "base:hub_safehouse",
+        "base:test_hub"
+      ],
       "provides_sockets": [
         {
           "id": "core",
-          "accepted_tags": ["starter_anchor"],
-          "label": "Starter Part"
+          "accepted_tags": [
+            "starter_anchor"
+          ],
+          "label": "Core Slot"
         }
       ],
       "inventory": [
-        { "instance_id": "base:player_body_core", "template_id": "base:body_torso_androgynous" }
+        {
+          "instance_id": "player_core_001",
+          "template_id": "base:test_core",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "player_module_001",
+          "template_id": "base:test_module",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "player_weapon_001",
+          "template_id": "base:test_weapon",
+          "condition": 1.0
+        }
       ],
       "assembly_socket_map": {
-        "core": "base:player_body_core"
+        "core": "player_core_001"
       },
       "assembly_instance_ids": [
-        "base:player_body_core"
+        "player_core_001"
+      ]
+    },
+    {
+      "entity_id": "base:test_vendor",
+      "display_name": "Quartermaster Theta",
+      "description": "A vendor entity that exposes trade, dialogue, sheet, and challenge interactions for system validation.",
+      "location_id": "base:test_hub",
+      "currencies": {
+        "credits": 9999,
+        "data_shards": 25
+      },
+      "stats": {
+        "charisma": 4,
+        "health": 100,
+        "health_max": 100
+      },
+      "flags": {
+        "met_player": false,
+        "passed_diagnostic": false
+      },
+      "inventory": [
+        {
+          "instance_id": "theta_core_001",
+          "template_id": "base:test_core",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "theta_module_001",
+          "template_id": "base:test_module",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "theta_weapon_001",
+          "template_id": "base:test_weapon",
+          "condition": 1.0
+        }
       ],
-      "interactions": []
+      "interactions": [
+        {
+          "tab_id": "theta_trade",
+          "label": "Trade",
+          "backend_class": "ExchangeBackend",
+          "source_inventory": "entity:base:test_vendor",
+          "destination_inventory": "player",
+          "currency_id": "credits"
+        },
+        {
+          "tab_id": "theta_talk",
+          "label": "Talk",
+          "backend_class": "DialogueBackend",
+          "dialogue_resource": "res://mods/base/dialogue/quartermaster_theta.dialogue",
+          "dialogue_start": "start"
+        },
+        {
+          "tab_id": "theta_sheet",
+          "label": "Inspect Quartermaster",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "base:test_vendor",
+          "screen_title": "Quartermaster Theta"
+        },
+        {
+          "tab_id": "theta_challenge",
+          "label": "Run Power Check",
+          "backend_class": "ChallengeBackend",
+          "required_stat": "power",
+          "required_value": 3,
+          "action_payload": {
+            "type": "set_flag",
+            "entity_id": "base:test_vendor",
+            "flag_id": "passed_diagnostic",
+            "value": true
+          }
+        }
+      ]
     }
   ]
 }

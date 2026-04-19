@@ -1,3 +1,40 @@
 {
-  "quests": []
+  "quests": [
+    {
+      "quest_id": "base:starter_checklist",
+      "display_name": "Starter Checklist",
+      "description": "A short two-stage quest for validating item and location objectives.",
+      "stages": [
+        {
+          "description": "Obtain any weapon.",
+          "objectives": [
+            {
+              "type": "has_item_tag",
+              "tag": "weapon",
+              "count": 1
+            }
+          ],
+          "reward": {
+            "credits": 25
+          }
+        },
+        {
+          "description": "Reach the Diagnostics Hub.",
+          "objectives": [
+            {
+              "type": "reach_location",
+              "location_id": "base:test_hub"
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "credits": 100,
+        "reputation": {
+          "base:test_faction": 20
+        }
+      },
+      "repeatable": false
+    }
+  ]
 }

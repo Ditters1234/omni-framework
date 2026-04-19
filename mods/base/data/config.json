@@ -1,34 +1,37 @@
 {
   "game": {
-    "starting_player_id": "base:player",
-    "starting_location": "base:start",
-    "ticks_per_day": 24
+    "title": "Omni Framework Base Starter",
+    "tagline": "Minimal starter content for system validation.",
+    "starting_location": "base:hub_safehouse",
+    "starting_discovered_locations": [
+      "base:hub_safehouse",
+      "base:test_hub"
+    ],
+    "starting_money": {
+      "credits": 500,
+      "data_shards": 3
+    },
+    "starting_player_id": "base:player"
   },
   "ui": {
-    "currency_symbol": "$",
-    "main_menu": {
-      "title": "Omni-Framework",
-      "subtitle": "A data-driven sandbox waiting for content.",
-      "new_game_label": "New Game",
-      "continue_label": "Continue",
-      "load_label": "Load Slot 1",
-      "quit_label": "Quit"
-    },
-    "theme": {
-      "primary_color": "#4fb3ff",
-      "secondary_color": "#7dd3a7",
-      "bg_color": "#11161f",
-      "color_positive": "#7dd97d",
-      "color_negative": "#ff7a7a",
-      "color_warning": "#f7c66b",
-      "color_info": "#84a9ff"
-    },
     "strings": {
-      "boot_status": "Omni-Framework ready."
+      "base_pack_label": "Base starter pack loaded"
     }
   },
-  "ai": {
-    "enabled": false,
-    "provider": "disabled"
+  "stats": {
+    "groups": {
+      "combat": [
+        "power"
+      ],
+      "social": [
+        "charisma"
+      ],
+      "survival": [
+        "health",
+        "health_max",
+        "stamina",
+        "stamina_max"
+      ]
+    }
   }
 }

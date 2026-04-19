@@ -1,40 +1,27 @@
-<p>
-  <img src="../../icon.svg" alt="Omni-Framework Icon" width="100" style="vertical-align: middle; margin-right: 15px;">
-  <span style="font-size: 2.5em; font-weight: bold; vertical-align: middle;">Base Game Mod</span>
-</p>
+# Base Starter Pack
 
-The shipped base content for Omni-Framework. It is a mod like any other, with one special property: `ModLoader` treats it as required and loads it first.
+A minimal **base game content pack** for Omni-Framework that follows the guide's `mods/base/` model instead of behaving like an add-on mod.
 
-- **ID:** `base`
-- **load_order:** `0`
-- **Namespace:** All template IDs here use the `base:` prefix (e.g. `base:iron_sword`).
-- **Status:** Required — the engine refuses to boot if this folder is missing.
+## What it is
 
-## Contents
+This is a small self-contained starter dataset meant to help you validate the core data pipeline and major gameplay systems in a fresh project structure.
 
-```
-base/
-├── mod.json       # Manifest
-├── data/          # Definitions, parts, entities, locations, factions,
-│                  # quests, tasks, achievements, config
-├── dialogue/      # Dialogue Manager .dialogue files
-├── scripts/       # Optional ScriptHook extensions
-└── assets/        # Fonts, icons, SFX, music
-```
+It includes:
+- base definitions for currencies and stats
+- a `base:player` entity with starter inventory and sockets
+- a vendor NPC with trade, dialogue, sheet, and challenge interactions
+- two connected locations (`base:hub_safehouse` and `base:test_hub`)
+- a faction, task templates, quest, achievements, and small config defaults
+- one simple DialogueBackend resource
 
-## Editing this mod
+## Install
 
-Treat `base/` the same as any other mod — author JSON additions and patches under `data/`, follow the schemas in [`../../docs/MODDING_GUIDE.md`](../../docs/MODDING_GUIDE.md), and keep stat pairs consistent with [`../../docs/STAT_SYSTEM_IMPLEMENTATION.md`](../../docs/STAT_SYSTEM_IMPLEMENTATION.md).
+Extract so the final path is:
 
-Reference fixtures now ship in `dialogue/sample_greeting.dialogue` and `scripts/sample_script_hook.gd` so Dialogue Manager integration and ScriptHook examples have a concrete base-mod starting point.
+`mods/base/`
 
-For the overall mod pipeline and load phases, see [`../README.md`](../README.md).
+## Notes
 
-## Contributing to Base Game Content
-
-The base game is a mod like any other. When adding or modifying base content:
-
-1. **Follow the data schemas** — see [`../../docs/SCHEMA_AND_LINT_SPEC.md`](../../docs/SCHEMA_AND_LINT_SPEC.md)
-2. **Use patches for compatibility** — if modifying existing entries, use Phase 2 patches to allow other mods to layer on top
-3. **Document your additions** — include descriptions in quest/task/achievement definitions
-4. **Test thorough
+- This pack intentionally avoids custom assets so it stays small and easy to inspect.
+- It is designed as a *starter/base scaffold*, not a content-rich game.
+- If your current engine build has drifted from the guide, you may still need to adjust a few field names or route params.

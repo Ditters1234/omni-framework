@@ -488,10 +488,7 @@ func _location_has_connection(location: Dictionary, target_location_id: String) 
 	if not connections_value is Dictionary:
 		return false
 	var connections: Dictionary = connections_value
-	for connected_location_value in connections.values():
-		if str(connected_location_value) == target_location_id:
-			return true
-	return false
+	return connections.has(target_location_id)
 
 
 func _location_has_screen_value(location: Dictionary, field_name: String, expected_value: String) -> bool:
@@ -622,12 +619,12 @@ func _validate_location_references() -> void:
 		var connections_value: Variant = location.get("connections", {})
 		if connections_value is Dictionary:
 			var connections: Dictionary = connections_value
-			for direction_value in connections.keys():
-				var target_location_id := str(connections.get(direction_value, ""))
+			for target_location_value in connections.keys():
+				var target_location_id := str(target_location_value)
 				if target_location_id.is_empty():
 					continue
 				if not has_location(target_location_id):
-					_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' connection '%s' references unknown location '%s'." % [location_id, str(direction_value), target_location_id])
+					_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' connection '%s' references unknown location '%s'." % [location_id, target_location_id, target_location_id])
 		elif location.has("connections"):
 			_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' field 'connections' must be an object." % location_id)
 
