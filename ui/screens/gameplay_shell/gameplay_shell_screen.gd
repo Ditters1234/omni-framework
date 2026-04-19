@@ -8,8 +8,8 @@ const CURRENCY_DISPLAY_SCENE := preload("res://ui/components/currency_display.ts
 const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gameplay_shell_presenter.gd")
 
-@onready var _title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/VBoxContainer/TitleLabel
-@onready var _subtitle_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/VBoxContainer/SubtitleLabel
+@onready var _title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/TitleLabel
+@onready var _subtitle_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/SubtitleLabel
 @onready var _location_title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationTitleLabel
 @onready var _location_description_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationDescriptionLabel
 @onready var _location_meta_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationMetaLabel
@@ -23,10 +23,9 @@ const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gamep
 @onready var _equipped_cards: VBoxContainer = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer/EquipmentScroll/EquippedCards
 @onready var _explore_location_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/ExploreLocationButton
 @onready var _loadout_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/OpenLoadoutButton
-@onready var _save_browser_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/SaveBrowserButton
-@onready var _quick_autosave_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/QuickAutosaveButton
+@onready var _quick_autosave_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/QuickAutosaveButton
 @onready var _advance_tick_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AdvanceTickButton
-@onready var _pause_menu_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/PauseMenuButton
+@onready var _pause_menu_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/PauseMenuButton
 @onready var _status_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/StatusLabel
 
 var _auto_open_location_view: bool = false
@@ -137,7 +136,6 @@ func _clear_container_children(container: Node) -> void:
 func _set_buttons_enabled(enabled: bool) -> void:
 	_explore_location_button.disabled = not enabled
 	_loadout_button.disabled = not enabled
-	_save_browser_button.disabled = not enabled
 	_quick_autosave_button.disabled = not enabled
 	_advance_tick_button.disabled = not enabled
 	_pause_menu_button.disabled = not enabled
@@ -178,12 +176,6 @@ func _on_advance_tick_button_pressed() -> void:
 	_status_message = "Advanced one tick."
 	_refresh()
 
-
-func _on_save_browser_button_pressed() -> void:
-	UIRouter.push(SCREEN_SAVE_SLOT_LIST, {
-		"mode": "save",
-		"close_on_save": true,
-	})
 
 
 func _on_explore_location_button_pressed() -> void:
