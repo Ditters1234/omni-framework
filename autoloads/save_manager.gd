@@ -8,6 +8,7 @@ class_name OmniSaveManager
 
 const DEFAULT_SAVE_DIR := "user://saves/"
 const TEST_SAVE_DIR_PREFIX := "user://test_saves/"
+const TEST_RUN_MARKERS := ["gut_cmdln.gd", "-gexit", "-gdir=", "--test", "res://tests"]
 const AUTOSAVE_SLOT := 0
 const MAX_SAVE_SLOTS := 5
 const SCHEMA_VERSION := 1
@@ -22,12 +23,17 @@ var _registered_runtime_classes: Array[String] = []
 var _save_dir: String = DEFAULT_SAVE_DIR
 var _save_dir_ready: bool = false
 var _simulate_invalid_load: bool = false
+var _is_test_environment: bool = false
+var _test_session_save_dir: String = ""
 
 # ---------------------------------------------------------------------------
 # Boot
 # ---------------------------------------------------------------------------
 
 func _ready() -> void:
+	_is_test_environment = _detect_test_environment()
+	if _is_test_environment:
+		_save_dir = _get_or_create_test_session_save_dir()
 	_save_dir_ready = _ensure_save_dir()
 	_register_runtime_classes()
 	last_operation_summary = {
@@ -36,6 +42,7 @@ func _ready() -> void:
 		"save_dir": get_save_directory(),
 		"registered_runtime_classes": _registered_runtime_classes.duplicate(),
 		"missing_runtime_classes": _get_missing_runtime_classes(),
+		"is_test_environment": _is_test_environment,
 	}
 
 
@@ -46,10 +53,12 @@ func _ensure_save_dir() -> bool:
 
 
 func get_save_directory() -> String:
+	_enforce_test_save_isolation()
 	return _save_dir
 
 
 func get_slot_path(slot: int) -> String:
+	_enforce_test_save_isolation()
 	return _slot_path(slot)
 
 
@@ -71,6 +80,7 @@ func set_save_directory_for_testing(path: String) -> bool:
 			"save_dir": get_save_directory(),
 		}
 		return false
+	_test_session_save_dir = normalized_path
 	_save_dir = normalized_path
 	_save_dir_ready = _ensure_save_dir()
 	last_operation_summary = {
@@ -82,7 +92,11 @@ func set_save_directory_for_testing(path: String) -> bool:
 
 
 func reset_save_directory_for_testing() -> void:
-	_save_dir = DEFAULT_SAVE_DIR
+	if _is_test_environment:
+		_save_dir = _get_or_create_test_session_save_dir()
+	else:
+		_test_session_save_dir = ""
+		_save_dir = DEFAULT_SAVE_DIR
 	_save_dir_ready = _ensure_save_dir()
 
 
@@ -104,6 +118,7 @@ func _register_runtime_classes() -> void:
 ## Saves the current GameState to the given slot (1-indexed).
 ## Emits GameEvents.save_started / save_completed / save_failed.
 func save_game(slot: int) -> void:
+	_enforce_test_save_isolation()
 	if not _is_valid_slot(slot):
 		var reason := _get_invalid_slot_reason()
 		last_operation_summary = {"kind": "save", "slot": slot, "status": "failed", "reason": reason}
@@ -213,6 +228,7 @@ func _build_save_payload(previous_payload: Dictionary = {}, slot: int = 1) -> Di
 ## Emits GameEvents.load_started / load_completed / load_failed.
 ## Returns true on success.
 func load_game(slot: int) -> bool:
+	_enforce_test_save_isolation()
 	if not _is_valid_slot(slot):
 		var invalid_reason := _get_invalid_slot_reason()
 		last_operation_summary = {"kind": "load", "slot": slot, "status": "failed", "reason": invalid_reason}
@@ -300,6 +316,7 @@ func load_game(slot: int) -> bool:
 ## Returns slot metadata (playtime, save date, etc.) without full deserialize.
 ## Returns empty dict if slot is empty or unreadable.
 func get_slot_info(slot: int) -> Dictionary:
+	_enforce_test_save_isolation()
 	if not slot_exists(slot):
 		return {}
 	var raw_data: Variant = JSON.parse_string(FileAccess.get_file_as_string(_slot_path(slot)))
@@ -322,6 +339,7 @@ func get_slot_info(slot: int) -> Dictionary:
 
 ## Returns true if the given slot contains a valid save file.
 func slot_exists(slot: int) -> bool:
+	_enforce_test_save_isolation()
 	if not _is_valid_slot(slot):
 		return false
 	var payload := _read_raw_payload(_slot_path(slot))
@@ -331,6 +349,7 @@ func slot_exists(slot: int) -> bool:
 
 
 func delete_game(slot: int) -> bool:
+	_enforce_test_save_isolation()
 	if not _is_valid_slot(slot):
 		var invalid_reason := _get_invalid_slot_reason()
 		last_operation_summary = {"kind": "delete", "slot": slot, "status": "failed", "reason": invalid_reason}
@@ -372,6 +391,34 @@ func _normalize_save_dir(path: String) -> String:
 	if not normalized_path.ends_with("/"):
 		normalized_path += "/"
 	return normalized_path
+
+
+func _detect_test_environment() -> bool:
+	for raw_arg in OS.get_cmdline_args():
+		var arg := str(raw_arg)
+		for marker in TEST_RUN_MARKERS:
+			if arg.contains(marker):
+				return true
+	if get_tree() != null and get_tree().root != null and get_tree().root.get_node_or_null("Gut") != null:
+		return true
+	return false
+
+
+func _get_or_create_test_session_save_dir() -> String:
+	if _test_session_save_dir.is_empty():
+		var timestamp := str(Time.get_unix_time_from_system()).replace(".", "_")
+		_test_session_save_dir = "%sgut_%s_%s/" % [TEST_SAVE_DIR_PREFIX, OS.get_process_id(), timestamp]
+	return _test_session_save_dir
+
+
+func _enforce_test_save_isolation() -> void:
+	if not _is_test_environment:
+		return
+	var isolated_save_dir := _get_or_create_test_session_save_dir()
+	if _save_dir == isolated_save_dir:
+		return
+	_save_dir = isolated_save_dir
+	_save_dir_ready = _ensure_save_dir()
 
 
 ## Checks schema version and runs any needed migrations before loading.
@@ -512,6 +559,8 @@ func get_debug_snapshot() -> Dictionary:
 	snapshot["save_dir"] = get_save_directory()
 	snapshot["default_save_dir"] = DEFAULT_SAVE_DIR
 	snapshot["save_dir_ready"] = _save_dir_ready
+	snapshot["is_test_environment"] = _is_test_environment
+	snapshot["test_session_save_dir"] = _test_session_save_dir
 	snapshot["registered_runtime_classes"] = _registered_runtime_classes.duplicate()
 	snapshot["missing_runtime_classes"] = _get_missing_runtime_classes()
 	return snapshot
