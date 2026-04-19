@@ -112,6 +112,16 @@ func test_catalog_list_backend_mints_new_part_for_buyer() -> void:
 
 
 func test_list_backend_builds_inventory_rows_from_player_inventory() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var template := DataManager.get_part("base:body_arm_standard")
+	assert_false(template.is_empty())
+	if template.is_empty():
+		return
+	player.add_part(PartInstance.from_template(template))
+
 	var backend: RefCounted = LIST_BACKEND.new()
 	backend.initialize({
 		"data_source": "player:inventory",
