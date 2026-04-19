@@ -2,28 +2,21 @@ extends RefCounted
 
 class_name OmniGameplayShellPresenter
 
-
 func build_view_model(status_message: String) -> Dictionary:
 	var base_view_model := {
 		"screen_id": "gameplay_shell",
 		"title": "Gameplay",
-		"subtitle": "Explore the current location and open interaction surfaces.",
+		"subtitle": "Persistent session frame for local interactions and global menus.",
 		"time_button_specs": get_time_button_specs(),
 	}
 	if GameState.player == null:
-		_apply_inactive_session_state(
-			base_view_model,
-			"The gameplay shell becomes available once a runtime session exists."
-		)
+		_apply_inactive_session_state(base_view_model, "The gameplay shell becomes available once a runtime session exists.")
 		return base_view_model
 
 	var player_object: Variant = GameState.player
 	var player := player_object as EntityInstance
 	if player == null:
-		_apply_inactive_session_state(
-			base_view_model,
-			"The gameplay shell could not resolve the active player entity."
-		)
+		_apply_inactive_session_state(base_view_model, "The gameplay shell could not resolve the active player entity.")
 		return base_view_model
 
 	var location_template := DataManager.get_location(GameState.current_location_id)
@@ -38,12 +31,9 @@ func build_view_model(status_message: String) -> Dictionary:
 		"description_text": location_description if not location_description.is_empty() else "No location description is available yet.",
 		"meta_text": _build_location_meta(player),
 	}
-	base_view_model["session"] = {
-		"time_text": "Time: %s" % TimeKeeper.get_time_string(),
-		"day_text": _build_day_text(),
-	}
+	base_view_model["time_text"] = "Time: %s" % TimeKeeper.get_time_string()
+	base_view_model["session_day_text"] = _build_session_day_text()
 	return base_view_model
-
 
 func get_time_button_specs() -> Array[Dictionary]:
 	var configured_value: Variant = DataManager.get_config_value("ui.time_advance_buttons", ["1 hour", "1 day"])
@@ -60,7 +50,6 @@ func get_time_button_specs() -> Array[Dictionary]:
 		specs.append({"label": "1 Day", "ticks": TimeKeeper.get_ticks_per_day()})
 	return specs
 
-
 func _apply_inactive_session_state(base_view_model: Dictionary, status_text: String) -> void:
 	base_view_model["has_session"] = false
 	base_view_model["status_text"] = status_text
@@ -70,11 +59,8 @@ func _apply_inactive_session_state(base_view_model: Dictionary, status_text: Str
 		"description_text": "Start or load a game to enter the shell.",
 		"meta_text": "",
 	}
-	base_view_model["session"] = {
-		"time_text": "",
-		"day_text": "",
-	}
-
+	base_view_model["time_text"] = ""
+	base_view_model["session_day_text"] = ""
 
 func _build_location_meta(player: EntityInstance) -> String:
 	var screens_count := 0
@@ -85,20 +71,14 @@ func _build_location_meta(player: EntityInstance) -> String:
 		screens_count = screens.size()
 	return "Interactions: %d | Known Locations: %d" % [screens_count, player.discovered_locations.size()]
 
-
-func _build_day_text() -> String:
+func _build_session_day_text() -> String:
 	var current_day := 0
 	if TimeKeeper.has_method("get_current_day"):
 		current_day = int(TimeKeeper.call("get_current_day"))
-		return "Day %d" % current_day
-	var debug_snapshot_value: Variant = {}
-	if TimeKeeper.has_method("get_debug_snapshot"):
-		debug_snapshot_value = TimeKeeper.call("get_debug_snapshot")
-	if debug_snapshot_value is Dictionary:
-		var debug_snapshot: Dictionary = debug_snapshot_value
-		current_day = int(debug_snapshot.get("day", 0))
-	return "Day %d" % current_day
-
+	else:
+		var snapshot: Dictionary = SaveManager.get_slot_info(SaveManager.AUTOSAVE_SLOT)
+		current_day = int(snapshot.get("day", 0))
+	return "Day: %d" % current_day
 
 func _parse_time_advance_spec(label: String) -> Dictionary:
 	var normalized := label.strip_edges()
@@ -120,7 +100,6 @@ func _parse_time_advance_spec(label: String) -> Dictionary:
 			return {"label": normalized.capitalize(), "ticks": quantity * TimeKeeper.get_ticks_per_day()}
 		_:
 			return {}
-
 
 func _get_ticks_per_hour() -> int:
 	var configured_value: Variant = DataManager.get_config_value("game.ticks_per_hour", 0)

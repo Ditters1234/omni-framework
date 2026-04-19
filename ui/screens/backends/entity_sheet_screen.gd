@@ -33,10 +33,19 @@ func initialize(params: Dictionary = {}) -> void:
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_state()
+	call_deferred("_normalize_for_shell_host")
 
 func _ready() -> void:
 	_initialize_backend()
 	_refresh_state()
+	call_deferred("_normalize_for_shell_host")
+
+func _normalize_for_shell_host() -> void:
+	if not _opened_from_gameplay_shell:
+		return
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	custom_minimum_size = Vector2.ZERO
 
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
@@ -58,7 +67,7 @@ func _refresh_state() -> void:
 	_description_label.text = str(view_model.get("description", ""))
 	_summary_label.text = str(view_model.get("summary_text", ""))
 	_status_label.text = str(view_model.get("status_text", ""))
-	_back_button.text = str(view_model.get("cancel_label", "Back"))
+	_back_button.text = "Back" if _opened_from_gameplay_shell else str(view_model.get("cancel_label", "Back"))
 	_render_portrait(_read_dictionary(view_model.get("portrait", {})))
 	_render_stat_sheet(_read_dictionary(view_model.get("stat_sheet", {})))
 	_render_equipped_section(view_model)

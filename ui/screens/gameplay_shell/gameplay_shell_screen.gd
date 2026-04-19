@@ -4,6 +4,7 @@ const SCREEN_ENTITY_SHEET := "entity_sheet"
 const SCREEN_PAUSE_MENU := "pause_menu"
 const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gameplay_shell_presenter.gd")
 const GAMEPLAY_LOCATION_SURFACE_SCENE := preload("res://ui/screens/gameplay_shell/gameplay_location_surface.tscn")
+const DEFAULT_SURFACE_ID := "location_surface"
 
 @onready var _title_label: Label = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/TitleLabel
 @onready var _subtitle_label: Label = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/SubtitleLabel
@@ -39,6 +40,7 @@ func initialize(_params: Dictionary = {}) -> void:
 
 func _ready() -> void:
 	_connect_runtime_signals()
+	_surface_host.clip_contents = true
 	_rebuild_time_buttons()
 	_refresh()
 	_show_default_surface_if_needed()
@@ -56,13 +58,9 @@ func open_surface_screen(screen_id: String, params: Dictionary = {}) -> void:
 	if surface == null:
 		return
 	_close_active_surface_internal(false)
-	_active_surface_screen_id = screen_id
-	_active_surface = surface
-	_surface_host.add_child(surface)
-	if surface.has_method("initialize"):
-		surface.call("initialize", params.duplicate(true))
+	_mount_surface(surface, screen_id, params)
 	_surface_title_label.text = _build_surface_title(screen_id)
-	_surface_panel.visible = true
+	_refresh_surface_chrome()
 
 
 func show_location_surface(params: Dictionary = {}) -> void:
@@ -71,13 +69,9 @@ func show_location_surface(params: Dictionary = {}) -> void:
 	if location_surface == null:
 		return
 	_close_active_surface_internal(false)
-	_active_surface_screen_id = "location_surface"
-	_active_surface = location_surface
-	_surface_host.add_child(location_surface)
-	if location_surface.has_method("initialize"):
-		location_surface.call("initialize", params.duplicate(true))
-	_surface_title_label.text = "Location"
-	_surface_panel.visible = true
+	_mount_surface(location_surface, DEFAULT_SURFACE_ID, params)
+	_surface_title_label.text = "Location Actions"
+	_refresh_surface_chrome()
 
 
 func close_active_surface() -> void:
@@ -89,6 +83,28 @@ func get_debug_snapshot() -> Dictionary:
 	snapshot["active_surface_screen_id"] = _active_surface_screen_id
 	snapshot["surface_visible"] = _surface_panel.visible
 	return snapshot
+
+
+func _mount_surface(surface: Control, screen_id: String, params: Dictionary) -> void:
+	_active_surface_screen_id = screen_id
+	_active_surface = surface
+	_surface_host.add_child(surface)
+	_prepare_surface_for_hosting(surface)
+	if surface.has_method("initialize"):
+		surface.call("initialize", params.duplicate(true))
+	_surface_panel.visible = true
+
+
+func _prepare_surface_for_hosting(surface: Control) -> void:
+	surface.set_anchors_preset(Control.PRESET_FULL_RECT)
+	surface.offset_left = 0.0
+	surface.offset_top = 0.0
+	surface.offset_right = 0.0
+	surface.offset_bottom = 0.0
+	surface.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	surface.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	surface.position = Vector2.ZERO
+	surface.custom_minimum_size = Vector2.ZERO
 
 
 func _show_default_surface_if_needed() -> void:
@@ -109,6 +125,20 @@ func _close_active_surface_internal(show_default_after_close: bool) -> void:
 	_surface_title_label.text = "Surface"
 	if show_default_after_close:
 		_show_default_surface_if_needed()
+	else:
+		_refresh_surface_chrome()
+
+
+func _refresh_surface_chrome() -> void:
+	var has_surface := _active_surface != null and is_instance_valid(_active_surface)
+	var is_default_surface := _active_surface_screen_id == DEFAULT_SURFACE_ID
+	_surface_panel.visible = has_surface
+	_surface_close_button.visible = has_surface and not is_default_surface
+	_surface_close_button.disabled = not has_surface or is_default_surface
+	if is_default_surface:
+		_surface_close_button.text = "Back"
+	else:
+		_surface_close_button.text = "Close"
 
 
 func _build_surface_title(screen_id: String) -> String:
@@ -179,7 +209,8 @@ func _set_buttons_enabled(enabled: bool) -> void:
 	_quick_autosave_button.disabled = not enabled
 	_advance_tick_button.disabled = not enabled
 	_pause_menu_button.disabled = not enabled
-	_surface_close_button.disabled = not enabled
+	if _surface_close_button.visible:
+		_surface_close_button.disabled = not enabled
 	for child in _time_buttons_container.get_children():
 		var button := child as Button
 		if button != null:

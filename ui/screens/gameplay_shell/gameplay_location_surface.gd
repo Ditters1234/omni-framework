@@ -1,19 +1,19 @@
-## GameplayLocationSurface — Shell-hosted location interaction surface.
-## Replaces the old standalone location_view route.
+## GameplayLocationSurface — shell-owned action surface for the active location.
 extends Control
 
 class_name GameplayLocationSurface
 
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
-const SEMANTIC_THEME_TYPE := "OmniSemantic"
-const FALLBACK_MUTED_TEXT_COLOR := Color(0.6, 0.6, 0.6)
-const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
+const GLOBAL_SHELL_SURFACE_IDS := {
+	"entity_sheet": true,
+	"quest_log": true,
+	"faction_rep": true,
+	"achievement_list": true,
+	"event_log": true,
+}
 
-@onready var _title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
-@onready var _description_label: Label = $MarginContainer/VBoxContainer/DescriptionLabel
-@onready var _screens_container: VBoxContainer = $MarginContainer/VBoxContainer/ScreensScroll/ScreensContainer
-@onready var _connections_container: HBoxContainer = $MarginContainer/VBoxContainer/ConnectionsContainer
-@onready var _back_button: Button = $MarginContainer/VBoxContainer/NavRow/BackButton
+@onready var _interactions_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer/VBoxContainer/InteractionsScroll/InteractionsContainer
+@onready var _travel_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer/TravelScroll/TravelContainer
 @onready var _status_label: Label = $MarginContainer/VBoxContainer/StatusLabel
 
 var _location_id: String = ""
@@ -27,7 +27,6 @@ func initialize(params: Dictionary = {}) -> void:
 
 
 func _ready() -> void:
-	_back_button.pressed.connect(_on_back_button_pressed)
 	GameEvents.location_changed.connect(_on_location_changed)
 	if _location_id.is_empty():
 		_location_id = GameState.current_location_id
@@ -46,82 +45,78 @@ func _load_location() -> void:
 	if _location_template.is_empty():
 		_show_error("Location '%s' not found." % _location_id)
 		return
-	_render_location()
+	_render_location_actions()
 
 
-func _render_location() -> void:
-	var title_text := str(_location_template.get("display_name", _location_id))
-	var description_text := str(_location_template.get("description", ""))
-	_title_label.text = title_text
-	_description_label.text = description_text
+func _render_location_actions() -> void:
+	_clear_container(_interactions_container)
+	_clear_container(_travel_container)
 
-	_clear_container(_screens_container)
-	_clear_container(_connections_container)
-
-	var screen_entries: Array[Dictionary] = []
+	var interaction_entries: Array[Dictionary] = []
 	var screens: Variant = _location_template.get("screens", [])
 	if screens is Array and not screens.is_empty():
 		for screen_entry in screens:
-			if screen_entry is Dictionary:
-				var entry: Dictionary = (screen_entry as Dictionary).duplicate(true)
-				screen_entries.append(entry)
-				_add_screen_button(entry)
-	else:
-		var empty_label := Label.new()
-		empty_label.text = "Nothing to do here yet."
-		empty_label.modulate = _get_semantic_color("muted_text", FALLBACK_MUTED_TEXT_COLOR)
-		_screens_container.add_child(empty_label)
+			if not screen_entry is Dictionary:
+				continue
+			var entry: Dictionary = (screen_entry as Dictionary).duplicate(true)
+			if _is_global_shell_surface(entry):
+				continue
+			interaction_entries.append(entry)
+			_add_interaction_button(entry)
+	if interaction_entries.is_empty():
+		_add_empty_label(_interactions_container, "No local interactions are available here right now.")
 
-	var connection_entries := _render_connections()
+	var travel_entries := _render_travel_actions()
 	_status_label.text = ""
-	_status_label.modulate = _get_semantic_color("muted_text", FALLBACK_MUTED_TEXT_COLOR)
-	_back_button.visible = false
 	_last_view_model = {
 		"surface_id": "location_surface",
 		"location_id": _location_id,
-		"title": title_text,
-		"description": description_text,
-		"screens": screen_entries,
-		"connections": connection_entries,
+		"interactions": interaction_entries,
+		"travel": travel_entries,
 		"status_text": "",
 	}
 
 
-func _add_screen_button(screen_entry: Dictionary) -> void:
-	var display_name: String = str(screen_entry.get("display_name", "Unnamed"))
+func _is_global_shell_surface(screen_entry: Dictionary) -> bool:
+	var backend_class: String = str(screen_entry.get("backend_class", ""))
+	var screen_id: String = UI_ROUTE_CATALOG.get_screen_id_for_backend(backend_class)
+	return GLOBAL_SHELL_SURFACE_IDS.has(screen_id)
+
+
+func _add_interaction_button(screen_entry: Dictionary) -> void:
+	var display_name: String = str(screen_entry.get("display_name", "Unnamed Interaction"))
 	var description: String = str(screen_entry.get("description", ""))
 	var backend_class: String = str(screen_entry.get("backend_class", ""))
 	var screen_id: String = UI_ROUTE_CATALOG.get_screen_id_for_backend(backend_class)
 
-	var btn := Button.new()
-	btn.text = display_name
-	btn.tooltip_text = description
-	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var button := Button.new()
+	button.text = display_name
+	button.tooltip_text = description
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button.custom_minimum_size = Vector2(0, 48)
 
 	if screen_id.is_empty():
-		btn.disabled = true
-		btn.tooltip_text += "\n[backend '%s' not mapped]" % backend_class
+		button.disabled = true
+		button.tooltip_text += "\n[backend '%s' not mapped]" % backend_class
 	elif not UIRouter.is_registered(screen_id):
-		btn.disabled = true
-		btn.tooltip_text += "\n[screen '%s' not yet built]" % screen_id
+		button.disabled = true
+		button.tooltip_text += "\n[screen '%s' not yet built]" % screen_id
 	else:
 		var push_params: Dictionary = screen_entry.duplicate(true)
 		push_params["opened_from_gameplay_shell"] = true
-		btn.pressed.connect(_on_screen_button_pressed.bind(screen_id, push_params))
+		button.pressed.connect(_on_screen_button_pressed.bind(screen_id, push_params))
 
-	_screens_container.add_child(btn)
+	_interactions_container.add_child(button)
 
 
-func _render_connections() -> Array[Dictionary]:
+func _render_travel_actions() -> Array[Dictionary]:
 	var rendered_connections: Array[Dictionary] = []
 	var connections: Dictionary = LocationGraph.get_connections(_location_id)
 	if connections.is_empty():
+		_add_empty_label(_travel_container, "No travel connections are available from this location.")
 		return rendered_connections
-
-	var label := Label.new()
-	label.text = "Travel:"
-	_connections_container.add_child(label)
 
 	for dest_id_value in connections.keys():
 		var dest_id: String = str(dest_id_value)
@@ -135,11 +130,21 @@ func _render_connections() -> Array[Dictionary]:
 			"travel_cost": travel_cost,
 		})
 
-		var btn := Button.new()
-		btn.text = "%s (%d)" % [dest_name, travel_cost]
-		btn.pressed.connect(_on_travel_button_pressed.bind(dest_id))
-		_connections_container.add_child(btn)
+		var button := Button.new()
+		button.text = "%s (%d)" % [dest_name, travel_cost]
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size = Vector2(0, 44)
+		button.pressed.connect(_on_travel_button_pressed.bind(dest_id))
+		_travel_container.add_child(button)
 	return rendered_connections
+
+
+func _add_empty_label(container: VBoxContainer, text: String) -> void:
+	var label := Label.new()
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.text = text
+	container.add_child(label)
 
 
 func _clear_container(container: Node) -> void:
@@ -149,20 +154,15 @@ func _clear_container(container: Node) -> void:
 
 
 func _show_error(message: String) -> void:
-	_title_label.text = "Error"
-	_description_label.text = message
+	_clear_container(_interactions_container)
+	_clear_container(_travel_container)
+	_add_empty_label(_interactions_container, message)
 	_status_label.text = message
-	_status_label.modulate = _get_semantic_color("negative", FALLBACK_NEGATIVE_COLOR)
-	_back_button.visible = false
-	_clear_container(_screens_container)
-	_clear_container(_connections_container)
 	_last_view_model = {
 		"surface_id": "location_surface",
 		"location_id": _location_id,
-		"title": "Error",
-		"description": message,
-		"screens": [],
-		"connections": [],
+		"interactions": [],
+		"travel": [],
 		"status_text": message,
 	}
 
@@ -177,17 +177,7 @@ func _on_travel_button_pressed(dest_location_id: String) -> void:
 	_load_location()
 
 
-func _on_back_button_pressed() -> void:
-	pass
-
-
 func _on_location_changed(_old_id: String, new_id: String) -> void:
 	if new_id != _location_id:
 		_location_id = new_id
 		_load_location()
-
-
-func _get_semantic_color(color_name: String, fallback: Color) -> Color:
-	if has_theme_color(color_name, SEMANTIC_THEME_TYPE):
-		return get_theme_color(color_name, SEMANTIC_THEME_TYPE)
-	return fallback
