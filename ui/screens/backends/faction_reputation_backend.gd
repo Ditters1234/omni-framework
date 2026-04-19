@@ -36,20 +36,21 @@ func initialize(params: Dictionary) -> void:
 
 func build_view_model() -> Dictionary:
 	var rows := _build_rows()
-	var empty_label := str(_params.get("empty_label", "No factions are available."))
+	var known_only := _get_bool_param(_params, "known_only", true)
+	var empty_label := _get_string_param(_params, "empty_label", "No factions are available.")
 	return {
-		"title": str(_params.get("screen_title", "Faction Reputation")),
-		"description": str(_params.get("screen_description", "Review known factions and current standing.")),
+		"title": _get_string_param(_params, "screen_title", "Faction Reputation"),
+		"description": _get_string_param(_params, "screen_description", "Review %s factions and current standing." % ("known" if known_only else "available")),
 		"rows": rows,
 		"status_text": empty_label if rows.is_empty() else "%s factions listed." % str(rows.size()),
-		"cancel_label": str(_params.get("cancel_label", "Back")),
+		"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
 		"empty_label": empty_label,
 	}
 
 
 func _build_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
-	var entity := BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("target_entity_id", "player")))
+	var entity := BACKEND_HELPERS.resolve_entity_lookup(_get_string_param(_params, "target_entity_id", "player"))
 	var faction_ids := _resolve_faction_ids(entity)
 	for faction_id in faction_ids:
 		var faction := DataManager.get_faction(faction_id)
@@ -69,7 +70,7 @@ func _build_rows() -> Array[Dictionary]:
 
 
 func _resolve_faction_ids(entity: EntityInstance) -> Array[String]:
-	var known_only := _read_bool("known_only", false)
+	var known_only := _get_bool_param(_params, "known_only", true)
 	var faction_ids: Array[String] = []
 	if known_only and entity != null:
 		for faction_id_value in entity.reputation.keys():
@@ -97,10 +98,3 @@ func _build_territory_summary(faction: Dictionary) -> String:
 		return "Territory: %s" % ", ".join(names)
 	var territory_text := str(territory_value)
 	return "" if territory_text.is_empty() else "Territory: %s" % BACKEND_HELPERS.humanize_id(territory_text)
-
-
-func _read_bool(field_name: String, default_value: bool) -> bool:
-	var value: Variant = _params.get(field_name, default_value)
-	if value is bool:
-		return bool(value)
-	return default_value

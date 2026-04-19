@@ -399,11 +399,15 @@ static func build_quest_card_view_model(quest_template: Dictionary, stage_index:
 	var stages_value: Variant = quest_template.get("stages", [])
 	if stages_value is Array:
 		var stages: Array = stages_value
-		if stage_index >= 0 and stage_index < stages.size():
-			var current_stage_value: Variant = stages[stage_index]
+		var resolved_stage_index := stage_index
+		if completed and stages.size() > 0:
+			resolved_stage_index = clampi(resolved_stage_index, 0, stages.size() - 1)
+		if resolved_stage_index >= 0 and resolved_stage_index < stages.size():
+			var current_stage_value: Variant = stages[resolved_stage_index]
 			if current_stage_value is Dictionary:
 				var current_stage: Dictionary = current_stage_value
-				current_stage_text = str(current_stage.get("description", current_stage.get("title", "")))
+				if not completed:
+					current_stage_text = str(current_stage.get("description", current_stage.get("title", "")))
 				var objective_values: Variant = current_stage.get("objectives", [])
 				if objective_values is Array:
 					var raw_objectives: Array = objective_values
@@ -423,7 +427,7 @@ static func build_quest_card_view_model(quest_template: Dictionary, stage_index:
 	return {
 		"quest_id": quest_id,
 		"display_name": str(quest_template.get("display_name", quest_template.get("title", humanize_id(quest_id)))),
-		"current_stage": current_stage_text,
+		"current_stage": current_stage_text if not current_stage_text.is_empty() else ("Completed" if completed else ""),
 		"objectives": objectives,
 		"rewards": _duplicate_dictionary(quest_template.get("reward", {})),
 	}

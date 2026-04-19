@@ -51,12 +51,12 @@ func build_view_model() -> Dictionary:
 	var fallback_title := "Entity Sheet"
 	if target_entity != null:
 		fallback_title = "%s Sheet" % BACKEND_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id)
-	var title := str(_params.get("screen_title", fallback_title))
-	var description := str(_params.get("screen_description", "Review the selected entity's stats, equipment, inventory, and standing."))
-	var stat_title := str(_params.get("stat_title", "Stats"))
-	var show_equipped := _read_bool("show_equipped", true)
-	var show_inventory := _read_bool("show_inventory", true)
-	var show_reputation := _read_bool("show_reputation", true)
+	var title := _get_string_param(_params, "screen_title", fallback_title)
+	var description := _get_string_param(_params, "screen_description", "Review the selected entity's stats, equipment, inventory, and standing.")
+	var stat_title := _get_string_param(_params, "stat_title", "Stats")
+	var show_equipped := _get_bool_param(_params, "show_equipped", true)
+	var show_inventory := _get_bool_param(_params, "show_inventory", true)
+	var show_reputation := _get_bool_param(_params, "show_reputation", true)
 
 	if target_entity == null:
 		return {
@@ -72,15 +72,19 @@ func build_view_model() -> Dictionary:
 			"show_reputation": show_reputation,
 			"status_text": "The entity sheet target could not be resolved.",
 			"summary_text": "",
-			"cancel_label": str(_params.get("cancel_label", "Back")),
+			"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
 			"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
 			"inventory_empty_label": _get_empty_label("inventory_empty_label", "Inventory is empty."),
 			"reputation_empty_label": _get_empty_label("reputation_empty_label", "No faction standing is recorded."),
 			"inventory_overflow_count": 0,
+			"inventory_total_instances": 0,
+			"inventory_total_stacks": 0,
+			"inventory_shown_stacks": 0,
 		}
 
 	var equipped_rows := _build_equipped_rows(target_entity)
-	var inventory_rows := _build_inventory_rows(target_entity)
+	var inventory_result := _build_inventory_result(target_entity)
+	var inventory_rows: Array[Dictionary] = inventory_result.get("rows", [])
 	var reputation_rows := _build_reputation_rows(target_entity)
 	return {
 		"title": title,
@@ -93,29 +97,31 @@ func build_view_model() -> Dictionary:
 		"show_equipped": show_equipped,
 		"show_inventory": show_inventory,
 		"show_reputation": show_reputation,
-		"status_text": _build_status_text(target_entity, equipped_rows, inventory_rows),
-		"summary_text": _build_summary_text(target_entity, equipped_rows, inventory_rows),
-		"cancel_label": str(_params.get("cancel_label", "Back")),
+		"status_text": _build_status_text(target_entity, equipped_rows, inventory_result),
+		"summary_text": _build_summary_text(target_entity, equipped_rows, inventory_result),
+		"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
 		"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
 		"inventory_empty_label": _get_empty_label("inventory_empty_label", "Inventory is empty."),
 		"reputation_empty_label": _get_empty_label("reputation_empty_label", "No faction standing is recorded."),
-		"inventory_overflow_count": _inventory_overflow_count(target_entity),
+		"inventory_overflow_count": int(inventory_result.get("overflow_count", 0)),
+		"inventory_total_instances": int(inventory_result.get("total_instances", 0)),
+		"inventory_total_stacks": int(inventory_result.get("total_stacks", 0)),
+		"inventory_shown_stacks": int(inventory_result.get("shown_stacks", 0)),
 	}
 
 
 func _resolve_target_entity() -> EntityInstance:
-	return BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("target_entity_id", "player")))
+	return BACKEND_HELPERS.resolve_entity_lookup(_get_string_param(_params, "target_entity_id", "player"))
 
 
 func _build_equipped_rows(entity: EntityInstance) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	if entity == null:
 		return rows
+
 	var socket_labels := _build_socket_label_map(entity)
-	var slot_keys: Array = entity.equipped.keys()
-	slot_keys.sort()
-	for slot_value in slot_keys:
-		var slot_id := str(slot_value)
+	var ordered_slot_ids := _build_ordered_slot_ids(entity)
+	for slot_id in ordered_slot_ids:
 		var part := entity.get_equipped(slot_id)
 		if part == null:
 			continue
@@ -132,15 +138,24 @@ func _build_equipped_rows(entity: EntityInstance) -> Array[Dictionary]:
 	return rows
 
 
-func _build_inventory_rows(entity: EntityInstance) -> Array[Dictionary]:
+func _build_inventory_result(entity: EntityInstance) -> Dictionary:
 	var rows: Array[Dictionary] = []
 	if entity == null:
-		return rows
+		return {
+			"rows": rows,
+			"total_instances": 0,
+			"total_stacks": 0,
+			"shown_stacks": 0,
+			"overflow_count": 0,
+		}
+
 	var grouped: Dictionary = {}
+	var total_instances := 0
 	for part_value in entity.inventory:
 		var part := part_value as PartInstance
 		if part == null:
 			continue
+		total_instances += 1
 		var entry_value: Variant = grouped.get(part.template_id, {})
 		var entry: Dictionary = {}
 		if entry_value is Dictionary:
@@ -159,17 +174,26 @@ func _build_inventory_rows(entity: EntityInstance) -> Array[Dictionary]:
 		if grouped_value is Dictionary:
 			var row: Dictionary = grouped_value
 			rows.append(row.duplicate(true))
+
 	var sort_callable := func(a: Dictionary, b: Dictionary) -> bool:
 		return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
 	rows.sort_custom(sort_callable)
 
+	var total_stacks := rows.size()
+	var shown_rows := rows
 	var inventory_limit := _read_inventory_limit()
-	if inventory_limit <= 0 or rows.size() <= inventory_limit:
-		return rows
-	var limited_rows: Array[Dictionary] = []
-	for index in range(inventory_limit):
-		limited_rows.append(rows[index].duplicate(true))
-	return limited_rows
+	if inventory_limit > 0 and rows.size() > inventory_limit:
+		shown_rows = []
+		for index in range(inventory_limit):
+			shown_rows.append(rows[index].duplicate(true))
+
+	return {
+		"rows": shown_rows,
+		"total_instances": total_instances,
+		"total_stacks": total_stacks,
+		"shown_stacks": shown_rows.size(),
+		"overflow_count": maxi(total_stacks - shown_rows.size(), 0),
+	}
 
 
 func _build_reputation_rows(entity: EntityInstance) -> Array[Dictionary]:
@@ -204,6 +228,30 @@ func _build_socket_label_map(entity: EntityInstance) -> Dictionary:
 	return labels
 
 
+func _build_ordered_slot_ids(entity: EntityInstance) -> Array[String]:
+	var ordered_slot_ids: Array[String] = []
+	var seen: Dictionary = {}
+	if entity == null:
+		return ordered_slot_ids
+
+	for socket_definition in entity.get_available_socket_definitions():
+		var socket_id := str(socket_definition.get("id", ""))
+		if socket_id.is_empty() or seen.has(socket_id):
+			continue
+		seen[socket_id] = true
+		ordered_slot_ids.append(socket_id)
+
+	var extra_slot_ids: Array[String] = []
+	for slot_value in entity.equipped.keys():
+		var slot_id := str(slot_value)
+		if slot_id.is_empty() or seen.has(slot_id):
+			continue
+		extra_slot_ids.append(slot_id)
+	extra_slot_ids.sort()
+	ordered_slot_ids.append_array(extra_slot_ids)
+	return ordered_slot_ids
+
+
 func _build_part_stat_summary(template: Dictionary, overrides: Dictionary) -> String:
 	var stats_value: Variant = template.get("stats", template.get("stat_modifiers", {}))
 	var stats: Dictionary = {}
@@ -224,56 +272,34 @@ func _build_part_stat_summary(template: Dictionary, overrides: Dictionary) -> St
 	return ", ".join(parts)
 
 
-func _build_summary_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_rows: Array[Dictionary]) -> String:
+func _build_summary_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_result: Dictionary) -> String:
 	var location_label := BACKEND_HELPERS.humanize_id(entity.location_id)
 	if not entity.location_id.is_empty():
 		var location := DataManager.get_location(entity.location_id)
 		location_label = str(location.get("display_name", location_label))
-	return "%s equipped, %s inventory stacks, location: %s." % [
+	return "%s equipped, %s inventory stacks shown of %s total, location: %s." % [
 		str(equipped_rows.size()),
-		str(inventory_rows.size()),
+		str(int(inventory_result.get("shown_stacks", 0))),
+		str(int(inventory_result.get("total_stacks", 0))),
 		location_label if not location_label.is_empty() else "Unknown",
 	]
 
 
-func _build_status_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_rows: Array[Dictionary]) -> String:
-	return "%s has %s equipped parts and %s inventory entries." % [
+func _build_status_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_result: Dictionary) -> String:
+	return "%s has %s equipped parts, %s inventory items, and %s inventory stacks." % [
 		BACKEND_HELPERS.get_entity_display_name(entity, entity.entity_id),
 		str(equipped_rows.size()),
-		str(entity.inventory.size() if entity != null else inventory_rows.size()),
+		str(int(inventory_result.get("total_instances", 0))),
+		str(int(inventory_result.get("total_stacks", 0))),
 	]
 
 
-func _inventory_overflow_count(entity: EntityInstance) -> int:
-	if entity == null:
-		return 0
-	var inventory_limit := _read_inventory_limit()
-	if inventory_limit <= 0:
-		return 0
-	var grouped_ids: Dictionary = {}
-	for part_value in entity.inventory:
-		var part := part_value as PartInstance
-		if part != null:
-			grouped_ids[part.template_id] = true
-	return maxi(grouped_ids.size() - inventory_limit, 0)
-
-
-func _read_bool(field_name: String, default_value: bool) -> bool:
-	var value: Variant = _params.get(field_name, default_value)
-	if value is bool:
-		return bool(value)
-	return default_value
-
-
 func _read_inventory_limit() -> int:
-	var value: Variant = _params.get("inventory_limit", 12)
-	if value is int:
-		return maxi(int(value), 0)
-	return 12
+	return _get_int_param(_params, "inventory_limit", 12, 0)
 
 
 func _get_empty_label(field_name: String, default_value: String) -> String:
-	return str(_params.get(field_name, default_value))
+	return _get_string_param(_params, field_name, default_value)
 
 
 func _read_float(value: Variant) -> float:

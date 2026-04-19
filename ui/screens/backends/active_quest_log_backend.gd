@@ -34,15 +34,15 @@ func initialize(params: Dictionary) -> void:
 
 func build_view_model() -> Dictionary:
 	var cards := _build_active_cards()
-	if _read_bool("include_completed", false):
+	if _get_bool_param(_params, "include_completed", false):
 		cards.append_array(_build_completed_cards())
-	var empty_label := str(_params.get("empty_label", "No active quests."))
+	var empty_label := _get_string_param(_params, "empty_label", "No active quests.")
 	return {
-		"title": str(_params.get("screen_title", "Quest Log")),
-		"description": str(_params.get("screen_description", "Review active quest stages and objectives.")),
+		"title": _get_string_param(_params, "screen_title", "Quest Log"),
+		"description": _get_string_param(_params, "screen_description", "Review active quest stages and objectives."),
 		"cards": cards,
 		"status_text": empty_label if cards.is_empty() else "%s quest entries." % str(cards.size()),
-		"cancel_label": str(_params.get("cancel_label", "Back")),
+		"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
 		"empty_label": empty_label,
 	}
 
@@ -73,12 +73,15 @@ func _build_completed_cards() -> Array[Dictionary]:
 		var quest_template := DataManager.get_quest(str(quest_id))
 		if quest_template.is_empty():
 			continue
-		cards.append(BACKEND_HELPERS.build_quest_card_view_model(quest_template, 0, true))
+		var final_stage_index := _resolve_final_stage_index(quest_template)
+		cards.append(BACKEND_HELPERS.build_quest_card_view_model(quest_template, final_stage_index, true))
 	return cards
 
 
-func _read_bool(field_name: String, default_value: bool) -> bool:
-	var value: Variant = _params.get(field_name, default_value)
-	if value is bool:
-		return bool(value)
-	return default_value
+func _resolve_final_stage_index(quest_template: Dictionary) -> int:
+	var stages_value: Variant = quest_template.get("stages", [])
+	if stages_value is Array:
+		var stages: Array = stages_value
+		if not stages.is_empty():
+			return stages.size() - 1
+	return 0
