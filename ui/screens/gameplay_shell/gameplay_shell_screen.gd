@@ -1,12 +1,12 @@
 extends Control
 
 const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
-const SCREEN_LOCATION_VIEW := "location_view"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_PAUSE_MENU := "pause_menu"
 const CURRENCY_DISPLAY_SCENE := preload("res://ui/components/currency_display.tscn")
 const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gameplay_shell_presenter.gd")
+const GAMEPLAY_LOCATION_SURFACE_SCENE := preload("res://ui/screens/gameplay_shell/gameplay_location_surface.tscn")
 
 @onready var _title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/TitleLabel
 @onready var _subtitle_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/SubtitleLabel
@@ -27,80 +27,130 @@ const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gamep
 @onready var _advance_tick_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AdvanceTickButton
 @onready var _pause_menu_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/PauseMenuButton
 @onready var _status_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/StatusLabel
-@onready var _shell_panel: PanelContainer = $MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel
-@onready var _shell_surface_title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/HeaderRow/SurfaceTitleLabel
-@onready var _shell_surface_close_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/HeaderRow/CloseSurfaceButton
-@onready var _shell_surface_host: VBoxContainer = $MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/SurfaceHost
+@onready var _surface_panel: PanelContainer = $MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel
+@onready var _surface_title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceTitleLabel
+@onready var _surface_close_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton
+@onready var _surface_host: Control = $MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHost
 
 var _auto_open_location_view: bool = false
-var _opened_initial_location_view: bool = false
 var _status_message: String = "Ready."
 var _last_view_model: Dictionary = {}
 var _presenter: RefCounted = GAMEPLAY_SHELL_PRESENTER.new()
 var _runtime_signals_connected: bool = false
-var _shell_screen: Control = null
-var _shell_screen_id: String = ""
+var _active_surface: Control = null
+var _active_surface_screen_id: String = ""
+
 
 func initialize(params: Dictionary = {}) -> void:
 	var auto_open_data: Variant = params.get("auto_open_location_view", false)
 	_auto_open_location_view = bool(auto_open_data)
 	_rebuild_time_buttons()
-	_set_shell_surface_visible(false)
 	_refresh()
-	_maybe_open_initial_location_view()
+	_show_default_surface_if_needed()
 
 
 func _ready() -> void:
 	_connect_runtime_signals()
 	_rebuild_time_buttons()
-	_set_shell_surface_visible(false)
 	_refresh()
-	_maybe_open_initial_location_view()
+	_show_default_surface_if_needed()
 	call_deferred("_grab_default_focus")
 
 
 func on_route_revealed() -> void:
 	_refresh()
+	_show_default_surface_if_needed()
 	call_deferred("_grab_default_focus")
 
 
-func open_shell_screen(screen_id: String, params: Dictionary = {}) -> bool:
-	if screen_id.is_empty() or not UIRouter.is_registered(screen_id):
-		return false
-	close_shell_screen()
-	var shell_params := params.duplicate(true)
-	shell_params["opened_from_gameplay_shell"] = true
-	var screen := UIRouter.instantiate_registered_screen(screen_id, shell_params)
-	if screen == null:
-		return false
-	_shell_screen = screen
-	_shell_screen_id = screen_id
-	_shell_surface_host.add_child(screen)
-	_shell_surface_title_label.text = _humanize_screen_id(screen_id)
-	_set_shell_surface_visible(true)
-	_status_message = "Opened %s in the shell." % _humanize_screen_id(screen_id)
-	_refresh()
-	return true
+func open_surface_screen(screen_id: String, params: Dictionary = {}) -> void:
+	var surface := UIRouter.instantiate_registered_screen(screen_id)
+	if surface == null:
+		return
+	_close_active_surface_internal(false)
+	_active_surface_screen_id = screen_id
+	_active_surface = surface
+	_surface_host.add_child(surface)
+	if surface.has_method("initialize"):
+		surface.call("initialize", params.duplicate(true))
+	_surface_title_label.text = _build_surface_title(screen_id)
+	_surface_panel.visible = true
 
 
-func close_shell_screen() -> void:
-	if _shell_screen != null and is_instance_valid(_shell_screen):
-		_shell_surface_host.remove_child(_shell_screen)
-		_shell_screen.queue_free()
-	_shell_screen = null
-	_shell_screen_id = ""
-	_set_shell_surface_visible(false)
-	_status_message = "Returned to the shell."
-	_refresh()
+func show_location_surface(params: Dictionary = {}) -> void:
+	var location_surface_value: Variant = GAMEPLAY_LOCATION_SURFACE_SCENE.instantiate()
+	var location_surface := location_surface_value as Control
+	if location_surface == null:
+		return
+	_close_active_surface_internal(false)
+	_active_surface_screen_id = "location_surface"
+	_active_surface = location_surface
+	_surface_host.add_child(location_surface)
+	if location_surface.has_method("initialize"):
+		location_surface.call("initialize", params.duplicate(true))
+	_surface_title_label.text = "Location"
+	_surface_panel.visible = true
 
 
-func has_shell_screen() -> bool:
-	return _shell_screen != null and is_instance_valid(_shell_screen)
+func close_active_surface() -> void:
+	_close_active_surface_internal(true)
 
 
-func _set_shell_surface_visible(is_visible: bool) -> void:
-	_shell_panel.visible = is_visible
-	_shell_surface_close_button.visible = is_visible
+func get_debug_snapshot() -> Dictionary:
+	var snapshot := _last_view_model.duplicate(true)
+	snapshot["active_surface_screen_id"] = _active_surface_screen_id
+	snapshot["surface_visible"] = _surface_panel.visible
+	return snapshot
+
+
+func _show_default_surface_if_needed() -> void:
+	if _active_surface != null and is_instance_valid(_active_surface):
+		return
+	show_location_surface({
+		"location_id": GameState.current_location_id,
+	})
+
+
+func _close_active_surface_internal(show_default_after_close: bool) -> void:
+	if _active_surface != null and is_instance_valid(_active_surface):
+		_surface_host.remove_child(_active_surface)
+		_active_surface.queue_free()
+	_active_surface = null
+	_active_surface_screen_id = ""
+	_surface_panel.visible = false
+	_surface_title_label.text = "Surface"
+	if show_default_after_close:
+		_show_default_surface_if_needed()
+
+
+func _build_surface_title(screen_id: String) -> String:
+	match screen_id:
+		"assembly_editor":
+			return "Loadout"
+		"exchange":
+			return "Exchange"
+		"list_view":
+			return "List"
+		"challenge":
+			return "Challenge"
+		"task_provider":
+			return "Tasks"
+		"catalog_list":
+			return "Catalog"
+		"dialogue":
+			return "Dialogue"
+		"entity_sheet":
+			return "Entity Sheet"
+		"quest_log":
+			return "Quest Log"
+		"faction_rep":
+			return "Faction Reputation"
+		"achievement_list":
+			return "Achievements"
+		"event_log":
+			return "Event Log"
+		_:
+			return screen_id.capitalize()
 
 
 func _connect_runtime_signals() -> void:
@@ -121,14 +171,8 @@ func _refresh() -> void:
 	var view_model := _read_dictionary(view_model_value)
 	_last_view_model = view_model.duplicate(true)
 	_last_view_model["auto_open_location_view"] = _auto_open_location_view
-	_last_view_model["opened_initial_location_view"] = _opened_initial_location_view
-	_last_view_model["shell_screen_id"] = _shell_screen_id
 	_rebuild_time_buttons(_read_dictionary_array(view_model.get("time_button_specs", [])))
 	_apply_view_model(view_model)
-
-
-func get_debug_snapshot() -> Dictionary:
-	return _last_view_model.duplicate(true)
 
 
 func _apply_view_model(view_model: Dictionary) -> void:
@@ -198,6 +242,7 @@ func _set_buttons_enabled(enabled: bool) -> void:
 	_quick_autosave_button.disabled = not enabled
 	_advance_tick_button.disabled = not enabled
 	_pause_menu_button.disabled = not enabled
+	_surface_close_button.disabled = not enabled
 	for child in _time_buttons_container.get_children():
 		var button := child as Button
 		if button != null:
@@ -239,11 +284,13 @@ func _on_advance_tick_button_pressed() -> void:
 
 
 func _on_explore_location_button_pressed() -> void:
-	UIRouter.push(SCREEN_LOCATION_VIEW)
+	show_location_surface({
+		"location_id": GameState.current_location_id,
+	})
 
 
 func _on_open_loadout_button_pressed() -> void:
-	open_shell_screen(SCREEN_ASSEMBLY_EDITOR, {
+	open_surface_screen(SCREEN_ASSEMBLY_EDITOR, {
 		"screen_title": "Character Loadout",
 		"screen_description": "Review your current build, inspect sockets, and return to the shell when you are done.",
 		"screen_summary": "This shell shortcut opens your live player assembly directly.",
@@ -252,6 +299,7 @@ func _on_open_loadout_button_pressed() -> void:
 		"cancel_label": "Back",
 		"pop_on_confirm": true,
 		"cancel_screen_id": "",
+		"opened_from_gameplay_shell": true,
 	})
 
 
@@ -270,8 +318,8 @@ func _on_pause_menu_button_pressed() -> void:
 	UIRouter.push(SCREEN_PAUSE_MENU)
 
 
-func _on_close_surface_button_pressed() -> void:
-	close_shell_screen()
+func _on_surface_close_button_pressed() -> void:
+	close_active_surface()
 
 
 func _on_tick_advanced(_tick: int) -> void:
@@ -310,38 +358,14 @@ func _on_part_unequipped(entity_id: String, _part_id: String, _slot: String) -> 
 		_refresh()
 
 
-func _maybe_open_initial_location_view() -> void:
-	if not _auto_open_location_view or _opened_initial_location_view:
-		return
-	if GameState.current_location_id.is_empty():
-		return
-	_opened_initial_location_view = true
-	call_deferred("_open_initial_location_view")
-
-
-func _open_initial_location_view() -> void:
-	UIRouter.push(SCREEN_LOCATION_VIEW, {
-		"location_id": GameState.current_location_id
-	})
-
-
 func _grab_default_focus() -> void:
 	if not is_node_ready():
-		return
-	if has_shell_screen() and _shell_surface_close_button.visible and not _shell_surface_close_button.disabled:
-		_shell_surface_close_button.grab_focus()
 		return
 	if not _explore_location_button.disabled:
 		_explore_location_button.grab_focus()
 		return
 	if not _advance_tick_button.disabled:
 		_advance_tick_button.grab_focus()
-
-
-func _humanize_screen_id(screen_id: String) -> String:
-	if screen_id.is_empty():
-		return "Shell Surface"
-	return screen_id.replace("_", " ").capitalize()
 
 
 func _read_dictionary(value: Variant) -> Dictionary:

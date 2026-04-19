@@ -70,13 +70,11 @@ autowrap_mode = 3
 [node name="QuickAutosaveButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1653716254]
 layout_mode = 2
 size_flags_horizontal = 3
-focus_mode = 2
 text = "Quick Autosave"
 
 [node name="PauseMenuButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1188300035]
 layout_mode = 2
 size_flags_horizontal = 3
-focus_mode = 2
 text = "Pause Menu"
 
 [node name="ContentColumns" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer" unique_id=2057014201]
@@ -187,13 +185,11 @@ text = "Quick Actions"
 [node name="ExploreLocationButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer" unique_id=106990528]
 layout_mode = 2
 size_flags_horizontal = 3
-focus_mode = 2
 text = "Explore Location"
 
 [node name="OpenLoadoutButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer" unique_id=606193107]
 layout_mode = 2
 size_flags_horizontal = 3
-focus_mode = 2
 text = "Open Loadout"
 
 [node name="TimePanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn" unique_id=1007470222]
@@ -229,7 +225,6 @@ autowrap_mode = 3
 [node name="AdvanceTickButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=1834133038]
 layout_mode = 2
 size_flags_horizontal = 3
-focus_mode = 2
 text = "Advance Tick"
 
 [node name="TimeAdvanceButtons" type="HFlowContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=294583534]
@@ -270,38 +265,38 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="ShellSurfacePanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer"]
-visible = false
+[node name="SurfacePanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer" unique_id=472047551]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel"]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel" unique_id=857822239]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer" unique_id=1589666822]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="HeaderRow" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer"]
+[node name="SurfaceHeader" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=744412417]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
-[node name="SurfaceTitleLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/HeaderRow"]
+[node name="SurfaceTitleLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader" unique_id=1868115028]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
-text = "Shell Surface"
+theme_override_font_sizes/font_size = 22
+text = "Location"
 
-[node name="CloseSurfaceButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/HeaderRow"]
+[node name="SurfaceCloseButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader" unique_id=1902188969]
 layout_mode = 2
-text = "Close"
+text = "Close Surface"
 
-[node name="SurfaceHost" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer"]
+[node name="SurfaceHost" type="Control" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=1954626861]
+custom_minimum_size = Vector2(0, 420)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -316,4 +311,4 @@ autowrap_mode = 3
 [connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/ExploreLocationButton" to="." method="_on_explore_location_button_pressed"]
 [connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/OpenLoadoutButton" to="." method="_on_open_loadout_button_pressed"]
 [connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]
-[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/HeaderRow/CloseSurfaceButton" to="." method="_on_close_surface_button_pressed"]
+[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton" to="." method="_on_surface_close_button_pressed"]

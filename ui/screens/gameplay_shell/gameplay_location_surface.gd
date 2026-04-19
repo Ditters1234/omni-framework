@@ -1,22 +1,13 @@
-## LocationViewScreen — Hub screen for a single location.
-## Displays the location's name, description, and interactive screens as buttons.
-## Pushing a screen button routes to the matching backend via UIRouter.
-##
-## Params accepted by initialize():
-##   location_id: String  — optional; defaults to GameState.current_location_id
-##
-## Each entry in location.screens becomes one button. The button's pressed
-## signal passes all screen-entry fields as params to the backend screen.
+## GameplayLocationSurface — Shell-hosted location interaction surface.
+## Replaces the old standalone location_view route.
 extends Control
 
-class_name LocationViewScreen
+class_name GameplayLocationSurface
 
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const FALLBACK_MUTED_TEXT_COLOR := Color(0.6, 0.6, 0.6)
 const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
-
-const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
 
 @onready var _title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/VBoxContainer/DescriptionLabel
@@ -41,6 +32,10 @@ func _ready() -> void:
 	if _location_id.is_empty():
 		_location_id = GameState.current_location_id
 	_load_location()
+
+
+func get_debug_snapshot() -> Dictionary:
+	return _last_view_model.duplicate(true)
 
 
 func _load_location() -> void:
@@ -68,8 +63,9 @@ func _render_location() -> void:
 	if screens is Array and not screens.is_empty():
 		for screen_entry in screens:
 			if screen_entry is Dictionary:
-				screen_entries.append((screen_entry as Dictionary).duplicate(true))
-				_add_screen_button(screen_entry)
+				var entry: Dictionary = (screen_entry as Dictionary).duplicate(true)
+				screen_entries.append(entry)
+				_add_screen_button(entry)
 	else:
 		var empty_label := Label.new()
 		empty_label.text = "Nothing to do here yet."
@@ -77,18 +73,17 @@ func _render_location() -> void:
 		_screens_container.add_child(empty_label)
 
 	var connection_entries := _render_connections()
-	_refresh_nav_state()
 	_status_label.text = ""
 	_status_label.modulate = _get_semantic_color("muted_text", FALLBACK_MUTED_TEXT_COLOR)
+	_back_button.visible = false
 	_last_view_model = {
-		"screen_id": "location_view",
+		"surface_id": "location_surface",
 		"location_id": _location_id,
 		"title": title_text,
 		"description": description_text,
 		"screens": screen_entries,
 		"connections": connection_entries,
 		"status_text": "",
-		"back_enabled": not _back_button.disabled,
 	}
 
 
@@ -112,8 +107,7 @@ func _add_screen_button(screen_entry: Dictionary) -> void:
 		btn.tooltip_text += "\n[screen '%s' not yet built]" % screen_id
 	else:
 		var push_params: Dictionary = screen_entry.duplicate(true)
-		if not push_params.has("cancel_screen_id"):
-			push_params["cancel_screen_id"] = ""
+		push_params["opened_from_gameplay_shell"] = true
 		btn.pressed.connect(_on_screen_button_pressed.bind(screen_id, push_params))
 
 	_screens_container.add_child(btn)
@@ -150,6 +144,7 @@ func _render_connections() -> Array[Dictionary]:
 
 func _clear_container(container: Node) -> void:
 	for child in container.get_children():
+		container.remove_child(child)
 		child.queue_free()
 
 
@@ -158,27 +153,22 @@ func _show_error(message: String) -> void:
 	_description_label.text = message
 	_status_label.text = message
 	_status_label.modulate = _get_semantic_color("negative", FALLBACK_NEGATIVE_COLOR)
-	_refresh_nav_state()
+	_back_button.visible = false
 	_clear_container(_screens_container)
 	_clear_container(_connections_container)
 	_last_view_model = {
-		"screen_id": "location_view",
+		"surface_id": "location_surface",
 		"location_id": _location_id,
 		"title": "Error",
 		"description": message,
 		"screens": [],
 		"connections": [],
 		"status_text": message,
-		"back_enabled": not _back_button.disabled,
 	}
 
 
 func _on_screen_button_pressed(screen_id: String, params: Dictionary) -> void:
-	if UIRouter.open_screen_in_gameplay_shell(screen_id, params):
-		if UIRouter.current_screen_id() == "location_view" and UIRouter.stack_depth() > 1:
-			UIRouter.pop()
-		return
-	UIRouter.push(screen_id, params)
+	UIRouter.open_in_gameplay_shell(screen_id, params)
 
 
 func _on_travel_button_pressed(dest_location_id: String) -> void:
@@ -188,9 +178,7 @@ func _on_travel_button_pressed(dest_location_id: String) -> void:
 
 
 func _on_back_button_pressed() -> void:
-	if UIRouter.stack_depth() <= 1:
-		return
-	UIRouter.pop()
+	pass
 
 
 func _on_location_changed(_old_id: String, new_id: String) -> void:
@@ -203,11 +191,3 @@ func _get_semantic_color(color_name: String, fallback: Color) -> Color:
 	if has_theme_color(color_name, SEMANTIC_THEME_TYPE):
 		return get_theme_color(color_name, SEMANTIC_THEME_TYPE)
 	return fallback
-
-
-func _refresh_nav_state() -> void:
-	_back_button.disabled = UIRouter.stack_depth() <= 1
-
-
-func get_debug_snapshot() -> Dictionary:
-	return _last_view_model.duplicate(true)
