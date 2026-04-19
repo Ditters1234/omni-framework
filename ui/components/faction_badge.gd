@@ -2,6 +2,7 @@
 ## {
 ##   "faction_id": String,
 ##   "emblem_path": String,
+##   "emblem_id": String,
 ##   "reputation_tier": String,
 ##   "reputation_value": float,
 ##   "color": Variant
@@ -10,6 +11,7 @@ extends PanelContainer
 
 class_name FactionBadge
 
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const FALLBACK_SECONDARY_COLOR := Color("#7dd3a7")
 
@@ -34,6 +36,7 @@ func render(view_model: Dictionary) -> void:
 
 func _apply_view_model(view_model: Dictionary) -> void:
 	var faction_id := str(view_model.get("faction_id", ""))
+	var emblem_id := str(view_model.get("emblem_id", ""))
 	var emblem_path := str(view_model.get("emblem_path", ""))
 	var reputation_tier := str(view_model.get("reputation_tier", ""))
 	var reputation_value := float(view_model.get("reputation_value", 0.0))
@@ -45,15 +48,18 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	_name_label.modulate = accent_color
 	_reputation_label.modulate = accent_color.lightened(0.1)
 	_apply_panel_style(accent_color)
-	_apply_emblem(emblem_path)
+	_apply_emblem(emblem_id, emblem_path)
 
 
-func _apply_emblem(emblem_path: String) -> void:
-	if emblem_path.is_empty() or not ResourceLoader.exists(emblem_path):
+func _apply_emblem(emblem_id: String, emblem_path: String) -> void:
+	var resolved_path := BACKEND_HELPERS.resolve_visual_resource_path(emblem_id)
+	if resolved_path.is_empty():
+		resolved_path = emblem_path
+	if resolved_path.is_empty() or not ResourceLoader.exists(resolved_path):
 		_emblem_rect.texture = null
 		_emblem_rect.visible = false
 		return
-	_emblem_rect.texture = load(emblem_path) as Texture2D
+	_emblem_rect.texture = load(resolved_path) as Texture2D
 	_emblem_rect.visible = _emblem_rect.texture != null
 
 

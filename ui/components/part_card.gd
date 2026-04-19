@@ -10,7 +10,7 @@ extends PanelContainer
 
 class_name PartCard
 
-const ROOT_FALLBACK := "res://mods/base/assets/images/fallbacks/root_fallback.png"
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const FALLBACK_POSITIVE_COLOR := Color("#8fd18f")
 const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
@@ -58,13 +58,13 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	_description_label.text = str(template.get("description", "No part description is available."))
 	_price_label.text = price_text
 	_price_label.modulate = _get_semantic_color("positive", FALLBACK_POSITIVE_COLOR) if affordable else _get_semantic_color("negative", FALLBACK_NEGATIVE_COLOR)
-	
-	var sprite_path := _resolve_sprite_path(template, default_sprite_paths)
+
+	var sprite_path := BACKEND_HELPERS.resolve_part_sprite_path(template, default_sprite_paths)
 	if not sprite_path.is_empty() and ResourceLoader.exists(sprite_path):
 		_texture_rect.texture = load(sprite_path) as Texture2D
 	else:
-		_texture_rect.texture = null	
-	
+		_texture_rect.texture = null
+
 	_render_badges(badges_value)
 	_stats_label.text = "\n".join(_build_stat_lines(template))
 
@@ -122,59 +122,6 @@ func _build_price_text(template: Dictionary) -> String:
 	for key_value in keys:
 		parts.append("%s %s" % [str(price.get(key_value, 0)), _humanize_id(str(key_value))])
 	return "Price: %s" % ", ".join(parts)
-
-
-func _resolve_sprite_path(part_template: Dictionary, default_sprite_paths: Dictionary) -> String:
-	var explicit_sprite := str(part_template.get("sprite", ""))
-	if not explicit_sprite.is_empty() and ResourceLoader.exists(explicit_sprite):
-		return explicit_sprite
-	var tags := _read_tags(part_template)
-	var configured_sprite := _resolve_configured_default_sprite(tags, default_sprite_paths)
-	if not configured_sprite.is_empty():
-		return configured_sprite
-	if "head" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_head.png"
-	if "hair" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_hat.png"
-	if "torso" in tags or "body_core" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_torso.png"
-	if "arm" in tags or "wing" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_arm.png"
-	if "leg" in tags or "tail" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_leg.png"
-	if "hand" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_hand.png"
-	if "foot" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_foot.png"
-	if "nose_cone" in tags or "fin" in tags or "thruster" in tags or "vehicle_core" in tags or "rocket_core" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_cyberware.png"
-	return ROOT_FALLBACK
-
-
-func _read_tags(part_template: Dictionary) -> Array[String]:
-	var results: Array[String] = []
-	var tags_value: Variant = part_template.get("tags", [])
-	if not tags_value is Array:
-		return results
-	var tags: Array = tags_value
-	for tag_value in tags:
-		var tag := str(tag_value)
-		if not tag.is_empty():
-			results.append(tag)
-	return results
-
-
-func _resolve_configured_default_sprite(tags: Array[String], configured_sprites: Dictionary) -> String:
-	for tag in tags:
-		if not configured_sprites.has(tag):
-			continue
-		var sprite_path := str(configured_sprites.get(tag, ""))
-		if not sprite_path.is_empty() and ResourceLoader.exists(sprite_path):
-			return sprite_path
-	var fallback_path := str(configured_sprites.get("default", ""))
-	if not fallback_path.is_empty() and ResourceLoader.exists(fallback_path):
-		return fallback_path
-	return ""
 
 
 func _humanize_id(value: String) -> String:

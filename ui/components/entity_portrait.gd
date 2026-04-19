@@ -2,6 +2,7 @@
 ## {
 ##   "display_name": String,
 ##   "emblem_path": String,
+##   "emblem_id": String,
 ##   "description": String,
 ##   "faction_badge": Variant,
 ##   "stat_preview": Array[Dictionary]
@@ -10,6 +11,7 @@ extends PanelContainer
 
 class_name EntityPortrait
 
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const STAT_BAR_SCENE := preload("res://ui/components/stat_bar.tscn")
 
 @onready var _emblem_rect: TextureRect = $MarginContainer/VBoxContainer/TopRow/EmblemRect
@@ -38,16 +40,22 @@ func _apply_view_model(view_model: Dictionary) -> void:
 
 	_render_faction_badge(view_model.get("faction_badge", null))
 
-	_apply_emblem(str(view_model.get("emblem_path", "")))
+	_apply_emblem(
+		str(view_model.get("emblem_id", "")),
+		str(view_model.get("emblem_path", ""))
+	)
 	_render_stat_preview(view_model.get("stat_preview", []))
 
 
-func _apply_emblem(emblem_path: String) -> void:
-	if emblem_path.is_empty() or not ResourceLoader.exists(emblem_path):
+func _apply_emblem(emblem_id: String, emblem_path: String) -> void:
+	var resolved_path := BACKEND_HELPERS.resolve_visual_resource_path(emblem_id)
+	if resolved_path.is_empty():
+		resolved_path = emblem_path
+	if resolved_path.is_empty() or not ResourceLoader.exists(resolved_path):
 		_emblem_rect.texture = null
 		_emblem_rect.visible = false
 		return
-	_emblem_rect.texture = load(emblem_path) as Texture2D
+	_emblem_rect.texture = load(resolved_path) as Texture2D
 	_emblem_rect.visible = _emblem_rect.texture != null
 
 

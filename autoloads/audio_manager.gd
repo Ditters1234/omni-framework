@@ -44,14 +44,16 @@ var _music_play_failures: int = 0
 # ---------------------------------------------------------------------------
 
 func _ready() -> void:
-	_resolve_audio_buses()
-	_build_sfx_pool()
-	_build_music_players()
+	_ensure_audio_players_ready()
 	_connect_runtime_signals()
 	reload_ui_sound_config()
 
 
 func _build_sfx_pool() -> void:
+	for player in _sfx_pool:
+		if player != null and player.get_parent() == self:
+			remove_child(player)
+			player.queue_free()
 	_sfx_pool.clear()
 	_sfx_volume_offsets.clear()
 	for _i in range(SFX_POOL_SIZE):
@@ -62,6 +64,13 @@ func _build_sfx_pool() -> void:
 
 
 func _build_music_players() -> void:
+	if _music_player_a != null and _music_player_a.get_parent() == self:
+		remove_child(_music_player_a)
+		_music_player_a.queue_free()
+	if _music_player_b != null and _music_player_b.get_parent() == self:
+		remove_child(_music_player_b)
+		_music_player_b.queue_free()
+
 	_music_player_a = AudioStreamPlayer.new()
 	_music_player_b = AudioStreamPlayer.new()
 	_music_player_a.bus = _resolved_music_bus
@@ -73,14 +82,49 @@ func _build_music_players() -> void:
 	_set_music_mix_b(0.0)
 
 
+func _ensure_audio_players_ready() -> void:
+	_resolve_audio_buses()
+
+	var needs_sfx_pool := _sfx_pool.is_empty()
+	if not needs_sfx_pool:
+		for player in _sfx_pool:
+			if player == null or player.get_parent() != self:
+				needs_sfx_pool = true
+				break
+	if needs_sfx_pool:
+		_build_sfx_pool()
+	else:
+		for player in _sfx_pool:
+			if player != null:
+				player.bus = _resolved_sfx_bus
+
+	var needs_music_players := (
+		_music_player_a == null
+		or _music_player_b == null
+		or _music_player_a.get_parent() != self
+		or _music_player_b.get_parent() != self
+	)
+	if needs_music_players:
+		_build_music_players()
+	else:
+		_music_player_a.bus = _resolved_music_bus
+		_music_player_b.bus = _resolved_music_bus
+		if _active_music_player == null:
+			_active_music_player = _music_player_a
+		_apply_music_mix(_music_player_a, _music_mix_a)
+		_apply_music_mix(_music_player_b, _music_mix_b)
+
+
 # ---------------------------------------------------------------------------
 # SFX
 # ---------------------------------------------------------------------------
 
 ## Plays a one-shot sound effect. path can be a res:// path or a mod asset path.
 func play_sfx(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:
+	_ensure_audio_players_ready()
+	var normalized_path := path.strip_edges()
 	_sfx_play_requests += 1
-	var stream := _load_audio_stream(path)
+	var stream := _load_audio_stream(normalized_path)
 	if stream == null:
 		_sfx_play_failures += 1
 		return
@@ -90,7 +134,7 @@ func play_sfx(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0) ->
 		_sfx_pool_exhaustions += 1
 	if player == null:
 		_sfx_play_failures += 1
-		_append_recent_error("AudioManager: no SFX player was available for '%s'." % path)
+		_append_recent_error("AudioManager: no SFX player was available for '%s'." % normalized_path)
 		return
 	_sfx_volume_offsets[player.get_instance_id()] = volume_db
 	player.stream = stream
@@ -114,16 +158,22 @@ func _get_free_sfx_player() -> AudioStreamPlayer:
 
 ## Plays background music. Cross-fades if a track is already playing.
 func play_music(path: String, fade_duration: float = 1.0) -> void:
+	_ensure_audio_players_ready()
+	var normalized_path := path.strip_edges()
 	_music_play_requests += 1
-	var stream := _load_audio_stream(path)
+	if normalized_path.is_empty():
+		_music_play_failures += 1
+		_append_recent_error("AudioManager: attempted to play music with an empty path.")
+		return
+	var stream := _load_audio_stream(normalized_path)
 	if stream == null:
 		_music_play_failures += 1
 		return
 	if _active_music_player == null or _music_player_a == null or _music_player_b == null:
 		_music_play_failures += 1
-		_append_recent_error("AudioManager: music players are not initialized; '%s' was not played." % path)
+		_append_recent_error("AudioManager: music players are not initialized; '%s' was not played." % normalized_path)
 		return
-	if path == _current_music_path and _active_music_player.playing:
+	if normalized_path == _current_music_path and _active_music_player.playing:
 		return
 	_cancel_music_fade()
 	var next_player := _music_player_b if _active_music_player == _music_player_a else _music_player_a
@@ -131,7 +181,7 @@ func play_music(path: String, fade_duration: float = 1.0) -> void:
 	next_player.stream_paused = false
 	_set_music_mix_for_player(next_player, 0.0)
 	next_player.play()
-	_current_music_path = path
+	_current_music_path = normalized_path
 	if not _active_music_player.playing or fade_duration <= 0.0:
 		if next_player != _music_player_a:
 			_stop_music_player(_music_player_a)
@@ -160,6 +210,7 @@ func play_music(path: String, fade_duration: float = 1.0) -> void:
 
 ## Stops music with an optional fade-out.
 func stop_music(fade_duration: float = 1.0) -> void:
+	_ensure_audio_players_ready()
 	if _music_player_a == null or _music_player_b == null:
 		return
 	_cancel_music_fade()
@@ -190,6 +241,7 @@ func stop_music(fade_duration: float = 1.0) -> void:
 
 ## Pauses music playback.
 func pause_music() -> void:
+	_ensure_audio_players_ready()
 	if _music_player_a != null:
 		_music_player_a.stream_paused = true
 	if _music_player_b != null:
@@ -198,6 +250,7 @@ func pause_music() -> void:
 
 ## Resumes paused music.
 func resume_music() -> void:
+	_ensure_audio_players_ready()
 	if _music_player_a != null:
 		_music_player_a.stream_paused = false
 	if _music_player_b != null:

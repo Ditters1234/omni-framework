@@ -2,6 +2,7 @@ extends RefCounted
 
 class_name OmniThemeApplier
 
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const THEME_PATH := "res://ui/theme/omni_theme.tres"
 const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const DEFAULT_PRIMARY_COLOR := Color("#4fb3ff")
@@ -154,10 +155,13 @@ static func _build_focus_style(border_color: Color) -> StyleBoxFlat:
 
 
 static func _load_font(path_data: Variant) -> Font:
-	var font_path := str(path_data)
-	if font_path.is_empty():
+	var font_ref := str(path_data)
+	if font_ref.is_empty():
 		return null
-	if not ResourceLoader.exists(font_path):
+	var font_path := BACKEND_HELPERS.resolve_font_path(font_ref)
+	if font_path.is_empty() and ResourceLoader.exists(font_ref):
+		font_path = font_ref
+	if font_path.is_empty():
 		return null
 	return load(font_path) as Font
 

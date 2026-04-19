@@ -41,6 +41,77 @@ static func get_part_default_sprite_paths() -> Dictionary:
 	return {}
 
 
+static func resolve_dialogue_resource_path(dialogue_ref: String) -> String:
+	return resolve_resource_path(dialogue_ref, [
+		"ui.dialogue_resources",
+		"game.dialogue_resources",
+		"assets.dialogues",
+	])
+
+
+static func resolve_sound_path(sound_ref: String) -> String:
+	return resolve_resource_path(sound_ref, [
+		"ui.sounds",
+		"audio.sounds",
+		"assets.sounds",
+	])
+
+
+static func resolve_font_path(font_ref: String) -> String:
+	return resolve_resource_path(font_ref, [
+		"ui.theme.fonts",
+		"ui.fonts",
+		"assets.fonts",
+	])
+
+
+static func resolve_resource_path(resource_ref: String, registry_paths: Array[String] = []) -> String:
+	var normalized_ref := resource_ref.strip_edges()
+	if normalized_ref.is_empty():
+		return ""
+	if _resource_exists(normalized_ref):
+		return normalized_ref
+	for registry_path in registry_paths:
+		var registry_value: Variant = DataManager.get_config_value(registry_path, {})
+		if not registry_value is Dictionary:
+			continue
+		var registry: Dictionary = registry_value
+		if not registry.has(normalized_ref):
+			continue
+		var mapped_path := str(registry.get(normalized_ref, ""))
+		if _resource_exists(mapped_path):
+			return mapped_path
+	return ""
+
+
+static func resolve_visual_resource_path(resource_ref: String) -> String:
+	return resolve_resource_path(resource_ref, [
+		"ui.images",
+		"ui.portraits",
+		"ui.emblems",
+		"ui.sprites",
+		"assets.images",
+	])
+
+
+static func resolve_part_sprite_path(part_template: Dictionary, default_sprite_paths: Dictionary = {}) -> String:
+	for field_name in ["sprite_id", "icon_id", "art_id"]:
+		var asset_id := str(part_template.get(field_name, ""))
+		var resolved_asset_path := resolve_visual_resource_path(asset_id)
+		if not resolved_asset_path.is_empty():
+			return resolved_asset_path
+
+	var explicit_sprite := str(part_template.get("sprite", ""))
+	if _resource_exists(explicit_sprite):
+		return explicit_sprite
+
+	var tags := _read_tags(part_template)
+	var configured_sprite := _resolve_configured_default_sprite(tags, default_sprite_paths)
+	if not configured_sprite.is_empty():
+		return configured_sprite
+	return ""
+
+
 static func get_entity_template(entity: EntityInstance) -> Dictionary:
 	if entity == null:
 		return {}
@@ -209,9 +280,11 @@ static func build_entity_portrait_view_model(
 			"stat_preview": [],
 		}
 	var template := get_entity_template(entity)
+	var emblem_id := str(template.get("portrait_id", template.get("emblem_id", template.get("sprite_id", ""))))
 	return {
 		"display_name": get_entity_display_name(entity, fallback_name),
 		"description": str(template.get("description", fallback_description)),
+		"emblem_id": emblem_id,
 		"emblem_path": _resolve_entity_emblem_path(template),
 		"faction_badge": build_faction_badge_view_model(entity, faction_id),
 		"stat_preview": build_priority_stat_preview(entity),
@@ -231,6 +304,7 @@ static func build_faction_badge_view_model(entity: EntityInstance, faction_id: S
 	var reputation_value := 0.0 if entity == null else entity.get_reputation(resolved_faction_id)
 	return {
 		"faction_id": resolved_faction_id,
+		"emblem_id": str(faction.get("emblem_id", faction.get("icon_id", ""))),
 		"emblem_path": _resolve_faction_emblem_path(faction),
 		"reputation_tier": _reputation_tier_for_value(reputation_value),
 		"reputation_value": reputation_value,
@@ -397,25 +471,31 @@ static func _append_stat_line(groups: Dictionary, group_name: String, line: Dict
 
 
 static func _resolve_entity_emblem_path(entity_template: Dictionary) -> String:
+	for field_name in ["portrait_id", "emblem_id", "sprite_id"]:
+		var asset_id := str(entity_template.get(field_name, ""))
+		var resolved_asset_path := resolve_visual_resource_path(asset_id)
+		if not resolved_asset_path.is_empty():
+			return resolved_asset_path
 	var emblem_fields := ["portrait", "emblem_path", "sprite"]
 	for field_name_value in emblem_fields:
 		var field_name := str(field_name_value)
 		var resource_path := str(entity_template.get(field_name, ""))
-		if resource_path.is_empty():
-			continue
-		if ResourceLoader.exists(resource_path):
+		if _resource_exists(resource_path):
 			return resource_path
 	return ""
 
 
 static func _resolve_faction_emblem_path(faction_template: Dictionary) -> String:
+	for field_name in ["emblem_id", "icon_id", "portrait_id"]:
+		var asset_id := str(faction_template.get(field_name, ""))
+		var resolved_asset_path := resolve_visual_resource_path(asset_id)
+		if not resolved_asset_path.is_empty():
+			return resolved_asset_path
 	var emblem_fields := ["emblem_path", "portrait", "icon"]
 	for field_name_value in emblem_fields:
 		var field_name := str(field_name_value)
 		var resource_path := str(faction_template.get(field_name, ""))
-		if resource_path.is_empty():
-			continue
-		if ResourceLoader.exists(resource_path):
+		if _resource_exists(resource_path):
 			return resource_path
 	return ""
 
@@ -461,3 +541,37 @@ static func _duplicate_dictionary(value: Variant) -> Dictionary:
 		var dictionary_value: Dictionary = value
 		return dictionary_value.duplicate(true)
 	return {}
+
+
+static func _resource_exists(resource_path: String) -> bool:
+	return not resource_path.is_empty() and ResourceLoader.exists(resource_path)
+
+
+static func _read_tags(part_template: Dictionary) -> Array[String]:
+	var results: Array[String] = []
+	var tags_value: Variant = part_template.get("tags", [])
+	if not tags_value is Array:
+		return results
+	var tags: Array = tags_value
+	for tag_value in tags:
+		var tag := str(tag_value)
+		if not tag.is_empty():
+			results.append(tag)
+	return results
+
+
+static func _resolve_configured_default_sprite(tags: Array[String], configured_sprites: Dictionary) -> String:
+	for tag in tags:
+		if not configured_sprites.has(tag):
+			continue
+		var sprite_ref := str(configured_sprites.get(tag, ""))
+		var sprite_path := resolve_visual_resource_path(sprite_ref)
+		if sprite_path.is_empty() and _resource_exists(sprite_ref):
+			sprite_path = sprite_ref
+		if not sprite_path.is_empty():
+			return sprite_path
+	var fallback_ref := str(configured_sprites.get("default", ""))
+	var fallback_path := resolve_visual_resource_path(fallback_ref)
+	if fallback_path.is_empty() and _resource_exists(fallback_ref):
+		fallback_path = fallback_ref
+	return fallback_path

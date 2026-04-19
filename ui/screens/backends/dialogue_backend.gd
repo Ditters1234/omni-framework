@@ -10,8 +10,10 @@ var _params: Dictionary = {}
 
 static func register_contract() -> void:
 	BACKEND_CONTRACT_REGISTRY.register("DialogueBackend", {
-		"required": ["dialogue_resource"],
+		"required": [],
 		"optional": [
+			"dialogue_id",
+			"dialogue_resource",
 			"dialogue_start",
 			"speaker_entity_id",
 			"screen_title",
@@ -19,6 +21,7 @@ static func register_contract() -> void:
 			"cancel_label",
 		],
 		"field_types": {
+			"dialogue_id": TYPE_STRING,
 			"dialogue_resource": TYPE_STRING,
 			"dialogue_start": TYPE_STRING,
 			"speaker_entity_id": TYPE_STRING,
@@ -35,20 +38,22 @@ func initialize(params: Dictionary) -> void:
 
 func build_view_model() -> Dictionary:
 	var speaker := _resolve_speaker_entity()
-	var dialogue_resource := str(_params.get("dialogue_resource", ""))
+	var dialogue_ref := _get_dialogue_reference()
+	var dialogue_resource := get_dialogue_resource_path()
 	var status_text := ""
-	if dialogue_resource.is_empty():
-		status_text = "This dialogue entry is missing a dialogue_resource path."
-	elif not ResourceLoader.exists(dialogue_resource):
-		status_text = "The configured dialogue resource could not be loaded."
+	if dialogue_ref.is_empty():
+		status_text = "This dialogue entry is missing a dialogue_id or dialogue_resource reference."
+	elif dialogue_resource.is_empty():
+		status_text = "The configured dialogue reference could not be resolved."
 	return {
 		"title": str(_params.get("screen_title", "Dialogue")),
 		"description": str(_params.get("screen_description", "Play a branching dialogue file through the routed UI layer.")),
 		"portrait": BACKEND_HELPERS.build_entity_portrait_view_model(
 			speaker,
 			"Speaker",
-			"Dialogue will use the configured resource and optional start title."
+			"Dialogue will use the configured dialogue id or resource reference."
 		),
+		"dialogue_id": str(_params.get("dialogue_id", "")),
 		"dialogue_resource": dialogue_resource,
 		"dialogue_start": str(_params.get("dialogue_start", "")),
 		"speaker_entity_id": "" if speaker == null else speaker.entity_id,
@@ -58,7 +63,10 @@ func build_view_model() -> Dictionary:
 
 
 func get_dialogue_resource_path() -> String:
-	return str(_params.get("dialogue_resource", ""))
+	var dialogue_id := str(_params.get("dialogue_id", ""))
+	if not dialogue_id.is_empty():
+		return BACKEND_HELPERS.resolve_dialogue_resource_path(dialogue_id)
+	return BACKEND_HELPERS.resolve_dialogue_resource_path(str(_params.get("dialogue_resource", "")))
 
 
 func get_dialogue_start() -> String:
@@ -82,8 +90,15 @@ func get_dialogue_blip_path() -> String:
 	if speaker == null:
 		return ""
 	var template := speaker.get_template()
-	return str(template.get("dialogue_blip", ""))
+	return BACKEND_HELPERS.resolve_sound_path(str(template.get("dialogue_blip", template.get("dialogue_blip_id", ""))))
 
 
 func _resolve_speaker_entity() -> EntityInstance:
 	return BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("speaker_entity_id", "")))
+
+
+func _get_dialogue_reference() -> String:
+	var dialogue_id := str(_params.get("dialogue_id", ""))
+	if not dialogue_id.is_empty():
+		return dialogue_id
+	return str(_params.get("dialogue_resource", ""))

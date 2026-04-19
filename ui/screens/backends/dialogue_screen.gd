@@ -86,7 +86,7 @@ func _start_dialogue_if_needed() -> void:
 		return
 	var resource_path := _backend.get_dialogue_resource_path()
 	if resource_path.is_empty():
-		_status_label.text = "This dialogue entry is missing a dialogue_resource path."
+		_status_label.text = "The configured dialogue reference could not be resolved."
 		return
 	if not ResourceLoader.exists(resource_path):
 		_status_label.text = "The configured dialogue resource could not be loaded."
