@@ -15,6 +15,15 @@ const DEFAULT_NEGATIVE_COLOR := Color("#ff7a7a")
 const DEFAULT_WARNING_COLOR := Color("#f7c66b")
 const DEFAULT_INFO_COLOR := Color("#84a9ff")
 const DEFAULT_FONT_SIZE := 16
+const DEFAULT_PANEL_RADIUS := 10
+const DEFAULT_BUTTON_RADIUS := 8
+const DEFAULT_BORDER_WIDTH := 2
+const DEFAULT_PANEL_PADDING := 18.0
+const DEFAULT_BUTTON_PADDING_X := 14.0
+const DEFAULT_BUTTON_PADDING_Y := 10.0
+const DEFAULT_CONTAINER_GAP := 12
+const DEFAULT_SECTION_GAP := 14
+const DEFAULT_ROW_GAP := 8
 
 
 static func build_theme() -> Theme:
@@ -28,6 +37,7 @@ static func build_theme() -> Theme:
 	var theme_config := _get_theme_config()
 	_apply_palette(theme, theme_config)
 	_apply_fonts(theme, theme_config)
+	_apply_layout(theme)
 	return theme
 
 
@@ -57,6 +67,8 @@ static func _apply_palette(theme: Theme, theme_config: Dictionary) -> void:
 	var button_pressed := primary_color.lerp(background_color, 0.25)
 	var button_disabled := background_color.lightened(0.03)
 	var button_text_pressed := background_color.lightened(0.45)
+	var input_fill := background_color.lightened(0.10)
+	var input_focus := primary_color.lerp(input_fill, 0.35)
 
 	theme.default_font_size = DEFAULT_FONT_SIZE
 	theme.set_color("font_color", "Label", text_color)
@@ -68,6 +80,11 @@ static func _apply_palette(theme: Theme, theme_config: Dictionary) -> void:
 	theme.set_color("font_pressed_color", "Button", button_text_pressed)
 	theme.set_color("font_disabled_color", "Button", muted_text_color)
 	theme.set_color("font_focus_color", "Button", text_color)
+	theme.set_color("font_color", "LineEdit", text_color)
+	theme.set_color("font_placeholder_color", "LineEdit", muted_text_color)
+	theme.set_color("font_uneditable_color", "LineEdit", muted_text_color)
+	theme.set_color("font_color", "OptionButton", text_color)
+	theme.set_color("font_color", "SpinBox", text_color)
 
 	theme.set_stylebox("panel", "PanelContainer", _build_panel_style(panel_fill, panel_border))
 	theme.set_stylebox("normal", "Button", _build_button_style(button_fill, panel_border))
@@ -75,6 +92,14 @@ static func _apply_palette(theme: Theme, theme_config: Dictionary) -> void:
 	theme.set_stylebox("pressed", "Button", _build_button_style(button_pressed, secondary_color))
 	theme.set_stylebox("disabled", "Button", _build_button_style(button_disabled, panel_border.darkened(0.25)))
 	theme.set_stylebox("focus", "Button", _build_focus_style(primary_color))
+	theme.set_stylebox("normal", "LineEdit", _build_input_style(input_fill, panel_border))
+	theme.set_stylebox("focus", "LineEdit", _build_input_style(input_focus, primary_color))
+	theme.set_stylebox("read_only", "LineEdit", _build_input_style(input_fill.darkened(0.08), panel_border.darkened(0.20)))
+	theme.set_stylebox("normal", "OptionButton", _build_button_style(button_fill, panel_border))
+	theme.set_stylebox("hover", "OptionButton", _build_button_style(button_hover, primary_color))
+	theme.set_stylebox("pressed", "OptionButton", _build_button_style(button_pressed, secondary_color))
+	theme.set_stylebox("disabled", "OptionButton", _build_button_style(button_disabled, panel_border.darkened(0.25)))
+	theme.set_stylebox("focus", "OptionButton", _build_focus_style(primary_color))
 
 	theme.set_color("primary", SEMANTIC_THEME_TYPE, primary_color)
 	theme.set_color("secondary", SEMANTIC_THEME_TYPE, secondary_color)
@@ -97,56 +122,84 @@ static func _apply_fonts(theme: Theme, theme_config: Dictionary) -> void:
 		theme.set_font("mono_font", SEMANTIC_THEME_TYPE, mono_font)
 
 
+static func _apply_layout(theme: Theme) -> void:
+	theme.set_constant("separation", "VBoxContainer", DEFAULT_CONTAINER_GAP)
+	theme.set_constant("separation", "HBoxContainer", DEFAULT_CONTAINER_GAP)
+	theme.set_constant("separation", "GridContainer", DEFAULT_SECTION_GAP)
+	theme.set_constant("h_separation", "HFlowContainer", DEFAULT_ROW_GAP)
+	theme.set_constant("v_separation", "HFlowContainer", DEFAULT_ROW_GAP)
+	theme.set_constant("v_separation", "VFlowContainer", DEFAULT_ROW_GAP)
+
+
 static func _build_panel_style(fill_color: Color, border_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill_color
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
+	style.border_width_left = DEFAULT_BORDER_WIDTH
+	style.border_width_top = DEFAULT_BORDER_WIDTH
+	style.border_width_right = DEFAULT_BORDER_WIDTH
+	style.border_width_bottom = DEFAULT_BORDER_WIDTH
 	style.border_color = border_color
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_right = 10
-	style.corner_radius_bottom_left = 10
-	style.content_margin_left = 18.0
-	style.content_margin_top = 18.0
-	style.content_margin_right = 18.0
-	style.content_margin_bottom = 18.0
+	style.corner_radius_top_left = DEFAULT_PANEL_RADIUS
+	style.corner_radius_top_right = DEFAULT_PANEL_RADIUS
+	style.corner_radius_bottom_right = DEFAULT_PANEL_RADIUS
+	style.corner_radius_bottom_left = DEFAULT_PANEL_RADIUS
+	style.content_margin_left = DEFAULT_PANEL_PADDING
+	style.content_margin_top = DEFAULT_PANEL_PADDING
+	style.content_margin_right = DEFAULT_PANEL_PADDING
+	style.content_margin_bottom = DEFAULT_PANEL_PADDING
 	return style
 
 
 static func _build_button_style(fill_color: Color, border_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill_color
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
+	style.border_width_left = DEFAULT_BORDER_WIDTH
+	style.border_width_top = DEFAULT_BORDER_WIDTH
+	style.border_width_right = DEFAULT_BORDER_WIDTH
+	style.border_width_bottom = DEFAULT_BORDER_WIDTH
 	style.border_color = border_color
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
-	style.content_margin_left = 14.0
-	style.content_margin_top = 10.0
-	style.content_margin_right = 14.0
-	style.content_margin_bottom = 10.0
+	style.corner_radius_top_left = DEFAULT_BUTTON_RADIUS
+	style.corner_radius_top_right = DEFAULT_BUTTON_RADIUS
+	style.corner_radius_bottom_right = DEFAULT_BUTTON_RADIUS
+	style.corner_radius_bottom_left = DEFAULT_BUTTON_RADIUS
+	style.content_margin_left = DEFAULT_BUTTON_PADDING_X
+	style.content_margin_top = DEFAULT_BUTTON_PADDING_Y
+	style.content_margin_right = DEFAULT_BUTTON_PADDING_X
+	style.content_margin_bottom = DEFAULT_BUTTON_PADDING_Y
+	return style
+
+
+static func _build_input_style(fill_color: Color, border_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill_color
+	style.border_width_left = DEFAULT_BORDER_WIDTH
+	style.border_width_top = DEFAULT_BORDER_WIDTH
+	style.border_width_right = DEFAULT_BORDER_WIDTH
+	style.border_width_bottom = DEFAULT_BORDER_WIDTH
+	style.border_color = border_color
+	style.corner_radius_top_left = DEFAULT_BUTTON_RADIUS
+	style.corner_radius_top_right = DEFAULT_BUTTON_RADIUS
+	style.corner_radius_bottom_right = DEFAULT_BUTTON_RADIUS
+	style.corner_radius_bottom_left = DEFAULT_BUTTON_RADIUS
+	style.content_margin_left = DEFAULT_BUTTON_PADDING_X
+	style.content_margin_top = DEFAULT_BUTTON_PADDING_Y
+	style.content_margin_right = DEFAULT_BUTTON_PADDING_X
+	style.content_margin_bottom = DEFAULT_BUTTON_PADDING_Y
 	return style
 
 
 static func _build_focus_style(border_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.draw_center = false
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
+	style.border_width_left = DEFAULT_BORDER_WIDTH
+	style.border_width_top = DEFAULT_BORDER_WIDTH
+	style.border_width_right = DEFAULT_BORDER_WIDTH
+	style.border_width_bottom = DEFAULT_BORDER_WIDTH
 	style.border_color = border_color.lightened(0.15)
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_right = 10
-	style.corner_radius_bottom_left = 10
+	style.corner_radius_top_left = DEFAULT_PANEL_RADIUS
+	style.corner_radius_top_right = DEFAULT_PANEL_RADIUS
+	style.corner_radius_bottom_right = DEFAULT_PANEL_RADIUS
+	style.corner_radius_bottom_left = DEFAULT_PANEL_RADIUS
 	style.expand_margin_left = 2.0
 	style.expand_margin_top = 2.0
 	style.expand_margin_right = 2.0

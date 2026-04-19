@@ -7,15 +7,15 @@ const SCREEN_SETTINGS := "settings"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_CREDITS := "credits"
 
-@onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
-@onready var _subtitle_label: Label = $MarginContainer/PanelContainer/VBoxContainer/SubtitleLabel
-@onready var _continue_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/ContinueButton
-@onready var _new_game_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/NewGameButton
-@onready var _load_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/LoadButton
-@onready var _settings_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/SettingsButton
-@onready var _credits_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/CreditsButton
-@onready var _quit_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/QuitButton
-@onready var _status_label: Label = $MarginContainer/PanelContainer/VBoxContainer/StatusLabel
+@onready var _title_label: Label = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/TitleLabel
+@onready var _subtitle_label: Label = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/SubtitleLabel
+@onready var _continue_button: Button = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/ButtonColumn/ContinueButton
+@onready var _new_game_button: Button = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/ButtonColumn/NewGameButton
+@onready var _load_button: Button = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/ButtonColumn/LoadButton
+@onready var _settings_button: Button = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/ButtonColumn/SettingsButton
+@onready var _credits_button: Button = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/ButtonColumn/CreditsButton
+@onready var _quit_button: Button = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/ButtonColumn/QuitButton
+@onready var _status_label: Label = $MarginContainer/CenterContainer/PanelContainer/VBoxContainer/StatusLabel
 
 var _last_view_model: Dictionary = {}
 
