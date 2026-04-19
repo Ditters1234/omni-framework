@@ -6,10 +6,9 @@ extends Node
 
 class_name OmniUIRouter
 
+const SCREEN_GAMEPLAY_SHELL := "gameplay_shell"
 const SCREENS_PATH := "res://ui/screens/"
 const MAX_DEBUG_ERRORS := 20
-const PARAM_SHELL_SOURCE := "_shell_source"
-const SHELL_SOURCE_GAMEPLAY := "gameplay_shell"
 
 ## screen_id → res:// path to the .tscn file
 var _screen_registry: Dictionary = {}
@@ -47,6 +46,7 @@ func set_screen_theme(screen_theme: Theme) -> void:
 		if screen != null:
 			screen.theme = _screen_theme
 
+
 # ---------------------------------------------------------------------------
 # Registration
 # ---------------------------------------------------------------------------
@@ -61,6 +61,7 @@ func register_screen(screen_id: String, scene_path: String) -> void:
 		_record_error("register_screen('%s') requires a non-empty scene_path." % screen_id)
 		return
 	_screen_registry[screen_id] = scene_path
+
 
 # ---------------------------------------------------------------------------
 # Navigation
@@ -108,50 +109,42 @@ func replace_all(screen_id: String, params: Dictionary = {}) -> void:
 	_emit_screen_pushed(screen_id)
 
 
-func close_shell_surface(fallback_screen_id: String = "", fallback_params: Dictionary = {}) -> void:
-	if not has_screen():
-		return
-	if _top_screen_is_shell_surface():
-		pop()
-		return
-	if fallback_screen_id.is_empty():
-		pop()
-		return
-	replace_all(fallback_screen_id, fallback_params)
+func instantiate_registered_screen(screen_id: String, params: Dictionary = {}) -> Control:
+	var screen := _instantiate_screen(screen_id)
+	if screen == null:
+		return null
+	_initialize_screen(screen, params)
+	return screen
 
 
-func dispatch_shell_action(action: Dictionary) -> void:
-	var action_type := str(action.get("type", ""))
-	var params := _read_dictionary(action.get("params", {}))
-	match action_type:
-		"pop":
-			close_shell_surface()
-		"replace_all":
-			var screen_id := str(action.get("screen_id", ""))
-			if screen_id.is_empty():
-				close_shell_surface()
-				return
-			if _top_screen_is_shell_surface():
-				close_shell_surface(screen_id, params)
-				return
-			replace_all(screen_id, params)
-		"push":
-			var push_screen_id := str(action.get("screen_id", ""))
-			if push_screen_id.is_empty():
-				return
-			push(push_screen_id, params)
-		_:
-			pass
+func has_screen_in_stack(screen_id: String) -> bool:
+	for entry in _stack:
+		if _get_stack_entry_screen_id(entry) == screen_id:
+			return true
+	return false
 
 
-func build_shell_params(params: Dictionary = {}) -> Dictionary:
-	var shell_params := params.duplicate(true)
-	shell_params[PARAM_SHELL_SOURCE] = SHELL_SOURCE_GAMEPLAY
-	return shell_params
+func open_screen_in_gameplay_shell(screen_id: String, params: Dictionary = {}) -> bool:
+	var shell := _find_gameplay_shell_node()
+	if shell == null:
+		return false
+	if not shell.has_method("open_shell_screen"):
+		return false
+	var params_copy := params.duplicate(true)
+	params_copy["opened_from_gameplay_shell"] = true
+	shell.call("open_shell_screen", screen_id, params_copy)
+	return true
 
 
-func is_shell_params(params: Dictionary) -> bool:
-	return str(params.get(PARAM_SHELL_SOURCE, "")) == SHELL_SOURCE_GAMEPLAY
+func close_gameplay_shell_screen() -> bool:
+	var shell := _find_gameplay_shell_node()
+	if shell == null:
+		return false
+	if not shell.has_method("close_shell_screen"):
+		return false
+	shell.call("close_shell_screen")
+	return true
+
 
 # ---------------------------------------------------------------------------
 # Queries
@@ -223,6 +216,7 @@ func get_debug_snapshot() -> Dictionary:
 		"recent_errors": _recent_errors.duplicate(),
 	}
 
+
 func get_current_screen_debug_snapshot() -> Dictionary:
 	var screen := _get_top_screen_node()
 	if screen == null:
@@ -238,6 +232,7 @@ func get_current_screen_debug_snapshot() -> Dictionary:
 		"node_name": _get_node_name(screen),
 	}
 
+
 # ---------------------------------------------------------------------------
 # Internals
 # ---------------------------------------------------------------------------
@@ -252,6 +247,7 @@ func _teardown_top(emit_events: bool) -> void:
 		node.queue_free()
 	if emit_events and not screen_id.is_empty():
 		_emit_screen_popped(screen_id)
+
 
 func _instantiate_screen(screen_id: String) -> Control:
 	if not _screen_registry.has(screen_id):
@@ -279,6 +275,7 @@ func _instantiate_screen(screen_id: String) -> Control:
 		screen.theme = _screen_theme
 	return screen
 
+
 func _can_navigate(operation: String, screen_id: String) -> bool:
 	if screen_id.is_empty():
 		_record_error("%s() requires a non-empty screen_id." % operation)
@@ -288,6 +285,7 @@ func _can_navigate(operation: String, screen_id: String) -> bool:
 		return false
 	return true
 
+
 func _create_stack_entry(screen_id: String, params: Dictionary, screen: Control) -> Dictionary:
 	return {
 		"screen_id": screen_id,
@@ -295,18 +293,22 @@ func _create_stack_entry(screen_id: String, params: Dictionary, screen: Control)
 		"node": screen,
 	}
 
+
 func _initialize_screen(screen: Control, params: Dictionary) -> void:
 	if screen.has_method("initialize"):
 		screen.call("initialize", params.duplicate(true))
 	_set_screen_active(screen, true)
 
+
 func _emit_screen_pushed(screen_id: String) -> void:
 	GameEvents.screen_pushed.emit(screen_id)
 	GameEvents.ui_screen_pushed.emit(screen_id)
 
+
 func _emit_screen_popped(screen_id: String) -> void:
 	GameEvents.screen_popped.emit(screen_id)
 	GameEvents.ui_screen_popped.emit(screen_id)
+
 
 func _set_screen_active(screen: Control, is_active: bool) -> void:
 	screen.visible = is_active
@@ -317,21 +319,29 @@ func _set_screen_active(screen: Control, is_active: bool) -> void:
 		if screen.has_method("on_route_hidden"):
 			screen.call("on_route_hidden")
 
+
 func _get_top_screen_node() -> Control:
 	if _stack.is_empty():
 		return null
 	var entry: Dictionary = _stack.back()
 	return _get_stack_entry_node(entry)
 
-func _top_screen_is_shell_surface() -> bool:
-	if _stack.is_empty():
-		return false
-	var entry: Dictionary = _stack.back()
-	return is_shell_params(_get_stack_entry_params(entry))
+
+func _find_gameplay_shell_node() -> Control:
+	for index in range(_stack.size() - 1, -1, -1):
+		var entry := _stack[index]
+		if _get_stack_entry_screen_id(entry) != SCREEN_GAMEPLAY_SHELL:
+			continue
+		var node := _get_stack_entry_node(entry)
+		if node != null and is_instance_valid(node):
+			return node
+	return null
+
 
 func _get_stack_entry_screen_id(entry: Dictionary) -> String:
 	var screen_id_value: Variant = entry.get("screen_id", "")
 	return str(screen_id_value)
+
 
 func _get_stack_entry_params(entry: Dictionary) -> Dictionary:
 	var params_value: Variant = entry.get("params", {})
@@ -340,19 +350,23 @@ func _get_stack_entry_params(entry: Dictionary) -> Dictionary:
 		return params.duplicate(true)
 	return {}
 
+
 func _get_stack_entry_node(entry: Dictionary) -> Control:
 	var node_value: Variant = entry.get("node", null)
 	return node_value as Control
+
 
 func _get_container_path() -> String:
 	if _screen_container == null or not is_instance_valid(_screen_container):
 		return ""
 	return str(_screen_container.get_path())
 
+
 func _get_node_name(node: Control) -> String:
 	if node == null or not is_instance_valid(node):
 		return ""
 	return node.name
+
 
 func _reattach_stack_to_container() -> void:
 	if _screen_container == null or not is_instance_valid(_screen_container):
@@ -368,11 +382,6 @@ func _reattach_stack_to_container() -> void:
 			current_parent.remove_child(node)
 		_screen_container.add_child(node)
 
-func _read_dictionary(value: Variant) -> Dictionary:
-	if value is Dictionary:
-		var dictionary_value: Dictionary = value
-		return dictionary_value.duplicate(true)
-	return {}
 
 func _record_error(message: String) -> void:
 	var full_message := "UIRouter: %s" % message

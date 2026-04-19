@@ -4,7 +4,6 @@ const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_ba
 const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn")
 const STAT_SHEET_SCENE := preload("res://ui/components/stat_sheet.tscn")
 const FACTION_BADGE_SCENE := preload("res://ui/components/faction_badge.tscn")
-const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -26,9 +25,11 @@ var _backend_initialized: bool = false
 var _portrait: Control = null
 var _stat_sheet: Control = null
 var _last_view_model: Dictionary = {}
+var _opened_from_gameplay_shell: bool = false
 
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
+	_opened_from_gameplay_shell = bool(params.get("opened_from_gameplay_shell", false))
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_state()
@@ -52,6 +53,7 @@ func _refresh_state() -> void:
 		return
 	var view_model: Dictionary = _backend.build_view_model()
 	_last_view_model = view_model.duplicate(true)
+	_last_view_model["opened_from_gameplay_shell"] = _opened_from_gameplay_shell
 	_title_label.text = str(view_model.get("title", "Entity Sheet"))
 	_description_label.text = str(view_model.get("description", ""))
 	_summary_label.text = str(view_model.get("summary_text", ""))
@@ -168,7 +170,10 @@ func _build_row_text(row: Dictionary, prefix_field: String) -> String:
 	return "%s\n%s" % [title, stat_summary]
 
 func _on_back_button_pressed() -> void:
-	BACKEND_NAVIGATION_HELPER.close_surface()
+	if _opened_from_gameplay_shell:
+		UIRouter.close_gameplay_shell_screen()
+		return
+	UIRouter.pop()
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

@@ -270,6 +270,42 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
+[node name="ShellSurfacePanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SurfaceTitleLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "Shell Surface"
+
+[node name="CloseSurfaceButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+text = "Close"
+
+[node name="SurfaceHost" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
 [node name="StatusLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer" unique_id=162230152]
 layout_mode = 2
 text = "Ready."
@@ -280,3 +316,4 @@ autowrap_mode = 3
 [connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/ExploreLocationButton" to="." method="_on_explore_location_button_pressed"]
 [connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/OpenLoadoutButton" to="." method="_on_open_loadout_button_pressed"]
 [connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]
+[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ShellSurfacePanel/MarginContainer/VBoxContainer/HeaderRow/CloseSurfaceButton" to="." method="_on_close_surface_button_pressed"]

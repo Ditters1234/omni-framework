@@ -5,7 +5,6 @@ const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn
 const DIALOGUE_RESOURCE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_resource.gd")
 const DIALOGUE_LINE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_line.gd")
 const DIALOGUE_RESPONSE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_response.gd")
-const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -27,9 +26,11 @@ var _conversation_finished: bool = false
 var _request_token: int = 0
 var _dialogue_started_emitted: bool = false
 var _last_view_model: Dictionary = {}
+var _opened_from_gameplay_shell: bool = false
 
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
+	_opened_from_gameplay_shell = bool(params.get("opened_from_gameplay_shell", false))
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_context()
@@ -45,6 +46,7 @@ func get_debug_snapshot() -> Dictionary:
 	snapshot["conversation_finished"] = _conversation_finished
 	snapshot["dialogue_started_emitted"] = _dialogue_started_emitted
 	snapshot["current_line_id"] = "" if _current_line == null else str(_current_line.get("id"))
+	snapshot["opened_from_gameplay_shell"] = _opened_from_gameplay_shell
 	return snapshot
 
 func _initialize_backend() -> void:
@@ -216,7 +218,13 @@ func _on_advance_button_pressed() -> void:
 func _on_back_button_pressed() -> void:
 	if not _conversation_finished:
 		_finish_dialogue("Conversation closed.")
-	BACKEND_NAVIGATION_HELPER.close_surface()
+	_navigate_back()
+
+func _navigate_back() -> void:
+	if _opened_from_gameplay_shell:
+		UIRouter.close_gameplay_shell_screen()
+		return
+	UIRouter.pop()
 
 func _read_line_character(line: RefCounted) -> String:
 	var character_value: Variant = line.get("character")

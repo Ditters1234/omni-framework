@@ -2,7 +2,6 @@ extends Control
 
 const FACTION_REPUTATION_BACKEND := preload("res://ui/screens/backends/faction_reputation_backend.gd")
 const FACTION_BADGE_SCENE := preload("res://ui/components/faction_badge.tscn")
-const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -14,9 +13,11 @@ var _backend: RefCounted = FACTION_REPUTATION_BACKEND.new()
 var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _last_view_model: Dictionary = {}
+var _opened_from_gameplay_shell: bool = false
 
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
+	_opened_from_gameplay_shell = bool(params.get("opened_from_gameplay_shell", false))
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_state()
@@ -40,6 +41,7 @@ func _refresh_state() -> void:
 		return
 	var view_model: Dictionary = _backend.build_view_model()
 	_last_view_model = view_model.duplicate(true)
+	_last_view_model["opened_from_gameplay_shell"] = _opened_from_gameplay_shell
 	_title_label.text = str(view_model.get("title", "Faction Reputation"))
 	_description_label.text = str(view_model.get("description", ""))
 	_status_label.text = str(view_model.get("status_text", ""))
@@ -81,7 +83,10 @@ func _build_detail_text(row: Dictionary) -> String:
 	return "\n".join(parts)
 
 func _on_back_button_pressed() -> void:
-	BACKEND_NAVIGATION_HELPER.close_surface()
+	if _opened_from_gameplay_shell:
+		UIRouter.close_gameplay_shell_screen()
+		return
+	UIRouter.pop()
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

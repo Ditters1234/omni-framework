@@ -2,7 +2,6 @@ extends Control
 
 const ASSEMBLY_SLOT_ROW_SCENE := preload("res://ui/components/assembly_slot_row.tscn")
 const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
-const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -20,9 +19,11 @@ var _backend: OmniAssemblyEditorBackend = ASSEMBLY_EDITOR_BACKEND.new()
 var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _last_view_model: Dictionary = {}
+var _opened_from_gameplay_shell: bool = false
 
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
+	_opened_from_gameplay_shell = bool(params.get("opened_from_gameplay_shell", false))
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_editor_state()
@@ -43,6 +44,7 @@ func _refresh_editor_state() -> void:
 		return
 	var view_model: Dictionary = _backend.build_view_model()
 	_last_view_model = view_model.duplicate(true)
+	_last_view_model["opened_from_gameplay_shell"] = _opened_from_gameplay_shell
 	_title_label.text = str(view_model.get("title", "Assembly Editor"))
 	_description_label.text = str(view_model.get("description", ""))
 	_summary_label.text = str(view_model.get("summary", ""))
@@ -61,6 +63,7 @@ func get_debug_snapshot() -> Dictionary:
 		"backend_initialized": _backend_initialized,
 		"pending_params": _pending_params.duplicate(true),
 		"last_view_model": _last_view_model.duplicate(true),
+		"opened_from_gameplay_shell": _opened_from_gameplay_shell,
 	}
 
 func _refresh_editor_rows(row_view_models: Array[Dictionary]) -> void:
@@ -161,15 +164,48 @@ func _on_row_selected(slot_id: String) -> void:
 	_refresh_editor_state()
 
 func _on_back_button_pressed() -> void:
-	var cancel_action := _backend.build_cancel_action()
-	BACKEND_NAVIGATION_HELPER.dispatch_action(cancel_action)
+	_execute_navigation_action(_backend.build_cancel_action())
 
 func _on_begin_button_pressed() -> void:
 	var navigation_action: Dictionary = _backend.confirm()
 	if navigation_action.is_empty():
 		_refresh_editor_state()
 		return
-	BACKEND_NAVIGATION_HELPER.dispatch_action(navigation_action)
+	_execute_navigation_action(navigation_action)
+
+func _navigate_back() -> void:
+	if _opened_from_gameplay_shell:
+		UIRouter.close_gameplay_shell_screen()
+		return
+	UIRouter.pop()
+
+func _execute_navigation_action(action: Dictionary) -> void:
+	var action_type := str(action.get("type", ""))
+	var screen_id := str(action.get("screen_id", ""))
+	var params := _read_dictionary(action.get("params", {}))
+	if _opened_from_gameplay_shell:
+		match action_type:
+			"pop":
+				UIRouter.close_gameplay_shell_screen()
+			"replace_all", "push":
+				if not screen_id.is_empty() and UIRouter.open_screen_in_gameplay_shell(screen_id, params):
+					return
+				if action_type == "replace_all":
+					UIRouter.replace_all(screen_id, params)
+				else:
+					UIRouter.push(screen_id, params)
+			_:
+				pass
+		return
+	match action_type:
+		"pop":
+			UIRouter.pop()
+		"replace_all":
+			UIRouter.replace_all(screen_id, params)
+		"push":
+			UIRouter.push(screen_id, params)
+		_:
+			pass
 
 func _read_row_view_models(view_model: Dictionary) -> Array[Dictionary]:
 	var rows_value: Variant = view_model.get("rows", [])

@@ -3,7 +3,6 @@ extends Control
 const EXCHANGE_BACKEND := preload("res://ui/screens/backends/exchange_backend.gd")
 const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 const CURRENCY_DISPLAY_SCENE := preload("res://ui/components/currency_display.tscn")
-const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -21,9 +20,11 @@ var _backend_initialized: bool = false
 var _part_card: Control = null
 var _currency_display: Control = null
 var _last_view_model: Dictionary = {}
+var _opened_from_gameplay_shell: bool = false
 
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
+	_opened_from_gameplay_shell = bool(params.get("opened_from_gameplay_shell", false))
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_state()
@@ -47,6 +48,7 @@ func _refresh_state() -> void:
 		return
 	var view_model: Dictionary = _backend.build_view_model()
 	_last_view_model = view_model.duplicate(true)
+	_last_view_model["opened_from_gameplay_shell"] = _opened_from_gameplay_shell
 	_title_label.text = str(view_model.get("title", "Exchange"))
 	_description_label.text = str(view_model.get("description", ""))
 	_summary_label.text = str(view_model.get("summary", ""))
@@ -105,11 +107,47 @@ func _on_row_pressed(instance_id: String) -> void:
 
 func _on_confirm_button_pressed() -> void:
 	var action: Dictionary = _backend.confirm()
-	BACKEND_NAVIGATION_HELPER.dispatch_action(action)
+	_execute_navigation_action(action)
 	_refresh_state()
 
 func _on_back_button_pressed() -> void:
-	BACKEND_NAVIGATION_HELPER.close_surface()
+	_navigate_back()
+
+func _navigate_back() -> void:
+	if _opened_from_gameplay_shell:
+		UIRouter.close_gameplay_shell_screen()
+		return
+	UIRouter.pop()
+
+
+func _execute_navigation_action(action: Dictionary) -> void:
+	var action_type := str(action.get("type", ""))
+	var screen_id := str(action.get("screen_id", ""))
+	var params := _read_dictionary(action.get("params", {}))
+	if _opened_from_gameplay_shell:
+		match action_type:
+			"pop":
+				UIRouter.close_gameplay_shell_screen()
+			"replace_all", "push":
+				if not screen_id.is_empty() and UIRouter.open_screen_in_gameplay_shell(screen_id, params):
+					return
+				if action_type == "replace_all":
+					UIRouter.replace_all(screen_id, params)
+				else:
+					UIRouter.push(screen_id, params)
+			_:
+				pass
+		return
+	match action_type:
+		"pop":
+			UIRouter.pop()
+		"replace_all":
+			UIRouter.replace_all(screen_id, params)
+		"push":
+			UIRouter.push(screen_id, params)
+		_:
+			pass
+
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
