@@ -1,38 +1,28 @@
 extends Control
 
-const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
-const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
+const SCREEN_ENTITY_SHEET := "entity_sheet"
 const SCREEN_PAUSE_MENU := "pause_menu"
-const CURRENCY_DISPLAY_SCENE := preload("res://ui/components/currency_display.tscn")
-const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gameplay_shell_presenter.gd")
 const GAMEPLAY_LOCATION_SURFACE_SCENE := preload("res://ui/screens/gameplay_shell/gameplay_location_surface.tscn")
 
-@onready var _title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/TitleLabel
-@onready var _subtitle_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/SubtitleLabel
-@onready var _location_title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationTitleLabel
-@onready var _location_description_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationDescriptionLabel
-@onready var _location_meta_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer/LocationMetaLabel
-@onready var _player_portrait: Control = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/PlayerPortrait
-@onready var _currency_list: HFlowContainer = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/CurrencyList
-@onready var _player_stat_sheet: Control = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/PlayerStatSheet
-@onready var _inventory_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer/InventoryLabel
-@onready var _time_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/TimeLabel
-@onready var _autosave_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AutosaveLabel
-@onready var _time_buttons_container: HFlowContainer = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/TimeAdvanceButtons
-@onready var _equipped_cards: VBoxContainer = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer/EquipmentScroll/EquippedCards
-@onready var _explore_location_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/ExploreLocationButton
-@onready var _loadout_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/OpenLoadoutButton
-@onready var _quick_autosave_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/QuickAutosaveButton
-@onready var _advance_tick_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AdvanceTickButton
-@onready var _pause_menu_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/PauseMenuButton
-@onready var _status_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/StatusLabel
-@onready var _surface_panel: PanelContainer = $MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel
-@onready var _surface_title_label: Label = $MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceTitleLabel
-@onready var _surface_close_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton
-@onready var _surface_host: Control = $MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHost
+@onready var _title_label: Label = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/TitleLabel
+@onready var _subtitle_label: Label = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/SubtitleLabel
+@onready var _character_menu_button: Button = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/CharacterMenuButton
+@onready var _quick_autosave_button: Button = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/QuickAutosaveButton
+@onready var _pause_menu_button: Button = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/PauseMenuButton
+@onready var _location_title_label: Label = $MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer/LocationTitleLabel
+@onready var _location_description_label: Label = $MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer/LocationDescriptionLabel
+@onready var _location_meta_label: Label = $MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer/LocationMetaLabel
+@onready var _session_time_label: Label = $MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/SessionTimeLabel
+@onready var _session_day_label: Label = $MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/SessionDayLabel
+@onready var _advance_tick_button: Button = $MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/AdvanceTickButton
+@onready var _time_buttons_container: HFlowContainer = $MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/TimeAdvanceButtons
+@onready var _surface_panel: PanelContainer = $MarginContainer/VBoxContainer/SurfacePanel
+@onready var _surface_title_label: Label = $MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceTitleLabel
+@onready var _surface_close_button: Button = $MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton
+@onready var _surface_host: Control = $MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHost
+@onready var _status_label: Label = $MarginContainer/VBoxContainer/StatusLabel
 
-var _auto_open_location_view: bool = false
 var _status_message: String = "Ready."
 var _last_view_model: Dictionary = {}
 var _presenter: RefCounted = GAMEPLAY_SHELL_PRESENTER.new()
@@ -41,9 +31,7 @@ var _active_surface: Control = null
 var _active_surface_screen_id: String = ""
 
 
-func initialize(params: Dictionary = {}) -> void:
-	var auto_open_data: Variant = params.get("auto_open_location_view", false)
-	_auto_open_location_view = bool(auto_open_data)
+func initialize(_params: Dictionary = {}) -> void:
 	_rebuild_time_buttons()
 	_refresh()
 	_show_default_surface_if_needed()
@@ -140,7 +128,7 @@ func _build_surface_title(screen_id: String) -> String:
 		"dialogue":
 			return "Dialogue"
 		"entity_sheet":
-			return "Entity Sheet"
+			return "Character Menu"
 		"quest_log":
 			return "Quest Log"
 		"faction_rep":
@@ -159,10 +147,6 @@ func _connect_runtime_signals() -> void:
 	GameEvents.tick_advanced.connect(_on_tick_advanced)
 	GameEvents.day_advanced.connect(_on_day_advanced)
 	GameEvents.location_changed.connect(_on_location_changed)
-	GameEvents.entity_stat_changed.connect(_on_entity_stat_changed)
-	GameEvents.entity_currency_changed.connect(_on_entity_currency_changed)
-	GameEvents.part_equipped.connect(_on_part_equipped)
-	GameEvents.part_unequipped.connect(_on_part_unequipped)
 	_runtime_signals_connected = true
 
 
@@ -170,75 +154,28 @@ func _refresh() -> void:
 	var view_model_value: Variant = _presenter.call("build_view_model", _status_message)
 	var view_model := _read_dictionary(view_model_value)
 	_last_view_model = view_model.duplicate(true)
-	_last_view_model["auto_open_location_view"] = _auto_open_location_view
 	_rebuild_time_buttons(_read_dictionary_array(view_model.get("time_button_specs", [])))
 	_apply_view_model(view_model)
 
 
 func _apply_view_model(view_model: Dictionary) -> void:
-	_title_label.text = str(view_model.get("title", "Gameplay Shell"))
+	_title_label.text = str(view_model.get("title", "Gameplay"))
 	_subtitle_label.text = str(view_model.get("subtitle", ""))
 	var location_value: Variant = view_model.get("location", {})
 	var location_view_model := _read_dictionary(location_value)
 	_location_title_label.text = str(location_view_model.get("title_text", ""))
 	_location_description_label.text = str(location_view_model.get("description_text", ""))
 	_location_meta_label.text = str(location_view_model.get("meta_text", ""))
-	var player_value: Variant = view_model.get("player", {})
-	var player_view_model := _read_dictionary(player_value)
-	_player_portrait.call("render", _read_dictionary(player_view_model.get("portrait", {})))
-	_render_currency_displays(_read_dictionary_array(player_view_model.get("currencies", [])))
-	_player_stat_sheet.call("render", _read_dictionary(player_view_model.get("stat_sheet", {})))
-	_inventory_label.text = str(player_view_model.get("inventory_summary", ""))
-	_time_label.text = str(view_model.get("time_text", ""))
-	_autosave_label.text = str(view_model.get("autosave_summary", ""))
-	_render_equipped_cards(_read_dictionary_array(player_view_model.get("equipped_parts", [])))
+	var session_value: Variant = view_model.get("session", {})
+	var session_view_model := _read_dictionary(session_value)
+	_session_time_label.text = str(session_view_model.get("time_text", ""))
+	_session_day_label.text = str(session_view_model.get("day_text", ""))
 	_status_label.text = str(view_model.get("status_text", ""))
 	_set_buttons_enabled(bool(view_model.get("buttons_enabled", false)))
 
 
-func _render_currency_displays(view_models: Array[Dictionary]) -> void:
-	_clear_container_children(_currency_list)
-	if view_models.is_empty():
-		var empty_label := Label.new()
-		empty_label.text = "No currencies available."
-		empty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_currency_list.add_child(empty_label)
-		return
-	for view_model in view_models:
-		var display_value: Variant = CURRENCY_DISPLAY_SCENE.instantiate()
-		if not display_value is Control:
-			continue
-		var display: Control = display_value
-		_currency_list.add_child(display)
-		display.call("render", view_model)
-
-
-func _render_equipped_cards(view_models: Array[Dictionary]) -> void:
-	_clear_container_children(_equipped_cards)
-	if view_models.is_empty():
-		var empty_label := Label.new()
-		empty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		empty_label.text = "No equipped parts are active in this loadout yet."
-		_equipped_cards.add_child(empty_label)
-		return
-	for view_model in view_models:
-		var part_card_value: Variant = PART_CARD_SCENE.instantiate()
-		if not part_card_value is Control:
-			continue
-		var part_card: Control = part_card_value
-		_equipped_cards.add_child(part_card)
-		part_card.call("render", view_model)
-
-
-func _clear_container_children(container: Node) -> void:
-	for child in container.get_children():
-		container.remove_child(child)
-		child.queue_free()
-
-
 func _set_buttons_enabled(enabled: bool) -> void:
-	_explore_location_button.disabled = not enabled
-	_loadout_button.disabled = not enabled
+	_character_menu_button.disabled = not enabled
 	_quick_autosave_button.disabled = not enabled
 	_advance_tick_button.disabled = not enabled
 	_pause_menu_button.disabled = not enabled
@@ -283,22 +220,9 @@ func _on_advance_tick_button_pressed() -> void:
 	_refresh()
 
 
-func _on_explore_location_button_pressed() -> void:
-	show_location_surface({
-		"location_id": GameState.current_location_id,
-	})
-
-
-func _on_open_loadout_button_pressed() -> void:
-	open_surface_screen(SCREEN_ASSEMBLY_EDITOR, {
-		"screen_title": "Character Loadout",
-		"screen_description": "Review your current build, inspect sockets, and return to the shell when you are done.",
-		"screen_summary": "This shell shortcut opens your live player assembly directly.",
+func _on_character_menu_button_pressed() -> void:
+	open_surface_screen(SCREEN_ENTITY_SHEET, {
 		"target_entity_id": "player",
-		"confirm_label": "Done",
-		"cancel_label": "Back",
-		"pop_on_confirm": true,
-		"cancel_screen_id": "",
 		"opened_from_gameplay_shell": true,
 	})
 
@@ -332,37 +256,16 @@ func _on_day_advanced(_day: int) -> void:
 
 func _on_location_changed(_old_id: String, _new_id: String) -> void:
 	_refresh()
-
-
-func _on_entity_stat_changed(entity_id: String, _stat_key: String, _old_value: float, _new_value: float) -> void:
-	var player := GameState.player as EntityInstance
-	if player != null and entity_id == player.entity_id:
-		_refresh()
-
-
-func _on_entity_currency_changed(entity_id: String, _currency_key: String, _old_amount: float, _new_amount: float) -> void:
-	var player := GameState.player as EntityInstance
-	if player != null and entity_id == player.entity_id:
-		_refresh()
-
-
-func _on_part_equipped(entity_id: String, _part_id: String, _slot: String) -> void:
-	var player := GameState.player as EntityInstance
-	if player != null and entity_id == player.entity_id:
-		_refresh()
-
-
-func _on_part_unequipped(entity_id: String, _part_id: String, _slot: String) -> void:
-	var player := GameState.player as EntityInstance
-	if player != null and entity_id == player.entity_id:
-		_refresh()
+	show_location_surface({
+		"location_id": GameState.current_location_id,
+	})
 
 
 func _grab_default_focus() -> void:
 	if not is_node_ready():
 		return
-	if not _explore_location_button.disabled:
-		_explore_location_button.grab_focus()
+	if not _character_menu_button.disabled:
+		_character_menu_button.grab_focus()
 		return
 	if not _advance_tick_button.disabled:
 		_advance_tick_button.grab_focus()

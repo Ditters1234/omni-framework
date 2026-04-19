@@ -171,7 +171,7 @@ func _build_row_text(row: Dictionary, prefix_field: String) -> String:
 
 func _on_back_button_pressed() -> void:
 	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_screen()
+		UIRouter.close_gameplay_shell_surface()
 		return
 	UIRouter.pop()
 

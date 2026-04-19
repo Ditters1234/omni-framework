@@ -197,6 +197,11 @@ func close_gameplay_shell_surface() -> bool:
 	return true
 
 
+## Compatibility shim for older backend screens.
+func close_gameplay_shell_screen() -> bool:
+	return close_gameplay_shell_surface()
+
+
 func show_gameplay_shell_location_surface(params: Dictionary = {}) -> bool:
 	var gameplay_shell := _get_gameplay_shell_node()
 	if gameplay_shell == null:

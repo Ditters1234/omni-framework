@@ -1,19 +1,17 @@
 [gd_scene format=3 uid="uid://c32usncwyte0f"]
 
-[ext_resource type="Script" uid="uid://c621vxj3edxyv" path="res://ui/screens/gameplay_shell/gameplay_shell_screen.gd" id="1_226q4"]
-[ext_resource type="PackedScene" path="res://ui/components/entity_portrait.tscn" id="2_73mfp"]
-[ext_resource type="PackedScene" path="res://ui/components/stat_sheet.tscn" id="3_okc2s"]
+[ext_resource type="Script" path="res://ui/screens/gameplay_shell/gameplay_shell_screen.gd" id="1_shell"]
 
-[node name="GameplayShellScreen" type="Control" unique_id=1105451455]
+[node name="GameplayShellScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_226q4")
+script = ExtResource("1_shell")
 
-[node name="MarginContainer" type="MarginContainer" parent="." unique_id=812041659]
+[node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -25,290 +23,165 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer" unique_id=613730888]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer" unique_id=1721152917]
-custom_minimum_size = Vector2(900, 0)
-layout_mode = 2
-size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
-[node name="HeaderPanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer" unique_id=872993784]
+[node name="HeaderPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel" unique_id=644238395]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/HeaderPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer" unique_id=1777148933]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=436306252]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 3.0
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
-[node name="TitleLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer" unique_id=280380707]
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Gameplay Shell"
+text = "Gameplay"
 
-[node name="SubtitleLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer" unique_id=1097334708]
+[node name="SubtitleLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
-text = "Engine-owned hub for the current session."
+text = "Explore the current location and open interaction surfaces."
 autowrap_mode = 3
 
-[node name="QuickAutosaveButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1653716254]
+[node name="CharacterMenuButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Quick Autosave"
+text = "Character Menu"
 
-[node name="PauseMenuButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1188300035]
+[node name="QuickAutosaveButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Pause Menu"
+text = "Autosave"
 
-[node name="ContentColumns" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer" unique_id=2057014201]
+[node name="PauseMenuButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer"]
 layout_mode = 2
-size_flags_vertical = 3
+text = "Pause"
+
+[node name="OverviewRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="LeftColumn" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns" unique_id=704553335]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/separation = 14
-
-[node name="LocationPanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn" unique_id=1408802487]
+[node name="LocationPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/OverviewRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel" unique_id=1526715415]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/OverviewRow/LocationPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer" unique_id=376127996]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="LocationTitleLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer" unique_id=1679666203]
+[node name="LocationTitleLabel" type="Label" parent="MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Location"
 
-[node name="LocationDescriptionLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer" unique_id=434900858]
+[node name="LocationDescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Location description."
 autowrap_mode = 3
 
-[node name="LocationMetaLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/LocationPanel/MarginContainer/VBoxContainer" unique_id=737523096]
+[node name="LocationMetaLabel" type="Label" parent="MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Location metadata."
 autowrap_mode = 3
 
-[node name="PlayerPanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn" unique_id=747398523]
+[node name="SessionPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/OverviewRow"]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
+custom_minimum_size = Vector2(260, 0)
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel" unique_id=2079724047]
-layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer" unique_id=123115983]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="PlayerPortrait" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer" unique_id=1325444235 instance=ExtResource("2_73mfp")]
-layout_mode = 2
-
-[node name="CurrencySectionLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer" unique_id=1859436715]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Currencies"
-
-[node name="CurrencyList" type="HFlowContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer" unique_id=1448372195]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
-
-[node name="PlayerStatSheet" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer" unique_id=117106268 instance=ExtResource("3_okc2s")]
-layout_mode = 2
-
-[node name="InventoryLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/LeftColumn/PlayerPanel/MarginContainer/VBoxContainer" unique_id=1429331897]
-layout_mode = 2
-text = "Inventory"
-autowrap_mode = 3
-
-[node name="RightColumn" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns" unique_id=1489533693]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/separation = 14
-
-[node name="ActionsPanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn" unique_id=1526177728]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel" unique_id=797447284]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer" unique_id=292635982]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SectionLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer" unique_id=1565279194]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Quick Actions"
-
-[node name="ExploreLocationButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer" unique_id=106990528]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Explore Location"
-
-[node name="OpenLoadoutButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer" unique_id=606193107]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Open Loadout"
-
-[node name="TimePanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn" unique_id=1007470222]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel" unique_id=1934060674]
-layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer" unique_id=555394313]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="TimeSectionLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=1076433269]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Time & Recovery"
-
-[node name="TimeLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=724548687]
+[node name="SessionTimeLabel" type="Label" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Time"
 autowrap_mode = 3
 
-[node name="AutosaveLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=337092633]
+[node name="SessionDayLabel" type="Label" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-text = "Autosave"
+text = "Day"
 autowrap_mode = 3
 
-[node name="AdvanceTickButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=1834133038]
+[node name="AdvanceTickButton" type="Button" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
 text = "Advance Tick"
 
-[node name="TimeAdvanceButtons" type="HFlowContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=294583534]
+[node name="TimeAdvanceButtons" type="HFlowContainer" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 
-[node name="EquipmentPanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn" unique_id=1989939434]
+[node name="SurfacePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel" unique_id=4820926]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/SurfacePanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer" unique_id=256036583]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="EquipmentSectionLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer" unique_id=691169849]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Loadout Snapshot"
-
-[node name="EquipmentScroll" type="ScrollContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer" unique_id=471941734]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="EquippedCards" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/EquipmentPanel/MarginContainer/VBoxContainer/EquipmentScroll" unique_id=1366491351]
-custom_minimum_size = Vector2(0, 200)
-layout_mode = 2
-size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="SurfacePanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer" unique_id=472047551]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel" unique_id=857822239]
-layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer" unique_id=1589666822]
+[node name="SurfaceHeader" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="SurfaceHeader" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=744412417]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="SurfaceTitleLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader" unique_id=1868115028]
+[node name="SurfaceTitleLabel" type="Label" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
 text = "Location"
 
-[node name="SurfaceCloseButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader" unique_id=1902188969]
+[node name="SurfaceCloseButton" type="Button" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader"]
 layout_mode = 2
-text = "Close Surface"
+text = "Close"
 
-[node name="SurfaceHost" type="Control" parent="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=1954626861]
+[node name="SurfaceHost" type="Control" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 420)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="StatusLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer" unique_id=162230152]
+[node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Ready."
 autowrap_mode = 3
 
-[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/QuickAutosaveButton" to="." method="_on_quick_autosave_button_pressed"]
-[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/PauseMenuButton" to="." method="_on_pause_menu_button_pressed"]
-[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/ExploreLocationButton" to="." method="_on_explore_location_button_pressed"]
-[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer/OpenLoadoutButton" to="." method="_on_open_loadout_button_pressed"]
-[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]
-[connection signal="pressed" from="MarginContainer/ScrollContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton" to="." method="_on_surface_close_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/CharacterMenuButton" to="." method="_on_character_menu_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/QuickAutosaveButton" to="." method="_on_quick_autosave_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/PauseMenuButton" to="." method="_on_pause_menu_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton" to="." method="_on_surface_close_button_pressed"]
