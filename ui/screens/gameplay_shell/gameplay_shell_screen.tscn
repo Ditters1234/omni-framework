@@ -20,10 +20,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 28
-theme_override_constants/margin_top = 28
-theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 28
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer" unique_id=613730888]
 layout_mode = 2
@@ -32,6 +32,7 @@ size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer" unique_id=1721152917]
+custom_minimum_size = Vector2(900, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 14
@@ -48,6 +49,7 @@ theme_override_constants/margin_bottom = 16
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer" unique_id=1777148933]
 layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=436306252]
 layout_mode = 2
@@ -68,11 +70,13 @@ autowrap_mode = 3
 [node name="QuickAutosaveButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1653716254]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Quick Autosave"
 
 [node name="PauseMenuButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1188300035]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Pause Menu"
 
 [node name="ContentColumns" type="HBoxContainer" parent="MarginContainer/ScrollContainer/VBoxContainer" unique_id=2057014201]
@@ -183,11 +187,13 @@ text = "Quick Actions"
 [node name="ExploreLocationButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer" unique_id=106990528]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Explore Location"
 
 [node name="OpenLoadoutButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/ActionsPanel/MarginContainer/VBoxContainer" unique_id=606193107]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Open Loadout"
 
 [node name="TimePanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn" unique_id=1007470222]
@@ -223,10 +229,14 @@ autowrap_mode = 3
 [node name="AdvanceTickButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=1834133038]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Advance Tick"
 
 [node name="TimeAdvanceButtons" type="HFlowContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn/TimePanel/MarginContainer/VBoxContainer" unique_id=294583534]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
 
 [node name="EquipmentPanel" type="PanelContainer" parent="MarginContainer/ScrollContainer/VBoxContainer/ContentColumns/RightColumn" unique_id=1989939434]
 layout_mode = 2

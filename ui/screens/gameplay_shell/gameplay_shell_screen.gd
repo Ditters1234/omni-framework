@@ -33,6 +33,7 @@ var _opened_initial_location_view: bool = false
 var _status_message: String = "Ready."
 var _last_view_model: Dictionary = {}
 var _presenter: RefCounted = GAMEPLAY_SHELL_PRESENTER.new()
+var _runtime_signals_connected: bool = false
 
 
 func initialize(params: Dictionary = {}) -> void:
@@ -44,6 +45,21 @@ func initialize(params: Dictionary = {}) -> void:
 
 
 func _ready() -> void:
+	_connect_runtime_signals()
+	_rebuild_time_buttons()
+	_refresh()
+	_maybe_open_initial_location_view()
+	call_deferred("_grab_default_focus")
+
+
+func on_route_revealed() -> void:
+	_refresh()
+	call_deferred("_grab_default_focus")
+
+
+func _connect_runtime_signals() -> void:
+	if _runtime_signals_connected:
+		return
 	GameEvents.tick_advanced.connect(_on_tick_advanced)
 	GameEvents.day_advanced.connect(_on_day_advanced)
 	GameEvents.location_changed.connect(_on_location_changed)
@@ -51,13 +67,7 @@ func _ready() -> void:
 	GameEvents.entity_currency_changed.connect(_on_entity_currency_changed)
 	GameEvents.part_equipped.connect(_on_part_equipped)
 	GameEvents.part_unequipped.connect(_on_part_unequipped)
-	_rebuild_time_buttons()
-	_refresh()
-	_maybe_open_initial_location_view()
-
-
-func on_route_revealed() -> void:
-	_refresh()
+	_runtime_signals_connected = true
 
 
 func _refresh() -> void:
@@ -72,6 +82,7 @@ func _refresh() -> void:
 
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
+
 
 func _apply_view_model(view_model: Dictionary) -> void:
 	_title_label.text = str(view_model.get("title", "Gameplay Shell"))
@@ -99,6 +110,7 @@ func _render_currency_displays(view_models: Array[Dictionary]) -> void:
 	if view_models.is_empty():
 		var empty_label := Label.new()
 		empty_label.text = "No currencies available."
+		empty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_currency_list.add_child(empty_label)
 		return
 	for view_model in view_models:
@@ -155,7 +167,9 @@ func _rebuild_time_buttons(specs: Array[Dictionary] = []) -> void:
 		button_specs = _read_dictionary_array(button_specs_value)
 	for spec in button_specs:
 		var button := Button.new()
+		button.focus_mode = Control.FOCUS_ALL
 		button.text = str(spec.get("label", "Advance"))
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var tick_count := int(spec.get("ticks", 1))
 		button.pressed.connect(func() -> void:
 			_advance_time_by_ticks(tick_count, str(spec.get("label", "Advance")))
@@ -175,7 +189,6 @@ func _on_advance_tick_button_pressed() -> void:
 	TimeKeeper.advance_tick()
 	_status_message = "Advanced one tick."
 	_refresh()
-
 
 
 func _on_explore_location_button_pressed() -> void:
@@ -259,6 +272,16 @@ func _open_initial_location_view() -> void:
 	UIRouter.push(SCREEN_LOCATION_VIEW, {
 		"location_id": GameState.current_location_id
 	})
+
+
+func _grab_default_focus() -> void:
+	if not is_node_ready():
+		return
+	if not _explore_location_button.disabled:
+		_explore_location_button.grab_focus()
+		return
+	if not _advance_tick_button.disabled:
+		_advance_tick_button.grab_focus()
 
 
 func _read_dictionary(value: Variant) -> Dictionary:

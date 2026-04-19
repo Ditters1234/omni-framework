@@ -7,15 +7,15 @@ const SCREEN_SETTINGS := "settings"
 const SCREEN_SAVE_SLOT_LIST := "save_slot_list"
 const SCREEN_CREDITS := "credits"
 
-@onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
-@onready var _subtitle_label: Label = $MarginContainer/PanelContainer/VBoxContainer/SubtitleLabel
-@onready var _continue_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/ContinueButton
-@onready var _new_game_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/NewGameButton
-@onready var _load_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/LoadButton
-@onready var _settings_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/SettingsButton
-@onready var _credits_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/CreditsButton
-@onready var _quit_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/QuitButton
-@onready var _status_label: Label = $MarginContainer/PanelContainer/VBoxContainer/StatusLabel
+@onready var _title_label: Label = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/TitleLabel
+@onready var _subtitle_label: Label = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/SubtitleLabel
+@onready var _continue_button: Button = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/ContinueButton
+@onready var _new_game_button: Button = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/NewGameButton
+@onready var _load_button: Button = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/LoadButton
+@onready var _settings_button: Button = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/SettingsButton
+@onready var _credits_button: Button = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/CreditsButton
+@onready var _quit_button: Button = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn/QuitButton
+@onready var _status_label: Label = $CenterContainer/ScrollContainer/MarginContainer/PanelContainer/VBoxContainer/StatusLabel
 
 var _last_view_model: Dictionary = {}
 
@@ -28,10 +28,12 @@ func initialize(_params: Dictionary = {}) -> void:
 func _ready() -> void:
 	_apply_menu_config()
 	_refresh_buttons()
+	call_deferred("_grab_default_focus")
 
 
 func on_route_revealed() -> void:
 	_refresh_buttons()
+	call_deferred("_grab_default_focus")
 
 
 func _apply_menu_config() -> void:
@@ -74,6 +76,19 @@ func _refresh_buttons() -> void:
 		"preferred_slot": preferred_slot,
 		"status_text": _status_label.text,
 	}
+
+
+func _grab_default_focus() -> void:
+	if not is_node_ready():
+		return
+	if not _continue_button.disabled:
+		_continue_button.grab_focus()
+		return
+	if not _new_game_button.disabled:
+		_new_game_button.grab_focus()
+		return
+	if not _settings_button.disabled:
+		_settings_button.grab_focus()
 
 
 func _transition_to_gameplay() -> void:

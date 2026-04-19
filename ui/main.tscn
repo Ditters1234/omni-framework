@@ -9,8 +9,13 @@ script = ExtResource("1_h2l7e")
 [node name="ScreenLayer" type="CanvasLayer" parent="." unique_id=2126839497]
 
 [node name="StatusLabel" type="Label" parent="ScreenLayer" unique_id=721826532]
-offset_right = 260.0
-offset_bottom = 23.0
+anchors_preset = 3
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 40.0
 text = "Booting Omni-Framework..."
+autowrap_mode = 3
 
 [node name="NotificationPopup" parent="ScreenLayer" instance=ExtResource("2_np7jw")]

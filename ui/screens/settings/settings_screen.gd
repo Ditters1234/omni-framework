@@ -65,6 +65,7 @@ const RESOLUTION_PRESETS := [
 @onready var _status_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/StatusLabel
 
 var _settings: Dictionary = {}
+var _persisted_settings: Dictionary = {}
 var _is_initializing: bool = false
 var _is_dirty: bool = false
 var _last_debug_snapshot: Dictionary = {}
@@ -78,10 +79,12 @@ func initialize(_params: Dictionary = {}) -> void:
 func _ready() -> void:
 	_ensure_option_items()
 	_load_settings_from_disk()
+	call_deferred("_grab_default_focus")
 
 
 func on_route_revealed() -> void:
 	_update_ai_info()
+	call_deferred("_grab_default_focus")
 
 
 func _ensure_option_items() -> void:
@@ -101,6 +104,7 @@ func _ensure_option_items() -> void:
 
 func _load_settings_from_disk() -> void:
 	_settings = APP_SETTINGS.load_settings()
+	_persisted_settings = _settings.duplicate(true)
 	_is_initializing = true
 	_apply_settings_to_controls()
 	_is_initializing = false
@@ -203,7 +207,7 @@ func _preview_current_settings() -> void:
 	_update_ai_controls_state()
 	_is_dirty = true
 	_update_dirty_state()
-	_status_label.text = "Previewing changes. Save to persist them."
+	_status_label.text = "Previewing changes. Save to persist them, or Back to save and exit."
 	_capture_debug_snapshot()
 
 
@@ -215,12 +219,27 @@ func _persist_settings() -> bool:
 		return false
 	APP_SETTINGS.apply_settings(get_window(), _settings)
 	AIManager.initialize(_settings)
+	_persisted_settings = _settings.duplicate(true)
 	_is_dirty = false
 	_update_dirty_state()
 	_update_ai_info()
 	_status_label.text = "Settings saved."
 	_capture_debug_snapshot()
 	return true
+
+
+func _revert_unsaved_changes() -> void:
+	_settings = _persisted_settings.duplicate(true)
+	_is_initializing = true
+	_apply_settings_to_controls()
+	_is_initializing = false
+	APP_SETTINGS.apply_settings(get_window(), _persisted_settings)
+	AIManager.initialize(_persisted_settings)
+	_is_dirty = false
+	_update_dirty_state()
+	_update_ai_info()
+	_status_label.text = "Unsaved changes discarded."
+	_capture_debug_snapshot()
 
 
 func _update_dirty_state() -> void:
@@ -318,6 +337,12 @@ func _build_ai_hint_text(provider: String) -> String:
 			return "On-disk model connection. Provide a local .gguf path and connect from engine settings."
 		_:
 			return "Choose a server or on-disk provider here. Mods can use AIManager, but they do not configure the engine connection."
+
+
+func _grab_default_focus() -> void:
+	if not is_node_ready():
+		return
+	_window_mode_button.grab_focus()
 
 
 func _on_master_slider_value_changed(_value: float) -> void:
