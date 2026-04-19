@@ -14,8 +14,12 @@ Useful variants:
 
 ```text
 godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gselect=test_entity_instance_stats
-godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gdir=res://tests/unit -ginclude_subdirs
 ```
+
+On Godot 4.6.2 Mono for Windows, prefer the configured full-suite run or
+`-gselect` targeted runs. Directory/path override flags such as `-gdir` and
+`-gtest` have been observed to crash this workspace before GUT prints its
+banner, while the configured suite and filename-selection flow run headlessly.
 
 UI-facing smoke/component suites mount scenes under offscreen `SubViewport` hosts so editor-driven runs keep the GUT result readout visible while controls and routed screens initialize.
 
