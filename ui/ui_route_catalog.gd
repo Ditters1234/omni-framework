@@ -53,35 +53,9 @@ const ENGINE_SCREEN_IDS := [
 	SCREEN_SAVE_SLOT_LIST,
 	SCREEN_PAUSE_MENU,
 	SCREEN_CREDITS,
-	SCREEN_EXCHANGE,
-	SCREEN_LIST_VIEW,
-	SCREEN_CHALLENGE,
-	SCREEN_TASK_PROVIDER,
-	SCREEN_CATALOG_LIST,
-	SCREEN_DIALOGUE,
-	SCREEN_ENTITY_SHEET,
-	SCREEN_QUEST_LOG,
-	SCREEN_FACTION_REP,
-	SCREEN_ACHIEVEMENT_LIST,
-	SCREEN_EVENT_LOG,
 ]
 
-const BACKEND_SCREEN_MAP := {
-	"AssemblyEditorBackend": "assembly_editor",
-	"ExchangeBackend": "exchange",
-	"ListBackend": "list_view",
-	"ChallengeBackend": "challenge",
-	"TaskProviderBackend": "task_provider",
-	"CatalogListBackend": "catalog_list",
-	"DialogueBackend": "dialogue",
-	"EntitySheetBackend": "entity_sheet",
-	"ActiveQuestLogBackend": "quest_log",
-	"FactionReputationBackend": "faction_rep",
-	"AchievementListBackend": "achievement_list",
-	"EventLogBackend": "event_log",
-}
-
-const RUNTIME_SCREEN_REGISTRY := {
+const APP_SCREEN_REGISTRY := {
 	SCREEN_MAIN_MENU: MAIN_MENU_SCENE,
 	SCREEN_ASSEMBLY_EDITOR: ASSEMBLY_EDITOR_SCENE,
 	SCREEN_CHARACTER_CREATOR: ASSEMBLY_EDITOR_SCENE,
@@ -91,6 +65,24 @@ const RUNTIME_SCREEN_REGISTRY := {
 	SCREEN_SAVE_SLOT_LIST: SAVE_SLOT_LIST_SCENE,
 	SCREEN_PAUSE_MENU: PAUSE_MENU_SCENE,
 	SCREEN_CREDITS: CREDITS_SCENE,
+}
+
+const BACKEND_SCREEN_MAP := {
+	"AssemblyEditorBackend": SCREEN_ASSEMBLY_EDITOR,
+	"ExchangeBackend": SCREEN_EXCHANGE,
+	"ListBackend": SCREEN_LIST_VIEW,
+	"ChallengeBackend": SCREEN_CHALLENGE,
+	"TaskProviderBackend": SCREEN_TASK_PROVIDER,
+	"CatalogListBackend": SCREEN_CATALOG_LIST,
+	"DialogueBackend": SCREEN_DIALOGUE,
+	"EntitySheetBackend": SCREEN_ENTITY_SHEET,
+	"ActiveQuestLogBackend": SCREEN_QUEST_LOG,
+	"FactionReputationBackend": SCREEN_FACTION_REP,
+	"AchievementListBackend": SCREEN_ACHIEVEMENT_LIST,
+	"EventLogBackend": SCREEN_EVENT_LOG,
+}
+
+const BACKEND_SCREEN_REGISTRY := {
 	SCREEN_EXCHANGE: EXCHANGE_SCENE,
 	SCREEN_LIST_VIEW: LIST_VIEW_SCENE,
 	SCREEN_CHALLENGE: CHALLENGE_SCENE,
@@ -104,40 +96,39 @@ const RUNTIME_SCREEN_REGISTRY := {
 	SCREEN_EVENT_LOG: EVENT_LOG_SCENE,
 }
 
-
 static func get_screen_id_for_backend(backend_class: String) -> String:
 	var screen_id_value: Variant = BACKEND_SCREEN_MAP.get(backend_class, "")
 	return str(screen_id_value)
 
-
 static func has_backend_class(backend_class: String) -> bool:
 	return BACKEND_SCREEN_MAP.has(backend_class)
-
 
 static func has_known_screen_id(screen_id: String) -> bool:
 	if screen_id.is_empty():
 		return false
-	if ENGINE_SCREEN_IDS.has(screen_id):
+	if APP_SCREEN_REGISTRY.has(screen_id):
 		return true
-	for screen_id_value in BACKEND_SCREEN_MAP.values():
-		if str(screen_id_value) == screen_id:
-			return true
-	return false
-
+	return BACKEND_SCREEN_REGISTRY.has(screen_id)
 
 static func get_known_screen_ids() -> Array[String]:
 	var screen_ids: Array[String] = []
-	for screen_id in ENGINE_SCREEN_IDS:
-		if not screen_ids.has(screen_id):
-			screen_ids.append(screen_id)
-	for screen_id_value in BACKEND_SCREEN_MAP.values():
+	for screen_id_value in APP_SCREEN_REGISTRY.keys():
+		screen_ids.append(str(screen_id_value))
+	for screen_id_value in BACKEND_SCREEN_REGISTRY.keys():
 		var screen_id := str(screen_id_value)
-		if screen_id.is_empty() or screen_ids.has(screen_id):
+		if screen_ids.has(screen_id):
 			continue
 		screen_ids.append(screen_id)
 	screen_ids.sort()
 	return screen_ids
 
-
 static func get_runtime_screen_registry() -> Dictionary:
-	return RUNTIME_SCREEN_REGISTRY.duplicate(true)
+	var runtime_registry := get_app_screen_registry()
+	runtime_registry.merge(get_backend_screen_registry(), true)
+	return runtime_registry
+
+static func get_app_screen_registry() -> Dictionary:
+	return APP_SCREEN_REGISTRY.duplicate(true)
+
+static func get_backend_screen_registry() -> Dictionary:
+	return BACKEND_SCREEN_REGISTRY.duplicate(true)

@@ -4,6 +4,7 @@ const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_ba
 const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn")
 const STAT_SHEET_SCENE := preload("res://ui/components/stat_sheet.tscn")
 const FACTION_BADGE_SCENE := preload("res://ui/components/faction_badge.tscn")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -26,22 +27,18 @@ var _portrait: Control = null
 var _stat_sheet: Control = null
 var _last_view_model: Dictionary = {}
 
-
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_state()
 
-
 func _ready() -> void:
 	_initialize_backend()
 	_refresh_state()
 
-
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
-
 
 func _initialize_backend() -> void:
 	if _backend_initialized and _pending_params.is_empty():
@@ -49,7 +46,6 @@ func _initialize_backend() -> void:
 	_backend.initialize(_pending_params)
 	_pending_params = {}
 	_backend_initialized = true
-
 
 func _refresh_state() -> void:
 	if not _backend_initialized:
@@ -67,7 +63,6 @@ func _refresh_state() -> void:
 	_render_inventory_section(view_model)
 	_render_reputation_section(view_model)
 
-
 func _render_portrait(view_model: Dictionary) -> void:
 	if _portrait == null:
 		var portrait_value: Variant = ENTITY_PORTRAIT_SCENE.instantiate()
@@ -76,7 +71,6 @@ func _render_portrait(view_model: Dictionary) -> void:
 			_portrait_host.add_child(_portrait)
 	if _portrait != null:
 		_portrait.call("render", view_model)
-
 
 func _render_stat_sheet(view_model: Dictionary) -> void:
 	if _stat_sheet == null:
@@ -87,7 +81,6 @@ func _render_stat_sheet(view_model: Dictionary) -> void:
 	if _stat_sheet != null:
 		_stat_sheet.call("render", view_model)
 
-
 func _render_equipped_section(view_model: Dictionary) -> void:
 	var show_equipped := bool(view_model.get("show_equipped", true))
 	_equipped_section_label.visible = show_equipped
@@ -96,7 +89,6 @@ func _render_equipped_section(view_model: Dictionary) -> void:
 		return
 	var rows := _read_dictionary_array(view_model.get("equipped_rows", []))
 	_render_text_rows(_equipped_rows, rows, str(view_model.get("equipped_empty_label", "No parts are equipped.")), "slot_label")
-
 
 func _render_inventory_section(view_model: Dictionary) -> void:
 	var show_inventory := bool(view_model.get("show_inventory", true))
@@ -113,7 +105,6 @@ func _render_inventory_section(view_model: Dictionary) -> void:
 		overflow_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		overflow_label.text = "+ %s more inventory stacks." % str(overflow_count)
 		_inventory_rows.add_child(overflow_label)
-
 
 func _render_reputation_section(view_model: Dictionary) -> void:
 	var show_reputation := bool(view_model.get("show_reputation", true))
@@ -145,7 +136,6 @@ func _render_reputation_section(view_model: Dictionary) -> void:
 		description_label.text = description
 		_reputation_rows.add_child(description_label)
 
-
 func _render_text_rows(host: VBoxContainer, rows: Array[Dictionary], empty_label: String, prefix_field: String) -> void:
 	for child in host.get_children():
 		host.remove_child(child)
@@ -162,7 +152,6 @@ func _render_text_rows(host: VBoxContainer, rows: Array[Dictionary], empty_label
 		label.text = _build_row_text(row, prefix_field)
 		host.add_child(label)
 
-
 func _build_row_text(row: Dictionary, prefix_field: String) -> String:
 	var display_name := str(row.get("display_name", row.get("template_id", "Unknown Part")))
 	var count := int(row.get("count", 0))
@@ -178,10 +167,8 @@ func _build_row_text(row: Dictionary, prefix_field: String) -> String:
 		return title
 	return "%s\n%s" % [title, stat_summary]
 
-
 func _on_back_button_pressed() -> void:
-	UIRouter.pop()
-
+	BACKEND_NAVIGATION_HELPER.close_surface()
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -193,7 +180,6 @@ func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 			var dictionary_item: Dictionary = item
 			result.append(dictionary_item.duplicate(true))
 	return result
-
 
 func _read_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:

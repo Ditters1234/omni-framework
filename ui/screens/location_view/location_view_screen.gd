@@ -29,11 +29,9 @@ var _location_id: String = ""
 var _location_template: Dictionary = {}
 var _last_view_model: Dictionary = {}
 
-
 func initialize(params: Dictionary = {}) -> void:
 	_location_id = str(params.get("location_id", GameState.current_location_id))
 	_load_location()
-
 
 func _ready() -> void:
 	_back_button.pressed.connect(_on_back_button_pressed)
@@ -41,7 +39,6 @@ func _ready() -> void:
 	if _location_id.is_empty():
 		_location_id = GameState.current_location_id
 	_load_location()
-
 
 # ---------------------------------------------------------------------------
 # Load & render
@@ -56,7 +53,6 @@ func _load_location() -> void:
 		_show_error("Location '%s' not found." % _location_id)
 		return
 	_render_location()
-
 
 func _render_location() -> void:
 	var title_text := str(_location_template.get("display_name", _location_id))
@@ -95,7 +91,6 @@ func _render_location() -> void:
 		"back_enabled": not _back_button.disabled,
 	}
 
-
 func _add_screen_button(screen_entry: Dictionary) -> void:
 	var display_name: String = str(screen_entry.get("display_name", "Unnamed"))
 	var description: String = str(screen_entry.get("description", ""))
@@ -115,14 +110,12 @@ func _add_screen_button(screen_entry: Dictionary) -> void:
 		btn.disabled = true
 		btn.tooltip_text += "\n[screen '%s' not yet built]" % screen_id
 	else:
-		# Capture params for closure — pass the full screen entry as params
-		var push_params: Dictionary = screen_entry.duplicate(true)
+		var push_params := UIRouter.build_shell_params(screen_entry.duplicate(true))
 		if not push_params.has("cancel_screen_id"):
 			push_params["cancel_screen_id"] = ""
 		btn.pressed.connect(_on_screen_button_pressed.bind(screen_id, push_params))
 
 	_screens_container.add_child(btn)
-
 
 func _render_connections() -> Array[Dictionary]:
 	var rendered_connections: Array[Dictionary] = []
@@ -152,7 +145,6 @@ func _render_connections() -> Array[Dictionary]:
 		_connections_container.add_child(btn)
 	return rendered_connections
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -160,7 +152,6 @@ func _render_connections() -> Array[Dictionary]:
 func _clear_container(container: Node) -> void:
 	for child in container.get_children():
 		child.queue_free()
-
 
 func _show_error(message: String) -> void:
 	_title_label.text = "Error"
@@ -181,7 +172,6 @@ func _show_error(message: String) -> void:
 		"back_enabled": not _back_button.disabled,
 	}
 
-
 # ---------------------------------------------------------------------------
 # Signal handlers
 # ---------------------------------------------------------------------------
@@ -189,18 +179,15 @@ func _show_error(message: String) -> void:
 func _on_screen_button_pressed(screen_id: String, params: Dictionary) -> void:
 	UIRouter.push(screen_id, params)
 
-
 func _on_travel_button_pressed(dest_location_id: String) -> void:
 	GameState.travel_to(dest_location_id)
 	_location_id = dest_location_id
 	_load_location()
 
-
 func _on_back_button_pressed() -> void:
 	if UIRouter.stack_depth() <= 1:
 		return
 	UIRouter.pop()
-
 
 func _on_location_changed(_old_id: String, new_id: String) -> void:
 	# If external code changes location (e.g. via GameState.travel_to from
@@ -209,16 +196,13 @@ func _on_location_changed(_old_id: String, new_id: String) -> void:
 		_location_id = new_id
 		_load_location()
 
-
 func _get_semantic_color(color_name: String, fallback: Color) -> Color:
 	if has_theme_color(color_name, SEMANTIC_THEME_TYPE):
 		return get_theme_color(color_name, SEMANTIC_THEME_TYPE)
 	return fallback
 
-
 func _refresh_nav_state() -> void:
 	_back_button.disabled = UIRouter.stack_depth() <= 1
-
 
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)

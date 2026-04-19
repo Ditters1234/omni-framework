@@ -2,6 +2,7 @@ extends Control
 
 const ASSEMBLY_SLOT_ROW_SCENE := preload("res://ui/components/assembly_slot_row.tscn")
 const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -20,18 +21,15 @@ var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _last_view_model: Dictionary = {}
 
-
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_editor_state()
 
-
 func _ready() -> void:
 	_initialize_backend()
 	_refresh_editor_state()
-
 
 func _initialize_backend() -> void:
 	if _backend_initialized and _pending_params.is_empty():
@@ -39,7 +37,6 @@ func _initialize_backend() -> void:
 	_backend.initialize(_pending_params)
 	_backend_initialized = true
 	_pending_params = {}
-
 
 func _refresh_editor_state() -> void:
 	if not _backend_initialized:
@@ -58,7 +55,6 @@ func _refresh_editor_state() -> void:
 	_refresh_stat_sheet(_read_dictionary(view_model.get("stat_delta", {})))
 	_status_label.text = str(view_model.get("status_text", ""))
 
-
 func get_debug_snapshot() -> Dictionary:
 	return {
 		"screen_id": "assembly_editor",
@@ -66,7 +62,6 @@ func get_debug_snapshot() -> Dictionary:
 		"pending_params": _pending_params.duplicate(true),
 		"last_view_model": _last_view_model.duplicate(true),
 	}
-
 
 func _refresh_editor_rows(row_view_models: Array[Dictionary]) -> void:
 	var active_slots: Dictionary = {}
@@ -83,7 +78,6 @@ func _refresh_editor_rows(row_view_models: Array[Dictionary]) -> void:
 		display_index += 1
 		row.call("render", row_view_model)
 	_remove_stale_rows(active_slots)
-
 
 func _ensure_row_state(slot_id: String) -> Control:
 	var existing_row_data: Variant = _slot_rows.get(slot_id, null)
@@ -103,7 +97,6 @@ func _ensure_row_state(slot_id: String) -> Control:
 	_slot_rows[slot_id] = row
 	return row
 
-
 func _remove_stale_rows(active_slots: Dictionary) -> void:
 	var stale_slots: Array[String] = []
 	for slot_value in _slot_rows.keys():
@@ -118,24 +111,20 @@ func _remove_stale_rows(active_slots: Dictionary) -> void:
 			row.queue_free()
 		_slot_rows.erase(slot_id)
 
-
 func _get_currency_summary_panel() -> CurrencySummaryPanel:
 	if _currency_summary_panel == null:
 		_currency_summary_panel = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/CurrencySummaryPanel") as CurrencySummaryPanel
 	return _currency_summary_panel
-
 
 func _get_part_detail_panel() -> PartDetailPanel:
 	if _part_detail_panel == null:
 		_part_detail_panel = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/PartDetailPanel") as PartDetailPanel
 	return _part_detail_panel
 
-
 func _get_stat_delta_sheet() -> StatDeltaSheet:
 	if _stat_delta_sheet == null:
 		_stat_delta_sheet = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/StatDeltaSheet") as StatDeltaSheet
 	return _stat_delta_sheet
-
 
 func _refresh_currency_panel(view_model: Dictionary) -> void:
 	var panel := _get_currency_summary_panel()
@@ -143,13 +132,11 @@ func _refresh_currency_panel(view_model: Dictionary) -> void:
 		return
 	panel.render(view_model)
 
-
 func _refresh_part_detail_panel(view_model: Dictionary) -> void:
 	var panel := _get_part_detail_panel()
 	if panel == null:
 		return
 	panel.render(view_model)
-
 
 func _refresh_stat_sheet(view_model: Dictionary) -> void:
 	var panel := _get_stat_delta_sheet()
@@ -157,52 +144,32 @@ func _refresh_stat_sheet(view_model: Dictionary) -> void:
 		return
 	panel.render(view_model)
 
-
 func _on_cycle_pressed(slot_id: String, direction: int) -> void:
 	_backend.cycle_slot(slot_id, direction)
 	_refresh_editor_state()
-
 
 func _on_apply_pressed(slot_id: String) -> void:
 	_backend.apply_slot(slot_id)
 	_refresh_editor_state()
 
-
 func _on_clear_pressed(slot_id: String) -> void:
 	_backend.clear_slot(slot_id)
 	_refresh_editor_state()
-
 
 func _on_row_selected(slot_id: String) -> void:
 	_backend.select_slot(slot_id)
 	_refresh_editor_state()
 
-
 func _on_back_button_pressed() -> void:
-	_execute_navigation_action(_backend.build_cancel_action())
-
+	var cancel_action := _backend.build_cancel_action()
+	BACKEND_NAVIGATION_HELPER.dispatch_action(cancel_action)
 
 func _on_begin_button_pressed() -> void:
 	var navigation_action: Dictionary = _backend.confirm()
 	if navigation_action.is_empty():
 		_refresh_editor_state()
 		return
-	_execute_navigation_action(navigation_action)
-
-
-func _execute_navigation_action(action: Dictionary) -> void:
-	var action_type := str(action.get("type", ""))
-	match action_type:
-		"pop":
-			UIRouter.pop()
-		"replace_all":
-			UIRouter.replace_all(
-				str(action.get("screen_id", "")),
-				_read_dictionary(action.get("params", {}))
-			)
-		_:
-			pass
-
+	BACKEND_NAVIGATION_HELPER.dispatch_action(navigation_action)
 
 func _read_row_view_models(view_model: Dictionary) -> Array[Dictionary]:
 	var rows_value: Variant = view_model.get("rows", [])
@@ -215,7 +182,6 @@ func _read_row_view_models(view_model: Dictionary) -> Array[Dictionary]:
 			var row_view_model: Dictionary = row_value
 			result.append(row_view_model)
 	return result
-
 
 func _read_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:

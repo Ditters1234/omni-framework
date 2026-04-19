@@ -1,6 +1,7 @@
 extends Control
 
 const ACHIEVEMENT_LIST_BACKEND := preload("res://ui/screens/backends/achievement_list_backend.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -13,22 +14,18 @@ var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _last_view_model: Dictionary = {}
 
-
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_state()
 
-
 func _ready() -> void:
 	_initialize_backend()
 	_refresh_state()
 
-
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
-
 
 func _initialize_backend() -> void:
 	if _backend_initialized and _pending_params.is_empty():
@@ -36,7 +33,6 @@ func _initialize_backend() -> void:
 	_backend.initialize(_pending_params)
 	_pending_params = {}
 	_backend_initialized = true
-
 
 func _refresh_state() -> void:
 	if not _backend_initialized:
@@ -48,7 +44,6 @@ func _refresh_state() -> void:
 	_status_label.text = str(view_model.get("status_text", ""))
 	_back_button.text = str(view_model.get("cancel_label", "Back"))
 	_render_rows(_read_dictionary_array(view_model.get("rows", [])), str(view_model.get("empty_label", "No achievements are available.")))
-
 
 func _render_rows(rows: Array[Dictionary], empty_label: String) -> void:
 	for child in _rows_container.get_children():
@@ -66,7 +61,6 @@ func _render_rows(rows: Array[Dictionary], empty_label: String) -> void:
 		label.text = _build_row_text(row)
 		_rows_container.add_child(label)
 
-
 func _build_row_text(row: Dictionary) -> String:
 	var status := "Unlocked" if bool(row.get("unlocked", false)) else "Locked"
 	var description := str(row.get("description", ""))
@@ -80,10 +74,8 @@ func _build_row_text(row: Dictionary) -> String:
 		text += "\n%s" % description
 	return text
 
-
 func _on_back_button_pressed() -> void:
-	UIRouter.pop()
-
+	BACKEND_NAVIGATION_HELPER.close_surface()
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

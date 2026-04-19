@@ -35,14 +35,12 @@ var _last_view_model: Dictionary = {}
 var _presenter: RefCounted = GAMEPLAY_SHELL_PRESENTER.new()
 var _runtime_signals_connected: bool = false
 
-
 func initialize(params: Dictionary = {}) -> void:
 	var auto_open_data: Variant = params.get("auto_open_location_view", false)
 	_auto_open_location_view = bool(auto_open_data)
 	_rebuild_time_buttons()
 	_refresh()
 	_maybe_open_initial_location_view()
-
 
 func _ready() -> void:
 	_connect_runtime_signals()
@@ -51,11 +49,9 @@ func _ready() -> void:
 	_maybe_open_initial_location_view()
 	call_deferred("_grab_default_focus")
 
-
 func on_route_revealed() -> void:
 	_refresh()
 	call_deferred("_grab_default_focus")
-
 
 func _connect_runtime_signals() -> void:
 	if _runtime_signals_connected:
@@ -69,7 +65,6 @@ func _connect_runtime_signals() -> void:
 	GameEvents.part_unequipped.connect(_on_part_unequipped)
 	_runtime_signals_connected = true
 
-
 func _refresh() -> void:
 	var view_model_value: Variant = _presenter.call("build_view_model", _status_message)
 	var view_model := _read_dictionary(view_model_value)
@@ -79,10 +74,8 @@ func _refresh() -> void:
 	_rebuild_time_buttons(_read_dictionary_array(view_model.get("time_button_specs", [])))
 	_apply_view_model(view_model)
 
-
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
-
 
 func _apply_view_model(view_model: Dictionary) -> void:
 	_title_label.text = str(view_model.get("title", "Gameplay Shell"))
@@ -104,7 +97,6 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	_status_label.text = str(view_model.get("status_text", ""))
 	_set_buttons_enabled(bool(view_model.get("buttons_enabled", false)))
 
-
 func _render_currency_displays(view_models: Array[Dictionary]) -> void:
 	_clear_container_children(_currency_list)
 	if view_models.is_empty():
@@ -120,7 +112,6 @@ func _render_currency_displays(view_models: Array[Dictionary]) -> void:
 		var display: Control = display_value
 		_currency_list.add_child(display)
 		display.call("render", view_model)
-
 
 func _render_equipped_cards(view_models: Array[Dictionary]) -> void:
 	_clear_container_children(_equipped_cards)
@@ -138,12 +129,10 @@ func _render_equipped_cards(view_models: Array[Dictionary]) -> void:
 		_equipped_cards.add_child(part_card)
 		part_card.call("render", view_model)
 
-
 func _clear_container_children(container: Node) -> void:
 	for child in container.get_children():
 		container.remove_child(child)
 		child.queue_free()
-
 
 func _set_buttons_enabled(enabled: bool) -> void:
 	_explore_location_button.disabled = not enabled
@@ -155,7 +144,6 @@ func _set_buttons_enabled(enabled: bool) -> void:
 		var button := child as Button
 		if button != null:
 			button.disabled = not enabled
-
 
 func _rebuild_time_buttons(specs: Array[Dictionary] = []) -> void:
 	for child in _time_buttons_container.get_children():
@@ -176,7 +164,6 @@ func _rebuild_time_buttons(specs: Array[Dictionary] = []) -> void:
 		)
 		_time_buttons_container.add_child(button)
 
-
 func _advance_time_by_ticks(tick_count: int, label: String) -> void:
 	if tick_count <= 0:
 		return
@@ -184,19 +171,16 @@ func _advance_time_by_ticks(tick_count: int, label: String) -> void:
 	_status_message = "Advanced %s." % label
 	_refresh()
 
-
 func _on_advance_tick_button_pressed() -> void:
 	TimeKeeper.advance_tick()
 	_status_message = "Advanced one tick."
 	_refresh()
 
-
 func _on_explore_location_button_pressed() -> void:
 	UIRouter.push(SCREEN_LOCATION_VIEW)
 
-
 func _on_open_loadout_button_pressed() -> void:
-	UIRouter.push(SCREEN_ASSEMBLY_EDITOR, {
+	UIRouter.push(SCREEN_ASSEMBLY_EDITOR, UIRouter.build_shell_params({
 		"screen_title": "Character Loadout",
 		"screen_description": "Review your current build, inspect sockets, and return to the shell when you are done.",
 		"screen_summary": "This shell shortcut opens your live player assembly directly.",
@@ -205,8 +189,7 @@ func _on_open_loadout_button_pressed() -> void:
 		"cancel_label": "Back",
 		"pop_on_confirm": true,
 		"cancel_screen_id": "",
-	})
-
+	}))
 
 func _on_quick_autosave_button_pressed() -> void:
 	SaveManager.save_game(SaveManager.AUTOSAVE_SLOT)
@@ -218,46 +201,37 @@ func _on_quick_autosave_button_pressed() -> void:
 	_status_message = "Autosave updated."
 	_refresh()
 
-
 func _on_pause_menu_button_pressed() -> void:
 	UIRouter.push(SCREEN_PAUSE_MENU)
-
 
 func _on_tick_advanced(_tick: int) -> void:
 	_refresh()
 
-
 func _on_day_advanced(_day: int) -> void:
 	_refresh()
 
-
 func _on_location_changed(_old_id: String, _new_id: String) -> void:
 	_refresh()
-
 
 func _on_entity_stat_changed(entity_id: String, _stat_key: String, _old_value: float, _new_value: float) -> void:
 	var player := GameState.player as EntityInstance
 	if player != null and entity_id == player.entity_id:
 		_refresh()
 
-
 func _on_entity_currency_changed(entity_id: String, _currency_key: String, _old_amount: float, _new_amount: float) -> void:
 	var player := GameState.player as EntityInstance
 	if player != null and entity_id == player.entity_id:
 		_refresh()
-
 
 func _on_part_equipped(entity_id: String, _part_id: String, _slot: String) -> void:
 	var player := GameState.player as EntityInstance
 	if player != null and entity_id == player.entity_id:
 		_refresh()
 
-
 func _on_part_unequipped(entity_id: String, _part_id: String, _slot: String) -> void:
 	var player := GameState.player as EntityInstance
 	if player != null and entity_id == player.entity_id:
 		_refresh()
-
 
 func _maybe_open_initial_location_view() -> void:
 	if not _auto_open_location_view or _opened_initial_location_view:
@@ -267,12 +241,10 @@ func _maybe_open_initial_location_view() -> void:
 	_opened_initial_location_view = true
 	call_deferred("_open_initial_location_view")
 
-
 func _open_initial_location_view() -> void:
 	UIRouter.push(SCREEN_LOCATION_VIEW, {
 		"location_id": GameState.current_location_id
 	})
-
 
 func _grab_default_focus() -> void:
 	if not is_node_ready():
@@ -283,12 +255,10 @@ func _grab_default_focus() -> void:
 	if not _advance_tick_button.disabled:
 		_advance_tick_button.grab_focus()
 
-
 func _read_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return value
 	return {}
-
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 	var dictionaries: Array[Dictionary] = []

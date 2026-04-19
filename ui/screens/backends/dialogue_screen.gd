@@ -5,6 +5,7 @@ const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn
 const DIALOGUE_RESOURCE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_resource.gd")
 const DIALOGUE_LINE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_line.gd")
 const DIALOGUE_RESPONSE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_response.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -27,7 +28,6 @@ var _request_token: int = 0
 var _dialogue_started_emitted: bool = false
 var _last_view_model: Dictionary = {}
 
-
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
 	_initialize_backend()
@@ -35,12 +35,10 @@ func initialize(params: Dictionary = {}) -> void:
 		_refresh_context()
 		_start_dialogue_if_needed()
 
-
 func _ready() -> void:
 	_initialize_backend()
 	_refresh_context()
 	_start_dialogue_if_needed()
-
 
 func get_debug_snapshot() -> Dictionary:
 	var snapshot := _last_view_model.duplicate(true)
@@ -49,14 +47,12 @@ func get_debug_snapshot() -> Dictionary:
 	snapshot["current_line_id"] = "" if _current_line == null else str(_current_line.get("id"))
 	return snapshot
 
-
 func _initialize_backend() -> void:
 	if _backend_initialized and _pending_params.is_empty():
 		return
 	_backend.initialize(_pending_params)
 	_pending_params = {}
 	_backend_initialized = true
-
 
 func _refresh_context() -> void:
 	if not _backend_initialized:
@@ -70,7 +66,6 @@ func _refresh_context() -> void:
 	_render_portrait(_read_dictionary(view_model.get("portrait", {})))
 	_update_advance_button()
 
-
 func _render_portrait(view_model: Dictionary) -> void:
 	if _portrait == null:
 		var portrait_value: Variant = ENTITY_PORTRAIT_SCENE.instantiate()
@@ -79,7 +74,6 @@ func _render_portrait(view_model: Dictionary) -> void:
 			_portrait_host.add_child(_portrait)
 	if _portrait != null:
 		_portrait.call("render", view_model)
-
 
 func _start_dialogue_if_needed() -> void:
 	if _conversation_finished or _current_line != null:
@@ -106,7 +100,6 @@ func _start_dialogue_if_needed() -> void:
 	var first_line := first_line_value as RefCounted
 	_apply_line(first_line)
 
-
 func _apply_line(line: RefCounted) -> void:
 	_current_line = line
 	if _current_line == null:
@@ -124,7 +117,6 @@ func _apply_line(line: RefCounted) -> void:
 			return
 		_advance_to(next_id)
 
-
 func _advance_to(next_id: String) -> void:
 	if _dialogue_resource == null:
 		_finish_dialogue("Conversation ended.")
@@ -137,7 +129,6 @@ func _advance_to(next_id: String) -> void:
 	var line := line_value as RefCounted
 	_apply_line(line)
 
-
 func _finish_dialogue(message: String) -> void:
 	if _conversation_finished:
 		return
@@ -149,7 +140,6 @@ func _finish_dialogue(message: String) -> void:
 	_status_label.text = message
 	_emit_dialogue_ended()
 	_update_advance_button()
-
 
 func _render_responses(responses: Array[RefCounted]) -> void:
 	_clear_responses()
@@ -164,12 +154,10 @@ func _render_responses(responses: Array[RefCounted]) -> void:
 		button.pressed.connect(_on_response_pressed.bind(_read_response_next_id(response)))
 		_responses_container.add_child(button)
 
-
 func _clear_responses() -> void:
 	for child in _responses_container.get_children():
 		_responses_container.remove_child(child)
 		child.queue_free()
-
 
 func _update_advance_button() -> void:
 	if _conversation_finished:
@@ -186,13 +174,11 @@ func _update_advance_button() -> void:
 	_advance_button.visible = true
 	_advance_button.text = "Close" if next_id.is_empty() else "Continue"
 
-
 func _play_dialogue_blip() -> void:
 	var dialogue_blip := _backend.get_dialogue_blip_path()
 	if dialogue_blip.is_empty():
 		return
 	AudioManager.play_sfx(dialogue_blip)
-
 
 func _emit_dialogue_started() -> void:
 	if _dialogue_started_emitted:
@@ -201,7 +187,6 @@ func _emit_dialogue_started() -> void:
 	if GameEvents != null:
 		GameEvents.dialogue_started.emit(_backend.get_speaker_entity_id(), _backend.get_dialogue_resource_path())
 
-
 func _emit_dialogue_ended() -> void:
 	if not _dialogue_started_emitted:
 		return
@@ -209,13 +194,11 @@ func _emit_dialogue_ended() -> void:
 	if GameEvents != null:
 		GameEvents.dialogue_ended.emit(_backend.get_speaker_entity_id(), _backend.get_dialogue_resource_path())
 
-
 func _on_response_pressed(next_id: String) -> void:
 	if next_id.is_empty():
 		_finish_dialogue("Conversation ended.")
 		return
 	_advance_to(next_id)
-
 
 func _on_advance_button_pressed() -> void:
 	if _conversation_finished:
@@ -230,12 +213,10 @@ func _on_advance_button_pressed() -> void:
 		return
 	_advance_to(next_id)
 
-
 func _on_back_button_pressed() -> void:
 	if not _conversation_finished:
 		_finish_dialogue("Conversation closed.")
-	UIRouter.pop()
-
+	BACKEND_NAVIGATION_HELPER.close_surface()
 
 func _read_line_character(line: RefCounted) -> String:
 	var character_value: Variant = line.get("character")
@@ -244,16 +225,13 @@ func _read_line_character(line: RefCounted) -> String:
 		return _backend.get_speaker_display_name()
 	return character_name
 
-
 func _read_line_text(line: RefCounted) -> String:
 	var text_value: Variant = line.get("text")
 	return str(text_value)
 
-
 func _read_line_next_id(line: RefCounted) -> String:
 	var next_id_value: Variant = line.get("next_id")
 	return str(next_id_value)
-
 
 func _read_responses(line: RefCounted) -> Array[RefCounted]:
 	var result: Array[RefCounted] = []
@@ -267,16 +245,13 @@ func _read_responses(line: RefCounted) -> Array[RefCounted]:
 			result.append(response)
 	return result
 
-
 func _read_response_text(response: RefCounted) -> String:
 	var text_value: Variant = response.get("text")
 	return str(text_value)
 
-
 func _read_response_next_id(response: RefCounted) -> String:
 	var next_id_value: Variant = response.get("next_id")
 	return str(next_id_value)
-
 
 func _read_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:

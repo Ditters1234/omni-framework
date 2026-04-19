@@ -3,6 +3,7 @@ extends Control
 const LIST_BACKEND := preload("res://ui/screens/backends/list_backend.gd")
 const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 const QUEST_CARD_SCENE := preload("res://ui/components/quest_card.tscn")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -20,22 +21,18 @@ var _detail_control: Control = null
 var _detail_kind: String = ""
 var _last_view_model: Dictionary = {}
 
-
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
 	_initialize_backend()
 	if is_node_ready():
 		_refresh_state()
 
-
 func _ready() -> void:
 	_initialize_backend()
 	_refresh_state()
 
-
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
-
 
 func _initialize_backend() -> void:
 	if _backend_initialized and _pending_params.is_empty():
@@ -43,7 +40,6 @@ func _initialize_backend() -> void:
 	_backend.initialize(_pending_params)
 	_pending_params = {}
 	_backend_initialized = true
-
 
 func _refresh_state() -> void:
 	if not _backend_initialized:
@@ -59,7 +55,6 @@ func _refresh_state() -> void:
 	_confirm_button.disabled = not bool(view_model.get("confirm_enabled", false))
 	_render_rows(_read_dictionary_array(view_model.get("rows", [])))
 	_render_detail(str(view_model.get("detail_kind", "")), _read_dictionary(view_model.get("selected_detail", {})))
-
 
 func _render_rows(rows: Array[Dictionary]) -> void:
 	for child in _rows_container.get_children():
@@ -83,7 +78,6 @@ func _render_rows(rows: Array[Dictionary]) -> void:
 		]
 		button.pressed.connect(_on_row_pressed.bind(str(row.get("row_id", ""))))
 		_rows_container.add_child(button)
-
 
 func _render_detail(detail_kind: String, detail_view_model: Dictionary) -> void:
 	if _detail_control != null and _detail_kind != detail_kind:
@@ -116,34 +110,17 @@ func _render_detail(detail_kind: String, detail_view_model: Dictionary) -> void:
 	if label_control != null:
 		label_control.text = str(detail_view_model.get("text", "Select a row to inspect it."))
 
-
 func _on_row_pressed(row_id: String) -> void:
 	_backend.select_row(row_id)
 	_refresh_state()
 
-
 func _on_confirm_button_pressed() -> void:
 	var action: Dictionary = _backend.confirm()
-	_execute_navigation_action(action)
+	BACKEND_NAVIGATION_HELPER.dispatch_action(action)
 	_refresh_state()
 
-
 func _on_back_button_pressed() -> void:
-	UIRouter.pop()
-
-
-func _execute_navigation_action(action: Dictionary) -> void:
-	var action_type := str(action.get("type", ""))
-	match action_type:
-		"pop":
-			UIRouter.pop()
-		"replace_all":
-			UIRouter.replace_all(str(action.get("screen_id", "")), _read_dictionary(action.get("params", {})))
-		"push":
-			UIRouter.push(str(action.get("screen_id", "")), _read_dictionary(action.get("params", {})))
-		_:
-			pass
-
+	BACKEND_NAVIGATION_HELPER.close_surface()
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -155,7 +132,6 @@ func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 			var dictionary_item: Dictionary = item
 			result.append(dictionary_item.duplicate(true))
 	return result
-
 
 func _read_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
