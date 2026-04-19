@@ -16,6 +16,7 @@ func after_each() -> void:
 		APP_SETTINGS.AI_ENABLED: false,
 		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
 	}))
+	await get_tree().process_frame
 
 
 func test_initialize_reads_nested_provider_block() -> void:

@@ -33,6 +33,7 @@ Current baseline suites cover:
 - AudioManager bus fallback, config reload hooks, pause/resume signal wiring, and music transition hardening
 - UIRouter stack semantics, failure-path hardening, and debug snapshot coverage
 - engine-owned UI behavior coverage for pause/cancel routing, settings back-save persistence, save-slot delete confirmation, and current-screen debug snapshots
+- Phase 4 backend screen smoke coverage for assembly editor, exchange, catalog list, list view, challenge, task provider, and dialogue routed scenes
 - gameplay shell presenter view-model coverage for active and inactive session states
 - shared UI route catalog coverage for backend mappings and runtime scene registration
 - mod dependency-aware load ordering

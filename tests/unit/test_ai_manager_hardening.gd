@@ -22,6 +22,7 @@ func after_each() -> void:
 		APP_SETTINGS.AI_ENABLED: false,
 		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
 	}))
+	await get_tree().process_frame
 
 
 func test_initialize_respects_enabled_flag_even_with_real_provider_value() -> void:
