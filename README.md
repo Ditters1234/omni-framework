@@ -1,78 +1,56 @@
-<p>
-  <img src="icon.svg" alt="Omni-Framework Icon" width="100" style="vertical-align: middle; margin-right: 15px;">
-  <span style="font-size: 2.5em; font-weight: bold; vertical-align: middle;">Omni-Framework</span>
-</p>
+# Omni-Framework
 
-A single-player, data-driven, genre-agnostic game engine built on **Godot 4.6** (GDScript).
+A single-player, data-driven, genre-agnostic game engine built on **Godot 4.6** using **GDScript**.
 
-The engine provides the systems; JSON provides the content. The same runtime can power a fantasy RPG, a sci-fi colony sim, or a cyberpunk trading game without code changes — swap the mod, swap the game.
+The engine provides systems; JSON provides content. The same runtime is intended to support very different games by swapping mod data instead of rewriting engine code.
 
-[![Godot 4.6](https://img.shields.io/badge/Godot-4.6-478cbf?style=flat-square&logo=godotengine)](https://godotengine.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+## Current Repository Snapshot
+
+This repository currently contains these top-level areas:
+
+- `autoloads/` — global singleton services registered in Godot
+- `core/` — shared runtime classes and low-level utilities
+- `docs/` — architecture and implementation notes
+- `mods/` — mod content, including the required `base` mod
+- `systems/` — engine services such as stats, tasks, rewards, transactions, contracts, hooks, AI providers, and loaders
+- `tests/` — automated test coverage
+- `ui/` — routed screens, shared UI components, theme resources, and debug UI
+- `addons/` — third-party plugins and integrations
 
 ## Quick Start
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ditters/omni-framework.git
-   cd omni-framework
-   ```
+1. Clone the repository:
 
-2. **Open in Godot 4.6**
-   - Launch Godot 4.6
-   - Open the project folder
-   - Godot will auto-load the GDExtensions (LimboAI, NobodyWho)
+```bash
+git clone https://github.com/Ditters1234/omni-framework.git
+cd omni-framework
+```
 
-3. **Create your first mod**
-   - Duplicate `mods/base/` as `mods/yourname/yourmod/`
-   - Edit `mod.json` with your mod's metadata
-   - Add JSON content to `data/` folder
-   - See [`docs/MODDING_GUIDE.md`](docs/MODDING_GUIDE.md) for full details
+2. Open the project in **Godot 4.6**.
+3. Let Godot import the project assets and addons.
+4. Run the project from the editor.
 
-## Highlights
+## Architecture Notes
 
-- **Data-first** — JSON templates define content; GDScript instances are runtime objects.
-- **Moddable by default** — two-phase loading lets mods layer non-destructively (additions first, patches second).
-- **Genre-agnostic** — abstract names throughout (Parts, Entities, Locations), no hardcoded genres, stats, or currencies.
-- **Engine-owned UI + moddable backends** — fixed app screens live in code; interactive screens are selected from mod data via `backend_class`.
-- **Pluggable AI** — `AIManager` routes to OpenAI-compatible, Anthropic, embedded NobodyWho, or disabled.
+The current repo structure shows these implemented high-level pieces:
+
+- **Autoload-driven boot flow** with dedicated managers for AI, audio, data, events, save/load, time, routing, game state, and mod loading.
+- **System layer** that includes action dispatching, stat evaluation, quest tracking, task running, rewards, transactions, script hook services, assembly commit support, backend contract registration, and loader/provider subfolders.
+- **UI layer** with `main.tscn`, `main.gd`, `ui_route_catalog.gd`, plus `components/`, `debug/`, `screens/`, and `theme/` folders.
+- **Mod-first content layout** under `mods/`, with the engine expecting a base mod to exist.
 
 ## Documentation
 
-Full documentation lives in [`docs/`](docs/README.md).
+This replacement README intentionally points only to docs that are confirmed by the current repository snapshot.
 
-Quick jumps:
+- `docs/PROJECT_STRUCTURE.md` — current code-facing structure and implementation snapshot
 
-- [Project structure](docs/PROJECT_STRUCTURE.md) — architecture, autoloads, core systems, UI framework.
-- [Modding guide](docs/MODDING_GUIDE.md) — data schemas, patching, backend classes, script hooks.
-- [UI implementation plan](docs/UI_IMPLEMENTATION_PLAN.md) — backend catalog and phased rollout.
-- [Stat system](docs/STAT_SYSTEM_IMPLEMENTATION.md) — base/capacity pairs and clamping rules.
+If you keep additional planning docs in `docs/`, treat them as design references unless they explicitly state they match the current implementation.
 
-## Requirements
+## Testing
 
-- [Godot 4.6](https://godotengine.org/) (GDScript — no C#).
-- Godot auto-loads the included GDExtensions (`LimboAI`, `NobodyWho`). Other addons (A2J, Dialogue Manager, GUT) are enabled in `project.godot`.
+The repository includes a `tests/` folder and a `.gutconfig.json`, indicating GUT-based automated tests are part of the workflow.
 
-## Contributing
+## Notes on Scope
 
-Contributions are welcome! Before submitting, please:
-
-1. Review [`docs/CODING_STANDARDS_AND_LOADER_PATTERNS.md`](docs/CODING_STANDARDS_AND_LOADER_PATTERNS.md) for implementation patterns
-2. Check [`docs/SCHEMA_AND_LINT_SPEC.md`](docs/SCHEMA_AND_LINT_SPEC.md) for validation requirements
-3. Run tests: `godot --headless -s res://addons/gut/gut_cmdln.gd -gexit`
-4. Ensure no test regressions before opening a pull request
-
-## Troubleshooting
-
-**Missing mods/base/ folder?**
-- `ModLoader` treats this as a fatal boot error. Ensure `mods/base/` exists with a valid `mod.json`.
-
-**Import errors on startup?**
-- Godot should auto-load A2J, LimboAI, and NobodyWho. If not, check **Project Settings → Autoload** to verify they're registered.
-
-**JSON validation errors?**
-- Check [`docs/SCHEMA_AND_LINT_SPEC.md`](docs/SCHEMA_AND_LINT_SPEC.md) for schema rules and error messages in the debug overlay.
-
-## License
-
-[MIT](LICENSE) © 2026 Ditters.
+This README is intentionally conservative. It avoids claiming that a subsystem is fully complete unless that subsystem is clearly represented by the current repository structure.
