@@ -1,5 +1,6 @@
 extends GutTest
 
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const EXCHANGE_BACKEND := preload("res://ui/screens/backends/exchange_backend.gd")
 const CATALOG_LIST_BACKEND := preload("res://ui/screens/backends/catalog_list_backend.gd")
@@ -12,9 +13,7 @@ const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_ba
 
 func before_each() -> void:
 	GameEvents.clear_event_history()
-	ModLoader.load_all_mods()
-	GameState.new_game()
-	TimeKeeper.stop()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 
 
 func test_mod_loader_registers_phase4_backend_contracts() -> void:
@@ -39,20 +38,7 @@ func test_exchange_backend_moves_stocked_part_and_transfers_currency() -> void:
 	assert_not_null(player)
 	if player == null:
 		return
-	var vendor_template := {
-		"entity_id": "base:test_vendor",
-		"display_name": "Test Vendor",
-		"description": "Stocks a single test item.",
-		"location_id": GameState.current_location_id,
-		"currencies": {"credits": 0},
-		"inventory": [
-			{"instance_id": "base:test_vendor:arm", "template_id": "base:body_arm_standard"},
-		],
-		"interactions": [],
-	}
-	DataManager.entities["base:test_vendor"] = vendor_template.duplicate(true)
-	var vendor := EntityInstance.from_template(vendor_template)
-	GameState.commit_entity_instance(vendor, vendor.entity_id)
+	var vendor := TEST_FIXTURE_WORLD.add_runtime_vendor()
 
 	var backend: RefCounted = EXCHANGE_BACKEND.new()
 	backend.initialize({
@@ -207,14 +193,14 @@ func test_task_provider_backend_lists_faction_tasks_and_accepts_selected_task() 
 func test_dialogue_backend_resolves_sample_dialogue_resource() -> void:
 	var backend: RefCounted = DIALOGUE_BACKEND.new()
 	backend.initialize({
-		"dialogue_resource": "res://mods/base/dialogue/sample_greeting.dialogue",
+		"dialogue_resource": "res://tests/fixtures/dialogue/sample_greeting.dialogue",
 		"screen_title": "Talk",
 	})
 
 	var view_model: Dictionary = backend.build_view_model()
 
 	assert_eq(str(view_model.get("title", "")), "Talk")
-	assert_eq(str(view_model.get("dialogue_resource", "")), "res://mods/base/dialogue/sample_greeting.dialogue")
+	assert_eq(str(view_model.get("dialogue_resource", "")), "res://tests/fixtures/dialogue/sample_greeting.dialogue")
 	assert_eq(str(view_model.get("status_text", "")), "")
 
 
@@ -223,6 +209,8 @@ func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() ->
 	assert_not_null(player)
 	if player == null:
 		return
+
+	player.set_equipped_template("hair", "base:body_hair_short")
 
 	var backend: RefCounted = ENTITY_SHEET_BACKEND.new()
 	backend.initialize({

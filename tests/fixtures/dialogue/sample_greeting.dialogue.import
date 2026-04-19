@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://b0cp7sof82agn"
+path="res://.godot/imported/sample_greeting.dialogue-c6f9098bd27d0199fb7e32919ffa3af0.tres"
+
+[deps]
+
+source_file="res://tests/fixtures/dialogue/sample_greeting.dialogue"
+dest_files=["res://.godot/imported/sample_greeting.dialogue-c6f9098bd27d0199fb7e32919ffa3af0.tres"]
+
+[params]
+
+defaults=true

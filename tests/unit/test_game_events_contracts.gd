@@ -1,6 +1,7 @@
 extends GutTest
 
 const TEST_SAVE_DIR := "user://test_saves/test_game_events_contracts/"
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 
 
 func before_each() -> void:
@@ -57,10 +58,8 @@ func test_emit_dynamic_rejects_unknown_signal_or_wrong_arity() -> void:
 
 
 func test_save_and_load_emit_documented_success_and_failure_signals() -> void:
-	ModLoader.load_all_mods()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	AIManager.initialize()
-	GameState.new_game()
-	TimeKeeper.stop()
 
 	watch_signals(GameEvents)
 	SaveManager.save_game(1)
@@ -81,11 +80,6 @@ func test_save_and_load_emit_documented_success_and_failure_signals() -> void:
 	watch_signals(GameEvents)
 	assert_false(SaveManager.load_game(99))
 	assert_signal_emitted(GameEvents, "load_failed")
-
-
-# ---------------------------------------------------------------------------
-# Boot pipeline contracts
-# ---------------------------------------------------------------------------
 
 
 func test_mod_loader_can_discover_and_order_base_mod() -> void:
@@ -113,8 +107,13 @@ func test_mod_loader_phase_one_populates_registries() -> void:
 
 	ModLoader._phase_one_additions(ordered)
 
-	assert_false(DataManager.get_entity("base:player").is_empty())
-	assert_false(DataManager.get_location("base:start").is_empty())
+	var starting_player_id := str(DataManager.get_config_value("game.starting_player_id", ""))
+	var starting_location_id := str(DataManager.get_config_value("game.starting_location", ""))
+
+	assert_false(starting_player_id.is_empty())
+	assert_false(starting_location_id.is_empty())
+	assert_false(DataManager.get_entity(starting_player_id).is_empty())
+	assert_false(DataManager.get_location(starting_location_id).is_empty())
 	assert_true(DataManager.get_definitions("stats").size() > 0)
 
 
@@ -145,20 +144,18 @@ func test_mod_loader_load_all_mods_completes() -> void:
 
 
 func test_boot_can_initialize_ai_and_start_new_game() -> void:
-	ModLoader.load_all_mods()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	AIManager.initialize()
-	GameState.new_game()
 
 	assert_true(GameState.player != null)
-	assert_eq(GameState.get_currency("credits"), 100.0)
-	assert_eq(GameState.current_location_id, "base:start")
+	assert_eq(GameState.get_currency("credits"), TEST_FIXTURE_WORLD.starting_currency("credits"))
+	assert_eq(GameState.current_location_id, TEST_FIXTURE_WORLD.starting_location_id())
 
 
 func test_repeated_boot_cycle_stays_stable() -> void:
 	for _i in range(3):
-		ModLoader.load_all_mods()
+		TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 		AIManager.initialize()
-		GameState.new_game()
 		GameState.reset()
 
 	assert_true(ModLoader.is_loaded)
@@ -166,8 +163,7 @@ func test_repeated_boot_cycle_stays_stable() -> void:
 
 
 func test_entity_instance_equipping_flow_matches_boot_suites() -> void:
-	ModLoader.load_all_mods()
-	GameState.reset()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 
 	var entity := EntityInstance.from_template(DataManager.get_entity("base:player"))
 	var part := PartInstance.from_template(DataManager.get_part("base:body_arm_standard"))
@@ -182,11 +178,10 @@ func test_entity_instance_equipping_flow_matches_boot_suites() -> void:
 
 
 func test_save_and_load_flow_matches_boot_suites() -> void:
-	ModLoader.load_all_mods()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	AIManager.initialize()
-	GameState.new_game()
-	TimeKeeper.stop()
 
+	var starting_credits := GameState.get_currency("credits")
 	GameState.player.set_stat("health", 40.0)
 	GameState.add_currency("credits", 25.0)
 	GameState.set_flag("debug_test_flag", true)
@@ -203,7 +198,7 @@ func test_save_and_load_flow_matches_boot_suites() -> void:
 
 	assert_true(SaveManager.load_game(1))
 	assert_eq(GameState.player.get_stat("health"), 40.0)
-	assert_eq(GameState.get_currency("credits"), 125.0)
+	assert_eq(GameState.get_currency("credits"), starting_credits + 25.0)
 
 
 func _prepare_test_save_directory() -> void:

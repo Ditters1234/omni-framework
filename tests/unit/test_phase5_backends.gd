@@ -1,5 +1,6 @@
 extends GutTest
 
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 const ACTIVE_QUEST_LOG_BACKEND := preload("res://ui/screens/backends/active_quest_log_backend.gd")
 const FACTION_REPUTATION_BACKEND := preload("res://ui/screens/backends/faction_reputation_backend.gd")
 const ACHIEVEMENT_LIST_BACKEND := preload("res://ui/screens/backends/achievement_list_backend.gd")
@@ -8,10 +9,8 @@ const EVENT_LOG_BACKEND := preload("res://ui/screens/backends/event_log_backend.
 
 func before_each() -> void:
 	GameEvents.clear_event_history()
-	ModLoader.load_all_mods()
-	GameState.new_game()
-	TimeKeeper.stop()
-	_seed_phase5_runtime()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
+	TEST_FIXTURE_WORLD.seed_phase5_runtime()
 
 
 func test_active_quest_log_backend_builds_quest_cards() -> void:
@@ -86,47 +85,3 @@ func test_event_log_backend_reads_recent_game_events() -> void:
 		if not rows.is_empty() and rows[0] is Dictionary:
 			var row: Dictionary = rows[0]
 			assert_eq(str(row.get("signal_name", "")), "ui_notification_requested")
-
-
-func _seed_phase5_runtime() -> void:
-	DataManager.quests["base:phase5_quest"] = {
-		"quest_id": "base:phase5_quest",
-		"display_name": "Phase 5 Quest",
-		"stages": [
-			{
-				"title": "First Stage",
-				"description": "Review the first Phase 5 stage.",
-				"objectives": [
-					{
-						"type": "has_flag",
-						"flag_id": "phase5_ready",
-						"value": true,
-						"description": "Set the Phase 5 flag.",
-					},
-				],
-			},
-		],
-		"reward": {"credits": 3},
-	}
-	GameState.active_quests["base:phase5_quest"] = {
-		"quest_id": "base:phase5_quest",
-		"stage_index": 0,
-	}
-	DataManager.factions["base:phase5_faction"] = {
-		"faction_id": "base:phase5_faction",
-		"display_name": "Phase 5 Faction",
-		"description": "A faction used by Phase 5 backend tests.",
-		"faction_color": "primary",
-		"territory": ["base:start"],
-	}
-	var player := GameState.player as EntityInstance
-	if player != null:
-		player.reputation["base:phase5_faction"] = 25.0
-	DataManager.achievements["base:phase5_achievement"] = {
-		"achievement_id": "base:phase5_achievement",
-		"display_name": "Phase 5 Achievement",
-		"description": "A seeded achievement.",
-		"stat_name": "phase5_steps",
-		"requirement": 3,
-	}
-	GameState.achievement_stats["phase5_steps"] = 1.0

@@ -39,7 +39,7 @@ static func get_location(location_id: String) -> Dictionary:
 	return DataManager.locations.get(location_id, {})
 
 
-## Returns the connections map for a location: {direction: location_id}.
+## Returns the connections map for a location: {target_location_id: travel_cost}.
 static func get_connections(location_id: String) -> Dictionary:
 	var loc: Dictionary = get_location(location_id)
 	var connections: Variant = loc.get("connections", {})
@@ -60,8 +60,8 @@ static func _apply_connection_patch(entry: Dictionary, patch_entry: Dictionary) 
 	if not entry.has("connections"):
 		entry["connections"] = {}
 	if add_connections is Dictionary:
-		for direction in add_connections.keys():
-			entry["connections"][direction] = add_connections[direction]
+		for target_location_id in add_connections.keys():
+			entry["connections"][target_location_id] = add_connections[target_location_id]
 	if remove_connections is Array:
 		for direction in remove_connections:
 			entry["connections"].erase(direction)

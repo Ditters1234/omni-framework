@@ -1,9 +1,10 @@
 extends GutTest
 
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
+
 
 func before_each() -> void:
-	ModLoader.load_all_mods()
-	GameState.reset()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 
 
 func test_set_equipped_template_replaces_slot_contents() -> void:

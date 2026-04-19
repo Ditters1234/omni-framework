@@ -21,6 +21,7 @@ var last_operation_summary: Dictionary = {}
 var _registered_runtime_classes: Array[String] = []
 var _save_dir: String = DEFAULT_SAVE_DIR
 var _save_dir_ready: bool = false
+var _simulate_invalid_load: bool = false
 
 # ---------------------------------------------------------------------------
 # Boot
@@ -218,6 +219,12 @@ func load_game(slot: int) -> bool:
 		GameEvents.load_failed.emit(slot, invalid_reason)
 		return false
 	GameEvents.load_started.emit(slot)
+	if _simulate_invalid_load:
+		_simulate_invalid_load = false
+		var simulated_reason := "Simulated invalid load failure."
+		last_operation_summary = {"kind": "load", "slot": slot, "status": "failed", "reason": simulated_reason}
+		GameEvents.load_failed.emit(slot, simulated_reason)
+		return false
 	var path := _slot_path(slot)
 	if not FileAccess.file_exists(path):
 		var missing_reason := "Save slot is empty."

@@ -56,7 +56,7 @@ func test_validate_loaded_content_reports_cross_registry_reference_failures() ->
 	}
 	DataManager.locations["base:start"] = {
 		"location_id": "base:start",
-		"connections": {"north": "base:missing_location"}
+		"connections": {"base:missing_location": 1}
 	}
 	DataManager.entities["base:player"] = {
 		"entity_id": "base:player",
@@ -86,13 +86,13 @@ func test_validate_loaded_content_reports_cross_registry_reference_failures() ->
 	assert_true(issue_messages.has("Entity 'base:broken_vendor' references unknown location 'base:missing_location'."))
 	assert_true(issue_messages.has("Entity 'base:broken_vendor' inventory references unknown part template 'base:missing_part'."))
 	assert_true(issue_messages.has("Entity 'base:broken_vendor' socket 'left_arm' references missing inventory instance 'missing_instance'."))
-	assert_true(issue_messages.has("Location 'base:start' connection 'north' references unknown location 'base:missing_location'."))
+	assert_true(issue_messages.has("Location 'base:start' connection 'base:missing_location' references unknown location 'base:missing_location'."))
 
 
 func test_query_locations_filters_and_returns_copies() -> void:
 	DataManager.locations["base:market"] = {
 		"location_id": "base:market",
-		"connections": {"east": "base:gate"},
+		"connections": {"base:gate": 1},
 		"screens": [
 			{"backend_class": "ExchangeBackend", "ui_group": "commerce"}
 		]

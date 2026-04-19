@@ -134,17 +134,20 @@ func _render_connections() -> Array[Dictionary]:
 	label.text = "Travel:"
 	_connections_container.add_child(label)
 
-	for direction in connections.keys():
-		var dest_id: String = str(connections[direction])
+	for dest_id_value in connections.keys():
+		var dest_id: String = str(dest_id_value)
+		var travel_cost: int = int(connections[dest_id_value])
 		var dest_template: Dictionary = LocationGraph.get_location(dest_id)
 		var dest_name: String = str(dest_template.get("display_name", dest_id))
+
 		rendered_connections.append({
-			"direction": str(direction),
 			"destination_id": dest_id,
 			"destination_name": dest_name,
+			"travel_cost": travel_cost,
 		})
+
 		var btn := Button.new()
-		btn.text = "%s -> %s" % [str(direction).capitalize(), dest_name]
+		btn.text = "%s (%d)" % [dest_name, travel_cost]
 		btn.pressed.connect(_on_travel_button_pressed.bind(dest_id))
 		_connections_container.add_child(btn)
 	return rendered_connections
