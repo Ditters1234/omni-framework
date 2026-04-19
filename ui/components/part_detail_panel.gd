@@ -36,7 +36,11 @@ func render(view_model: Dictionary) -> void:
 	_description_label.text = description
 	_price_label.text = price_text
 	_price_label.modulate = _get_semantic_color("positive", FALLBACK_POSITIVE_COLOR) if affordable else _get_semantic_color("negative", FALLBACK_NEGATIVE_COLOR)
-	_texture_rect.texture = load(_resolve_sprite_path(part_template_data, default_sprite_paths)) as Texture2D
+	var sprite_path := _resolve_sprite_path(part_template_data, default_sprite_paths)
+	if not sprite_path.is_empty() and ResourceLoader.exists(sprite_path):
+		_texture_rect.texture = load(sprite_path) as Texture2D
+	else:
+		_texture_rect.texture = null
 	_stats_label.text = "\n".join(_normalize_lines(stats_lines_data))
 
 
