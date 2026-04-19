@@ -58,8 +58,8 @@ const SCREEN_CASES := [
 	{
 		"scene_path": UI_ROUTE_CATALOG.DIALOGUE_SCENE,
 		"params": {
-			"dialogue_resource": "res://mods/base/dialogue/sample_greeting.dialogue",
-			"speaker_entity_id": "player",
+			"dialogue_resource": "res://mods/base/dialogue/quartermaster_theta.dialogue",
+			"speaker_entity_id": "base:test_vendor",
 			"screen_title": "Smoke Dialogue",
 		},
 	},
@@ -140,6 +140,7 @@ func test_phase4_backend_screens_instantiate_and_initialize_without_runtime_erro
 			screen.call("initialize", params)
 		await get_tree().process_frame
 		assert_true(screen.is_inside_tree())
+		push_error("SCREEN: %s" % scene_path)
 		if screen.has_method("get_debug_snapshot"):
 			var snapshot_value: Variant = screen.call("get_debug_snapshot")
 			assert_true(snapshot_value is Dictionary)

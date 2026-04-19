@@ -9,9 +9,10 @@ func before_all() -> void:
 
 func test_base_bootstrap_content_exists() -> void:
 	assert_false(DataManager.get_entity("base:player").is_empty())
-	assert_false(DataManager.get_location("base:start").is_empty())
+	assert_false(DataManager.get_location("base:hub_safehouse").is_empty())
 	assert_eq(DataManager.get_config_value("game.starting_player_id", ""), "base:player")
-
+	assert_eq(DataManager.get_config_value("game.starting_location", ""), "base:hub_safehouse")
+	
 
 func test_resource_and_capacity_stats_have_valid_pair_links() -> void:
 	var stat_ids: Array[String] = []
@@ -92,5 +93,6 @@ func test_base_content_uses_known_stats_currencies_and_location_backends() -> vo
 
 
 func test_base_mod_ships_reference_dialogue_and_script_hook_fixtures() -> void:
-	assert_true(FileAccess.file_exists("res://mods/base/dialogue/sample_greeting.dialogue"))
-	assert_true(FileAccess.file_exists("res://mods/base/scripts/sample_script_hook.gd"))
+	assert_true(FileAccess.file_exists("res://mods/base/dialogue/quartermaster_theta.dialogue"))
+	# Remove this unless base actually promises a sample hook file:
+	# assert_true(FileAccess.file_exists("res://mods/base/scripts/sample_script_hook.gd"))

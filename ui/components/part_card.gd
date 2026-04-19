@@ -58,7 +58,13 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	_description_label.text = str(template.get("description", "No part description is available."))
 	_price_label.text = price_text
 	_price_label.modulate = _get_semantic_color("positive", FALLBACK_POSITIVE_COLOR) if affordable else _get_semantic_color("negative", FALLBACK_NEGATIVE_COLOR)
-	_texture_rect.texture = load(_resolve_sprite_path(template, default_sprite_paths)) as Texture2D
+	
+	var sprite_path := _resolve_sprite_path(template, default_sprite_paths)
+	if not sprite_path.is_empty() and ResourceLoader.exists(sprite_path):
+		_texture_rect.texture = load(sprite_path) as Texture2D
+	else:
+		_texture_rect.texture = null	
+	
 	_render_badges(badges_value)
 	_stats_label.text = "\n".join(_build_stat_lines(template))
 
