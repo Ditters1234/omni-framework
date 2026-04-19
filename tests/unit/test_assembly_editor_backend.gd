@@ -49,7 +49,7 @@ func test_build_cancel_action_returns_pop_when_cancel_screen_is_empty() -> void:
 	assert_eq(str(action.get("type", "")), "pop")
 
 
-func test_confirm_returns_configured_next_screen_action() -> void:
+func test_confirm_requires_pending_changes_by_default() -> void:
 	var backend := ASSEMBLY_EDITOR_BACKEND.new()
 	backend.initialize({
 		"target_entity_id": "player",
@@ -57,6 +57,22 @@ func test_confirm_returns_configured_next_screen_action() -> void:
 		"next_screen_params": {
 			"source": "assembly_editor_test",
 		},
+	})
+
+	var action := backend.confirm()
+
+	assert_eq(action, {})
+
+
+func test_confirm_returns_configured_next_screen_action_when_allowing_no_change_confirmation() -> void:
+	var backend := ASSEMBLY_EDITOR_BACKEND.new()
+	backend.initialize({
+		"target_entity_id": "player",
+		"next_screen_id": "gameplay_shell",
+		"next_screen_params": {
+			"source": "assembly_editor_test",
+		},
+		"allow_confirm_without_changes": true,
 	})
 
 	var action := backend.confirm()
