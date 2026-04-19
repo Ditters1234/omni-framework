@@ -622,7 +622,7 @@ When defining a moddable screen in a location or an interaction on an NPC, you a
     }
     ```
 *   **`ExchangeBackend` (Inventory Shops/Trading):** Sells physical *Instances* directly out of an Entity's `inventory` array. Once the NPC runs out of an item, it's gone until restocked. Uses real game economy. Reverse source/destination to create a "Sell" screen.
-    *   *Required:* Define `"source_inventory"` (e.g., `"entity:my_name:my_mod:merchant_bob"`) and `"destination_inventory"` (e.g., `"player"`). 
+    *   *Required:* Define `"source_inventory"` (e.g., `"entity:my_name:my_mod:merchant_bob"`), `"destination_inventory"` (e.g., `"player"`), and `"currency_id"` (e.g., `"gold"`). All three are required — the backend cannot price or transfer items without a currency context.
     *   Inventory refs may include an explicit suffix, such as `"entity:my_name:my_mod:merchant_bob:inventory"` or `"player:inventory"`, when a screen wants to name the collection it is drawing from.
     *   *Optional:* Define `"transaction_sound"` and `"list_icon"` for rich feedback.
 *   **`ListBackend` (Data Displays):** Shows lists like `"player:inventory"` or `"player:fleet"`. Use `action_payload` to trigger events when items are clicked.

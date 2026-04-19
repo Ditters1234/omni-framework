@@ -61,12 +61,12 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - `OmniUIRouteCatalog` (`ui/ui_route_catalog.gd`) — the shared route catalog for `backend_class → screen_id` mapping, the runtime `screen_id → scene_path` registry used by `ui/main.gd`, and the known routed screen ids used by content validation.
 - **Phase 4 Backend Implementation (completed for the current scope):** `AssemblyEditorBackend`, `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
 - **Backend helper strategy:** `backend_helpers.gd` contains phase-neutral helpers shared by multiple backends. Assembly-editor-only logic stays in `assembly_editor_config.gd` and `assembly_editor_option_provider.gd` so generic helpers do not become a junk drawer.
+- **Phase 5 Backend Implementation (complete — basic pass):** `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, and `EventLogBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
 
 ### Planned but not yet implemented
 
-- Backend-driven screens: `quest_log`, `entity_sheet`, `faction_rep`, `achievement_list`, `event_log` (Phase 5 basic implementation complete).
 - Backend-driven screen plus data schema: `crafting` / `CraftingBackend` and `recipes.json` (Phase 6).
-- Backend-driven screen: `world_map` (deferred to Phase 7).
+- Backend-driven screen: `world_map` / `WorldMapBackend` (deferred to Phase 7).
 
 ---
 

@@ -104,7 +104,7 @@ All data IDs use **namespacing:** `author:mod:name`. Base game uses `base:` pref
 
 ## AI Systems
 
-The `AIManager` autoload routes all AI calls to one of four backends based on `config.json ai.provider`.
+The `AIManager` autoload routes all AI calls to one of four backends based on the AI provider setting in `user://settings.cfg`. AI provider configuration is engine-owned and not moddable via `config.json` — see [`MODDING_GUIDE.md`](MODDING_GUIDE.md) §3.10 ("AI Connection Ownership").
 
 ### AI Providers
 
