@@ -12,7 +12,7 @@ const STAT_BAR_SCENE := preload("res://ui/components/stat_bar.tscn")
 @onready var _confirm_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/ConfirmButton
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton
 
-var _backend: RefCounted = CHALLENGE_BACKEND.new()
+var _backend: OmniChallengeBackend = CHALLENGE_BACKEND.new()
 var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _portrait: Control = null

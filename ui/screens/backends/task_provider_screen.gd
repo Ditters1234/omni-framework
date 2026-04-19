@@ -14,7 +14,7 @@ const QUEST_CARD_SCENE := preload("res://ui/components/quest_card.tscn")
 @onready var _confirm_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/ConfirmButton
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton
 
-var _backend: RefCounted = TASK_PROVIDER_BACKEND.new()
+var _backend: OmniTaskProviderBackend = TASK_PROVIDER_BACKEND.new()
 var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _portrait: Control = null

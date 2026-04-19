@@ -3,7 +3,7 @@ extends "res://ui/screens/backends/backend_base.gd"
 class_name OmniTaskProviderBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
-const PHASE4_HELPERS := preload("res://ui/screens/backends/phase4_backend_helpers.gd")
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 
 var _params: Dictionary = {}
 var _selected_template_id: String = ""
@@ -113,7 +113,7 @@ func _build_task_rows(faction_id: String) -> Array[Dictionary]:
 				"display_name": str(task_template.get("display_name", task_template.get("title", template_id))),
 				"detail_text": str(task_template.get("description", "")),
 				"selected": template_id == _selected_template_id,
-				"quest_card_view_model": PHASE4_HELPERS.build_task_card_view_model(task_template),
+				"quest_card_view_model": BACKEND_HELPERS.build_task_card_view_model(task_template),
 			})
 	var sort_callable := func(a: Dictionary, b: Dictionary) -> bool:
 		return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
@@ -122,9 +122,9 @@ func _build_task_rows(faction_id: String) -> Array[Dictionary]:
 
 
 func _build_provider_portrait(faction_id: String) -> Dictionary:
-	var provider_entity := PHASE4_HELPERS.resolve_entity_lookup(str(_params.get("provider_entity_id", "")))
+	var provider_entity := BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("provider_entity_id", "")))
 	if provider_entity != null:
-		return PHASE4_HELPERS.build_entity_portrait_view_model(provider_entity, "", "", faction_id)
+		return BACKEND_HELPERS.build_entity_portrait_view_model(provider_entity, "", "", faction_id)
 	var faction := DataManager.get_faction(faction_id)
 	if faction.is_empty():
 		return {
@@ -135,7 +135,7 @@ func _build_provider_portrait(faction_id: String) -> Dictionary:
 	var player := GameState.player as EntityInstance
 	var reputation_value := 0.0 if player == null else player.get_reputation(faction_id)
 	return {
-		"display_name": str(faction.get("display_name", PHASE4_HELPERS.humanize_id(faction_id))),
+		"display_name": str(faction.get("display_name", BACKEND_HELPERS.humanize_id(faction_id))),
 		"description": str(faction.get("description", "Accept work from the configured faction task pool.")),
 		"emblem_path": str(faction.get("emblem_path", "")),
 		"faction_badge": {

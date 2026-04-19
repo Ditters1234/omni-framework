@@ -14,7 +14,7 @@ const CURRENCY_DISPLAY_SCENE := preload("res://ui/components/currency_display.ts
 @onready var _confirm_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/ConfirmButton
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton
 
-var _backend: RefCounted = CATALOG_LIST_BACKEND.new()
+var _backend: OmniCatalogListBackend = CATALOG_LIST_BACKEND.new()
 var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _part_card: Control = null

@@ -3,7 +3,7 @@ extends "res://ui/screens/backends/backend_base.gd"
 class_name OmniChallengeBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
-const PHASE4_HELPERS := preload("res://ui/screens/backends/phase4_backend_helpers.gd")
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 
 var _params: Dictionary = {}
 var _status_text: String = ""
@@ -59,14 +59,14 @@ func build_view_model() -> Dictionary:
 	return {
 		"title": title,
 		"description": description,
-		"portrait": PHASE4_HELPERS.build_entity_portrait_view_model(
+		"portrait": BACKEND_HELPERS.build_entity_portrait_view_model(
 			portrait_entity,
 			"Challenge",
 			"Review the opposition, then decide whether to attempt the check."
 		),
 		"stat_line": {
 			"stat_id": required_stat,
-			"label": PHASE4_HELPERS.humanize_id(required_stat),
+			"label": BACKEND_HELPERS.humanize_id(required_stat),
 			"value": current_value,
 			"max_value": maxf(required_value, current_value),
 			"color_token": "warning",
@@ -98,8 +98,8 @@ func confirm() -> Dictionary:
 		if not success_sound.is_empty():
 			AudioManager.play_sfx(success_sound)
 		_status_text = "Success: %s met the %s threshold." % [
-			PHASE4_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id),
-			PHASE4_HELPERS.humanize_id(required_stat),
+			BACKEND_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id),
+			BACKEND_HELPERS.humanize_id(required_stat),
 		]
 	else:
 		_apply_failure()
@@ -107,23 +107,23 @@ func confirm() -> Dictionary:
 		if not failure_sound.is_empty():
 			AudioManager.play_sfx(failure_sound)
 		_status_text = "Failure: %s needs %.0f %s but only has %.0f." % [
-			PHASE4_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id),
+			BACKEND_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id),
 			required_value,
-			PHASE4_HELPERS.humanize_id(required_stat),
+			BACKEND_HELPERS.humanize_id(required_stat),
 			current_value,
 		]
 	return {}
 
 
 func _resolve_target_entity() -> EntityInstance:
-	return PHASE4_HELPERS.resolve_entity_lookup(str(_params.get("target_entity_id", "player")))
+	return BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("target_entity_id", "player")))
 
 
 func _resolve_portrait_entity(target_entity: EntityInstance) -> EntityInstance:
 	var portrait_lookup := str(_params.get("portrait_entity_id", ""))
 	if portrait_lookup.is_empty():
 		return target_entity
-	return PHASE4_HELPERS.resolve_entity_lookup(portrait_lookup)
+	return BACKEND_HELPERS.resolve_entity_lookup(portrait_lookup)
 
 
 func _apply_success(target_entity: EntityInstance) -> void:
@@ -153,9 +153,9 @@ func _build_status_text(target_entity: EntityInstance, required_stat: String, cu
 	if required_stat.is_empty():
 		return "This challenge is missing a required_stat value."
 	return "%s currently has %.0f %s. %.0f is required to pass." % [
-		PHASE4_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id),
+		BACKEND_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id),
 		current_value,
-		PHASE4_HELPERS.humanize_id(required_stat),
+		BACKEND_HELPERS.humanize_id(required_stat),
 		required_value,
 	]
 

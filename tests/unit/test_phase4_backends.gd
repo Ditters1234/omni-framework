@@ -50,8 +50,8 @@ func test_exchange_backend_moves_stocked_part_and_transfers_currency() -> void:
 
 	var backend: RefCounted = EXCHANGE_BACKEND.new()
 	backend.initialize({
-		"source_inventory": "entity:base:test_vendor",
-		"destination_inventory": "player",
+		"source_inventory": "entity:base:test_vendor:inventory",
+		"destination_inventory": "player:inventory",
 		"currency_id": "credits",
 	})
 

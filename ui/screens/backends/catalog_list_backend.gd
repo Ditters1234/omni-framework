@@ -3,7 +3,7 @@ extends "res://ui/screens/backends/backend_base.gd"
 class_name OmniCatalogListBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
-const PHASE4_HELPERS := preload("res://ui/screens/backends/phase4_backend_helpers.gd")
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 
 var _params: Dictionary = {}
 var _selected_template_id: String = ""
@@ -83,7 +83,7 @@ func build_view_model() -> Dictionary:
 		"summary": summary,
 		"rows": rows,
 		"selected_card": _read_card_view_model(selected_row),
-		"currency_display": PHASE4_HELPERS.build_currency_display_view_model(buyer, str(_params.get("currency_id", ""))),
+		"currency_display": BACKEND_HELPERS.build_currency_display_view_model(buyer, str(_params.get("currency_id", ""))),
 		"status_text": _build_status_text(rows, selected_row, buyer, empty_label),
 		"confirm_label": str(_params.get("confirm_label", "Buy Selected")),
 		"cancel_label": str(_params.get("cancel_label", "Back")),
@@ -111,10 +111,10 @@ func confirm() -> Dictionary:
 		return {}
 	var currency_id := str(_params.get("currency_id", ""))
 	var price_modifier := _get_price_modifier()
-	var price := PHASE4_HELPERS.get_part_price_for_currency(template, currency_id, price_modifier)
+	var price := BACKEND_HELPERS.get_part_price_for_currency(template, currency_id, price_modifier)
 	var buyer_clone := buyer.duplicate_instance()
 	if price > 0.0 and not TransactionService.spend_currency(buyer_clone, currency_id, price):
-		_status_text = "%s cannot afford that purchase." % PHASE4_HELPERS.get_entity_display_name(buyer, buyer.entity_id)
+		_status_text = "%s cannot afford that purchase." % BACKEND_HELPERS.get_entity_display_name(buyer, buyer.entity_id)
 		return {}
 	var new_part := PartInstance.from_template(template)
 	buyer_clone.add_part(new_part)
@@ -124,13 +124,13 @@ func confirm() -> Dictionary:
 	_dispatch_catalog_action(template, buyer_clone)
 	_status_text = "Purchased %s for %s." % [
 		str(template.get("display_name", new_part.template_id)),
-		PHASE4_HELPERS.build_price_text(template, currency_id, price_modifier).trim_prefix("Price: "),
+		BACKEND_HELPERS.build_price_text(template, currency_id, price_modifier).trim_prefix("Price: "),
 	]
 	return {}
 
 
 func _resolve_buyer() -> EntityInstance:
-	return PHASE4_HELPERS.resolve_entity_lookup(_resolve_buyer_lookup())
+	return BACKEND_HELPERS.resolve_entity_lookup(_resolve_buyer_lookup())
 
 
 func _resolve_buyer_lookup() -> String:
@@ -156,15 +156,15 @@ func _build_catalog_rows(buyer: EntityInstance) -> Array[Dictionary]:
 		var template_id := str(part_template.get("id", ""))
 		if template_id.is_empty():
 			continue
-		var price := PHASE4_HELPERS.get_part_price_for_currency(part_template, currency_id, price_modifier)
+		var price := BACKEND_HELPERS.get_part_price_for_currency(part_template, currency_id, price_modifier)
 		var affordable := buyer.get_currency(currency_id) >= price
 		result.append({
 			"template_id": template_id,
 			"display_name": str(part_template.get("display_name", template_id)),
-			"price_text": PHASE4_HELPERS.build_price_text(part_template, currency_id, price_modifier),
+			"price_text": BACKEND_HELPERS.build_price_text(part_template, currency_id, price_modifier),
 			"selected": template_id == _selected_template_id,
 			"affordable": affordable,
-			"card_view_model": PHASE4_HELPERS.build_part_card_view_model(
+			"card_view_model": BACKEND_HELPERS.build_part_card_view_model(
 				part_template,
 				currency_id,
 				price_modifier,
@@ -234,11 +234,11 @@ func _build_status_text(rows: Array[Dictionary], selected_row: Dictionary, buyer
 		return "Select a catalog item to inspect it."
 	if bool(selected_row.get("affordable", false)):
 		return "%s can afford %s." % [
-			PHASE4_HELPERS.get_entity_display_name(buyer, buyer.entity_id),
+			BACKEND_HELPERS.get_entity_display_name(buyer, buyer.entity_id),
 			str(selected_row.get("display_name", "that item")),
 		]
 	return "%s cannot currently afford %s." % [
-		PHASE4_HELPERS.get_entity_display_name(buyer, buyer.entity_id),
+		BACKEND_HELPERS.get_entity_display_name(buyer, buyer.entity_id),
 		str(selected_row.get("display_name", "that item")),
 	]
 

@@ -1,6 +1,6 @@
 extends RefCounted
 
-class_name OmniPhase4BackendHelpers
+class_name OmniBackendHelpers
 
 
 static func humanize_id(value: String) -> String:

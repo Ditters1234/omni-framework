@@ -3,7 +3,7 @@ extends "res://ui/screens/backends/backend_base.gd"
 class_name OmniExchangeBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
-const PHASE4_HELPERS := preload("res://ui/screens/backends/phase4_backend_helpers.gd")
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 
 var _params: Dictionary = {}
 var _selected_instance_id: String = ""
@@ -80,14 +80,14 @@ func build_view_model() -> Dictionary:
 		"summary": summary,
 		"rows": stock,
 		"selected_card": selected_card,
-		"currency_display": PHASE4_HELPERS.build_currency_display_view_model(destination_entity, currency_id),
+		"currency_display": BACKEND_HELPERS.build_currency_display_view_model(destination_entity, currency_id),
 		"status_text": _build_status_text(stock, selected_row, source_entity, destination_entity, empty_label),
 		"confirm_label": str(_params.get("confirm_label", "Buy Selected")),
 		"cancel_label": str(_params.get("cancel_label", "Back")),
 		"empty_label": empty_label,
 		"confirm_enabled": not selected_row.is_empty() and bool(selected_row.get("affordable", false)),
-		"source_name": PHASE4_HELPERS.get_entity_display_name(source_entity, source_entity.entity_id),
-		"destination_name": PHASE4_HELPERS.get_entity_display_name(destination_entity, destination_entity.entity_id),
+		"source_name": BACKEND_HELPERS.get_entity_display_name(source_entity, source_entity.entity_id),
+		"destination_name": BACKEND_HELPERS.get_entity_display_name(destination_entity, destination_entity.entity_id),
 	}
 
 
@@ -120,9 +120,9 @@ func confirm() -> Dictionary:
 		_status_text = "That stocked part no longer has a valid template."
 		return {}
 	var currency_id := str(_params.get("currency_id", ""))
-	var price := PHASE4_HELPERS.get_part_price_for_currency(template, currency_id, price_modifier)
+	var price := BACKEND_HELPERS.get_part_price_for_currency(template, currency_id, price_modifier)
 	if price > 0.0 and destination_clone.get_currency(currency_id) < price:
-		_status_text = "%s cannot afford that purchase." % PHASE4_HELPERS.get_entity_display_name(destination_entity, destination_entity.entity_id)
+		_status_text = "%s cannot afford that purchase." % BACKEND_HELPERS.get_entity_display_name(destination_entity, destination_entity.entity_id)
 		return {}
 	var moved_part := PartInstance.new()
 	moved_part.from_dict(source_part.to_dict())
@@ -145,25 +145,25 @@ func confirm() -> Dictionary:
 		AudioManager.play_sfx(transaction_sound)
 	_status_text = "Purchased %s for %s." % [
 		str(template.get("display_name", moved_part.template_id)),
-		PHASE4_HELPERS.build_price_text(template, currency_id, price_modifier).trim_prefix("Price: "),
+		BACKEND_HELPERS.build_price_text(template, currency_id, price_modifier).trim_prefix("Price: "),
 	]
 	return {}
 
 
 func _resolve_source_entity() -> EntityInstance:
-	return PHASE4_HELPERS.resolve_entity_lookup(_resolve_lookup_id(str(_params.get("source_inventory", ""))))
+	return BACKEND_HELPERS.resolve_entity_lookup(_resolve_lookup_id(str(_params.get("source_inventory", ""))))
 
 
 func _resolve_destination_entity() -> EntityInstance:
-	return PHASE4_HELPERS.resolve_entity_lookup(_resolve_lookup_id(str(_params.get("destination_inventory", ""))))
+	return BACKEND_HELPERS.resolve_entity_lookup(_resolve_lookup_id(str(_params.get("destination_inventory", ""))))
 
 
 func _resolve_lookup_id(inventory_ref: String) -> String:
 	var normalized_ref := inventory_ref.strip_edges()
+	if normalized_ref.begins_with("entity:"):
+		normalized_ref = normalized_ref.trim_prefix("entity:")
 	if normalized_ref == "player":
 		return "player"
-	if normalized_ref.begins_with("entity:"):
-		return normalized_ref.trim_prefix("entity:")
 	var segments := normalized_ref.split(":", false)
 	if segments.size() >= 2:
 		var suffix := str(segments[segments.size() - 1])
@@ -184,16 +184,16 @@ func _get_stock_rows(source_entity: EntityInstance) -> Array[Dictionary]:
 		var template := part.get_template()
 		if template.is_empty():
 			continue
-		var price := PHASE4_HELPERS.get_part_price_for_currency(template, currency_id, price_modifier)
+		var price := BACKEND_HELPERS.get_part_price_for_currency(template, currency_id, price_modifier)
 		var affordable := destination_entity != null and destination_entity.get_currency(currency_id) >= price
 		result.append({
 			"instance_id": part.instance_id,
 			"template_id": part.template_id,
 			"display_name": str(template.get("display_name", part.template_id)),
-			"price_text": PHASE4_HELPERS.build_price_text(template, currency_id, price_modifier),
+			"price_text": BACKEND_HELPERS.build_price_text(template, currency_id, price_modifier),
 			"affordable": affordable,
 			"selected": part.instance_id == _selected_instance_id,
-			"card_view_model": PHASE4_HELPERS.build_part_card_view_model(
+			"card_view_model": BACKEND_HELPERS.build_part_card_view_model(
 				template,
 				currency_id,
 				price_modifier,
@@ -247,16 +247,16 @@ func _build_status_text(
 	if rows.is_empty():
 		return empty_label
 	if selected_row.is_empty():
-		return "Select an item from %s to inspect it." % PHASE4_HELPERS.get_entity_display_name(source_entity, source_entity.entity_id)
+		return "Select an item from %s to inspect it." % BACKEND_HELPERS.get_entity_display_name(source_entity, source_entity.entity_id)
 	var affordable := bool(selected_row.get("affordable", false))
 	if affordable:
 		return "%s can buy %s from %s." % [
-			PHASE4_HELPERS.get_entity_display_name(destination_entity, destination_entity.entity_id),
+			BACKEND_HELPERS.get_entity_display_name(destination_entity, destination_entity.entity_id),
 			str(selected_row.get("display_name", "this item")),
-			PHASE4_HELPERS.get_entity_display_name(source_entity, source_entity.entity_id),
+			BACKEND_HELPERS.get_entity_display_name(source_entity, source_entity.entity_id),
 		]
 	return "%s cannot currently afford %s." % [
-		PHASE4_HELPERS.get_entity_display_name(destination_entity, destination_entity.entity_id),
+		BACKEND_HELPERS.get_entity_display_name(destination_entity, destination_entity.entity_id),
 		str(selected_row.get("display_name", "that item")),
 	]
 

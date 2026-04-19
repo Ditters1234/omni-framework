@@ -3,7 +3,7 @@ extends "res://ui/screens/backends/backend_base.gd"
 class_name OmniDialogueBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
-const PHASE4_HELPERS := preload("res://ui/screens/backends/phase4_backend_helpers.gd")
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 
 var _params: Dictionary = {}
 
@@ -44,7 +44,7 @@ func build_view_model() -> Dictionary:
 	return {
 		"title": str(_params.get("screen_title", "Dialogue")),
 		"description": str(_params.get("screen_description", "Play a branching dialogue file through the routed UI layer.")),
-		"portrait": PHASE4_HELPERS.build_entity_portrait_view_model(
+		"portrait": BACKEND_HELPERS.build_entity_portrait_view_model(
 			speaker,
 			"Speaker",
 			"Dialogue will use the configured resource and optional start title."
@@ -74,7 +74,7 @@ func get_speaker_display_name() -> String:
 	var speaker := _resolve_speaker_entity()
 	if speaker == null:
 		return "Speaker"
-	return PHASE4_HELPERS.get_entity_display_name(speaker, speaker.entity_id)
+	return BACKEND_HELPERS.get_entity_display_name(speaker, speaker.entity_id)
 
 
 func get_dialogue_blip_path() -> String:
@@ -86,4 +86,4 @@ func get_dialogue_blip_path() -> String:
 
 
 func _resolve_speaker_entity() -> EntityInstance:
-	return PHASE4_HELPERS.resolve_entity_lookup(str(_params.get("speaker_entity_id", "")))
+	return BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("speaker_entity_id", "")))

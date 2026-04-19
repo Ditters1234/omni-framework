@@ -72,7 +72,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
 | `AppSettings` | `AppSettings` | `core/app_settings.gd` | — | Persistent app-level preferences (audio vol, graphics, accessibility). |
-| `phase4_backend_helpers` | — | `ui/screens/backends/phase4_backend_helpers.gd` | GameState, DataManager | Shared utilities for all Phase 4 backend screens. |
+| `BackendHelpers` | `OmniBackendHelpers` | `ui/screens/backends/backend_helpers.gd` | GameState, DataManager | Phase-neutral utilities shared by backend screens. |
 
 ---
 
@@ -434,4 +434,3 @@ SYSTEM_CATALOG.md (this file)
 | Date | Author | Change |
 |---|---|---|
 | 2026-04-18 | System | Initial catalog creation — comprehensive system inventory with all links. |
-

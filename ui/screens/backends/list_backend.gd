@@ -3,7 +3,7 @@ extends "res://ui/screens/backends/backend_base.gd"
 class_name OmniListBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
-const PHASE4_HELPERS := preload("res://ui/screens/backends/phase4_backend_helpers.gd")
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 
 var _params: Dictionary = {}
 var _selected_row_id: String = ""
@@ -128,15 +128,15 @@ func _build_inventory_rows(data_source: String) -> Array[Dictionary]:
 				"row_id": slot_id,
 				"template_id": part.template_id,
 				"display_name": str(template.get("display_name", part.template_id)),
-				"detail_text": PHASE4_HELPERS.humanize_id(slot_id),
+				"detail_text": BACKEND_HELPERS.humanize_id(slot_id),
 				"selected": slot_id == _selected_row_id,
 				"detail_kind": "part_card",
-				"detail_view_model": PHASE4_HELPERS.build_part_card_view_model(
+				"detail_view_model": BACKEND_HELPERS.build_part_card_view_model(
 					template,
 					"",
 					1.0,
 					[
-						{"label": PHASE4_HELPERS.humanize_id(slot_id), "color_token": "primary"},
+						{"label": BACKEND_HELPERS.humanize_id(slot_id), "color_token": "primary"},
 						{"label": "Equipped", "color_token": "positive"},
 					],
 					true
@@ -158,7 +158,7 @@ func _build_inventory_rows(data_source: String) -> Array[Dictionary]:
 			"detail_text": str(template.get("description", "")),
 			"selected": part.instance_id == _selected_row_id,
 			"detail_kind": "part_card",
-			"detail_view_model": PHASE4_HELPERS.build_part_card_view_model(
+			"detail_view_model": BACKEND_HELPERS.build_part_card_view_model(
 				template,
 				"",
 				1.0,

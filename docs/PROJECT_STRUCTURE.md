@@ -17,7 +17,7 @@ The engine ships with:
 
 ### Current Implementation Snapshot
 
-As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-4 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, the backend/screen split for `AssemblyEditorBackend`, and the first round of moddable backend screens (`DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`). The full target tree is still not implemented end-to-end, though, and later read-only backends plus world-map/crafting support remain future-facing in this document.
+As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-4 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, the backend/screen split for `AssemblyEditorBackend`, phase-neutral backend helpers, and the first round of moddable backend screens (`DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`). The full target tree is still not implemented end-to-end, though, and later read-only backends plus world-map/crafting support remain future-facing in this document.
 
 Use this document as the "where we are going and what rules we must preserve" reference, not as a claim that every folder and subsystem below is feature-complete today.
 
@@ -64,7 +64,7 @@ var safe_ruleset := {
 var state = A2J.from_json(raw_data, safe_ruleset)
 ```
 
-Phase 4 note: the first round of moddable backend scenes now exists under `ui/screens/backends/` for exchange, catalog vending, generic list rendering, challenge checks, faction task boards, and dialogue. Some comments in the legacy tree diagram still say "planned", but the routed scene files, backend scripts, and route registrations are now present in the repository.
+Phase 4 note: the first round of moddable backend scenes now exists under `ui/screens/backends/` for exchange, catalog vending, generic list rendering, challenge checks, faction task boards, and dialogue. Assembly editor is also part of Phase 4 consistency passes now, because its backend/screen/helper shape must stay aligned with the newer routed backends.
 
 ---
 
@@ -141,7 +141,7 @@ res://
 │   │       ├── catalog_list_screen.tscn      # ✅ CatalogListBackend — implemented
 │   │       ├── dialogue_screen.tscn          # ✅ DialogueBackend — implemented (wraps Dialogue Manager)
 │   │       ├── backend_base.gd               # ✅ Base class for all backend implementations
-│   │       ├── phase4_backend_helpers.gd     # ✅ Shared utilities used by Phase 4 backend screens
+│   │       ├── backend_helpers.gd            # ✅ Phase-neutral utilities shared by backend screens
 │   │       └── [backend_*.gd files]          # Backend implementation classes (one per backend_class type)
 │   ├── components/          # Reusable UI widgets (used inside screens)
 │   │   ├── currency_summary_panel.tscn  # ✅ Budget display used by AssemblyEditor

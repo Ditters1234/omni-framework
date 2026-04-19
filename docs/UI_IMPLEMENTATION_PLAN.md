@@ -6,7 +6,7 @@ This document is a planning reference for the UI layer. It catalogs the backend 
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
-**Companion document:** `UI_DESIGN_GUIDE.md` defines *how* UI is built — component contracts, layout patterns, authoring templates, naming, and anti-patterns. This plan defines *what* to build and *when*. When the two disagree, the design guide wins for conventions; this plan wins for priorities.
+UI implementation conventions currently live in this document and in `PROJECT_STRUCTURE.md`. If a dedicated design guide is added later, it should inherit these backend/screen/component contracts rather than replace them silently.
 
 Decisions this document assumes:
 
@@ -59,13 +59,14 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - `AssemblySession` in `core/` as the draft layer `AssemblyEditorBackend` operates on.
 - `BackendContractRegistry` (`systems/backend_contract_registry.gd`) for load-time `backend_class` validation during mod loading.
 - `OmniUIRouteCatalog` (`ui/ui_route_catalog.gd`) — the shared route catalog for `backend_class → screen_id` mapping, the runtime `screen_id → scene_path` registry used by `ui/main.gd`, and the known routed screen ids used by content validation.
-- **Phase 4 Backend Implementation (completed):** `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` are all implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
-- **Shared backend utilities:** `phase4_backend_helpers.gd` contains utility functions extracted from Phase 4 backends to reduce duplication across future backends.
+- **Phase 4 Backend Implementation (completed for the current scope):** `AssemblyEditorBackend`, `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
+- **Backend helper strategy:** `backend_helpers.gd` contains phase-neutral helpers shared by multiple backends. Assembly-editor-only logic stays in `assembly_editor_config.gd` and `assembly_editor_option_provider.gd` so generic helpers do not become a junk drawer.
 
 ### Planned but not yet implemented
 
-- Backend screens: `crafting`, `quest_log`, `entity_sheet`, `faction_rep`, `achievement_list`, `event_log` (Phase 5+)
-- Backend screens: `world_map` (⚠️ deferred)
+- Backend-driven screens: `quest_log`, `entity_sheet`, `faction_rep`, `achievement_list`, `event_log` (Phase 5).
+- Backend-driven screen plus data schema: `crafting` / `CraftingBackend` and `recipes.json` (Phase 6).
+- Backend-driven screen: `world_map` (deferred to Phase 7).
 
 ---
 
@@ -73,7 +74,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 
 Target end state once this plan is fully executed. Fourteen backends plus engine-owned screens.
 
-Implementation note: the repository has now completed the Phase 4 "round 1" backend set. `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` all exist as routed screens with backend scripts, contract registration, and route-catalog entries. Later sections in this document still describe the original rollout order so the remaining Phase 5+ work keeps its intended shape.
+Implementation note: the repository has completed the current Phase 4 backend scope. The older `AssemblyEditorBackend` is now explicitly part of Phase 4 maintenance and consistency passes, alongside `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend`. Later phases describe the remaining new backend work rather than the already-landed route foundation.
 
 ### 3.1 Interactive Backends (moddable, selected via `backend_class`)
 
@@ -312,22 +313,21 @@ The separate `crafter`, `input_source`, `output_destination` fields mirror the t
 
 ---
 
-## 8. Architecture Improvements Before Backend Proliferation
+## 8. Backend Architecture Guardrails
 
-Before writing seven new backends, the current single backend should be refactored to establish the pattern. Skipping this step means the seven will duplicate the current screen's mixing of concerns.
+This section describes the current backend pattern, not future scaffolding. Phase 1 established it with `AssemblyEditorBackend`, and Phase 4 extended it across the first round of moddable backends. Keep using this structure for every new backend so the UI layer stays boring in the best possible way.
 
 ### 8.1 Split Backend from Screen
 
-Target file layout per backend:
+Current flat file layout per backend:
 
 ```
-ui/screens/backends/exchange/
-├── exchange_screen.tscn
-├── exchange_screen.gd              # @onready refs, signal forwarding, render dispatch
-└── exchange_backend.gd             # class_name OmniExchangeBackend extends OmniBackendBase
+ui/screens/backends/exchange_screen.tscn
+ui/screens/backends/exchange_screen.gd      # @onready refs, signal forwarding, render dispatch
+ui/screens/backends/exchange_backend.gd     # class_name OmniExchangeBackend extends OmniBackendBase
 ```
 
-`OmniBackendBase` (new file in `ui/screens/backends/backend_base.gd`):
+`OmniBackendBase` lives in `ui/screens/backends/backend_base.gd`:
 
 ```gdscript
 class_name OmniBackendBase
@@ -339,11 +339,11 @@ func confirm() -> Dictionary: return {"status": "ok"}
 func get_required_params() -> Array[String]: return []
 ```
 
-The refactor of `assembly_editor_screen.gd` is an in-place edit per the AGENTS.md rule: extract data-gathering methods into a new `assembly_editor_backend.gd` without deleting the original; then trim the screen to `@onready` refs and `_on_*` handlers that call into the backend.
+The `assembly_editor_screen.gd` refactor is complete: the screen now owns node references and input handlers, while `assembly_editor_backend.gd` owns runtime state, view-model assembly, and commit/cancel behavior. Keep `AssemblyEditorBackend` inside Phase 4 consistency work because it is the oldest backend and the easiest one to accidentally let drift from the newer pattern.
 
 ### 8.2 `BackendContractRegistry`
 
-New file: `systems/backend_contract_registry.gd`. The registry is populated by built-in backends at the start of `ModLoader.load_all_mods()`, then consulted during `DataManager.validate_loaded_content()`. Given a dictionary containing a `backend_class` field, it returns precise required-field and type-validation issues for screens and interactions.
+`systems/backend_contract_registry.gd` is implemented. The registry is populated by built-in backends at the start of `ModLoader.load_all_mods()`, then consulted during content validation. Given a dictionary containing a `backend_class` field, it returns precise required-field and type-validation issues for screens and interactions.
 
 Contract entries are registered at engine boot by each backend script in a single `static func register_contract()` method. That keeps the contract next to the backend that enforces it.
 
@@ -358,7 +358,16 @@ static func register_contract() -> void:
 
 Boot order: contracts register inside the content-loading pipeline before validation runs. That keeps headless tests, non-UI boot flows, and the main scene on the same path instead of making registration a `ui/main.gd` concern.
 
-### 8.3 Typed view models (optional)
+### 8.3 Helper Script Boundaries
+
+Use helper scripts deliberately:
+
+- `backend_helpers.gd` is for phase-neutral, cross-backend utilities such as entity lookup, display-name formatting, currency view models, part cards, and stat-preview lines.
+- Backend-specific helpers keep the backend readable without pretending their logic is reusable. Current examples are `assembly_editor_config.gd` and `assembly_editor_option_provider.gd`.
+- Do not add a helper just because a method is private. Extract when the code has a stable boundary, a testable responsibility, or at least two likely consumers.
+- Do not name helpers after phases. Phases are planning history; helper filenames should describe their runtime role.
+
+### 8.4 Typed view models (optional)
 
 A `ViewModel` base resource with `to_dict()` / `from_dict()` would let tests snapshot backend output without instantiating scenes. This is a nice-to-have, not a blocker. Components still accept `Dictionary` at the render boundary; the typed resource is a backend-side convenience.
 
@@ -404,36 +413,39 @@ Current status: functionally complete. The engine-owned route set is built, wire
 
 Deliverable: full boot → menu → settings → save-slot → game shell loop using real components.
 
-### Phase 4 — Moddable backends, round 1 (~4–5 days)
+### Phase 4 — Backend consistency and moddable backends, round 1 (~4–5 days)
 
-**Phase 4 completion note (April 2026):** All six Phase 4 backends are now implemented with a consistent pattern:
+**Phase 4 completion note (April 2026):** The current Phase 4 scope is implemented. Treat `AssemblyEditorBackend` as part of Phase 4 for all remaining consistency passes, even though it first landed earlier, because it shares the same backend/screen/contract responsibilities as the six round-1 moddable backends.
 
 - **Backend script** (`*_backend.gd`) — Extends `OmniBackendBase`, implements `initialize()`, `build_view_model()`, and `confirm()`.
 - **Screen script** (`*_screen.gd`) — Thin controller layer; owns scene refs and dispatches to backend.
 - **Scene file** (`*_screen.tscn`) — UI layout; components receive view model dicts from the screen controller.
-- **Shared helper** (`phase4_backend_helpers.gd`) — Utility functions extracted from common patterns across backends to reduce duplication.
+- **Shared helper** (`backend_helpers.gd`) — Phase-neutral utility functions extracted from common patterns across backends to reduce duplication.
 - **Route catalog entry** — Backend registered in `ui/ui_route_catalog.gd` with screen id mapping.
 - **Contract registration** — Backend registers its param contract during `ModLoader` phase.
 
-**Assembly editor improvements added during Phase 4:**
+**Helper boundary for this phase:**
+
+- `backend_helpers.gd` is generic and can be used by any current or future backend.
 - `assembly_editor_config.gd` — Configuration and state management helper.
 - `assembly_editor_option_provider.gd` — Part option sourcing and filtering logic.
-- These follow the same helper pattern; future backends should extract similar reusable utilities instead of keeping everything inside the backend.
+- Assembly editor helpers are intentionally specific. Do not move their logic into `backend_helpers.gd` unless another backend has the same concrete need.
 
-Build in dependency order — screens that depend on fewer new components come first.
+Historical build order:
 
-1. `DialogueBackend` (depends on `entity_portrait`; high modder priority since Dialogue Manager integration unblocks writable content).
-2. `ExchangeBackend` (depends on `part_card`, `currency_display`).
-3. `CatalogListBackend` (shares most of Exchange's shape).
-4. `ListBackend` (generic, depends on `part_card` + pluggable row templates).
-5. `ChallengeBackend` (depends on `stat_bar`, `entity_portrait`).
-6. `TaskProviderBackend` (depends on `entity_portrait`, `quest_card`).
+1. `AssemblyEditorBackend` consistency pass (backend/screen split, contract registration, config/helper extraction).
+2. `DialogueBackend` (depends on `entity_portrait`; high modder priority since Dialogue Manager integration unblocks writable content).
+3. `ExchangeBackend` (depends on `part_card`, `currency_display`).
+4. `CatalogListBackend` (shares most of Exchange's shape).
+5. `ListBackend` (generic, depends on `part_card` + pluggable row templates).
+6. `ChallengeBackend` (depends on `stat_bar`, `entity_portrait`).
+7. `TaskProviderBackend` (depends on `entity_portrait`, `quest_card`).
 
-Each follows the Phase 1 pattern: scene, screen script, backend script, contract registration. Register each in `ui/main.gd` alongside existing screens.
+Each follows the Phase 1 pattern: scene, screen script, backend script, contract registration. Register backend-to-route mappings in `ui/ui_route_catalog.gd`; `ui/main.gd` consumes that catalog rather than owning backend registration itself.
 
 ### Phase 5 — Moddable backends, round 2 (~3–4 days)
 
-The "read-only view" backends that depend on existing runtime state.
+The remaining read-only view backends depend on existing runtime state and the component library that is already in place.
 
 1. `EntitySheetBackend` + `stat_sheet` integration.
 2. `ActiveQuestLogBackend` + `quest_card`.
@@ -456,11 +468,11 @@ The "read-only view" backends that depend on existing runtime state.
 
 Not built in this plan. When combat lands, it follows the same pattern as every other backend. See §6.
 
-**Total estimated effort for Phases 1–7: ~17–22 engineering days.**
+**Remaining estimated effort for Phases 5–7: ~8–10 engineering days.** The original Phase 1–4 foundation is now complete for the current scope, so future estimates should focus on the read-only backend set, crafting, and world map.
 
 ---
 
-Phase 4 status update: the round-1 moddable backend set is now in the repository. `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` all have backend scripts, routed screen scenes, route-catalog entries, and load-time contract registration.
+Phase 4 status update: `AssemblyEditorBackend`, `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` all have backend scripts, routed screen scenes, route-catalog entries, and load-time contract registration. Future Phase 4 cleanup should include assembly editor when checking helper boundaries, view-model shape, contract naming, tests, and route behavior.
 
 ## 10. Testing and Verification
 

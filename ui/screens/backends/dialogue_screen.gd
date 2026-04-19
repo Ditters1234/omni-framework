@@ -16,7 +16,7 @@ const DIALOGUE_RESPONSE_SCRIPT := preload("res://addons/dialogue_manager/dialogu
 @onready var _advance_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/AdvanceButton
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton
 
-var _backend: RefCounted = DIALOGUE_BACKEND.new()
+var _backend: OmniDialogueBackend = DIALOGUE_BACKEND.new()
 var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _portrait: Control = null

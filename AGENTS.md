@@ -176,7 +176,7 @@ Each backend class is validated against a **contract** — a schema that defines
 - Backends are defined in JSON with a `backend_class` string and a `backend_config` dict.
 - The backend config must match the contract registered for that class.
 - Custom backends can be registered in mod scripts — see `docs/MODDING_GUIDE.md` for schema examples.
-- All official backends use the `phase4_backend_helpers.gd` utility module for common operations.
+- Official backends use `backend_helpers.gd` for phase-neutral common operations. Backend-specific helpers should stay scoped to their backend, such as `assembly_editor_config.gd` and `assembly_editor_option_provider.gd`.
 
 ---
 
@@ -208,7 +208,7 @@ These systems provide core runtime functionality but are not autoloads. They're 
 | `StatManager` | `systems/stat_manager.gd` | Calculates stat modifiers, applies stat changes, and enforces clamping rules |
 
 **Helper utilities:**
-- `phase4_backend_helpers.gd` — Shared utility functions used by all Phase 4 backend screens (catalog, exchange, list, challenge, task provider, dialogue)
+- `backend_helpers.gd` — Phase-neutral utility functions shared by backend screens (catalog, exchange, list, challenge, task provider, dialogue, and future reusable backend needs)
 - `AppSettings` (`core/app_settings.gd`) — Persistent app-level settings (audio, graphics, accessibility)
 
 ---
