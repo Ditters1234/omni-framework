@@ -63,6 +63,13 @@ const SCREEN_CASES := [
 			"screen_title": "Smoke Dialogue",
 		},
 	},
+	{
+		"scene_path": UI_ROUTE_CATALOG.ENTITY_SHEET_SCENE,
+		"params": {
+			"target_entity_id": "player",
+			"screen_title": "Smoke Entity Sheet",
+		},
+	},
 ]
 
 var _spawned_screens: Array[Control] = []

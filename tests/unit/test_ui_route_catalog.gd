@@ -28,6 +28,7 @@ func test_backend_screen_ids_map_to_known_routes() -> void:
 		"TaskProviderBackend",
 		"CatalogListBackend",
 		"DialogueBackend",
+		"EntitySheetBackend",
 	]
 
 	for backend_class in backend_classes:

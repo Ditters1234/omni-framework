@@ -139,6 +139,63 @@ static func build_stat_line(entity: EntityInstance, stat_definition: Dictionary)
 	}
 
 
+static func build_stat_sheet_view_model(entity: EntityInstance, title: String = "Stats") -> Dictionary:
+	var groups: Dictionary = {}
+	if entity == null:
+		return {
+			"title": title,
+			"groups": groups,
+		}
+
+	var effective_stats := StatManager.compute_effective_stats(entity)
+	var seen_stats: Dictionary = {}
+	var stat_definitions_value: Variant = DataManager.get_definitions("stats")
+	if stat_definitions_value is Array:
+		var stat_definitions: Array = stat_definitions_value
+		for stat_definition_value in stat_definitions:
+			if not stat_definition_value is Dictionary:
+				continue
+			var stat_definition: Dictionary = stat_definition_value
+			var stat_id := str(stat_definition.get("id", ""))
+			if stat_id.is_empty() or not effective_stats.has(stat_id):
+				continue
+			var kind := str(stat_definition.get("kind", "flat"))
+			var paired_base_id := str(stat_definition.get("paired_base_id", ""))
+			if kind == "capacity" and not paired_base_id.is_empty() and effective_stats.has(paired_base_id):
+				continue
+			var line := _build_effective_stat_line(effective_stats, stat_definition)
+			if line.is_empty():
+				continue
+			_append_stat_line(groups, str(stat_definition.get("ui_group", "other")), line)
+			seen_stats[stat_id] = true
+			var paired_capacity_id := str(stat_definition.get("paired_capacity_id", ""))
+			if not paired_capacity_id.is_empty():
+				seen_stats[paired_capacity_id] = true
+
+	var stat_keys: Array = effective_stats.keys()
+	stat_keys.sort()
+	for stat_key_value in stat_keys:
+		var stat_id := str(stat_key_value)
+		if seen_stats.has(stat_id):
+			continue
+		if stat_id.ends_with(OmniConstants.CAPACITY_SUFFIX):
+			var base_stat_id := stat_id.trim_suffix(OmniConstants.CAPACITY_SUFFIX)
+			if effective_stats.has(base_stat_id):
+				continue
+		var amount := _read_float(effective_stats.get(stat_key_value, 0.0))
+		_append_stat_line(groups, "other", {
+			"stat_id": stat_id,
+			"label": humanize_id(stat_id),
+			"value": amount,
+			"color_token": "info",
+		})
+
+	return {
+		"title": title,
+		"groups": groups,
+	}
+
+
 static func build_entity_portrait_view_model(
 	entity: EntityInstance,
 	fallback_name: String = "",
@@ -268,6 +325,40 @@ static func _build_task_objective_label(task_template: Dictionary) -> String:
 	return "%s %s" % [str(task_template.get("description", "Reach")), humanize_id(target)]
 
 
+static func _build_effective_stat_line(effective_stats: Dictionary, stat_definition: Dictionary) -> Dictionary:
+	var stat_id := str(stat_definition.get("id", ""))
+	if stat_id.is_empty() or not effective_stats.has(stat_id):
+		return {}
+	var color_token := _color_token_for_group(str(stat_definition.get("ui_group", "other")))
+	var value := _read_float(effective_stats.get(stat_id, 0.0))
+	var kind := str(stat_definition.get("kind", "flat"))
+	if kind == "resource":
+		var capacity_id := str(stat_definition.get("paired_capacity_id", ""))
+		return {
+			"stat_id": stat_id,
+			"label": humanize_id(stat_id),
+			"value": value,
+			"max_value": _read_float(effective_stats.get(capacity_id, 0.0)),
+			"color_token": color_token,
+		}
+	return {
+		"stat_id": stat_id,
+		"label": humanize_id(stat_id),
+		"value": value,
+		"color_token": color_token,
+	}
+
+
+static func _append_stat_line(groups: Dictionary, group_name: String, line: Dictionary) -> void:
+	var normalized_group := group_name if not group_name.is_empty() else "other"
+	var group_lines_value: Variant = groups.get(normalized_group, [])
+	var group_lines: Array = []
+	if group_lines_value is Array:
+		group_lines = group_lines_value
+	group_lines.append(line.duplicate(true))
+	groups[normalized_group] = group_lines
+
+
 static func _resolve_entity_emblem_path(entity_template: Dictionary) -> String:
 	var emblem_fields := ["portrait", "emblem_path", "sprite"]
 	for field_name_value in emblem_fields:
@@ -320,6 +411,12 @@ static func _format_number(amount: float) -> String:
 	if absf(amount - roundf(amount)) < 0.001:
 		return str(int(roundf(amount)))
 	return "%.2f" % amount
+
+
+static func _read_float(value: Variant) -> float:
+	if value is int or value is float:
+		return float(value)
+	return 0.0
 
 
 static func _duplicate_dictionary(value: Variant) -> Dictionary:

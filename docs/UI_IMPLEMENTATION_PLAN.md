@@ -88,7 +88,7 @@ Implementation note: the repository has completed the current Phase 4 backend sc
 | `ChallengeBackend` | `challenge` | ✅ Implemented | Single stat check → branch to `reward` or `action_payload` |
 | `TaskProviderBackend` | `task_provider` | ✅ Implemented | Faction job board — accept tasks from `faction.quest_pool` |
 | `ActiveQuestLogBackend` | `quest_log` | 🆕 **Proposed** | Read active quests + stages + objectives + rewards from `GameState` |
-| `EntitySheetBackend` | `entity_sheet` | 🆕 **Proposed** | Read-only full entity view: stats, modifiers, equipped parts, inventory summary, faction standings |
+| `EntitySheetBackend` | `entity_sheet` | Implemented (Phase 5 pass 1) | Read-only full entity view: stats, modifiers, equipped parts, inventory summary, faction standings |
 | `FactionReputationBackend` | `faction_rep` | 🆕 **Proposed** | Grid/list of factions with reputation tier + emblem + territory summary |
 | `AchievementListBackend` | `achievement_list` | 🆕 **Proposed** | Browse achievement progress including locked/unlocked state and thresholds |
 | `EventLogBackend` | `event_log` | 🆕 **Proposed** | Rolling history from `GameEvents._event_history` |
@@ -447,7 +447,7 @@ Each follows the Phase 1 pattern: scene, screen script, backend script, contract
 
 The remaining read-only view backends depend on existing runtime state and the component library that is already in place.
 
-1. `EntitySheetBackend` + `stat_sheet` integration.
+1. `EntitySheetBackend` + `stat_sheet` integration. Implemented in Phase 5 pass 1 with `entity_sheet` routing, read-only entity stats/equipment/inventory/reputation view models, and screen smoke/unit coverage.
 2. `ActiveQuestLogBackend` + `quest_card`.
 3. `FactionReputationBackend` + `faction_badge`.
 4. `AchievementListBackend`.

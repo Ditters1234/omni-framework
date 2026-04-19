@@ -17,6 +17,7 @@ const SCREEN_CHALLENGE := "challenge"
 const SCREEN_TASK_PROVIDER := "task_provider"
 const SCREEN_CATALOG_LIST := "catalog_list"
 const SCREEN_DIALOGUE := "dialogue"
+const SCREEN_ENTITY_SHEET := "entity_sheet"
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu/main_menu_screen.tscn"
 const ASSEMBLY_EDITOR_SCENE := "res://ui/screens/backends/assembly_editor_screen.tscn"
@@ -32,6 +33,7 @@ const CHALLENGE_SCENE := "res://ui/screens/backends/challenge_screen.tscn"
 const TASK_PROVIDER_SCENE := "res://ui/screens/backends/task_provider_screen.tscn"
 const CATALOG_LIST_SCENE := "res://ui/screens/backends/catalog_list_screen.tscn"
 const DIALOGUE_SCENE := "res://ui/screens/backends/dialogue_screen.tscn"
+const ENTITY_SHEET_SCENE := "res://ui/screens/backends/entity_sheet_screen.tscn"
 
 const ENGINE_SCREEN_IDS := [
 	SCREEN_MAIN_MENU,
@@ -49,6 +51,7 @@ const ENGINE_SCREEN_IDS := [
 	SCREEN_TASK_PROVIDER,
 	SCREEN_CATALOG_LIST,
 	SCREEN_DIALOGUE,
+	SCREEN_ENTITY_SHEET,
 ]
 
 const BACKEND_SCREEN_MAP := {
@@ -59,6 +62,7 @@ const BACKEND_SCREEN_MAP := {
 	"TaskProviderBackend": "task_provider",
 	"CatalogListBackend": "catalog_list",
 	"DialogueBackend": "dialogue",
+	"EntitySheetBackend": "entity_sheet",
 }
 
 const RUNTIME_SCREEN_REGISTRY := {
@@ -77,6 +81,7 @@ const RUNTIME_SCREEN_REGISTRY := {
 	SCREEN_TASK_PROVIDER: TASK_PROVIDER_SCENE,
 	SCREEN_CATALOG_LIST: CATALOG_LIST_SCENE,
 	SCREEN_DIALOGUE: DIALOGUE_SCENE,
+	SCREEN_ENTITY_SHEET: ENTITY_SHEET_SCENE,
 }
 
 

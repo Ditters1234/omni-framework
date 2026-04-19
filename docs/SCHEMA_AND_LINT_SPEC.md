@@ -195,6 +195,7 @@ Minimum required contracts:
 - `DialogueBackend`: `dialogue_resource`
 - `ChallengeBackend`: `required_stat`, `required_value`
 - `CatalogListBackend`: `data_source`, `action_payload`
+- `EntitySheetBackend`: no required fields; optional params are type-checked at load time
 
 ## Patch Validation
 

@@ -17,7 +17,7 @@ The engine ships with:
 
 ### Current Implementation Snapshot
 
-As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-4 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, the backend/screen split for `AssemblyEditorBackend`, phase-neutral backend helpers, and the first round of moddable backend screens (`DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`). The full target tree is still not implemented end-to-end, though, and later read-only backends plus world-map/crafting support remain future-facing in this document.
+As of this revision, the repository already contains the autoload, core, loader, stat, task, quest, and AI provider scaffolding, plus the Phase 1-4 UI foundation: engine-owned routed screens, the shared component library, `BackendContractRegistry`, the backend/screen split for `AssemblyEditorBackend`, phase-neutral backend helpers, the first round of moddable backend screens (`DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`), and the Phase 5 pass 1 read-only `EntitySheetBackend`. The full target tree is still not implemented end-to-end, though, and later read-only backends plus world-map/crafting support remain future-facing in this document.
 
 Use this document as the "where we are going and what rules we must preserve" reference, not as a claim that every folder and subsystem below is feature-complete today.
 
@@ -140,6 +140,7 @@ res://
 │   │       ├── task_provider_screen.tscn     # ✅ TaskProviderBackend — implemented
 │   │       ├── catalog_list_screen.tscn      # ✅ CatalogListBackend — implemented
 │   │       ├── dialogue_screen.tscn          # ✅ DialogueBackend — implemented (wraps Dialogue Manager)
+│   │       ├── entity_sheet_screen.tscn      # ✅ EntitySheetBackend — implemented
 │   │       ├── backend_base.gd               # ✅ Base class for all backend implementations
 │   │       ├── backend_helpers.gd            # ✅ Phase-neutral utilities shared by backend screens
 │   │       └── [backend_*.gd files]          # Backend implementation classes (one per backend_class type)
@@ -422,6 +423,7 @@ Backend-driven routed screens:
 | `task_provider` | `task_provider_screen.tscn` | ✅ |
 | `catalog_list` | `catalog_list_screen.tscn` | ✅ |
 | `dialogue` | `dialogue_screen.tscn` | ✅ |
+| `entity_sheet` | `entity_sheet_screen.tscn` | ✅ |
 | `world_map` | `world_map_screen.tscn` | ⚠️ PLANNED |
 
 `UIRouter` is also the boundary where the UI should evolve from simple screen navigation into a state router:

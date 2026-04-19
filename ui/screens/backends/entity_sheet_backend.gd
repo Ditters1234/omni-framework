@@ -1,0 +1,282 @@
+extends "res://ui/screens/backends/backend_base.gd"
+
+class_name OmniEntitySheetBackend
+
+const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
+
+var _params: Dictionary = {}
+
+
+static func register_contract() -> void:
+	BACKEND_CONTRACT_REGISTRY.register("EntitySheetBackend", {
+		"required": [],
+		"optional": [
+			"target_entity_id",
+			"screen_title",
+			"screen_description",
+			"stat_title",
+			"cancel_label",
+			"show_equipped",
+			"show_inventory",
+			"show_reputation",
+			"inventory_limit",
+			"equipped_empty_label",
+			"inventory_empty_label",
+			"reputation_empty_label",
+		],
+		"field_types": {
+			"target_entity_id": TYPE_STRING,
+			"screen_title": TYPE_STRING,
+			"screen_description": TYPE_STRING,
+			"stat_title": TYPE_STRING,
+			"cancel_label": TYPE_STRING,
+			"show_equipped": TYPE_BOOL,
+			"show_inventory": TYPE_BOOL,
+			"show_reputation": TYPE_BOOL,
+			"inventory_limit": TYPE_INT,
+			"equipped_empty_label": TYPE_STRING,
+			"inventory_empty_label": TYPE_STRING,
+			"reputation_empty_label": TYPE_STRING,
+		},
+	})
+
+
+func initialize(params: Dictionary) -> void:
+	_params = params.duplicate(true)
+
+
+func build_view_model() -> Dictionary:
+	var target_entity := _resolve_target_entity()
+	var fallback_title := "Entity Sheet"
+	if target_entity != null:
+		fallback_title = "%s Sheet" % BACKEND_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id)
+	var title := str(_params.get("screen_title", fallback_title))
+	var description := str(_params.get("screen_description", "Review the selected entity's stats, equipment, inventory, and standing."))
+	var stat_title := str(_params.get("stat_title", "Stats"))
+	var show_equipped := _read_bool("show_equipped", true)
+	var show_inventory := _read_bool("show_inventory", true)
+	var show_reputation := _read_bool("show_reputation", true)
+
+	if target_entity == null:
+		return {
+			"title": title,
+			"description": description,
+			"portrait": BACKEND_HELPERS.build_entity_portrait_view_model(null, "Unknown Entity", "The requested entity could not be resolved."),
+			"stat_sheet": BACKEND_HELPERS.build_stat_sheet_view_model(null, stat_title),
+			"equipped_rows": [],
+			"inventory_rows": [],
+			"reputation_rows": [],
+			"show_equipped": show_equipped,
+			"show_inventory": show_inventory,
+			"show_reputation": show_reputation,
+			"status_text": "The entity sheet target could not be resolved.",
+			"summary_text": "",
+			"cancel_label": str(_params.get("cancel_label", "Back")),
+			"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
+			"inventory_empty_label": _get_empty_label("inventory_empty_label", "Inventory is empty."),
+			"reputation_empty_label": _get_empty_label("reputation_empty_label", "No faction standing is recorded."),
+			"inventory_overflow_count": 0,
+		}
+
+	var equipped_rows := _build_equipped_rows(target_entity)
+	var inventory_rows := _build_inventory_rows(target_entity)
+	var reputation_rows := _build_reputation_rows(target_entity)
+	return {
+		"title": title,
+		"description": description,
+		"portrait": BACKEND_HELPERS.build_entity_portrait_view_model(target_entity, target_entity.entity_id),
+		"stat_sheet": BACKEND_HELPERS.build_stat_sheet_view_model(target_entity, stat_title),
+		"equipped_rows": equipped_rows,
+		"inventory_rows": inventory_rows,
+		"reputation_rows": reputation_rows,
+		"show_equipped": show_equipped,
+		"show_inventory": show_inventory,
+		"show_reputation": show_reputation,
+		"status_text": _build_status_text(target_entity, equipped_rows, inventory_rows),
+		"summary_text": _build_summary_text(target_entity, equipped_rows, inventory_rows),
+		"cancel_label": str(_params.get("cancel_label", "Back")),
+		"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
+		"inventory_empty_label": _get_empty_label("inventory_empty_label", "Inventory is empty."),
+		"reputation_empty_label": _get_empty_label("reputation_empty_label", "No faction standing is recorded."),
+		"inventory_overflow_count": _inventory_overflow_count(target_entity),
+	}
+
+
+func _resolve_target_entity() -> EntityInstance:
+	return BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("target_entity_id", "player")))
+
+
+func _build_equipped_rows(entity: EntityInstance) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if entity == null:
+		return rows
+	var socket_labels := _build_socket_label_map(entity)
+	var slot_keys: Array = entity.equipped.keys()
+	slot_keys.sort()
+	for slot_value in slot_keys:
+		var slot_id := str(slot_value)
+		var part := entity.get_equipped(slot_id)
+		if part == null:
+			continue
+		var template := part.get_template()
+		rows.append({
+			"slot_id": slot_id,
+			"slot_label": str(socket_labels.get(slot_id, BACKEND_HELPERS.humanize_id(slot_id))),
+			"template_id": part.template_id,
+			"instance_id": part.instance_id,
+			"display_name": str(template.get("display_name", part.template_id)),
+			"description": str(template.get("description", "")),
+			"stat_summary": _build_part_stat_summary(template, part.stat_overrides),
+		})
+	return rows
+
+
+func _build_inventory_rows(entity: EntityInstance) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if entity == null:
+		return rows
+	var grouped: Dictionary = {}
+	for part_value in entity.inventory:
+		var part := part_value as PartInstance
+		if part == null:
+			continue
+		var entry_value: Variant = grouped.get(part.template_id, {})
+		var entry: Dictionary = {}
+		if entry_value is Dictionary:
+			entry = entry_value
+		var count := int(entry.get("count", 0)) + 1
+		var template := part.get_template()
+		entry["template_id"] = part.template_id
+		entry["display_name"] = str(template.get("display_name", part.template_id))
+		entry["description"] = str(template.get("description", ""))
+		entry["count"] = count
+		entry["stat_summary"] = _build_part_stat_summary(template, {})
+		grouped[part.template_id] = entry
+
+	var grouped_values: Array = grouped.values()
+	for grouped_value in grouped_values:
+		if grouped_value is Dictionary:
+			var row: Dictionary = grouped_value
+			rows.append(row.duplicate(true))
+	var sort_callable := func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
+	rows.sort_custom(sort_callable)
+
+	var inventory_limit := _read_inventory_limit()
+	if inventory_limit <= 0 or rows.size() <= inventory_limit:
+		return rows
+	var limited_rows: Array[Dictionary] = []
+	for index in range(inventory_limit):
+		limited_rows.append(rows[index].duplicate(true))
+	return limited_rows
+
+
+func _build_reputation_rows(entity: EntityInstance) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if entity == null:
+		return rows
+	var faction_ids: Array = entity.reputation.keys()
+	faction_ids.sort()
+	for faction_id_value in faction_ids:
+		var faction_id := str(faction_id_value)
+		if faction_id.is_empty():
+			continue
+		var faction := DataManager.get_faction(faction_id)
+		rows.append({
+			"faction_id": faction_id,
+			"display_name": str(faction.get("display_name", BACKEND_HELPERS.humanize_id(faction_id))),
+			"description": str(faction.get("description", "")),
+			"badge": BACKEND_HELPERS.build_faction_badge_view_model(entity, faction_id),
+		})
+	return rows
+
+
+func _build_socket_label_map(entity: EntityInstance) -> Dictionary:
+	var labels: Dictionary = {}
+	if entity == null:
+		return labels
+	for socket_definition in entity.get_available_socket_definitions():
+		var socket_id := str(socket_definition.get("id", ""))
+		if socket_id.is_empty():
+			continue
+		labels[socket_id] = str(socket_definition.get("label", BACKEND_HELPERS.humanize_id(socket_id)))
+	return labels
+
+
+func _build_part_stat_summary(template: Dictionary, overrides: Dictionary) -> String:
+	var stats_value: Variant = template.get("stats", template.get("stat_modifiers", {}))
+	var stats: Dictionary = {}
+	if stats_value is Dictionary:
+		stats = stats_value.duplicate(true)
+	for key_value in overrides.keys():
+		stats[key_value] = overrides.get(key_value, 0.0)
+	if stats.is_empty():
+		return "No stat modifiers."
+	var stat_keys: Array = stats.keys()
+	stat_keys.sort()
+	var parts: Array[String] = []
+	for stat_key_value in stat_keys:
+		var stat_id := str(stat_key_value)
+		var amount := _read_float(stats.get(stat_key_value, 0.0))
+		var amount_text := "%+.0f" % amount if absf(amount - roundf(amount)) < 0.001 else "%+.2f" % amount
+		parts.append("%s %s" % [BACKEND_HELPERS.humanize_id(stat_id), amount_text])
+	return ", ".join(parts)
+
+
+func _build_summary_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_rows: Array[Dictionary]) -> String:
+	var location_label := BACKEND_HELPERS.humanize_id(entity.location_id)
+	if not entity.location_id.is_empty():
+		var location := DataManager.get_location(entity.location_id)
+		location_label = str(location.get("display_name", location_label))
+	return "%s equipped, %s inventory stacks, location: %s." % [
+		str(equipped_rows.size()),
+		str(inventory_rows.size()),
+		location_label if not location_label.is_empty() else "Unknown",
+	]
+
+
+func _build_status_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_rows: Array[Dictionary]) -> String:
+	return "%s has %s equipped parts and %s inventory entries." % [
+		BACKEND_HELPERS.get_entity_display_name(entity, entity.entity_id),
+		str(equipped_rows.size()),
+		str(entity.inventory.size() if entity != null else inventory_rows.size()),
+	]
+
+
+func _inventory_overflow_count(entity: EntityInstance) -> int:
+	if entity == null:
+		return 0
+	var inventory_limit := _read_inventory_limit()
+	if inventory_limit <= 0:
+		return 0
+	var grouped_ids: Dictionary = {}
+	for part_value in entity.inventory:
+		var part := part_value as PartInstance
+		if part != null:
+			grouped_ids[part.template_id] = true
+	return maxi(grouped_ids.size() - inventory_limit, 0)
+
+
+func _read_bool(field_name: String, default_value: bool) -> bool:
+	var value: Variant = _params.get(field_name, default_value)
+	if value is bool:
+		return bool(value)
+	return default_value
+
+
+func _read_inventory_limit() -> int:
+	var value: Variant = _params.get("inventory_limit", 12)
+	if value is int:
+		return maxi(int(value), 0)
+	return 12
+
+
+func _get_empty_label(field_name: String, default_value: String) -> String:
+	return str(_params.get(field_name, default_value))
+
+
+func _read_float(value: Variant) -> float:
+	if value is int or value is float:
+		return float(value)
+	return 0.0

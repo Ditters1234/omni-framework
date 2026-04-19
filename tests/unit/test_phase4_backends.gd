@@ -7,6 +7,7 @@ const LIST_BACKEND := preload("res://ui/screens/backends/list_backend.gd")
 const CHALLENGE_BACKEND := preload("res://ui/screens/backends/challenge_backend.gd")
 const TASK_PROVIDER_BACKEND := preload("res://ui/screens/backends/task_provider_backend.gd")
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
+const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_backend.gd")
 
 
 func before_each() -> void:
@@ -26,6 +27,7 @@ func test_mod_loader_registers_phase4_backend_contracts() -> void:
 	assert_true(registered_backend_classes.has("TaskProviderBackend"))
 	assert_true(registered_backend_classes.has("CatalogListBackend"))
 	assert_true(registered_backend_classes.has("DialogueBackend"))
+	assert_true(registered_backend_classes.has("EntitySheetBackend"))
 
 
 func test_exchange_backend_moves_stocked_part_and_transfers_currency() -> void:
@@ -210,3 +212,35 @@ func test_dialogue_backend_resolves_sample_dialogue_resource() -> void:
 	assert_eq(str(view_model.get("title", "")), "Talk")
 	assert_eq(str(view_model.get("dialogue_resource", "")), "res://mods/base/dialogue/sample_greeting.dialogue")
 	assert_eq(str(view_model.get("status_text", "")), "")
+
+
+func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+
+	var backend: RefCounted = ENTITY_SHEET_BACKEND.new()
+	backend.initialize({
+		"target_entity_id": "player",
+		"screen_title": "Character Sheet",
+	})
+
+	var view_model: Dictionary = backend.build_view_model()
+	var stat_sheet_value: Variant = view_model.get("stat_sheet", {})
+	var equipped_rows_value: Variant = view_model.get("equipped_rows", [])
+
+	assert_eq(str(view_model.get("title", "")), "Character Sheet")
+	assert_true(stat_sheet_value is Dictionary)
+	assert_true(equipped_rows_value is Array)
+	if stat_sheet_value is Dictionary:
+		var stat_sheet: Dictionary = stat_sheet_value
+		var groups_value: Variant = stat_sheet.get("groups", {})
+		assert_true(groups_value is Dictionary)
+		if groups_value is Dictionary:
+			var groups: Dictionary = groups_value
+			assert_true(groups.has("combat"))
+			assert_true(groups.has("survival"))
+	if equipped_rows_value is Array:
+		var equipped_rows: Array = equipped_rows_value
+		assert_eq(equipped_rows.size(), 1)

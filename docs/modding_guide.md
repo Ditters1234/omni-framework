@@ -629,6 +629,7 @@ When defining a moddable screen in a location or an interaction on an NPC, you a
 *   **`ChallengeBackend` (Stat Checks/Challenges):** Allows the player to attempt instantaneous challenges. Define `required_stat` (e.g., `"power"`) and `required_value`. On success, trigger `reward` or `action_payload`.
 *   **`TaskProviderBackend` (Job Boards):** Shows repeatable tasks from a Faction's `quest_pool`. Requires `faction_id` field.
 *   **`CatalogListBackend` (Infinite Vending):** Acts as an infinite vending machine. Sells raw `Part` templates directly from the database (like an MMO vendor). Requires `data_source: "catalog"` and `action_payload: {"type": "buy_item"}`.
+*   **`EntitySheetBackend` (Character / Ship / NPC Sheets):** Shows a read-only sheet for a live entity. Defaults to the player and renders the entity portrait, grouped stat sheet, equipped parts, inventory stack summary, and faction standing. Optional params include `target_entity_id`, `screen_title`, `screen_description`, `stat_title`, `show_equipped`, `show_inventory`, `show_reputation`, and `inventory_limit`.
 *   **`DialogueBackend` (NPC Conversations):** Plays a branching dialogue written in a `.dialogue` file (Dialogue Manager format). The entity's `dialogue_blip` audio is played automatically for each spoken line. Supports conditions and action payloads within the dialogue script itself.
     *   *Required:* `"dialogue_resource"` — path to a `.dialogue` file (e.g., `"res://mods/my_name/my_mod/dialogue/bob.dialogue"`).
     *   *Optional:* `"dialogue_start"` — the title entry point within the file (defaults to the first title if omitted).
@@ -661,6 +662,7 @@ When defining a moddable screen in a location or an interaction on an NPC, you a
 - `DialogueBackend`: `dialogue_resource`
 - `ChallengeBackend`: `required_stat`, `required_value`
 - `CatalogListBackend`: `data_source`, `action_payload`
+- `EntitySheetBackend`: no required fields; defaults to `target_entity_id: "player"`
 
 **Currency & Pricing Rules:**
 A Part's `"price"` property is a dictionary of currencies and their respective values. This allows items to natively cost multiple currencies simultaneously!

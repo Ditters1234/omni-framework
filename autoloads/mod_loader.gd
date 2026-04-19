@@ -14,6 +14,7 @@ const CHALLENGE_BACKEND := preload("res://ui/screens/backends/challenge_backend.
 const TASK_PROVIDER_BACKEND := preload("res://ui/screens/backends/task_provider_backend.gd")
 const CATALOG_LIST_BACKEND := preload("res://ui/screens/backends/catalog_list_backend.gd")
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
+const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_backend.gd")
 const SCRIPT_HOOK_LOADER := preload("res://systems/script_hook_loader.gd")
 
 const MODS_PATH := "res://mods/"
@@ -120,6 +121,7 @@ func _register_backend_contracts() -> void:
 	TASK_PROVIDER_BACKEND.register_contract()
 	CATALOG_LIST_BACKEND.register_contract()
 	DIALOGUE_BACKEND.register_contract()
+	ENTITY_SHEET_BACKEND.register_contract()
 	BACKEND_CONTRACT_REGISTRY.lock()
 
 

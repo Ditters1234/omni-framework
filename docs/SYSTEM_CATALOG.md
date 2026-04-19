@@ -160,6 +160,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `TaskProviderBackend` | `ui/screens/backends/task_provider_screen.tscn` | Faction ID, difficulty filter, task list | Faction job board with repeatable tasks. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager .dialogue file ref | NPC branching dialogue (wraps Dialogue Manager). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Read-only entity stats, equipment, inventory, and faction standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 
 **How it works:**
 1. Modders define a location/NPC with a `backend_class` and `backend_config` dict in JSON.
