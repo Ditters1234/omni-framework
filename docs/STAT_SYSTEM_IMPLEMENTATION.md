@@ -1,6 +1,6 @@
 # Stat System Implementation Guide
 
-> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for system architecture, [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for stat field validation, and [`modding_guide.md`](modding_guide.md) for how to define stats in data.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for system architecture, [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for stat field validation, and [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for how to define stats in data.
 
 ## Overview
 

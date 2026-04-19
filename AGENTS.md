@@ -33,7 +33,7 @@ Core pillars:
 | File | Purpose |
 |---|---|
 | `docs/PROJECT_STRUCTURE.md` | Canonical folder layout, all autoloads, core systems, UI framework, theme system, AI architecture |
-| `docs/modding_guide.md` | Full modder reference — data schemas, JSON examples, patching, backend classes, script hooks |
+| `docs/MODDING_GUIDE.md` | Full modder reference — data schemas, JSON examples, patching, backend classes, script hooks |
 | `docs/STAT_SYSTEM_IMPLEMENTATION.md` | Stat + capacity stat system, clamping rules, GDScript patterns |
 
 **Always read the relevant doc section before editing architecture.**
@@ -175,7 +175,7 @@ Each backend class is validated against a **contract** — a schema that defines
 **Modders extending backends:**
 - Backends are defined in JSON with a `backend_class` string and a `backend_config` dict.
 - The backend config must match the contract registered for that class.
-- Custom backends can be registered in mod scripts — see `docs/modding_guide.md` for schema examples.
+- Custom backends can be registered in mod scripts — see `docs/MODDING_GUIDE.md` for schema examples.
 - All official backends use the `phase4_backend_helpers.gd` utility module for common operations.
 
 ---

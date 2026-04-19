@@ -24,7 +24,7 @@ base/
 
 ## Editing this mod
 
-Treat `base/` the same as any other mod — author JSON additions and patches under `data/`, follow the schemas in [`../../docs/modding_guide.md`](../../docs/modding_guide.md), and keep stat pairs consistent with [`../../docs/STAT_SYSTEM_IMPLEMENTATION.md`](../../docs/STAT_SYSTEM_IMPLEMENTATION.md).
+Treat `base/` the same as any other mod — author JSON additions and patches under `data/`, follow the schemas in [`../../docs/MODDING_GUIDE.md`](../../docs/MODDING_GUIDE.md), and keep stat pairs consistent with [`../../docs/STAT_SYSTEM_IMPLEMENTATION.md`](../../docs/STAT_SYSTEM_IMPLEMENTATION.md).
 
 Reference fixtures now ship in `dialogue/sample_greeting.dialogue` and `scripts/sample_script_hook.gd` so Dialogue Manager integration and ScriptHook examples have a concrete base-mod starting point.
 
@@ -37,5 +37,4 @@ The base game is a mod like any other. When adding or modifying base content:
 1. **Follow the data schemas** — see [`../../docs/SCHEMA_AND_LINT_SPEC.md`](../../docs/SCHEMA_AND_LINT_SPEC.md)
 2. **Use patches for compatibility** — if modifying existing entries, use Phase 2 patches to allow other mods to layer on top
 3. **Document your additions** — include descriptions in quest/task/achievement definitions
-4. **Test thoroughly** — use the debug overlay to verify registries and state
-5. **Keep it genre-agnostic** — the base game should not assume a specific setting or mechanics (no hardcoded classes, currencies, etc.)
+4. **Test thorough

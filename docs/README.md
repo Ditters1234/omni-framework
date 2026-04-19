@@ -14,7 +14,7 @@ This folder is the canonical reference for Omni-Framework. The main docs below a
 | [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) | **Start here.** Complete inventory of all systems, subsystems, relationships, and links to relevant documentation. |
 | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | Engine architecture, target folder layout, autoload responsibilities, UI architecture, and cross-system guardrails |
 | [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) | UI rollout plan: backend catalog, engine-owned screens, component library, and phased implementation priorities |
-| [`modding_guide.md`](modding_guide.md) | The modder-facing contract: data schemas, patching rules, backend requirements, config keys, and safe extension patterns |
+| [`MODDING_GUIDE.md`](MODDING_GUIDE.md) | The modder-facing contract: data schemas, patching rules, backend requirements, config keys, and safe extension patterns |
 | [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) | Canonical stat-pair rules, clamping behavior, validation requirements, and implementation patterns |
 | [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) | Load-time validation rules, per-system schema expectations, patch validation, and content lint severity guidance |
 | [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) | Event naming, domain grouping, payload design, and long-term signal-bus stability rules |
@@ -29,7 +29,7 @@ This folder is the canonical reference for Omni-Framework. The main docs below a
 2. Read [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) before expanding the routed UI surface, adding a backend, or introducing engine-owned screens.
 3. Read [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) before building the first loaders, registries, or autoload orchestration.
 4. Read [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) before implementing validation or patch application.
-5. Read [`modding_guide.md`](modding_guide.md) when authoring JSON, patches, assets, or script hooks.
+5. Read [`MODDING_GUIDE.md`](MODDING_GUIDE.md) when authoring JSON, patches, assets, or script hooks.
 6. Read [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) before changing stat math, stat schema, or any system that touches resource pools.
 7. Read [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) before expanding `GameEvents`.
 8. Read [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md) before building persistence or migration logic.
@@ -42,7 +42,7 @@ Each doc below is the source of truth for its domain:
 - [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) — complete inventory of all systems, subsystems, and their relationships; entry point for system discovery.
 - [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) — target architecture; explicitly calls out where hardening is still planned.
 - [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) — backend catalog, engine-owned screen catalog, component rollout, and UI build order.
-- [`modding_guide.md`](modding_guide.md) — the contracts modders must satisfy, even where enforcement is still being implemented.
+- [`MODDING_GUIDE.md`](MODDING_GUIDE.md) — the contracts modders must satisfy, even where enforcement is still being implemented.
 - [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) — stat invariants and validation rules.
 - [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) — content validation behavior.
 - [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) — signal naming and event grouping.

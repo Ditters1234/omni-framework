@@ -37,7 +37,7 @@ Base mod always loads first. All template IDs use `author:mod:name` namespacing 
 
 ## Authoring
 
-See [`../docs/modding_guide.md`](../docs/modding_guide.md) for the full modder reference — schemas, patching rules, backend class contracts, config keys, and script hook patterns.
+See [`../docs/MODDING_GUIDE.md`](../docs/MODDING_GUIDE.md) for the full modder reference — schemas, patching rules, backend class contracts, config keys, and script hook patterns.
 
 ## Best Practices
 
@@ -56,4 +56,4 @@ Found a bug in a mod or want to improve the base game?
 1. Check the existing issues in the repo
 2. Test against the latest version
 3. Submit a PR with your changes, ensuring the test suite passes
-4. Reference the relevant documentation (`modding_guide.md`, `SCHEMA_AND_LINT_SPEC.md`, etc.)
+4. Reference the relevant documentation (`MODDING_GUIDE.md`, `SCHEMA_AND_LINT_SPEC.md`, etc.)

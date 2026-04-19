@@ -50,8 +50,8 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
-| `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, etc. See [`modding_guide.md`](modding_guide.md) for schema. |
-| `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic. See [`modding_guide.md`](modding_guide.md) for syntax. |
+| `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, etc. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for schema. |
+| `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for syntax. |
 | `StatManager` | `StatManager` | `systems/stat_manager.gd` | DataManager | Calculates stat modifiers, applies stat changes, enforces clamping rules. See [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md). |
 | `BackendContractRegistry` | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | — | Validates `backend_class` IDs and their payload schemas. Locked after `ModLoader`. |
 | `RewardService` | `RewardService` | `systems/reward_service.gd` | GameState, SaveManager | Distributes currency, items, unlocks when quests/tasks complete. |
@@ -96,7 +96,7 @@ All loaders support **two-phase patching**:
 1. **Phase 1:** Additions — new entries added to the registry
 2. **Phase 2:** Patches — existing entries are updated non-destructively
 
-See [`modding_guide.md`](modding_guide.md) for patch syntax and [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for validation rules.
+See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for patch syntax and [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for validation rules.
 
 All data IDs use **namespacing:** `author:mod:name`. Base game uses `base:` prefix.
 
@@ -117,7 +117,7 @@ The `AIManager` autoload routes all AI calls to one of four backends based on `c
 
 **Usage:** Mod scripts call `AIManager.generate_async(prompt, context)` and listen to AI events. Always guard with `AIManager.is_available()`.
 
-See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`modding_guide.md`](modding_guide.md) for script hook examples.
+See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for script hook examples.
 
 ### AI Events
 
@@ -153,13 +153,13 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 
 | Backend Class | Scene | Validated By | Purpose | Modder Docs |
 |---|---|---|---|---|
-| `AssemblyEditorBackend` | `ui/screens/backends/assembly_editor_screen.tscn` | Part attachment, slot limits, stat budget | Attach/detach parts, preview stat changes. | [`modding_guide.md`](modding_guide.md) |
-| `ExchangeBackend` | `ui/screens/backends/exchange_screen.tscn` | Inventory lists, pricing, currency type | Buy/sell items from NPC vendor. | [`modding_guide.md`](modding_guide.md) |
-| `ListBackend` | `ui/screens/backends/list_screen.tscn` | Array of displayable items | Render a data list (journal, bestiary, etc.). | [`modding_guide.md`](modding_guide.md) |
-| `ChallengeBackend` | `ui/screens/backends/challenge_screen.tscn` | Stat check rules, pass/fail actions | Stat-check pass/fail outcome. | [`modding_guide.md`](modding_guide.md) |
-| `TaskProviderBackend` | `ui/screens/backends/task_provider_screen.tscn` | Faction ID, difficulty filter, task list | Faction job board with repeatable tasks. | [`modding_guide.md`](modding_guide.md) |
-| `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`modding_guide.md`](modding_guide.md) |
-| `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager .dialogue file ref | NPC branching dialogue (wraps Dialogue Manager). | [`modding_guide.md`](modding_guide.md) |
+| `AssemblyEditorBackend` | `ui/screens/backends/assembly_editor_screen.tscn` | Part attachment, slot limits, stat budget | Attach/detach parts, preview stat changes. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `ExchangeBackend` | `ui/screens/backends/exchange_screen.tscn` | Inventory lists, pricing, currency type | Buy/sell items from NPC vendor. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `ListBackend` | `ui/screens/backends/list_screen.tscn` | Array of displayable items | Render a data list (journal, bestiary, etc.). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `ChallengeBackend` | `ui/screens/backends/challenge_screen.tscn` | Stat check rules, pass/fail actions | Stat-check pass/fail outcome. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `TaskProviderBackend` | `ui/screens/backends/task_provider_screen.tscn` | Faction ID, difficulty filter, task list | Faction job board with repeatable tasks. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager .dialogue file ref | NPC branching dialogue (wraps Dialogue Manager). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 
 **How it works:**
 1. Modders define a location/NPC with a `backend_class` and `backend_config` dict in JSON.
@@ -240,7 +240,7 @@ See [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) for:
 
 ## Mod System
 
-The **mod pipeline** is the engine's content backbone. See [`modding_guide.md`](modding_guide.md) for full modder reference.
+The **mod pipeline** is the engine's content backbone. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for full modder reference.
 
 ### Mod Structure
 
@@ -405,7 +405,7 @@ See [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for full architectural guardr
 | **Stat math and validation** | [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) |
 | **Schema rules and lint** | [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) |
 | **Save versioning and migration** | [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md) |
-| **Modding contracts and data** | [`modding_guide.md`](modding_guide.md) |
+| **Modding contracts and data** | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | **Coding style and loader patterns** | [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) |
 | **Debug tooling and testing** | [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) |
 
@@ -420,7 +420,7 @@ SYSTEM_CATALOG.md (this file)
   ├─→ UI_IMPLEMENTATION_PLAN.md    (UI rollout, backend catalog, components)
   ├─→ GAME_EVENTS_TAXONOMY.md      (Event naming, domains, stability rules)
   ├─→ STAT_SYSTEM_IMPLEMENTATION.md (Stat math, clamping, validation)
-  ├─→ modding_guide.md             (Data schemas, patching, script hooks)
+  ├─→ MODDING_GUIDE.md             (Data schemas, patching, script hooks)
   ├─→ SCHEMA_AND_LINT_SPEC.md      (Validation rules, lint severity)
   ├─→ SAVE_SCHEMA_AND_MIGRATION.md (Persistence, versioning, migration)
   ├─→ CODING_STANDARDS_AND_LOADER_PATTERNS.md (Implementation habits)

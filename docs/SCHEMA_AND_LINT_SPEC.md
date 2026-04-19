@@ -1,8 +1,8 @@
 # Omni-Framework Schema And Content Lint Spec
 
-> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for architecture context, [`modding_guide.md`](modding_guide.md) for the data contracts modders must satisfy, [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) for stat field rules, and [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) for validation implementation patterns.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for architecture context, [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for the data contracts modders must satisfy, [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) for stat field rules, and [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) for validation implementation patterns.
 
-This document defines the minimum validation and linting behavior expected from the Omni-Framework data pipeline. It is the implementation companion to the architecture guardrails in `PROJECT_STRUCTURE.md` and the data contracts in `modding_guide.md`.
+This document defines the minimum validation and linting behavior expected from the Omni-Framework data pipeline. It is the implementation companion to the architecture guardrails in `PROJECT_STRUCTURE.md` and the data contracts in `MODDING_GUIDE.md`.
 
 ## Purpose
 

@@ -3,7 +3,7 @@
   <span style="font-size: 2.5em; font-weight: bold; vertical-align: middle;">Omni-Framework</span>
 </p>
 
-A single-player, data-driven, genre-agnostic game engine built on **Godot 4** (GDScript).
+A single-player, data-driven, genre-agnostic game engine built on **Godot 4.6** (GDScript).
 
 The engine provides the systems; JSON provides the content. The same runtime can power a fantasy RPG, a sci-fi colony sim, or a cyberpunk trading game without code changes — swap the mod, swap the game.
 
@@ -27,7 +27,7 @@ The engine provides the systems; JSON provides the content. The same runtime can
    - Duplicate `mods/base/` as `mods/yourname/yourmod/`
    - Edit `mod.json` with your mod's metadata
    - Add JSON content to `data/` folder
-   - See [`docs/modding_guide.md`](docs/modding_guide.md) for full details
+   - See [`docs/MODDING_GUIDE.md`](docs/MODDING_GUIDE.md) for full details
 
 ## Highlights
 
@@ -44,7 +44,7 @@ Full documentation lives in [`docs/`](docs/README.md).
 Quick jumps:
 
 - [Project structure](docs/PROJECT_STRUCTURE.md) — architecture, autoloads, core systems, UI framework.
-- [Modding guide](docs/modding_guide.md) — data schemas, patching, backend classes, script hooks.
+- [Modding guide](docs/MODDING_GUIDE.md) — data schemas, patching, backend classes, script hooks.
 - [UI implementation plan](docs/UI_IMPLEMENTATION_PLAN.md) — backend catalog and phased rollout.
 - [Stat system](docs/STAT_SYSTEM_IMPLEMENTATION.md) — base/capacity pairs and clamping rules.
 

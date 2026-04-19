@@ -2,7 +2,7 @@
 
 Welcome to the **Omni-Framework** modding scene.
 
-**Omni-Framework** is a single-player game engine built on Godot 4. It is a **100% data-driven, genre-agnostic platform** — the engine provides systems, and JSON provides the content. There are no hardcoded genres, no mandatory stats, no assumed currencies. A fantasy RPG, a sci-fi colony sim, and a cyberpunk trading game can all be built on the same engine without touching a single line of GDScript.
+**Omni-Framework** is a single-player game engine built on Godot 4.6. It is a **100% data-driven, genre-agnostic platform** — the engine provides systems, and JSON provides the content. There are no hardcoded genres, no mandatory stats, no assumed currencies. A fantasy RPG, a sci-fi colony sim, and a cyberpunk trading game can all be built on the same engine without touching a single line of GDScript.
 
 You do not need to know GDScript or Godot to add new items, magic systems, NPCs, or entire worlds. If you can edit a JSON file and draw some pixel art, you can mod any game built on this platform.
 
@@ -1121,9 +1121,4 @@ The engine uses a smart, 4-step hierarchy to find the sprite for your part or lo
 
 ---
 
-## 6. Advanced Stat Systems & Modifiers
-
-This section covers advanced patterns for stat management that work within the omni-framework.
-
-**Stat Floors & Ceilings:**
-While not explicitly enforced in the JSON schema, implementa
+## 6. Advanced Stat Systems &

@@ -6,7 +6,7 @@ This document is the canonical reference for the engine's folder layout, autoloa
 
 ## What We Are Building
 
-**Omni-Framework** is a single-player game engine built on Godot 4. The goal is a fully modular, JSON-driven platform where the *engine provides systems* and *data provides content*. No game genre is baked in. The same engine can run a sci-fi colony sim, a cyberpunk trading game, or a fantasy RPG without code changes.
+**Omni-Framework** is a single-player game engine built on Godot 4.6. The goal is a fully modular, JSON-driven platform where the *engine provides systems* and *data provides content*. No game genre is baked in. The same engine can run a sci-fi colony sim, a cyberpunk trading game, or a fantasy RPG without code changes.
 
 The engine ships with:
 - A **data loading pipeline** that processes JSON templates and mod patches at startup.
@@ -416,12 +416,12 @@ Backend-driven routed screens:
 |---|---|---|
 | `assembly_editor` | `assembly_editor_screen.tscn` | ✅ |
 | `character_creator` | `assembly_editor_screen.tscn` (alias) | ✅ |
-| `exchange` | `exchange_screen.tscn` | ⚠️ PLANNED |
-| `list_view` | `list_screen.tscn` | ⚠️ PLANNED |
-| `challenge` | `challenge_screen.tscn` | ⚠️ PLANNED |
-| `task_provider` | `task_provider_screen.tscn` | ⚠️ PLANNED |
-| `catalog_list` | `catalog_list_screen.tscn` | ⚠️ PLANNED |
-| `dialogue` | `dialogue_screen.tscn` | ⚠️ PLANNED |
+| `exchange` | `exchange_screen.tscn` | ✅ |
+| `list_view` | `list_screen.tscn` | ✅ |
+| `challenge` | `challenge_screen.tscn` | ✅ |
+| `task_provider` | `task_provider_screen.tscn` | ✅ |
+| `catalog_list` | `catalog_list_screen.tscn` | ✅ |
+| `dialogue` | `dialogue_screen.tscn` | ✅ |
 | `world_map` | `world_map_screen.tscn` | ⚠️ PLANNED |
 
 `UIRouter` is also the boundary where the UI should evolve from simple screen navigation into a state router:
