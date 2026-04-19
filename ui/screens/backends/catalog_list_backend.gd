@@ -12,8 +12,9 @@ var _status_text: String = ""
 
 static func register_contract() -> void:
 	BACKEND_CONTRACT_REGISTRY.register("CatalogListBackend", {
-		"required": ["data_source", "action_payload"],
+		"required": ["data_source"],
 		"optional": [
+			"action_payload",
 			"buyer_entity_id",
 			"currency_id",
 			"screen_title",

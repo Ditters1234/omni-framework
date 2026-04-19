@@ -154,6 +154,33 @@ func get_newly_equipped_template_ids() -> Array[String]:
 	return result
 
 
+func get_template_delta_counts() -> Dictionary:
+	var deltas: Dictionary = {}
+	var slot_ids := _collect_slot_ids()
+	for slot_id in slot_ids:
+		var old_template_id := "" if original_entity == null else original_entity.get_equipped_template_id(slot_id)
+		var new_template_id := "" if draft_entity == null else draft_entity.get_equipped_template_id(slot_id)
+		if old_template_id == new_template_id:
+			continue
+		if not old_template_id.is_empty():
+			deltas[old_template_id] = int(deltas.get(old_template_id, 0)) - 1
+		if not new_template_id.is_empty():
+			deltas[new_template_id] = int(deltas.get(new_template_id, 0)) + 1
+	var positive_deltas: Dictionary = {}
+	for template_id_value in deltas.keys():
+		var template_id := str(template_id_value)
+		var count := int(deltas.get(template_id, 0))
+		if count > 0:
+			positive_deltas[template_id] = count
+	return positive_deltas
+
+
+func has_pending_changes() -> bool:
+	if draft_entity == null:
+		return false
+	return not get_template_delta_counts().is_empty() or _has_layout_changes()
+
+
 func get_template_price(template: Dictionary) -> float:
 	if budget_currency_id.is_empty():
 		return 0.0
@@ -168,13 +195,53 @@ func _compute_total_cost(entity: EntityInstance) -> float:
 	if entity == null or budget_currency_id.is_empty():
 		return 0.0
 	var total := 0.0
-	for slot_value in entity.equipped.keys():
-		var slot := str(slot_value)
-		var part := entity.get_equipped(slot)
-		if part == null:
+	var slot_ids := _collect_slot_ids(entity)
+	for slot_id in slot_ids:
+		var old_template_id := "" if original_entity == null else original_entity.get_equipped_template_id(slot_id)
+		var new_template_id := entity.get_equipped_template_id(slot_id)
+		if old_template_id == new_template_id:
 			continue
-		total += get_template_price(part.get_template())
+		var old_price := _get_template_price_by_id(old_template_id)
+		var new_price := _get_template_price_by_id(new_template_id)
+		total += maxf(new_price - old_price, 0.0)
 	return total
+
+
+func _get_template_price_by_id(template_id: String) -> float:
+	if template_id.is_empty():
+		return 0.0
+	var template_value: Variant = DataManager.get_part(template_id)
+	if template_value is Dictionary:
+		var template: Dictionary = template_value
+		return get_template_price(template)
+	return 0.0
+
+
+func _collect_slot_ids(entity: EntityInstance = null) -> Array[String]:
+	var slot_ids: Array[String] = []
+	if original_entity != null:
+		for slot_value in original_entity.equipped.keys():
+			var slot_id := str(slot_value)
+			if not slot_id in slot_ids:
+				slot_ids.append(slot_id)
+	var resolved_entity := entity if entity != null else draft_entity
+	if resolved_entity != null:
+		for slot_value in resolved_entity.equipped.keys():
+			var slot_id := str(slot_value)
+			if not slot_id in slot_ids:
+				slot_ids.append(slot_id)
+	slot_ids.sort()
+	return slot_ids
+
+
+func _has_layout_changes() -> bool:
+	var slot_ids := _collect_slot_ids()
+	for slot_id in slot_ids:
+		var old_template_id := "" if original_entity == null else original_entity.get_equipped_template_id(slot_id)
+		var new_template_id := "" if draft_entity == null else draft_entity.get_equipped_template_id(slot_id)
+		if old_template_id != new_template_id:
+			return true
+	return false
 
 
 func _clone_entity(source_entity: EntityInstance) -> EntityInstance:

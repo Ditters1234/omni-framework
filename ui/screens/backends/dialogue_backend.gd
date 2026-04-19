@@ -93,6 +93,10 @@ func get_dialogue_blip_path() -> String:
 	return BACKEND_HELPERS.resolve_sound_path(str(template.get("dialogue_blip", template.get("dialogue_blip_id", ""))))
 
 
+func has_valid_dialogue_reference() -> bool:
+	return not _get_dialogue_reference().is_empty() and not get_dialogue_resource_path().is_empty()
+
+
 func _resolve_speaker_entity() -> EntityInstance:
 	return BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("speaker_entity_id", "")))
 

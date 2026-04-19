@@ -28,6 +28,21 @@ func get_options_for_slot(slot_id: String) -> Array[Dictionary]:
 	return _get_catalog_options_for_slot(slot_id)
 
 
+func get_inventory_template_counts() -> Dictionary:
+	var counts: Dictionary = {}
+	if _source_entity == null:
+		return counts
+	for inventory_part in _source_entity.inventory:
+		var part := inventory_part as PartInstance
+		if part == null or part.is_equipped:
+			continue
+		var template_id := part.template_id
+		if template_id.is_empty():
+			continue
+		counts[template_id] = int(counts.get(template_id, 0)) + 1
+	return counts
+
+
 func _get_catalog_options_for_slot(slot_id: String) -> Array[Dictionary]:
 	var results: Array[Dictionary] = []
 	var seen_template_ids: Dictionary = {}
@@ -63,13 +78,12 @@ func _get_inventory_options_for_slot(slot_id: String) -> Array[Dictionary]:
 	var results: Array[Dictionary] = []
 	if _source_entity == null:
 		return results
-	var seen_template_ids: Dictionary = {}
-	for inventory_part in _source_entity.inventory:
-		var part := inventory_part as PartInstance
-		if part == null:
-			continue
-		var template_id: String = part.template_id
-		if template_id.is_empty() or seen_template_ids.has(template_id):
+	var counts := get_inventory_template_counts()
+	var template_ids: Array = counts.keys()
+	template_ids.sort()
+	for template_id_value in template_ids:
+		var template_id := str(template_id_value)
+		if template_id.is_empty():
 			continue
 		if not _session.can_equip_template_in_slot(slot_id, template_id):
 			continue
@@ -80,8 +94,9 @@ func _get_inventory_options_for_slot(slot_id: String) -> Array[Dictionary]:
 			continue
 		if not _matches_tag_filters(template):
 			continue
-		results.append(template)
-		seen_template_ids[template_id] = true
+		var option_template := template.duplicate(true)
+		option_template["_inventory_count"] = int(counts.get(template_id, 0))
+		results.append(option_template)
 	results.sort_custom(_sort_options_by_display_name)
 	return results
 

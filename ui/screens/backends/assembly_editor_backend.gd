@@ -8,6 +8,7 @@ const ASSEMBLY_COMMIT_SERVICE := preload("res://systems/assembly_commit_service.
 const TRANSACTION_SERVICE := preload("res://systems/transaction_service.gd")
 const ASSEMBLY_EDITOR_CONFIG := preload("res://ui/screens/backends/assembly_editor_config.gd")
 const ASSEMBLY_EDITOR_OPTION_PROVIDER := preload("res://ui/screens/backends/assembly_editor_option_provider.gd")
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const EMPTY_LABEL := "<empty>"
 
 var _config = ASSEMBLY_EDITOR_CONFIG.new()
@@ -92,6 +93,7 @@ func build_view_model() -> Dictionary:
 				"title": "Build Stats",
 				"current_stats": {},
 				"projected_stats": {},
+				"baseline_stats": {},
 			},
 			"status_text": "No target entity is available for editing.",
 			"confirm_enabled": false,
@@ -109,7 +111,7 @@ func build_view_model() -> Dictionary:
 		"part_detail": _build_part_detail_view_model(),
 		"stat_delta": _build_stat_delta_view_model(),
 		"status_text": _build_status_text(),
-		"confirm_enabled": true,
+		"confirm_enabled": _can_confirm(),
 	}
 
 
@@ -151,6 +153,12 @@ func apply_slot(slot_id: String) -> void:
 	if preview_template_id.is_empty() or preview_template_id == current_template_id:
 		_status_override = "There is no pending change to apply in %s." % label
 		return
+	if not _session.can_afford_template(slot_id, preview_template_id):
+		_status_override = "%s would exceed the current build budget." % _get_template_display_name(preview_template_id)
+		return
+	if not _has_inventory_capacity_for_preview(slot_id, preview_template_id):
+		_status_override = "There are not enough source inventory copies of %s to apply that change." % _get_template_display_name(preview_template_id)
+		return
 	if not _session.apply_template(slot_id, preview_template_id):
 		_status_override = "That change cannot be applied right now."
 		return
@@ -181,23 +189,27 @@ func build_cancel_action() -> Dictionary:
 
 
 func confirm() -> Dictionary:
-	if _session == null:
-		_status_override = "No target entity is available for editing."
+	var config: OmniAssemblyEditorConfig = _config
+	if config == null:
 		return {}
-	var committed := _session.get_committed_entity()
-	if committed == null:
-		_status_override = "The edited build could not be finalized."
+
+	var session: AssemblySession = _session
+	if session == null:
 		return {}
-	var committed_payer := _session.get_committed_payer()
-	if not _apply_confirm_transaction_effects(committed, committed_payer):
-		_status_override = "The transaction could not be completed."
+
+	var committed_entity: EntityInstance = session.get_committed_entity()
+	var previous_entity: EntityInstance = session.original_entity
+
+	if committed_entity == null:
 		return {}
-	_commit_target_entity_to_game_state(committed)
-	if committed_payer != null:
-		_commit_entity_to_game_state(committed_payer, _config.budget_entity_lookup_id)
-	_deduct_from_source_inventory()
-	_status_override = "Build confirmed."
-	return _config.build_confirm_navigation_action()
+
+	AssemblyCommitService.commit_entity(
+		previous_entity,
+		committed_entity,
+		config.target_entity_lookup_id
+	)
+
+	return config.build_confirm_navigation_action()
 
 
 func get_required_params() -> Array[String]:
@@ -267,7 +279,7 @@ func _build_row_view_model(slot_id: String) -> Dictionary:
 	var preview_name := current_name if preview_template_id.is_empty() else _get_template_display_name(preview_template_id)
 	var can_apply := false
 	if not preview_template_id.is_empty() and preview_template_id != current_template_id:
-		can_apply = _session.can_afford_template(slot_id, preview_template_id)
+		can_apply = _session.can_afford_template(slot_id, preview_template_id) and _has_inventory_capacity_for_preview(slot_id, preview_template_id)
 	return {
 		"slot_id": slot_id,
 		"slot_label": _get_socket_display_label(socket_def, slot_id),
@@ -313,8 +325,11 @@ func _build_part_detail_view_model() -> Dictionary:
 	if not template.is_empty():
 		description = str(template.get("description", description))
 		price_text = _build_price_text(slot_id, template)
-		affordable = preview_template_id.is_empty() or _session.can_afford_template(slot_id, preview_template_id)
+		affordable = preview_template_id.is_empty() or (_session.can_afford_template(slot_id, preview_template_id) and _has_inventory_capacity_for_preview(slot_id, preview_template_id))
 		stats_lines = _build_template_stat_lines(template)
+		var available_count := int(template.get("_inventory_count", -1))
+		if available_count >= 0:
+			stats_lines.append("Available in source inventory: %s" % str(available_count))
 	return {
 		"slot_label": _get_socket_display_label(socket_def, slot_id),
 		"current_name": current_name,
@@ -346,9 +361,11 @@ func _build_stat_delta_view_model() -> Dictionary:
 	if _session == null:
 		return {
 			"title": "Build Stats",
+			"baseline_stats": {},
 			"current_stats": {},
 			"projected_stats": {},
 		}
+	var baseline_stats := _session.get_current_effective_stats()
 	var current_stats := _session.get_projected_effective_stats()
 	var projected_stats := current_stats
 	var slot_id := _get_active_selected_slot_id()
@@ -359,6 +376,7 @@ func _build_stat_delta_view_model() -> Dictionary:
 			projected_stats = _session.get_preview_effective_stats(slot_id, preview_template_id)
 	return {
 		"title": "Build Stats",
+		"baseline_stats": baseline_stats,
 		"current_stats": current_stats,
 		"projected_stats": projected_stats,
 	}
@@ -372,6 +390,8 @@ func _build_status_text() -> String:
 	var socket_defs: Array[Dictionary] = _session.get_available_socket_definitions()
 	if socket_defs.is_empty():
 		return "This entity has no visible assembly sockets."
+	if not _has_sufficient_source_inventory():
+		return "The current draft uses more parts than the source inventory can provide."
 	var slot_id := _get_active_selected_slot_id()
 	if slot_id.is_empty():
 		return "Pick a socket to preview the parts that fit there."
@@ -388,6 +408,8 @@ func _build_status_text() -> String:
 		return "%s currently uses %s." % [label, _get_template_display_name(current_template_id)]
 	var currency_id := _session.get_budget_currency_id()
 	var remaining_after := _session.get_remaining_budget_after_preview(slot_id, preview_template_id)
+	if not _has_inventory_capacity_for_preview(slot_id, preview_template_id):
+		return "%s fits in %s, but the source inventory does not have enough copies remaining." % [_get_template_display_name(preview_template_id), label]
 	if _session.can_afford_template(slot_id, preview_template_id):
 		return "Previewing %s for %s. Applying it will leave %.0f %s." % [_get_template_display_name(preview_template_id), label, remaining_after, currency_id]
 	return "%s would fit in %s, but it would push the build past your %.0f %s budget." % [_get_template_display_name(preview_template_id), label, _session.starting_budget, currency_id]
@@ -431,17 +453,39 @@ func _resolve_budget_entity(target_entity: EntityInstance) -> EntityInstance:
 	return payer
 
 
-func _deduct_from_source_inventory() -> void:
+func _consume_source_inventory() -> bool:
 	if _config.option_source_entity_lookup_id.is_empty() or _session == null:
-		return
+		return true
 	var source := _resolve_source_entity()
 	if source == null:
-		return
+		return false
 	var committed_source := source.duplicate_instance()
-	var template_ids: Array[String] = _session.get_newly_equipped_template_ids()
-	for template_id in template_ids:
-		TRANSACTION_SERVICE.remove_one_inventory_template(committed_source, template_id)
+	var delta_counts := _session.get_template_delta_counts()
+	for template_id_value in delta_counts.keys():
+		var template_id := str(template_id_value)
+		var count := int(delta_counts.get(template_id, 0))
+		for _i in range(count):
+			if not _remove_one_inventory_template_by_id(committed_source, template_id):
+				return false
 	GameState.commit_entity_instance(committed_source, _config.option_source_entity_lookup_id)
+	return true
+
+
+func _remove_one_inventory_template_by_id(entity: EntityInstance, template_id: String) -> bool:
+	if entity == null or template_id.is_empty():
+		return false
+	for index in range(entity.inventory.size()):
+		var part_value: Variant = entity.inventory[index]
+		var part := part_value as PartInstance
+		if part == null or part.is_equipped:
+			continue
+		if part.template_id != template_id:
+			continue
+		entity.inventory.remove_at(index)
+		if GameEvents:
+			GameEvents.part_removed.emit(entity.entity_id, template_id)
+		return true
+	return false
 
 
 func _get_options_for_slot(slot_id: String) -> Array[Dictionary]:
@@ -516,17 +560,17 @@ func _build_price_text(slot_id: String, template: Dictionary) -> String:
 
 func _build_template_stat_lines(template: Dictionary) -> Array[String]:
 	var result: Array[String] = []
-	var stats_data: Variant = template.get("stats", {})
-	if not stats_data is Dictionary:
+	var stats_value: Variant = template.get("stats", template.get("stat_modifiers", {}))
+	if not stats_value is Dictionary:
 		result.append("No stat changes.")
 		return result
-	var stats: Dictionary = stats_data
+	var stats: Dictionary = stats_value
 	var stat_keys: Array = stats.keys()
 	stat_keys.sort()
 	for stat_key in stat_keys:
 		var stat_id := str(stat_key)
 		var amount := float(stats.get(stat_id, 0.0))
-		result.append("%s %+.0f" % [stat_id, amount])
+		result.append("%s %s" % [BACKEND_HELPERS.humanize_id(stat_id), "%+.0f" % amount if absf(amount - roundf(amount)) < 0.001 else "%+.2f" % amount])
 	if result.is_empty():
 		result.append("No stat changes.")
 	return result
@@ -636,4 +680,49 @@ func _commit_payment_recipient(buyer: EntityInstance, amount: float) -> bool:
 	if not TRANSACTION_SERVICE.transfer_currency(buyer, committed_recipient, _config.budget_currency_id, amount):
 		return false
 	_commit_entity_to_game_state(committed_recipient, _config.payment_recipient_lookup_id)
+	return true
+
+
+func _can_confirm() -> bool:
+	if _session == null:
+		return false
+	if not _session.has_pending_changes():
+		return false
+	return _has_sufficient_source_inventory()
+
+
+func _has_sufficient_source_inventory() -> bool:
+	if _option_provider == null or _config.option_source_entity_lookup_id.is_empty() or _session == null:
+		return true
+	var available_counts := _option_provider.get_inventory_template_counts()
+	var delta_counts := _session.get_template_delta_counts()
+	for template_id_value in delta_counts.keys():
+		var template_id := str(template_id_value)
+		var required_count := int(delta_counts.get(template_id, 0))
+		if required_count <= int(available_counts.get(template_id, 0)):
+			continue
+		return false
+	return true
+
+
+func _has_inventory_capacity_for_preview(slot_id: String, preview_template_id: String) -> bool:
+	if _option_provider == null or _config.option_source_entity_lookup_id.is_empty() or _session == null:
+		return true
+	var delta_counts := _session.get_template_delta_counts().duplicate(true)
+	var current_template_id := _session.get_equipped_template_id(slot_id)
+	if current_template_id == preview_template_id:
+		return _has_sufficient_source_inventory()
+	if not current_template_id.is_empty():
+		delta_counts[current_template_id] = int(delta_counts.get(current_template_id, 0)) - 1
+		if int(delta_counts.get(current_template_id, 0)) <= 0:
+			delta_counts.erase(current_template_id)
+	if not preview_template_id.is_empty():
+		delta_counts[preview_template_id] = int(delta_counts.get(preview_template_id, 0)) + 1
+	var available_counts := _option_provider.get_inventory_template_counts()
+	for template_id_value in delta_counts.keys():
+		var template_id := str(template_id_value)
+		var required_count := int(delta_counts.get(template_id, 0))
+		if required_count <= int(available_counts.get(template_id, 0)):
+			continue
+		return false
 	return true

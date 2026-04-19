@@ -26,20 +26,20 @@ var confirm_label: String = "Confirm"
 
 
 func apply_params(params: Dictionary) -> void:
-	target_entity_lookup_id = str(params.get("target_entity_id", "player"))
-	budget_entity_lookup_id = str(params.get("budget_entity_id", ""))
-	budget_currency_id = str(params.get("budget_currency_id", "credits"))
-	payment_recipient_lookup_id = str(params.get("payment_recipient_id", ""))
-	option_source_entity_lookup_id = str(params.get("option_source_entity_id", ""))
-	next_screen_id = str(params.get("next_screen_id", ""))
-	cancel_screen_id = str(params.get("cancel_screen_id", SCREEN_MAIN_MENU))
-	reset_game_state_on_cancel = bool(params.get("reset_game_state_on_cancel", false))
-	pop_on_confirm = bool(params.get("pop_on_confirm", false))
-	screen_title = str(params.get("screen_title", screen_title))
-	screen_description = str(params.get("screen_description", screen_description))
-	screen_summary = str(params.get("screen_summary", screen_summary))
-	cancel_label = str(params.get("cancel_label", cancel_label))
-	confirm_label = str(params.get("confirm_label", confirm_label))
+	target_entity_lookup_id = _read_string(params, "target_entity_id", "player")
+	budget_entity_lookup_id = _read_string(params, "budget_entity_id", "")
+	budget_currency_id = _read_string(params, "budget_currency_id", "credits")
+	payment_recipient_lookup_id = _read_string(params, "payment_recipient_id", "")
+	option_source_entity_lookup_id = _read_string(params, "option_source_entity_id", "")
+	next_screen_id = _read_string(params, "next_screen_id", "")
+	cancel_screen_id = _read_string(params, "cancel_screen_id", SCREEN_MAIN_MENU)
+	reset_game_state_on_cancel = _read_bool(params, "reset_game_state_on_cancel", false)
+	pop_on_confirm = _read_bool(params, "pop_on_confirm", false)
+	screen_title = _read_string(params, "screen_title", screen_title)
+	screen_description = _read_string(params, "screen_description", screen_description)
+	screen_summary = _read_string(params, "screen_summary", screen_summary)
+	cancel_label = _read_string(params, "cancel_label", cancel_label)
+	confirm_label = _read_string(params, "confirm_label", confirm_label)
 
 	var confirm_params_data: Variant = params.get("next_screen_params", {})
 	if confirm_params_data is Dictionary:
@@ -57,7 +57,7 @@ func apply_params(params: Dictionary) -> void:
 
 	option_tags = _to_string_array(params.get("option_tags", []))
 	if option_tags.is_empty():
-		var option_tag := str(params.get("option_tag", DEFAULT_OPTION_TAG))
+		var option_tag := _read_string(params, "option_tag", DEFAULT_OPTION_TAG)
 		if not option_tag.is_empty():
 			option_tags.append(option_tag)
 	option_template_ids = _to_string_array(params.get("option_template_ids", []))
@@ -101,5 +101,19 @@ static func _to_string_array(values: Variant) -> Array[String]:
 		return result
 	var entries: Array = values
 	for entry in entries:
-		result.append(str(entry))
+		var text := str(entry)
+		if text.is_empty():
+			continue
+		result.append(text)
 	return result
+
+
+static func _read_string(params: Dictionary, field_name: String, default_value: String = "") -> String:
+	return str(params.get(field_name, default_value))
+
+
+static func _read_bool(params: Dictionary, field_name: String, default_value: bool) -> bool:
+	var value: Variant = params.get(field_name, default_value)
+	if value is bool:
+		return bool(value)
+	return default_value
