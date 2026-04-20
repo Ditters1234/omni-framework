@@ -27,12 +27,20 @@ func after_each() -> void:
 	window.mode = _original_window_mode
 	window.size = _original_window_size
 	_delete_settings_file()
+	APP_SETTINGS.reset_settings_path_for_testing()
 
 
 func test_load_settings_returns_defaults_when_file_is_missing() -> void:
 	var settings := APP_SETTINGS.load_settings()
 
 	assert_eq_deep(settings, APP_SETTINGS.get_default_settings())
+
+
+func test_settings_path_is_isolated_while_running_gut() -> void:
+	var settings_path := APP_SETTINGS.get_settings_path()
+
+	assert_true(settings_path.begins_with(APP_SETTINGS.TEST_SETTINGS_PATH_PREFIX))
+	assert_ne(settings_path, APP_SETTINGS.SETTINGS_PATH)
 
 
 func test_save_and_load_settings_round_trip_normalizes_values() -> void:
@@ -120,9 +128,10 @@ func test_ai_settings_round_trip_normalizes_engine_owned_connection_fields() -> 
 
 
 func _delete_settings_file() -> void:
-	if not FileAccess.file_exists(APP_SETTINGS.SETTINGS_PATH):
+	var settings_path := APP_SETTINGS.get_settings_path()
+	if not FileAccess.file_exists(settings_path):
 		return
-	var absolute_path := ProjectSettings.globalize_path(APP_SETTINGS.SETTINGS_PATH)
+	var absolute_path := ProjectSettings.globalize_path(settings_path)
 	DirAccess.remove_absolute(absolute_path)
 
 

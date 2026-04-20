@@ -52,7 +52,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - `UIRouter` (autoload) — screen stack, registration, theme propagation.
 - `ui/main.tscn` / `ui/main.gd` — boots mods, applies theme, and registers the current runtime screen ids from `OmniUIRouteCatalog`.
 - `omni_theme.tres` + `theme_applier.gd` — centralized theme with `OmniSemantic` color tokens driven by `config.json ui.theme`.
-- Screens: `main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, `gameplay_shell`, `location_view`, `assembly_editor` (also aliased as `character_creator`).
+- Screens: `main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, `gameplay_shell`, `assembly_editor` (also aliased as `character_creator`). The earlier standalone `location_view` route is now represented by the gameplay shell's location surface.
 - Components: `currency_summary_panel`, `part_detail_panel`, `stat_delta_sheet`, `assembly_slot_row`, `currency_display`, `stat_bar`, `stat_sheet`, `entity_portrait`, `part_card`, `tab_panel`, `notification_popup`, `recipe_card`, `quest_card`, `faction_badge`.
 - `OmniBackendBase` (`ui/screens/backends/backend_base.gd`) as the shared backend surface for moddable UI backends.
 - `OmniAssemblyEditorBackend` (`ui/screens/backends/assembly_editor_backend.gd`) as the extracted runtime/backend layer behind the assembly editor screen.
@@ -172,7 +172,7 @@ Prioritized by number of downstream consumers. Build in this order.
 | `stat_sheet` | `{groups: Dict[group_name → Array[stat_line]]}` | `entity_sheet`, `gameplay_shell`, `dialogue` |
 | `part_card` | `{template, default_sprite_paths, price_text, badges, affordable}` | `exchange`, `catalog_list`, `list_view`, `crafting` (inputs and outputs) |
 | `entity_portrait` | `{display_name, emblem_path, description, faction_badge, stat_preview}` | `dialogue`, `exchange`, `task_provider`, `entity_sheet` |
-| `tab_panel` | `{tabs: Array[{id, label, content_scene}]}` | `location_view` (optional), `entity_sheet`, modder-built multi-tab shops |
+| `tab_panel` | `{tabs: Array[{id, label, content_scene}]}` | Future tabbed location surfaces, `entity_sheet`, modder-built multi-tab shops |
 | `notification_popup` | `{message, level, icon, duration_ms}` | Global — mounts under `ScreenLayer` in `main.tscn` |
 | `recipe_card` | `{recipe, input_status: [{template_id, required, have, satisfied}], output_template}` | `crafting` |
 | `quest_card` | `{quest_id, display_name, current_stage, objectives: [{label, satisfied}], rewards}` | `quest_log`, potentially `dialogue` inline |
@@ -400,7 +400,7 @@ Priority order:
 4. `entity_portrait` (unblocks dialogue, task_provider)
 5. `notification_popup` (global — mounts in main.tscn)
 6. `recipe_card`, `quest_card`, `faction_badge` (backend-specific; build alongside their backends)
-7. `tab_panel` (lowest priority; used by `location_view` only if we want tabs instead of a button list)
+7. `tab_panel` (lowest priority; reserved for future tabbed location surfaces if we want tabs instead of a button list)
 
 ### Phase 3 — Engine-owned screens (~2 days)
 

@@ -140,7 +140,6 @@ These are **always available**, navigation-owned by the engine.
 |---|---|---|---|
 | Main Menu | `main_menu` | `ui/screens/main_menu/main_menu_screen.tscn` | Boot/menu entry point. |
 | Gameplay Shell | `gameplay_shell` | `ui/screens/gameplay_shell/gameplay_shell_screen.tscn` | In-game HUD. Displays player summary, location, available screens. |
-| Location View | `location_view` | `ui/screens/location_view/location_view_screen.tscn` | Hub screen: location name, description, interactive screens as buttons. |
 | World Map | `world_map` | `ui/screens/world_map/world_map_screen.tscn` | ⚠️ **PLANNED.** Visualization of location graph and fast travel. |
 | Pause Menu | `pause_menu` | `ui/screens/pause_menu/` | Layered pause overlay with continue/settings/quit. |
 | Settings | `settings` | `ui/screens/settings/` | Audio, graphics, accessibility options. |

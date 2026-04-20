@@ -3,6 +3,8 @@ extends RefCounted
 class_name OmniAppSettings
 
 const SETTINGS_PATH := "user://settings.cfg"
+const TEST_SETTINGS_PATH_PREFIX := "user://test_settings/"
+const TEST_RUN_MARKERS := ["gut_cmdln.gd", "-gexit", "-gdir=", "--test", "res://tests"]
 const SECTION_AUDIO := "audio"
 const SECTION_DISPLAY := "display"
 const SECTION_AI := "ai"
@@ -37,6 +39,10 @@ const DEFAULT_AI_MAX_TOKENS := 256
 const DEFAULT_AI_TEMPERATURE := 0.7
 const DEFAULT_AI_CONTEXT_WINDOW := 2048
 
+static var _settings_path: String = SETTINGS_PATH
+static var _is_test_environment: bool = false
+static var _test_session_settings_path: String = ""
+
 
 static func get_default_settings() -> Dictionary:
 	return {
@@ -65,10 +71,37 @@ static func get_default_settings() -> Dictionary:
 	}
 
 
+static func get_settings_path() -> String:
+	_enforce_test_settings_isolation()
+	return _settings_path
+
+
+static func set_settings_path_for_testing(path: String) -> bool:
+	if not OS.is_debug_build():
+		return false
+	var normalized_path := _normalize_settings_path(path)
+	if not normalized_path.begins_with(TEST_SETTINGS_PATH_PREFIX):
+		return false
+	_test_session_settings_path = normalized_path
+	_settings_path = normalized_path
+	return _ensure_settings_dir(_settings_path)
+
+
+static func reset_settings_path_for_testing() -> void:
+	if _is_test_environment or _detect_test_environment():
+		_is_test_environment = true
+		_settings_path = _get_or_create_test_session_settings_path()
+	else:
+		_test_session_settings_path = ""
+		_settings_path = SETTINGS_PATH
+	_ensure_settings_dir(_settings_path)
+
+
 static func load_settings() -> Dictionary:
+	_enforce_test_settings_isolation()
 	var normalized_defaults := normalize_settings(get_default_settings())
 	var config := ConfigFile.new()
-	var load_error := config.load(SETTINGS_PATH)
+	var load_error := config.load(_settings_path)
 	if load_error != OK:
 		return normalized_defaults
 	return normalize_settings({
@@ -98,6 +131,9 @@ static func load_settings() -> Dictionary:
 
 
 static func save_settings(settings: Dictionary) -> int:
+	_enforce_test_settings_isolation()
+	if not _ensure_settings_dir(_settings_path):
+		return ERR_CANT_CREATE
 	var normalized := normalize_settings(settings)
 	var config := ConfigFile.new()
 	var audio := _get_section_dict(normalized, SECTION_AUDIO)
@@ -119,7 +155,7 @@ static func save_settings(settings: Dictionary) -> int:
 	config.set_value(SECTION_AI, AI_TEMPERATURE, float(ai.get(AI_TEMPERATURE, DEFAULT_AI_TEMPERATURE)))
 	config.set_value(SECTION_AI, AI_MODEL_PATH, str(ai.get(AI_MODEL_PATH, "")))
 	config.set_value(SECTION_AI, AI_CONTEXT_WINDOW, int(ai.get(AI_CONTEXT_WINDOW, DEFAULT_AI_CONTEXT_WINDOW)))
-	return config.save(SETTINGS_PATH)
+	return config.save(_settings_path)
 
 
 static func normalize_settings(settings: Dictionary) -> Dictionary:
@@ -276,3 +312,49 @@ static func _normalize_text(value: Variant, fallback: String) -> String:
 	if normalized.is_empty():
 		return fallback
 	return normalized
+
+
+static func _normalize_settings_path(path: String) -> String:
+	var normalized_path := path.strip_edges().replace("\\", "/")
+	if normalized_path.is_empty():
+		return SETTINGS_PATH
+	return normalized_path
+
+
+static func _detect_test_environment() -> bool:
+	for raw_arg in OS.get_cmdline_args():
+		var arg := str(raw_arg)
+		for marker in TEST_RUN_MARKERS:
+			if arg.contains(marker):
+				return true
+	var main_loop := Engine.get_main_loop()
+	var tree := main_loop as SceneTree
+	if tree != null and tree.root != null and tree.root.get_node_or_null("Gut") != null:
+		return true
+	return false
+
+
+static func _get_or_create_test_session_settings_path() -> String:
+	if _test_session_settings_path.is_empty():
+		var timestamp := str(Time.get_unix_time_from_system()).replace(".", "_")
+		_test_session_settings_path = "%sgut_%s_%s/settings.cfg" % [
+			TEST_SETTINGS_PATH_PREFIX,
+			OS.get_process_id(),
+			timestamp,
+		]
+	return _test_session_settings_path
+
+
+static func _enforce_test_settings_isolation() -> void:
+	if not _is_test_environment:
+		_is_test_environment = _detect_test_environment()
+		if not _is_test_environment:
+			return
+	_settings_path = _get_or_create_test_session_settings_path()
+	_ensure_settings_dir(_settings_path)
+
+
+static func _ensure_settings_dir(path: String) -> bool:
+	var directory_path := path.get_base_dir()
+	var make_result := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory_path))
+	return make_result == OK

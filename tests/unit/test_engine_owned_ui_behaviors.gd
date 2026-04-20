@@ -41,6 +41,7 @@ func after_each() -> void:
 	SaveManager.reset_save_directory_for_testing()
 	_cleanup_directory(TEST_SAVE_DIR)
 	_delete_settings_file()
+	APP_SETTINGS.reset_settings_path_for_testing()
 
 
 func test_ui_cancel_pushes_and_pops_pause_menu_from_gameplay_shell() -> void:
@@ -171,9 +172,10 @@ func _get_top_screen() -> Control:
 
 
 func _delete_settings_file() -> void:
-	if not FileAccess.file_exists(APP_SETTINGS.SETTINGS_PATH):
+	var settings_path := APP_SETTINGS.get_settings_path()
+	if not FileAccess.file_exists(settings_path):
 		return
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(APP_SETTINGS.SETTINGS_PATH))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(settings_path))
 
 
 func _cleanup_directory(path: String) -> void:

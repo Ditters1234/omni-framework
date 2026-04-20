@@ -4,13 +4,18 @@ const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_regis
 const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 
-const TEMP_ROOT := "user://data_manager_contracts"
+const TEMP_ROOT := "user://test_scratch/data_manager_contracts"
 
 
 func before_each() -> void:
+	_cleanup_directory(TEMP_ROOT)
 	DataManager.clear_all()
 	BACKEND_CONTRACT_REGISTRY.clear()
 	ASSEMBLY_EDITOR_BACKEND.register_contract()
+
+
+func after_each() -> void:
+	_cleanup_directory(TEMP_ROOT)
 
 
 func test_register_additions_rejects_wrong_section_type_without_mutating_registry() -> void:
@@ -220,6 +225,26 @@ func _write_data_file(test_name: String, file_name: String, contents: String) ->
 		file.store_string(contents)
 		file.close()
 	return data_dir
+
+
+func _cleanup_directory(path: String) -> void:
+	if not path.begins_with("user://test_scratch/"):
+		return
+	var absolute_path := ProjectSettings.globalize_path(path)
+	var dir := DirAccess.open(absolute_path)
+	if dir != null:
+		dir.list_dir_begin()
+		var child_name := dir.get_next()
+		while not child_name.is_empty():
+			if child_name != "." and child_name != "..":
+				var child_path := path.path_join(child_name)
+				if dir.current_is_dir():
+					_cleanup_directory(child_path)
+				else:
+					DirAccess.remove_absolute(ProjectSettings.globalize_path(child_path))
+			child_name = dir.get_next()
+		dir.list_dir_end()
+	DirAccess.remove_absolute(absolute_path)
 
 
 func _issue_messages(issues: Array[Dictionary]) -> Array[String]:

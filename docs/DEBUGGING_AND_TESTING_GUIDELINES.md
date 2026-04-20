@@ -313,3 +313,5 @@ Add or update tests when you change:
 - Invalid runtime state is rejected before writing a save
 - Failed loads restore the prior live session instead of wiping it
 - Save/load success and failure signals are covered by reg
+
+Save and settings tests must not touch production `user://` persistence paths. GUT runs are isolated automatically: `SaveManager` writes to `user://test_saves/`, `AppSettings` writes to `user://test_settings/`, and ad hoc test scratch files should live under `user://test_scratch/` with teardown cleanup.

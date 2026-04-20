@@ -413,7 +413,9 @@ func _get_or_create_test_session_save_dir() -> String:
 
 func _enforce_test_save_isolation() -> void:
 	if not _is_test_environment:
-		return
+		_is_test_environment = _detect_test_environment()
+		if not _is_test_environment:
+			return
 	var isolated_save_dir := _get_or_create_test_session_save_dir()
 	if _save_dir == isolated_save_dir:
 		return
