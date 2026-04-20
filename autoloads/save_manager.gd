@@ -399,8 +399,19 @@ func _detect_test_environment() -> bool:
 		for marker in TEST_RUN_MARKERS:
 			if arg.contains(marker):
 				return true
-	if get_tree() != null and get_tree().root != null and get_tree().root.get_node_or_null("Gut") != null:
-		return true
+	var stack := get_stack()
+	for frame_value in stack:
+		if not frame_value is Dictionary:
+			continue
+		var frame: Dictionary = frame_value
+		var source := str(frame.get("source", ""))
+		if source.begins_with("res://tests/") or source.begins_with("res://addons/gut/"):
+			return true
+	if get_tree() != null and get_tree().root != null:
+		if get_tree().root.get_node_or_null("Gut") != null:
+			return true
+		if get_tree().root.find_child("*Gut*", true, false) != null:
+			return true
 	return false
 
 
