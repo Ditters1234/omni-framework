@@ -217,6 +217,9 @@ func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
 	UIRouter.register_screen("gameplay_shell", GAMEPLAY_SHELL_SCENE_PATH)
 	UIRouter.register_screen("assembly_editor", ASSEMBLY_EDITOR_SCENE_PATH)
 	GameState.new_game()
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	assert_true(player.has_discovered_location("base:test_hub"))
 
 	UIRouter.replace_all("gameplay_shell", {
 		"initial_surface_id": "assembly_editor",
@@ -243,6 +246,19 @@ func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
 	var snapshot := UIRouter.get_current_screen_debug_snapshot()
 	assert_eq(str(snapshot.get("active_surface_screen_id", "")), "location_surface")
 	assert_true(bool(snapshot.get("surface_visible", false)))
+
+	var location_surface := shell.find_child("GameplayLocationSurface", true, false) as Control
+	assert_not_null(location_surface)
+	var surface_snapshot_value: Variant = location_surface.call("get_debug_snapshot")
+	assert_true(surface_snapshot_value is Dictionary)
+	var surface_snapshot: Dictionary = surface_snapshot_value
+	var travel_value: Variant = surface_snapshot.get("travel", [])
+	assert_true(travel_value is Array)
+	var travel_entries: Array = travel_value
+	assert_gt(travel_entries.size(), 0)
+	var travel_container := location_surface.get_node("MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer/TravelScroll/TravelContainer") as VBoxContainer
+	assert_not_null(travel_container)
+	assert_gt(travel_container.get_child_count(), 0)
 
 
 func test_gameplay_shell_scrolls_when_viewport_is_short() -> void:

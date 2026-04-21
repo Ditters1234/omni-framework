@@ -669,6 +669,7 @@ Common fields:
 ### Important current notes
 - `game.starting_player_id` should point at a valid entity id
 - `starting_location` should be a valid location id
+- `starting_discovered_locations` is applied when a new game starts; include any connected locations that should be available in the first travel view
 - `starting_money` uses the currencies you declared in `definitions.json`
 - The current base content also defines `game.new_game_flow`, which means the startup flow can be configured through data instead of hardcoding it all in scripts
 

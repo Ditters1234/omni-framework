@@ -2,13 +2,15 @@
 
 [ext_resource type="Script" uid="uid://c621vxj3edxyv" path="res://ui/screens/gameplay_shell/gameplay_shell_screen.gd" id="1_shell"]
 
-[node name="GameplayShellScreen" type="Control" unique_id=663406250]
+[node name="GameplayShellScreen" type="ScrollContainer" unique_id=663406250]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+follow_focus = true
+horizontal_scroll_mode = 0
 script = ExtResource("1_shell")
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=1915641520]
@@ -134,10 +136,13 @@ visible = false
 layout_mode = 2
 text = "Close"
 
-[node name="SurfaceHost" type="MarginContainer" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=453409780]
+[node name="SurfaceHost" type="ScrollContainer" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=453409780]
+custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1783271831]
 visible = false

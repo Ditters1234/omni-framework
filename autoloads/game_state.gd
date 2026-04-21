@@ -74,6 +74,14 @@ func new_game() -> void:
 	current_location_id = str(DataManager.get_config_value("game.starting_location", player_entity.location_id))
 	player_entity.location_id = current_location_id
 	player_entity.discover_location(current_location_id)
+	var discovered_locations_value: Variant = DataManager.get_config_value("game.starting_discovered_locations", [])
+	if discovered_locations_value is Array:
+		var discovered_locations: Array = discovered_locations_value
+		for location_id_value in discovered_locations:
+			var discovered_location_id := str(location_id_value)
+			if discovered_location_id.is_empty() or not DataManager.has_location(discovered_location_id):
+				continue
+			player_entity.discover_location(discovered_location_id)
 	_sync_timekeeper()
 	GameEvents.game_started.emit()
 
