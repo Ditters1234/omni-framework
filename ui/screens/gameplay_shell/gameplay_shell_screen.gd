@@ -6,18 +6,18 @@ const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gamep
 const GAMEPLAY_LOCATION_SURFACE_SCENE := preload("res://ui/screens/gameplay_shell/gameplay_location_surface.tscn")
 const DEFAULT_SURFACE_ID := "location_surface"
 
-@onready var _title_label: Label = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/TitleLabel
-@onready var _subtitle_label: Label = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/VBoxContainer/SubtitleLabel
-@onready var _character_menu_button: Button = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/CharacterMenuButton
-@onready var _quick_autosave_button: Button = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/QuickAutosaveButton
-@onready var _pause_menu_button: Button = $MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer/PauseMenuButton
-@onready var _location_title_label: Label = $MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer/LocationTitleLabel
-@onready var _location_description_label: Label = $MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer/LocationDescriptionLabel
-@onready var _location_meta_label: Label = $MarginContainer/VBoxContainer/OverviewRow/LocationPanel/MarginContainer/VBoxContainer/LocationMetaLabel
-@onready var _session_time_label: Label = $MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/SessionTimeLabel
-@onready var _session_day_label: Label = $MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/SessionDayLabel
-@onready var _advance_tick_button: Button = $MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/AdvanceTickButton
-@onready var _time_buttons_container: HFlowContainer = $MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer/TimeAdvanceButtons
+var _title_label: Label = null
+var _subtitle_label: Label = null
+@onready var _character_menu_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/CharacterMenuButton
+@onready var _quick_autosave_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/QuickAutosaveButton
+@onready var _pause_menu_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/PauseMenuButton
+@onready var _location_title_label: Label = $MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer/LocationTitleLabel
+@onready var _location_description_label: Label = $MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer/LocationDescriptionLabel
+@onready var _location_meta_label: Label = $MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer/LocationMetaLabel
+@onready var _session_time_label: Label = $MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/HBoxContainer/SessionTimeLabel
+@onready var _session_day_label: Label = $MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/HBoxContainer/SessionDayLabel
+@onready var _advance_tick_button: Button = $MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/TimeButtonsHBox/AdvanceTickButton
+@onready var _time_buttons_container: Control = $MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/TimeButtonsHBox/TimeAdvanceButtons
 @onready var _surface_panel: PanelContainer = $MarginContainer/VBoxContainer/SurfacePanel
 @onready var _surface_title_label: Label = $MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceTitleLabel
 @onready var _surface_close_button: Button = $MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton
@@ -30,9 +30,22 @@ var _presenter: RefCounted = GAMEPLAY_SHELL_PRESENTER.new()
 var _runtime_signals_connected: bool = false
 var _active_surface: Control = null
 var _active_surface_screen_id: String = ""
+var _initial_surface_id: String = ""
+var _initial_surface_params: Dictionary = {}
+var _disable_shell_chrome: bool = false
+
+@onready var _top_row: HBoxContainer = $MarginContainer/VBoxContainer/TopRow
 
 
 func initialize(_params: Dictionary = {}) -> void:
+	_initial_surface_id = str(_params.get("initial_surface_id", ""))
+	var initial_surface_params_value: Variant = _params.get("initial_surface_params", {})
+	if initial_surface_params_value is Dictionary:
+		var initial_surface_params: Dictionary = initial_surface_params_value
+		_initial_surface_params = initial_surface_params.duplicate(true)
+	else:
+		_initial_surface_params = {}
+	_disable_shell_chrome = bool(_params.get("disable_shell_chrome", false))
 	_rebuild_time_buttons()
 	_refresh()
 	_show_default_surface_if_needed()
@@ -57,8 +70,10 @@ func open_surface_screen(screen_id: String, params: Dictionary = {}) -> void:
 	var surface := UIRouter.instantiate_registered_screen(screen_id)
 	if surface == null:
 		return
+	var surface_params := params.duplicate(true)
+	surface_params["opened_from_gameplay_shell"] = true
 	_close_active_surface_internal(false)
-	_mount_surface(surface, screen_id, params)
+	_mount_surface(surface, screen_id, surface_params)
 	_surface_title_label.text = _build_surface_title(screen_id)
 	_refresh_surface_chrome()
 
@@ -68,6 +83,7 @@ func show_location_surface(params: Dictionary = {}) -> void:
 	var location_surface := location_surface_value as Control
 	if location_surface == null:
 		return
+	_disable_shell_chrome = false
 	_close_active_surface_internal(false)
 	_mount_surface(location_surface, DEFAULT_SURFACE_ID, params)
 	_surface_title_label.text = "Location Actions"
@@ -96,20 +112,44 @@ func _mount_surface(surface: Control, screen_id: String, params: Dictionary) -> 
 
 
 func _prepare_surface_for_hosting(surface: Control) -> void:
-	surface.set_anchors_preset(Control.PRESET_FULL_RECT)
-	surface.offset_left = 0.0
-	surface.offset_top = 0.0
-	surface.offset_right = 0.0
-	surface.offset_bottom = 0.0
 	surface.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	surface.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	surface.position = Vector2.ZERO
-	surface.custom_minimum_size = Vector2.ZERO
+
+	if surface.get_child_count() > 0:
+		var margin := surface.get_child(0) as MarginContainer
+		if margin != null:
+			margin.add_theme_constant_override("margin_left", 0)
+			margin.add_theme_constant_override("margin_top", 0)
+			margin.add_theme_constant_override("margin_right", 0)
+			margin.add_theme_constant_override("margin_bottom", 0)
+			if margin.get_child_count() > 0:
+				var panel := margin.get_child(0) as PanelContainer
+				if panel != null:
+					panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+					if panel.get_child_count() > 0:
+						var vbox := panel.get_child(0) as VBoxContainer
+						if vbox != null:
+							var title := vbox.get_node_or_null("TitleLabel") as Label
+							if title != null:
+								title.hide()
+							var button_row := vbox.get_node_or_null("ButtonRow") as HBoxContainer
+							if button_row != null:
+								var back_btn := button_row.get_node_or_null("BackButton") as Button
+								if back_btn != null:
+									back_btn.hide()
 
 
 func _show_default_surface_if_needed() -> void:
+	if not _initial_surface_id.is_empty():
+		var target_id := _initial_surface_id
+		var target_params := _initial_surface_params.duplicate(true)
+		_initial_surface_id = ""
+		open_surface_screen(target_id, target_params)
+		return
+
 	if _active_surface != null and is_instance_valid(_active_surface):
 		return
+
 	show_location_surface({
 		"location_id": GameState.current_location_id,
 	})
@@ -132,6 +172,10 @@ func _close_active_surface_internal(show_default_after_close: bool) -> void:
 func _refresh_surface_chrome() -> void:
 	var has_surface := _active_surface != null and is_instance_valid(_active_surface)
 	var is_default_surface := _active_surface_screen_id == DEFAULT_SURFACE_ID
+
+	if _top_row != null:
+		_top_row.visible = not _disable_shell_chrome
+
 	_surface_panel.visible = has_surface
 	_surface_close_button.visible = has_surface and not is_default_surface
 	_surface_close_button.disabled = not has_surface or is_default_surface
@@ -180,39 +224,7 @@ func _connect_runtime_signals() -> void:
 	_runtime_signals_connected = true
 
 
-func _connect_layout_signals() -> void:
-	var layout_resized := Callable(self, "_on_layout_resized")
-	if not resized.is_connected(layout_resized):
-		resized.connect(_on_layout_resized)
-	if _surface_host != null and not _surface_host.resized.is_connected(layout_resized):
-		_surface_host.resized.connect(_on_layout_resized)
 
-
-func _on_layout_resized() -> void:
-	call_deferred("_sync_active_surface_minimum_size")
-
-
-func _sync_active_surface_minimum_size() -> void:
-	if _active_surface == null or not is_instance_valid(_active_surface):
-		return
-	var surface_minimum := _get_surface_content_minimum_size(_active_surface)
-	var host_size := _surface_host.size
-	_active_surface.custom_minimum_size = Vector2(
-		maxf(surface_minimum.x, host_size.x),
-		maxf(surface_minimum.y, host_size.y)
-	)
-
-
-func _get_surface_content_minimum_size(surface: Control) -> Vector2:
-	var minimum_size := surface.get_combined_minimum_size()
-	for child in surface.get_children():
-		var child_control := child as Control
-		if child_control == null:
-			continue
-		var child_minimum := child_control.get_combined_minimum_size()
-		minimum_size.x = maxf(minimum_size.x, child_minimum.x)
-		minimum_size.y = maxf(minimum_size.y, child_minimum.y)
-	return minimum_size
 
 
 func _refresh() -> void:
@@ -224,8 +236,10 @@ func _refresh() -> void:
 
 
 func _apply_view_model(view_model: Dictionary) -> void:
-	_title_label.text = str(view_model.get("title", "Gameplay"))
-	_subtitle_label.text = str(view_model.get("subtitle", ""))
+	if _title_label != null:
+		_title_label.text = str(view_model.get("title", "Gameplay"))
+	if _subtitle_label != null:
+		_subtitle_label.text = str(view_model.get("subtitle", ""))
 	var location_value: Variant = view_model.get("location", {})
 	var location_view_model := _read_dictionary(location_value)
 	_location_title_label.text = str(location_view_model.get("title_text", ""))

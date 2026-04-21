@@ -7,8 +7,8 @@ const FACTION_BADGE_SCENE := preload("res://ui/components/faction_badge.tscn")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
-@onready var _portrait_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/Sidebar/PortraitHost
-@onready var _summary_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/Sidebar/SummaryLabel
+@onready var _portrait_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/PortraitHost
+@onready var _summary_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/SummaryLabel
 @onready var _stat_sheet_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/StatSheetHost
 @onready var _equipped_section_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/EquippedSectionLabel
 @onready var _equipped_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/EquippedRows

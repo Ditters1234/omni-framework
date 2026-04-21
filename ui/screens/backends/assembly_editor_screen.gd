@@ -186,7 +186,10 @@ func _execute_navigation_action(action: Dictionary) -> void:
 	if _opened_from_gameplay_shell:
 		match action_type:
 			"pop":
-				UIRouter.close_gameplay_shell_screen()
+				if _backend.build_cancel_action() == action:
+					UIRouter.replace_all("main_menu", {})
+				else:
+					UIRouter.close_gameplay_shell_screen()
 			"replace_all", "push":
 				if not screen_id.is_empty() and UIRouter.open_screen_in_gameplay_shell(screen_id, params):
 					return

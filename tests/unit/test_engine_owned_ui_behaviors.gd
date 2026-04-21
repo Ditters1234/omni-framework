@@ -4,6 +4,7 @@ const APP_SETTINGS := preload("res://core/app_settings.gd")
 const MAIN_SCENE := preload("res://ui/main.tscn")
 const SETTINGS_SCENE_PATH := "res://ui/screens/settings/settings_screen.tscn"
 const GAMEPLAY_SHELL_SCENE_PATH := "res://ui/screens/gameplay_shell/gameplay_shell_screen.tscn"
+const ASSEMBLY_EDITOR_SCENE_PATH := "res://ui/screens/backends/assembly_editor_screen.tscn"
 const SAVE_SLOT_LIST_SCENE := preload("res://ui/screens/save_slot_list/save_slot_list_screen.tscn")
 const TEST_SCREEN_SCENE := "res://tests/fixtures/ui_router/test_routed_screen.tscn"
 const TEST_SAVE_DIR := "user://test_saves/test_engine_owned_ui_behaviors/"
@@ -205,6 +206,43 @@ func test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen()
 	assert_true(bool(snapshot.get("has_session", false)))
 	assert_true(snapshot.has("player"))
 	assert_true(snapshot.has("location"))
+
+
+func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface() -> void:
+	_screen_container = CanvasLayer.new()
+	_spawned_nodes.append(_screen_container)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
+	UIRouter.initialize(_screen_container)
+	UIRouter.register_screen("gameplay_shell", GAMEPLAY_SHELL_SCENE_PATH)
+	UIRouter.register_screen("assembly_editor", ASSEMBLY_EDITOR_SCENE_PATH)
+	GameState.new_game()
+
+	UIRouter.replace_all("gameplay_shell", {
+		"initial_surface_id": "assembly_editor",
+		"disable_shell_chrome": true,
+		"initial_surface_params": {
+			"target_entity_id": "player",
+			"pop_on_confirm": true,
+			"allow_confirm_without_changes": true,
+			"cancel_screen_id": "main_menu",
+		},
+	})
+	await get_tree().process_frame
+
+	var shell := _get_top_screen()
+	assert_not_null(shell)
+	var assembly_screen := shell.find_child("AssemblyEditorScreen", true, false) as Control
+	assert_not_null(assembly_screen)
+
+	assembly_screen.call("_on_begin_button_pressed")
+	await get_tree().process_frame
+
+	assert_eq(UIRouter.current_screen_id(), "gameplay_shell")
+	assert_eq(UIRouter.stack_depth(), 1)
+	var snapshot := UIRouter.get_current_screen_debug_snapshot()
+	assert_eq(str(snapshot.get("active_surface_screen_id", "")), "location_surface")
+	assert_true(bool(snapshot.get("surface_visible", false)))
 
 
 func test_gameplay_shell_scrolls_when_viewport_is_short() -> void:

@@ -176,6 +176,8 @@ func instantiate_registered_screen(screen_id: String) -> Control:
 
 
 func open_in_gameplay_shell(screen_id: String, params: Dictionary = {}) -> bool:
+	if screen_id == GAMEPLAY_SHELL_SCREEN_ID or screen_id == "main_menu":
+		return false
 	var gameplay_shell := _get_gameplay_shell_node()
 	if gameplay_shell == null:
 		return false
@@ -185,6 +187,11 @@ func open_in_gameplay_shell(screen_id: String, params: Dictionary = {}) -> bool:
 	shell_params["opened_from_gameplay_shell"] = true
 	gameplay_shell.call("open_surface_screen", screen_id, shell_params)
 	return true
+
+
+## Compatibility shim for backend screens using the older method name.
+func open_screen_in_gameplay_shell(screen_id: String, params: Dictionary = {}) -> bool:
+	return open_in_gameplay_shell(screen_id, params)
 
 
 func close_gameplay_shell_surface() -> bool:

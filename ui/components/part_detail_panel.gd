@@ -15,8 +15,22 @@ const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
 @onready var _price_label: Label = $MarginContainer/VBoxContainer/PriceLabel
 @onready var _stats_label: RichTextLabel = $MarginContainer/VBoxContainer/StatsLabel
 
+var _pending_view_model: Dictionary = {}
+
+
+func _ready() -> void:
+	if not _pending_view_model.is_empty():
+		_apply_view_model(_pending_view_model)
+
 
 func render(view_model: Dictionary) -> void:
+	_pending_view_model = view_model.duplicate(true)
+	if not is_node_ready():
+		return
+	_apply_view_model(_pending_view_model)
+
+
+func _apply_view_model(view_model: Dictionary) -> void:
 	var slot_label := str(view_model.get("slot_label", "Selection"))
 	var current_name := str(view_model.get("current_name", "<empty>"))
 	var preview_name := str(view_model.get("preview_name", current_name))

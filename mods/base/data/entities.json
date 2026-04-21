@@ -3,7 +3,7 @@
     {
       "entity_id": "base:player",
       "display_name": "Player",
-      "description": "Starter player entity for validating inventory, equipment, quests, factions, and location travel.",
+      "description": "Starter human player entity for validating inventory, equipment, quests, factions, and location travel.",
       "location_id": "base:hub_safehouse",
       "currencies": {
         "credits": 500,
@@ -26,22 +26,65 @@
       ],
       "provides_sockets": [
         {
-          "id": "core",
-          "accepted_tags": [
-            "starter_anchor"
-          ],
-          "label": "Core Slot"
+          "id": "head",
+          "accepted_tags": ["head"],
+          "label": "Head"
+        },
+        {
+          "id": "torso",
+          "accepted_tags": ["torso"],
+          "label": "Torso"
+        },
+        {
+          "id": "arms",
+          "accepted_tags": ["arms"],
+          "label": "Arms"
+        },
+        {
+          "id": "legs",
+          "accepted_tags": ["legs"],
+          "label": "Legs"
+        },
+        {
+          "id": "hands",
+          "accepted_tags": ["hands"],
+          "label": "Hands"
+        },
+        {
+          "id": "feet",
+          "accepted_tags": ["feet"],
+          "label": "Feet"
         }
       ],
       "inventory": [
         {
-          "instance_id": "player_core_001",
-          "template_id": "base:test_core",
+          "instance_id": "player_head_001",
+          "template_id": "base:human_head",
           "condition": 1.0
         },
         {
-          "instance_id": "player_module_001",
-          "template_id": "base:test_module",
+          "instance_id": "player_torso_001",
+          "template_id": "base:human_torso",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "player_arms_001",
+          "template_id": "base:human_arms",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "player_legs_001",
+          "template_id": "base:human_legs",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "player_hands_001",
+          "template_id": "base:human_hands",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "player_feet_001",
+          "template_id": "base:human_feet",
           "condition": 1.0
         },
         {
@@ -51,16 +94,26 @@
         }
       ],
       "assembly_socket_map": {
-        "core": "player_core_001"
+        "head": "player_head_001",
+        "torso": "player_torso_001",
+        "arms": "player_arms_001",
+        "legs": "player_legs_001",
+        "hands": "player_hands_001",
+        "feet": "player_feet_001"
       },
       "assembly_instance_ids": [
-        "player_core_001"
+        "player_head_001",
+        "player_torso_001",
+        "player_arms_001",
+        "player_legs_001",
+        "player_hands_001",
+        "player_feet_001"
       ]
     },
     {
       "entity_id": "base:test_vendor",
       "display_name": "Quartermaster Theta",
-      "description": "A vendor entity that exposes trade, dialogue, sheet, and challenge interactions for system validation.",
+      "description": "A ripperdoc/quartermaster entity that exposes trade, dialogue, sheet, and challenge interactions for system validation.",
       "location_id": "base:test_hub",
       "currencies": {
         "credits": 9999,
@@ -77,13 +130,13 @@
       },
       "inventory": [
         {
-          "instance_id": "theta_core_001",
-          "template_id": "base:test_core",
+          "instance_id": "theta_implant_001",
+          "template_id": "base:optic_implant",
           "condition": 1.0
         },
         {
-          "instance_id": "theta_module_001",
-          "template_id": "base:test_module",
+          "instance_id": "theta_armor_001",
+          "template_id": "base:kevlar_weave",
           "condition": 1.0
         },
         {

@@ -18,21 +18,15 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 32
 
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
 layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
 layout_mode = 2
-theme_override_constants/separation = 12
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
 text = "Achievements"
 
 [node name="DescriptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
@@ -50,7 +44,6 @@ horizontal_scroll_mode = 0
 [node name="RowsContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/RowsScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
@@ -60,7 +53,6 @@ text = ""
 [node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 alignment = 2
-theme_override_constants/separation = 8
 
 [node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2

@@ -6,8 +6,8 @@ const STAT_BAR_SCENE := preload("res://ui/components/stat_bar.tscn")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
-@onready var _portrait_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/PortraitHost
-@onready var _stat_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/StatHost
+@onready var _portrait_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/PortraitScroll/PortraitHost
+@onready var _stat_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/StatScroll/StatHost
 @onready var _status_label: Label = $MarginContainer/PanelContainer/VBoxContainer/StatusLabel
 @onready var _confirm_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/ConfirmButton
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton

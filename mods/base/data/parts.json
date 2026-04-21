@@ -1,72 +1,121 @@
 {
   "parts": [
     {
-      "id": "base:test_core",
-      "display_name": "Diagnostic Core",
-      "description": "A starter anchor part used to verify root assembly sockets and stat application.",
-      "tags": [
-        "starter_anchor",
-        "device",
-        "test_part"
-      ],
-      "price": {
-        "credits": 25
-      },
-      "stats": {
-        "power": 1,
-        "health_max": 5
-      },
+      "id": "base:human_head",
+      "display_name": "Biological Head",
+      "description": "Standard organic processing unit. Provides a neural socket.",
+      "tags": ["head", "organic"],
+      "price": { "credits": 500 },
+      "stats": { "charisma": 1 },
       "equippable": true,
       "provides_sockets": [
         {
-          "id": "module_slot",
-          "accepted_tags": [
-            "test_module"
-          ],
-          "label": "Module Slot"
+          "id": "neural_slot",
+          "accepted_tags": ["neural_implant"],
+          "label": "Neural Socket"
         }
       ],
       "customizable": true,
-      "custom_field_labels": [
-        "Nickname"
+      "custom_field_labels": ["Eye Color"]
+    },
+    {
+      "id": "base:human_torso",
+      "display_name": "Biological Torso",
+      "description": "Core vital chassis. Provides subdermal and core sockets.",
+      "tags": ["torso", "organic"],
+      "price": { "credits": 1000 },
+      "stats": { "health": 20, "health_max": 20 },
+      "equippable": true,
+      "provides_sockets": [
+        {
+          "id": "core_slot",
+          "accepted_tags": ["core_implant"],
+          "label": "Core Socket"
+        },
+        {
+          "id": "subdermal_slot",
+          "accepted_tags": ["subdermal_armor"],
+          "label": "Subdermal Slot"
+        }
       ]
     },
     {
-      "id": "base:test_module",
-      "display_name": "Calibration Module",
-      "description": "A plug-in module for validating nested sockets and modular assembly.",
-      "tags": [
-        "test_module",
-        "device"
-      ],
-      "required_tags": [
-        "starter_anchor"
-      ],
-      "price": {
-        "credits": 40,
-        "data_shards": 1
-      },
-      "stats": {
-        "power": 2,
-        "charisma": 1
-      },
+      "id": "base:human_arms",
+      "display_name": "Biological Arms",
+      "description": "Standard manipulation appendages.",
+      "tags": ["arms", "organic"],
+      "price": { "credits": 400 },
+      "stats": { "power": 1 },
+      "equippable": true,
+      "provides_sockets": [
+        {
+          "id": "arm_mod_slot",
+          "accepted_tags": ["arm_mod"],
+          "label": "Arm Mod"
+        }
+      ]
+    },
+    {
+      "id": "base:human_legs",
+      "display_name": "Biological Legs",
+      "description": "Bipedal locomotion units.",
+      "tags": ["legs", "organic"],
+      "price": { "credits": 400 },
+      "stats": { "stamina": 10, "stamina_max": 10 },
+      "equippable": true,
+      "provides_sockets": [
+        {
+          "id": "leg_mod_slot",
+          "accepted_tags": ["leg_mod"],
+          "label": "Leg Mod"
+        }
+      ]
+    },
+    {
+      "id": "base:human_hands",
+      "display_name": "Biological Hands",
+      "description": "Fine manipulation end effectors.",
+      "tags": ["hands", "organic"],
+      "price": { "credits": 200 },
+      "stats": { "power": 1 },
+      "equippable": true
+    },
+    {
+      "id": "base:human_feet",
+      "display_name": "Biological Feet",
+      "description": "Ground contact stabilizers.",
+      "tags": ["feet", "organic"],
+      "price": { "credits": 200 },
+      "stats": { "stamina": 5, "stamina_max": 5 },
+      "equippable": true
+    },
+    {
+      "id": "base:optic_implant",
+      "display_name": "Optic Kiroshi",
+      "description": "A low-tier optical scanner.",
+      "tags": ["neural_implant", "device"],
+      "required_tags": ["head"],
+      "price": { "credits": 150 },
+      "stats": { "charisma": 1, "power": 1 },
+      "equippable": true
+    },
+    {
+      "id": "base:kevlar_weave",
+      "display_name": "Kevlar Weave",
+      "description": "Subdermal ballistic protection.",
+      "tags": ["subdermal_armor", "armor"],
+      "required_tags": ["torso"],
+      "price": { "credits": 300 },
+      "stats": { "health_max": 20 },
       "equippable": true
     },
     {
       "id": "base:test_weapon",
       "display_name": "Training Baton",
-      "description": "A harmless-looking but fully registered test weapon for inventory, shops, and quests.",
-      "tags": [
-        "weapon",
-        "melee",
-        "test_part"
-      ],
-      "price": {
-        "credits": 60
-      },
-      "stats": {
-        "power": 3
-      },
+      "description": "A harmless-looking but fully registered test weapon.",
+      "tags": ["weapon", "melee", "test_part"],
+      "price": { "credits": 60 },
+      "stats": { "power": 3 },
       "equippable": true
     }
   ]

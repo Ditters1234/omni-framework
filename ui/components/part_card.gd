@@ -16,13 +16,13 @@ const FALLBACK_POSITIVE_COLOR := Color("#8fd18f")
 const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
 const FALLBACK_INFO_COLOR := Color("#84a9ff")
 
-@onready var _texture_rect: TextureRect = $MarginContainer/VBoxContainer/TextureRect
-@onready var _title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
-@onready var _template_id_label: Label = $MarginContainer/VBoxContainer/TemplateIdLabel
-@onready var _description_label: Label = $MarginContainer/VBoxContainer/DescriptionLabel
-@onready var _price_label: Label = $MarginContainer/VBoxContainer/PriceLabel
-@onready var _badges_container: HFlowContainer = $MarginContainer/VBoxContainer/BadgesContainer
-@onready var _stats_label: RichTextLabel = $MarginContainer/VBoxContainer/StatsLabel
+@onready var _texture_rect: TextureRect = $MarginContainer/HBoxContainer/VBoxContainer/TextureRect
+@onready var _title_label: Label = $MarginContainer/HBoxContainer/VBoxContainer/TitleLabel
+@onready var _template_id_label: Label = $MarginContainer/HBoxContainer/VBoxContainer2/TemplateIdLabel
+@onready var _description_label: Label = $MarginContainer/HBoxContainer/VBoxContainer2/DescriptionLabel
+@onready var _price_label: Label = $MarginContainer/HBoxContainer/VBoxContainer2/PriceLabel
+@onready var _badges_container: HFlowContainer = $MarginContainer/HBoxContainer/VBoxContainer/BadgesContainer
+@onready var _stats_label: RichTextLabel = $MarginContainer/HBoxContainer/VBoxContainer2/StatsLabel
 
 var _pending_view_model: Dictionary = {}
 

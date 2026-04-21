@@ -9,8 +9,22 @@ const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
 @onready var _title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
 @onready var _stats_label: RichTextLabel = $MarginContainer/VBoxContainer/StatsLabel
 
+var _pending_view_model: Dictionary = {}
+
+
+func _ready() -> void:
+	if not _pending_view_model.is_empty():
+		_apply_view_model(_pending_view_model)
+
 
 func render(view_model: Dictionary) -> void:
+	_pending_view_model = view_model.duplicate(true)
+	if not is_node_ready():
+		return
+	_apply_view_model(_pending_view_model)
+
+
+func _apply_view_model(view_model: Dictionary) -> void:
 	_title_label.text = str(view_model.get("title", "Projected Stats"))
 	var current_stats_data: Variant = view_model.get("current_stats", {})
 	var projected_stats_data: Variant = view_model.get("projected_stats", {})

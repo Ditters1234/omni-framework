@@ -7,8 +7,22 @@ class_name CurrencySummaryPanel
 @onready var _spent_label: Label = $MarginContainer/VBoxContainer/SpentLabel
 @onready var _remaining_label: Label = $MarginContainer/VBoxContainer/RemainingLabel
 
+var _pending_view_model: Dictionary = {}
+
+
+func _ready() -> void:
+	if not _pending_view_model.is_empty():
+		_apply_view_model(_pending_view_model)
+
 
 func render(view_model: Dictionary) -> void:
+	_pending_view_model = view_model.duplicate(true)
+	if not is_node_ready():
+		return
+	_apply_view_model(_pending_view_model)
+
+
+func _apply_view_model(view_model: Dictionary) -> void:
 	var currency_id := str(view_model.get("currency_id", "credits"))
 	var budget := float(view_model.get("budget", 0.0))
 	var spent := float(view_model.get("spent", 0.0))

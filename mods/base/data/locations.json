@@ -94,18 +94,24 @@
         },
         {
           "tab_id": "hub_assembly",
-          "display_name": "Assembly Bench",
-          "description": "Open a basic assembly screen for the player.",
+          "display_name": "Ripperdoc Bench",
+          "description": "Open a basic assembly screen for the player to swap biological parts and install implants.",
           "backend_class": "AssemblyEditorBackend",
           "target_entity_id": "player",
           "budget_entity_id": "player",
           "budget_currency_id": "credits",
           "option_tags": [
-            "starter_anchor",
-            "test_module",
+            "head",
+            "torso",
+            "arms",
+            "legs",
+            "hands",
+            "feet",
+            "neural_implant",
+            "subdermal_armor",
             "weapon"
           ],
-          "screen_title": "Diagnostic Bench"
+          "screen_title": "Ripperdoc Operating Table"
         }
       ],
       "entities_present": [

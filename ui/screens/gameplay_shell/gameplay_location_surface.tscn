@@ -18,22 +18,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 10
 
 [node name="MainColumns" type="HSplitContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 14
 
 [node name="InteractionsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/MainColumns"]
 layout_mode = 2
@@ -42,19 +36,13 @@ size_flags_vertical = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/MainColumns/InteractionsPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 8
 
 [node name="SectionLabel" type="Label" parent="MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 text = "Interactions"
 
 [node name="InteractionsScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer/VBoxContainer"]
@@ -67,7 +55,6 @@ horizontal_scroll_mode = 0
 [node name="InteractionsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer/VBoxContainer/InteractionsScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
 
 [node name="TravelPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/MainColumns"]
 layout_mode = 2
@@ -76,19 +63,13 @@ size_flags_vertical = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/MainColumns/TravelPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 8
 
 [node name="SectionLabel" type="Label" parent="MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 text = "Travel"
 
 [node name="TravelScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer"]
@@ -101,7 +82,6 @@ horizontal_scroll_mode = 0
 [node name="TravelContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer/TravelScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2

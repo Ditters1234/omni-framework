@@ -8,19 +8,13 @@ script = ExtResource("1_qc")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 20
 text = "Unnamed Quest"
 
 [node name="QuestIdLabel" type="Label" parent="MarginContainer/VBoxContainer"]
@@ -35,7 +29,6 @@ text = ""
 
 [node name="ObjectivesContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 4
 
 [node name="RewardsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2

@@ -8,10 +8,10 @@ const DIALOGUE_RESPONSE_SCRIPT := preload("res://addons/dialogue_manager/dialogu
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
-@onready var _portrait_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/PortraitHost
-@onready var _speaker_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationPanel/SpeakerLabel
-@onready var _body_label: RichTextLabel = $MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationPanel/BodyLabel
-@onready var _responses_container: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationPanel/ResponsesContainer
+@onready var _portrait_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/PortraitScroll/PortraitHost
+@onready var _speaker_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel/SpeakerLabel
+@onready var _body_label: RichTextLabel = $MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel/BodyLabel
+@onready var _responses_container: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel/ResponsesContainer
 @onready var _status_label: Label = $MarginContainer/PanelContainer/VBoxContainer/StatusLabel
 @onready var _advance_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/AdvanceButton
 @onready var _back_button: Button = $MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton
