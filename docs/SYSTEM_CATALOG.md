@@ -115,6 +115,8 @@ The `AIManager` autoload routes all AI calls to one of four backends based on th
 | **NobodyWho** | `NobodyWhoProvider` | `systems/ai/providers/nobodywho_provider.gd` | Embedded | Local inference (no server) |
 | **Disabled** | — | — | No-op | Testing, offline mode |
 
+`NobodyWhoProvider` validates that the configured `.gguf` path exists before reporting availability, then creates the `NobodyWhoModel` and `NobodyWhoChat` GDExtension nodes in-process. It listens to `response_updated` for streaming chunks and `response_finished` for completed responses; `max_tokens` remains part of the shared AI settings contract, but the current NobodyWho GDExtension surface does not expose a direct max-token setter.
+
 **Usage:** Mod scripts call `AIManager.generate_async(prompt, context)` and listen to AI events. Always guard with `AIManager.is_available()`.
 
 See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for script hook examples.
