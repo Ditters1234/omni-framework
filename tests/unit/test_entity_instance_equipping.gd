@@ -34,3 +34,80 @@ func test_inventory_equip_and_unequip_moves_part_between_inventory_and_slot() ->
 
 	assert_eq(entity.get_equipped_template_id("left_arm"), "")
 	assert_eq(entity.inventory.size(), initial_inventory_count + 1)
+
+
+func test_unequip_prunes_parts_when_required_tags_disappear() -> void:
+	DataManager.parts["base:test_torso"] = {
+		"id": "base:test_torso",
+		"display_name": "Test Torso",
+		"tags": ["torso"],
+	}
+	DataManager.parts["base:test_arm"] = {
+		"id": "base:test_arm",
+		"display_name": "Test Arm",
+		"tags": ["arm"],
+		"required_tags": ["torso"],
+	}
+	DataManager.entities["base:test_body"] = {
+		"entity_id": "base:test_body",
+		"provides_sockets": [
+			{"id": "torso", "accepted_tags": ["torso"], "label": "Torso"},
+			{"id": "arm", "accepted_tags": ["arm"], "label": "Arm"},
+		],
+		"inventory": [
+			{"instance_id": "test_torso_001", "template_id": "base:test_torso"},
+			{"instance_id": "test_arm_001", "template_id": "base:test_arm"},
+		],
+		"assembly_socket_map": {
+			"torso": "test_torso_001",
+			"arm": "test_arm_001",
+		},
+	}
+	var entity := EntityInstance.from_template(DataManager.get_entity("base:test_body"))
+
+	entity.unequip("torso")
+
+	assert_eq(entity.get_equipped_template_id("torso"), "")
+	assert_eq(entity.get_equipped_template_id("arm"), "")
+	var arm := entity.get_inventory_part("test_arm_001")
+	assert_not_null(arm)
+	assert_false(arm.is_equipped)
+
+
+func test_unequip_prunes_parts_when_dynamic_socket_disappears() -> void:
+	DataManager.parts["base:test_frame"] = {
+		"id": "base:test_frame",
+		"display_name": "Test Frame",
+		"tags": ["frame"],
+		"provides_sockets": [
+			{"id": "module", "accepted_tags": ["module"], "label": "Module"},
+		],
+	}
+	DataManager.parts["base:test_module"] = {
+		"id": "base:test_module",
+		"display_name": "Test Module",
+		"tags": ["module"],
+	}
+	DataManager.entities["base:test_frame_entity"] = {
+		"entity_id": "base:test_frame_entity",
+		"provides_sockets": [
+			{"id": "frame", "accepted_tags": ["frame"], "label": "Frame"},
+		],
+		"inventory": [
+			{"instance_id": "test_frame_001", "template_id": "base:test_frame"},
+			{"instance_id": "test_module_001", "template_id": "base:test_module"},
+		],
+		"assembly_socket_map": {
+			"frame": "test_frame_001",
+			"module": "test_module_001",
+		},
+	}
+	var entity := EntityInstance.from_template(DataManager.get_entity("base:test_frame_entity"))
+
+	entity.unequip("frame")
+
+	assert_eq(entity.get_equipped_template_id("frame"), "")
+	assert_eq(entity.get_equipped_template_id("module"), "")
+	var module := entity.get_inventory_part("test_module_001")
+	assert_not_null(module)
+	assert_false(module.is_equipped)

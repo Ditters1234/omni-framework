@@ -47,6 +47,7 @@
       "display_name": "Biological Arms",
       "description": "Standard manipulation appendages.",
       "tags": ["arms", "organic"],
+      "required_tags": ["torso"],
       "price": { "credits": 400 },
       "stats": { "power": 1 },
       "equippable": true,
@@ -64,6 +65,7 @@
       "display_name": "Biological Legs",
       "description": "Bipedal locomotion units.",
       "tags": ["legs", "organic"],
+      "required_tags": ["torso"],
       "price": { "credits": 400 },
       "stats": { "stamina": 10, "stamina_max": 10 },
       "equippable": true,
@@ -81,6 +83,7 @@
       "display_name": "Biological Hands",
       "description": "Fine manipulation end effectors.",
       "tags": ["hands", "organic"],
+      "required_tags": ["arms"],
       "price": { "credits": 200 },
       "stats": { "power": 1 },
       "equippable": true
@@ -91,6 +94,7 @@
       "display_name": "Biological Feet",
       "description": "Ground contact stabilizers.",
       "tags": ["feet", "organic"],
+      "required_tags": ["legs"],
       "price": { "credits": 200 },
       "stats": { "stamina": 5, "stamina_max": 5 },
       "equippable": true

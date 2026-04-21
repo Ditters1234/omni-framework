@@ -268,19 +268,24 @@ func get_equipped(slot: String) -> PartInstance:
 func set_equipped_template(slot: String, part_template_id: String) -> bool:
 	if part_template_id.is_empty():
 		return false
+	if not can_equip_template_in_slot(slot, part_template_id):
+		return false
 	var template: Variant = DataManager.get_part(part_template_id)
 	if not template is Dictionary:
 		return false
 	var tmpl: Dictionary = template
 	if tmpl.is_empty():
 		return false
+	if equipped.has(slot):
+		_unequip_slot_without_prune(slot)
 	var part := PartInstance.new()
 	part.template_id = part_template_id
 	part.instance_id = PartInstance._generate_id()
 	part.equipped_slot = slot
 	part.is_equipped = true
 	equipped[slot] = part
-	return true
+	prune_invalid_equipment()
+	return get_equipped_template_id(slot) == part_template_id
 
 
 ## Equips an existing inventory part into the given slot.
@@ -300,20 +305,36 @@ func equip(instance_id: String, slot: String) -> bool:
 	part.equipped_slot = slot
 	part.is_equipped = true
 	equipped[slot] = part
-	return true
+	prune_invalid_equipment()
+	return get_equipped(slot) == part
 
 
 ## Removes the part from slot and returns it to inventory.
 func unequip(slot: String) -> void:
-	if not equipped.has(slot):
-		return
-	var part: PartInstance = equipped.get(slot, null)
-	if part != null:
-		part.equipped_slot = ""
-		part.is_equipped = false
-		if not _has_inventory_part(part.instance_id):
-			inventory.append(part)
-	equipped.erase(slot)
+	if _unequip_slot_without_prune(slot):
+		prune_invalid_equipment()
+
+
+## Removes equipped parts whose slots or template requirements are no longer valid.
+func prune_invalid_equipment() -> Array[String]:
+	var removed_slots: Array[String] = []
+	var changed := true
+	while changed:
+		changed = false
+		var slot_ids: Array[String] = []
+		for slot_value in equipped.keys():
+			slot_ids.append(str(slot_value))
+		slot_ids.sort()
+		for slot_id in slot_ids:
+			var part := get_equipped(slot_id)
+			if part == null:
+				continue
+			if _part_can_remain_equipped(slot_id, part):
+				continue
+			if _unequip_slot_without_prune(slot_id):
+				removed_slots.append(slot_id)
+				changed = true
+	return removed_slots
 
 
 ## Returns true if part_template_id's tags satisfy the slot's accepted_tags.
@@ -341,7 +362,7 @@ func can_equip_template_in_slot(slot: String, part_template_id: String) -> bool:
 	var part_tags: Array = part_tags_data
 	for tag in accepted_tags:
 		if part_tags.has(tag):
-			return true
+			return _template_requirements_are_satisfied(tmpl, slot)
 	return false
 
 
@@ -375,6 +396,7 @@ func _init_equipped_from_template(template: Dictionary) -> void:
 			part.equipped_slot = slot
 			part.is_equipped = true
 			equipped[slot] = part
+	prune_invalid_equipment()
 
 
 func _find_inventory_part(instance_id: String) -> PartInstance:
@@ -393,6 +415,88 @@ func _find_socket_def(slot: String) -> Dictionary:
 		if socket_def.get("id", "") == slot:
 			return socket_def
 	return {}
+
+
+func _unequip_slot_without_prune(slot: String) -> bool:
+	if not equipped.has(slot):
+		return false
+	var part: PartInstance = equipped.get(slot, null)
+	if part != null:
+		part.equipped_slot = ""
+		part.is_equipped = false
+		if not _has_inventory_part(part.instance_id):
+			inventory.append(part)
+	equipped.erase(slot)
+	return true
+
+
+func _part_can_remain_equipped(slot: String, part: PartInstance) -> bool:
+	if part == null:
+		return false
+	var template: Dictionary = part.get_template()
+	if template.is_empty():
+		return false
+	var socket_def := _find_socket_def(slot)
+	if socket_def.is_empty():
+		return false
+	if not _template_matches_socket(template, socket_def):
+		return false
+	return _template_requirements_are_satisfied(template, slot)
+
+
+func _template_matches_socket(template: Dictionary, socket_def: Dictionary) -> bool:
+	var accepted_tags_data: Variant = socket_def.get("accepted_tags", [])
+	if not accepted_tags_data is Array:
+		return true
+	var accepted_tags: Array = accepted_tags_data
+	if accepted_tags.is_empty():
+		return true
+	var part_tags_data: Variant = template.get("tags", [])
+	if not part_tags_data is Array:
+		return false
+	var part_tags: Array = part_tags_data
+	for tag in accepted_tags:
+		if part_tags.has(tag):
+			return true
+	return false
+
+
+func _template_requirements_are_satisfied(template: Dictionary, equipped_slot_to_ignore: String = "") -> bool:
+	var required_tags_data: Variant = template.get("required_tags", [])
+	if not required_tags_data is Array:
+		return true
+	var required_tags: Array = required_tags_data
+	if required_tags.is_empty():
+		return true
+	var available_tags := _collect_equipped_tags(equipped_slot_to_ignore)
+	for required_tag_value in required_tags:
+		var required_tag := str(required_tag_value)
+		if required_tag.is_empty():
+			continue
+		if not available_tags.has(required_tag):
+			return false
+	return true
+
+
+func _collect_equipped_tags(slot_to_ignore: String = "") -> Dictionary:
+	var tags: Dictionary = {}
+	for slot_value in equipped.keys():
+		var slot := str(slot_value)
+		if not slot_to_ignore.is_empty() and slot == slot_to_ignore:
+			continue
+		var part := get_equipped(slot)
+		if part == null:
+			continue
+		var template := part.get_template()
+		var part_tags_data: Variant = template.get("tags", [])
+		if not part_tags_data is Array:
+			continue
+		var part_tags: Array = part_tags_data
+		for tag_value in part_tags:
+			var tag := str(tag_value)
+			if not tag.is_empty():
+				tags[tag] = true
+	return tags
 
 
 func duplicate_instance() -> EntityInstance:
@@ -458,6 +562,7 @@ func from_dict(data: Dictionary) -> void:
 			var part := PartInstance.new()
 			part.from_dict(part_data)
 			equipped[slot] = part
+	prune_invalid_equipment()
 
 
 func _to_string_array(values: Variant) -> Array[String]:

@@ -258,6 +258,8 @@ Parts are the core content building blocks. They can represent equipment, module
 - `equip_sound`
 - `script_path`
 
+`required_tags` lists tags that must be present on other currently equipped parts for this part to remain equipped. If a required provider is removed, the engine automatically unequips dependent parts and returns them to inventory. For example, arms can require `torso`, hands can require `arms`, and an implant can require `head`.
+
 ### Socket shape
 
 ```json
