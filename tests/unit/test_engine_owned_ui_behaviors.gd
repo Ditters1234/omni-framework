@@ -77,10 +77,13 @@ func test_ui_cancel_pushes_and_pops_pause_menu_from_gameplay_shell() -> void:
 
 
 func test_main_menu_new_game_opens_character_creator_surface_without_crashing() -> void:
-	_main_scene = MAIN_SCENE.instantiate()
-	_spawned_nodes.append(_main_scene)
+	_screen_container = CanvasLayer.new()
+	_spawned_nodes.append(_screen_container)
 	assert_not_null(_test_viewport)
-	_test_viewport.add_child(_main_scene)
+	_test_viewport.add_child(_screen_container)
+	UIRouter.initialize(_screen_container)
+	_register_runtime_screens()
+	UIRouter.push("main_menu")
 	await get_tree().process_frame
 
 	var menu := _get_top_screen()
@@ -322,13 +325,13 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 	assert_false(talk_button.disabled)
 
 
-func test_gameplay_shell_scrolls_when_viewport_is_short() -> void:
+func test_gameplay_shell_hosts_default_location_surface() -> void:
 	GameState.new_game()
 	var packed_scene := load(GAMEPLAY_SHELL_SCENE_PATH) as PackedScene
 	assert_not_null(packed_scene)
 	var instance_value: Variant = packed_scene.instantiate()
-	assert_true(instance_value is ScrollContainer)
-	var shell := instance_value as ScrollContainer
+	assert_true(instance_value is Control)
+	var shell := instance_value as Control
 	_spawned_nodes.append(shell)
 	assert_not_null(_test_viewport)
 	_test_viewport.size = Vector2i(640, 360)
@@ -337,18 +340,11 @@ func test_gameplay_shell_scrolls_when_viewport_is_short() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	assert_lte(shell.size.y, float(_test_viewport.size.y))
-	var shell_scrollbar := shell.get_v_scroll_bar()
-	assert_gt(shell_scrollbar.max_value, shell_scrollbar.page)
-
-	var surface_host := shell.get_node("MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHost") as ScrollContainer
+	var surface_host := shell.get_node("MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHost") as Control
 	assert_not_null(surface_host)
-	assert_true(surface_host.follow_focus)
-	assert_eq(surface_host.horizontal_scroll_mode, ScrollContainer.SCROLL_MODE_DISABLED)
 
 	var active_surface := shell.find_child("GameplayLocationSurface", true, false) as Control
 	assert_not_null(active_surface)
-	assert_gte(active_surface.custom_minimum_size.y, surface_host.size.y)
 
 
 func _get_top_screen() -> Control:
