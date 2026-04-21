@@ -207,6 +207,35 @@ func test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen()
 	assert_true(snapshot.has("location"))
 
 
+func test_gameplay_shell_scrolls_when_viewport_is_short() -> void:
+	GameState.new_game()
+	var packed_scene := load(GAMEPLAY_SHELL_SCENE_PATH) as PackedScene
+	assert_not_null(packed_scene)
+	var instance_value: Variant = packed_scene.instantiate()
+	assert_true(instance_value is ScrollContainer)
+	var shell := instance_value as ScrollContainer
+	_spawned_nodes.append(shell)
+	assert_not_null(_test_viewport)
+	_test_viewport.size = Vector2i(640, 360)
+	_test_viewport.add_child(shell)
+	shell.call("initialize", {})
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_lte(shell.size.y, float(_test_viewport.size.y))
+	var shell_scrollbar := shell.get_v_scroll_bar()
+	assert_gt(shell_scrollbar.max_value, shell_scrollbar.page)
+
+	var surface_host := shell.get_node("MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHost") as ScrollContainer
+	assert_not_null(surface_host)
+	assert_true(surface_host.follow_focus)
+	assert_eq(surface_host.horizontal_scroll_mode, ScrollContainer.SCROLL_MODE_DISABLED)
+
+	var active_surface := shell.find_child("GameplayLocationSurface", true, false) as Control
+	assert_not_null(active_surface)
+	assert_gte(active_surface.custom_minimum_size.y, surface_host.size.y)
+
+
 func _get_top_screen() -> Control:
 	if _screen_container == null or _screen_container.get_child_count() == 0:
 		return null

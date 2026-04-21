@@ -1,6 +1,7 @@
 ## GameEvents — Global signal bus.
 ## All cross-system communication flows through here.
 ## No system should hold a direct reference to another system.
+@warning_ignore_start("unused_signal")
 extends Node
 
 class_name OmniGameEvents

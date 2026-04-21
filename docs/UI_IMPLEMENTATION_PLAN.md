@@ -154,6 +154,7 @@ The gameplay shell is now the current engine-owned gameplay hub. Its current res
 - **Session summary:** current location, description, interaction count, player identity, currencies, stats, inventory, and equipped loadout snapshot.
 - **Time controls:** current time string, buttons derived from `config.ui.time_advance_buttons`, and a quick autosave surface.
 - **Action hub:** "Explore Location", direct loadout access, save browser access, and pause routing.
+- **Responsive hosting:** the shell scrolls as a whole on short viewports, and embedded backend/location surfaces are hosted in a scrollable surface area so full-screen-style routed scenes do not clip their top or bottom chrome inside the shell.
 
 The shell is where the engine-owned screens connect back into the moddable ones. Its buttons delegate to existing `UIRouter.push` calls; no new infrastructure required.
 

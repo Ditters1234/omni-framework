@@ -40,6 +40,7 @@ func initialize(_params: Dictionary = {}) -> void:
 
 func _ready() -> void:
 	_connect_runtime_signals()
+	_connect_layout_signals()
 	_surface_host.clip_contents = true
 	_rebuild_time_buttons()
 	_refresh()
@@ -92,6 +93,7 @@ func _mount_surface(surface: Control, screen_id: String, params: Dictionary) -> 
 	_prepare_surface_for_hosting(surface)
 	if surface.has_method("initialize"):
 		surface.call("initialize", params.duplicate(true))
+	call_deferred("_sync_active_surface_minimum_size")
 	_surface_panel.visible = true
 
 
@@ -178,6 +180,41 @@ func _connect_runtime_signals() -> void:
 	GameEvents.day_advanced.connect(_on_day_advanced)
 	GameEvents.location_changed.connect(_on_location_changed)
 	_runtime_signals_connected = true
+
+
+func _connect_layout_signals() -> void:
+	var layout_resized := Callable(self, "_on_layout_resized")
+	if not resized.is_connected(layout_resized):
+		resized.connect(_on_layout_resized)
+	if _surface_host != null and not _surface_host.resized.is_connected(layout_resized):
+		_surface_host.resized.connect(_on_layout_resized)
+
+
+func _on_layout_resized() -> void:
+	call_deferred("_sync_active_surface_minimum_size")
+
+
+func _sync_active_surface_minimum_size() -> void:
+	if _active_surface == null or not is_instance_valid(_active_surface):
+		return
+	var surface_minimum := _get_surface_content_minimum_size(_active_surface)
+	var host_size := _surface_host.size
+	_active_surface.custom_minimum_size = Vector2(
+		maxf(surface_minimum.x, host_size.x),
+		maxf(surface_minimum.y, host_size.y)
+	)
+
+
+func _get_surface_content_minimum_size(surface: Control) -> Vector2:
+	var minimum_size := surface.get_combined_minimum_size()
+	for child in surface.get_children():
+		var child_control := child as Control
+		if child_control == null:
+			continue
+		var child_minimum := child_control.get_combined_minimum_size()
+		minimum_size.x = maxf(minimum_size.x, child_minimum.x)
+		minimum_size.y = maxf(minimum_size.y, child_minimum.y)
+	return minimum_size
 
 
 func _refresh() -> void:

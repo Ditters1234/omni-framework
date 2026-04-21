@@ -73,10 +73,10 @@ static func _normalize_stat_definition(raw_entry: Variant, raw_stat_ids: Array[S
 	if raw_entry is Dictionary:
 		stat_def = raw_entry.duplicate(true)
 	else:
-		var stat_id := str(raw_entry)
-		if stat_id.is_empty():
+		var raw_stat_id := str(raw_entry)
+		if raw_stat_id.is_empty():
 			return {}
-		stat_def["id"] = stat_id
+		stat_def["id"] = raw_stat_id
 
 	var stat_id := str(stat_def.get("id", ""))
 	if stat_id.is_empty():

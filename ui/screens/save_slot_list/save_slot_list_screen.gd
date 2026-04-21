@@ -227,7 +227,9 @@ func _on_delete_pressed(slot: int) -> void:
 
 func _format_playtime(playtime_seconds: int) -> String:
 	var total_seconds := maxi(playtime_seconds, 0)
+	@warning_ignore("integer_division")
 	var hours := total_seconds / 3600
+	@warning_ignore("integer_division")
 	var minutes := (total_seconds % 3600) / 60
 	if hours > 0:
 		return "%dh %dm" % [hours, minutes]

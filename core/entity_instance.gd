@@ -181,14 +181,14 @@ func has_flag(flag_key: String) -> bool:
 	return flags.has(flag_key)
 
 
-func discover_location(location_id: String) -> void:
-	if location_id.is_empty() or location_id in discovered_locations:
+func discover_location(discovered_location_id: String) -> void:
+	if discovered_location_id.is_empty() or discovered_location_id in discovered_locations:
 		return
-	discovered_locations.append(location_id)
+	discovered_locations.append(discovered_location_id)
 
 
-func has_discovered_location(location_id: String) -> bool:
-	return location_id in discovered_locations
+func has_discovered_location(discovered_location_id: String) -> bool:
+	return discovered_location_id in discovered_locations
 
 
 # ---------------------------------------------------------------------------
@@ -263,19 +263,19 @@ func get_equipped(slot: String) -> PartInstance:
 # Assembly — equip / unequip
 # ---------------------------------------------------------------------------
 
-## Equips a new PartInstance built from template_id into slot.
+## Equips a new PartInstance built from part_template_id into slot.
 ## Returns false if the template is not found in DataManager.
-func set_equipped_template(slot: String, template_id: String) -> bool:
-	if template_id.is_empty():
+func set_equipped_template(slot: String, part_template_id: String) -> bool:
+	if part_template_id.is_empty():
 		return false
-	var template: Variant = DataManager.get_part(template_id)
+	var template: Variant = DataManager.get_part(part_template_id)
 	if not template is Dictionary:
 		return false
 	var tmpl: Dictionary = template
 	if tmpl.is_empty():
 		return false
 	var part := PartInstance.new()
-	part.template_id = template_id
+	part.template_id = part_template_id
 	part.instance_id = PartInstance._generate_id()
 	part.equipped_slot = slot
 	part.is_equipped = true
@@ -316,9 +316,9 @@ func unequip(slot: String) -> void:
 	equipped.erase(slot)
 
 
-## Returns true if template_id's tags satisfy the slot's accepted_tags.
-func can_equip_template_in_slot(slot: String, template_id: String) -> bool:
-	if template_id.is_empty():
+## Returns true if part_template_id's tags satisfy the slot's accepted_tags.
+func can_equip_template_in_slot(slot: String, part_template_id: String) -> bool:
+	if part_template_id.is_empty():
 		return false
 	var socket_def := _find_socket_def(slot)
 	if socket_def.is_empty():
@@ -329,7 +329,7 @@ func can_equip_template_in_slot(slot: String, template_id: String) -> bool:
 	var accepted_tags: Array = accepted_tags_data
 	if accepted_tags.is_empty():
 		return true
-	var template: Variant = DataManager.get_part(template_id)
+	var template: Variant = DataManager.get_part(part_template_id)
 	if not template is Dictionary:
 		return false
 	var tmpl: Dictionary = template

@@ -16,52 +16,52 @@ class_name ScriptHook
 
 ## Called when a part using this hook is equipped to an entity.
 ## entity: the EntityInstance dict, instance: the PartInstance dict.
-func on_equip(entity: Dictionary, instance: Dictionary) -> void:
+func on_equip(_entity: Dictionary, _instance: Dictionary) -> void:
 	pass
 
 
 ## Called when a part using this hook is unequipped from an entity.
-func on_unequip(entity: Dictionary, instance: Dictionary) -> void:
+func on_unequip(_entity: Dictionary, _instance: Dictionary) -> void:
 	pass
 
 
 ## Called once per game tick for each entity carrying this part.
-func on_tick(entity: Dictionary, instance: Dictionary, tick: int) -> void:
+func on_tick(_entity: Dictionary, _instance: Dictionary, _tick: int) -> void:
 	pass
 
 
 ## Called when a quest with this hook starts.
-func on_quest_start(quest_instance: Dictionary) -> void:
+func on_quest_start(_quest_instance: Dictionary) -> void:
 	pass
 
 
 ## Called when a quest with this hook completes.
-func on_quest_complete(quest_instance: Dictionary) -> void:
+func on_quest_complete(_quest_instance: Dictionary) -> void:
 	pass
 
 
 ## Called when a quest with this hook fails.
-func on_quest_fail(quest_instance: Dictionary) -> void:
+func on_quest_fail(_quest_instance: Dictionary) -> void:
 	pass
 
 
 ## Called when the player enters a location with this hook.
-func on_location_enter(location_template: Dictionary) -> void:
+func on_location_enter(_location_template: Dictionary) -> void:
 	pass
 
 
 ## Called when the player leaves a location with this hook.
-func on_location_exit(location_template: Dictionary) -> void:
+func on_location_exit(_location_template: Dictionary) -> void:
 	pass
 
 
 ## Called when a task with this hook is started.
-func on_task_start(task_instance: Dictionary) -> void:
+func on_task_start(_task_instance: Dictionary) -> void:
 	pass
 
 
 ## Called when a task with this hook is completed.
-func on_task_complete(task_instance: Dictionary) -> void:
+func on_task_complete(_task_instance: Dictionary) -> void:
 	pass
 
 

@@ -2,22 +2,20 @@
 
 [ext_resource type="Script" uid="uid://c621vxj3edxyv" path="res://ui/screens/gameplay_shell/gameplay_shell_screen.gd" id="1_shell"]
 
-[node name="GameplayShellScreen" type="Control" unique_id=829094226]
-layout_mode = 3
+[node name="GameplayShellScreen" type="ScrollContainer" unique_id=829094226]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+follow_focus = true
+horizontal_scroll_mode = 0
 script = ExtResource("1_shell")
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=1509590594]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
@@ -60,17 +58,14 @@ autowrap_mode = 3
 
 [node name="CharacterMenuButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1257694608]
 layout_mode = 2
-focus_mode = 2
 text = "Character Menu"
 
 [node name="QuickAutosaveButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1210663343]
 layout_mode = 2
-focus_mode = 2
 text = "Autosave"
 
 [node name="PauseMenuButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1956951053]
 layout_mode = 2
-focus_mode = 2
 text = "Pause"
 
 [node name="OverviewRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1635805892]
@@ -134,7 +129,6 @@ autowrap_mode = 3
 
 [node name="AdvanceTickButton" type="Button" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer" unique_id=1287529419]
 layout_mode = 2
-focus_mode = 2
 text = "Advance Tick"
 
 [node name="TimeAdvanceButtons" type="HFlowContainer" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer" unique_id=187659921]
@@ -172,15 +166,15 @@ text = "Location"
 [node name="SurfaceCloseButton" type="Button" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader" unique_id=1027284133]
 visible = false
 layout_mode = 2
-focus_mode = 2
 text = "Close"
 
-[node name="SurfaceHost" type="Control" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=1993238720]
-clip_contents = true
+[node name="SurfaceHost" type="ScrollContainer" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=1993238720]
 custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=599553090]
 layout_mode = 2

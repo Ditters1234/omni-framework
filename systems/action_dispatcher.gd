@@ -88,9 +88,9 @@ static func _action_remove_part(action: Dictionary) -> void:
 		var existing_part := entity.get_inventory_part(instance_id)
 		if existing_part == null:
 			return
-		var template_id := existing_part.template_id
+		var existing_template_id := existing_part.template_id
 		if entity.remove_part(instance_id):
-			GameEvents.part_removed.emit(entity.entity_id, template_id)
+			GameEvents.part_removed.emit(entity.entity_id, existing_template_id)
 		return
 	var template_id := str(action.get("part_id", action.get("template_id", "")))
 	if template_id.is_empty():

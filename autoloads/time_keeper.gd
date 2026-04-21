@@ -132,6 +132,7 @@ func get_ticks_per_day() -> int:
 func get_time_string() -> String:
 	var ticks_per_day := _get_ticks_per_day()
 	var total_minutes := int(float(_tick_accumulator) * (1440.0 / float(ticks_per_day)))
+	@warning_ignore("integer_division")
 	var hour := total_minutes / 60
 	var minute := total_minutes % 60
 	return "Day %d, %02d:%02d" % [GameState.current_day, hour, minute]
@@ -263,4 +264,5 @@ func _normalize_game_state_time(ticks_per_day: int) -> void:
 
 
 func _get_normalized_day(current_tick: int, ticks_per_day: int) -> int:
+	@warning_ignore("integer_division")
 	return int(current_tick / ticks_per_day) + 1

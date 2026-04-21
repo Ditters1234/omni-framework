@@ -643,7 +643,7 @@ func _validate_backend_contracts() -> void:
 				if not interaction_value is Dictionary:
 					_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' interactions[%d] must be an object." % [entity_id, index])
 					continue
-				var interaction: Dictionary = interaction_value
+				var _interaction: Dictionary = interaction_value
 				_record_backend_contract_issues(
 					entity_id,
 					OmniConstants.DATA_ENTITIES,
