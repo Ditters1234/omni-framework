@@ -60,14 +60,17 @@ autowrap_mode = 3
 
 [node name="CharacterMenuButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1257694608]
 layout_mode = 2
+focus_mode = 2
 text = "Character Menu"
 
 [node name="QuickAutosaveButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1210663343]
 layout_mode = 2
+focus_mode = 2
 text = "Autosave"
 
 [node name="PauseMenuButton" type="Button" parent="MarginContainer/VBoxContainer/HeaderPanel/MarginContainer/HBoxContainer" unique_id=1956951053]
 layout_mode = 2
+focus_mode = 2
 text = "Pause"
 
 [node name="OverviewRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1635805892]
@@ -131,6 +134,7 @@ autowrap_mode = 3
 
 [node name="AdvanceTickButton" type="Button" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer" unique_id=1287529419]
 layout_mode = 2
+focus_mode = 2
 text = "Advance Tick"
 
 [node name="TimeAdvanceButtons" type="HFlowContainer" parent="MarginContainer/VBoxContainer/OverviewRow/SessionPanel/MarginContainer/VBoxContainer" unique_id=187659921]
@@ -168,11 +172,12 @@ text = "Location"
 [node name="SurfaceCloseButton" type="Button" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader" unique_id=1027284133]
 visible = false
 layout_mode = 2
+focus_mode = 2
 text = "Close"
 
 [node name="SurfaceHost" type="Control" parent="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer" unique_id=1993238720]
 clip_contents = true
-custom_minimum_size = Vector2(0, 460)
+custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3

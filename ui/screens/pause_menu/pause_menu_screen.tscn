@@ -60,26 +60,31 @@ theme_override_constants/separation = 8
 [node name="ResumeButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Resume"
 
 [node name="SaveButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Save Game"
 
 [node name="SettingsButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Settings"
 
 [node name="MainMenuButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Return to Main Menu"
 
 [node name="QuitButton" type="Button" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer/ButtonColumn"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "Quit Desktop"
 
 [node name="StatusLabel" type="Label" parent="Overlay/MarginContainer/PanelContainer/VBoxContainer"]

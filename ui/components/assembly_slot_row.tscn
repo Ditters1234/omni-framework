@@ -48,16 +48,20 @@ theme_override_constants/separation = 8
 
 [node name="PreviousButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2
+focus_mode = 2
 text = "<"
 
 [node name="NextButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2
+focus_mode = 2
 text = ">"
 
 [node name="ApplyButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2
+focus_mode = 2
 text = "Apply"
 
 [node name="ClearButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2
+focus_mode = 2
 text = "Clear"

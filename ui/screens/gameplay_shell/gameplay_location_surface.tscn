@@ -61,6 +61,7 @@ text = "Interactions"
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+follow_focus = true
 horizontal_scroll_mode = 0
 
 [node name="InteractionsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer/VBoxContainer/InteractionsScroll"]
@@ -70,7 +71,7 @@ theme_override_constants/separation = 8
 
 [node name="TravelPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/MainColumns"]
 layout_mode = 2
-custom_minimum_size = Vector2(260, 0)
+custom_minimum_size = Vector2(240, 0)
 size_flags_vertical = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/MainColumns/TravelPanel"]
@@ -94,6 +95,7 @@ text = "Travel"
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+follow_focus = true
 horizontal_scroll_mode = 0
 
 [node name="TravelContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer/TravelScroll"]
