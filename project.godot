@@ -32,6 +32,11 @@ AIManager="*res://autoloads/ai_manager.gd"
 DialogueManager="*uid://c3rodes2l3gxb"
 ImGuiRoot="*uid://dugmpnsxaagba"
 
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [dotnet]
 
 project/assembly_name="Omni-Framework"
@@ -39,6 +44,10 @@ project/assembly_name="Omni-Framework"
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/A2J/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/gut/plugin.cfg", "res://addons/imgui-godot/plugin.cfg")
+
+[gui]
+
+theme/custom="res://ui/theme/omni_theme.tres"
 
 [internationalization]
 

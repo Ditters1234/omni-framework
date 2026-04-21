@@ -40,7 +40,6 @@ func initialize(_params: Dictionary = {}) -> void:
 
 func _ready() -> void:
 	_connect_runtime_signals()
-	_connect_layout_signals()
 	_surface_host.clip_contents = true
 	_rebuild_time_buttons()
 	_refresh()
@@ -93,7 +92,6 @@ func _mount_surface(surface: Control, screen_id: String, params: Dictionary) -> 
 	_prepare_surface_for_hosting(surface)
 	if surface.has_method("initialize"):
 		surface.call("initialize", params.duplicate(true))
-	call_deferred("_sync_active_surface_minimum_size")
 	_surface_panel.visible = true
 
 
