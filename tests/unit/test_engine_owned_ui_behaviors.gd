@@ -327,6 +327,20 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 	var talk_button := _find_button_with_text(location_surface, "Talk")
 	assert_not_null(talk_button)
 	assert_false(talk_button.disabled)
+	talk_button.pressed.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var shell_snapshot := UIRouter.get_current_screen_debug_snapshot()
+	assert_eq(str(shell_snapshot.get("active_surface_screen_id", "")), "dialogue")
+	var dialogue_screen := shell.find_child("DialogueScreen", true, false) as Control
+	assert_not_null(dialogue_screen)
+	var dialogue_snapshot_value: Variant = dialogue_screen.call("get_debug_snapshot")
+	assert_true(dialogue_snapshot_value is Dictionary)
+	var dialogue_snapshot: Dictionary = dialogue_snapshot_value
+	assert_eq(str(dialogue_snapshot.get("speaker_entity_id", "")), "base:test_vendor")
+	assert_eq(str(dialogue_snapshot.get("dialogue_resource", "")), "res://mods/base/dialogue/quartermaster_theta.dialogue")
+	assert_null(_find_label_with_text(dialogue_screen, "The configured dialogue resource could not be loaded."))
 
 
 func test_location_surface_empty_location_param_falls_back_to_game_state_location() -> void:

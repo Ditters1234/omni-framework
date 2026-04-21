@@ -2,6 +2,7 @@
   "achievements": [
     {
       "achievement_id": "base:first_purchase",
+      "icon": "res://mods/base/assets/ach_buy.svg",
       "display_name": "Procurement Confirmed",
       "description": "Buy your first test item.",
       "stat_name": "items_bought",
@@ -9,6 +10,7 @@
     },
     {
       "achievement_id": "base:first_trip",
+      "icon": "res://mods/base/assets/ach_trip.svg",
       "display_name": "Field Verified",
       "description": "Discover one new location in the starter flow.",
       "stat_name": "locations_discovered",

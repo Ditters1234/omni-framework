@@ -782,6 +782,7 @@ That mismatch is easy to miss and is one of the biggest practical gotchas in the
 ## 16. Dialogue
 
 Current entity interactions can launch `DialogueBackend` with a Dialogue Manager resource.
+When a `DialogueBackend` interaction is rendered from an entity's `interactions` list, the gameplay location surface uses that entity as `speaker_entity_id` unless the interaction explicitly supplies another speaker.
 
 Example:
 

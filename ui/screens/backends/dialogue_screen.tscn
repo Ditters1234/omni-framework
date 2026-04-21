@@ -64,11 +64,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="SpeakerLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationPanel"]
+[node name="SpeakerLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel"]
 layout_mode = 2
 text = "Speaker"
 
-[node name="BodyLabel" type="RichTextLabel" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationPanel"]
+[node name="BodyLabel" type="RichTextLabel" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel"]
 custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
 fit_content = false
@@ -76,7 +76,7 @@ scroll_active = true
 bbcode_enabled = false
 text = ""
 
-[node name="ResponsesContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationPanel"]
+[node name="ResponsesContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel"]
 layout_mode = 2
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]

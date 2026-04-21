@@ -263,6 +263,9 @@ func _add_entity_interaction_button(entity_id: String, interaction: Dictionary) 
 	else:
 		var push_params := interaction.duplicate(true)
 		push_params["source_entity_id"] = entity_id
+		var speaker_entity_value: Variant = push_params.get("speaker_entity_id", "")
+		if backend_class == "DialogueBackend" and str(speaker_entity_value).is_empty():
+			push_params["speaker_entity_id"] = entity_id
 		push_params["opened_from_gameplay_shell"] = true
 		button.pressed.connect(_on_screen_button_pressed.bind(screen_id, push_params))
 
