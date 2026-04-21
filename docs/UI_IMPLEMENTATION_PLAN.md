@@ -152,6 +152,7 @@ Rationale for keeping these out of the mod pipeline: they are about the applicat
 The gameplay shell is now the current engine-owned gameplay hub. Its current responsibilities are:
 
 - **Session summary:** current location, description, interaction count, player identity, currencies, stats, inventory, and equipped loadout snapshot.
+- **Location presence:** the shell-owned location surface shows local screens, entities present at the location, entity interaction buttons, and travel exits.
 - **Time controls:** current time string, buttons derived from `config.ui.time_advance_buttons`, and a quick autosave surface.
 - **Action hub:** "Explore Location", direct loadout access, save browser access, and pause routing.
 - **Responsive hosting:** the shell scrolls as a whole on short viewports, and embedded backend/location surfaces are hosted in a scrollable surface area so full-screen-style routed scenes do not clip their top or bottom chrome inside the shell.

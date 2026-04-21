@@ -1,6 +1,7 @@
 extends GutTest
 
 const APP_SETTINGS := preload("res://core/app_settings.gd")
+const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const MAIN_SCENE := preload("res://ui/main.tscn")
 const SETTINGS_SCENE_PATH := "res://ui/screens/settings/settings_screen.tscn"
 const GAMEPLAY_SHELL_SCENE_PATH := "res://ui/screens/gameplay_shell/gameplay_shell_screen.tscn"
@@ -261,6 +262,46 @@ func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
 	assert_gt(travel_container.get_child_count(), 0)
 
 
+func test_location_surface_lists_present_entities_and_entity_interactions() -> void:
+	_screen_container = CanvasLayer.new()
+	_spawned_nodes.append(_screen_container)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
+	UIRouter.initialize(_screen_container)
+	_register_runtime_screens()
+	GameState.new_game()
+	assert_not_null(GameState.get_entity_instance("base:test_vendor"))
+	GameState.travel_to("base:test_hub")
+
+	UIRouter.replace_all("gameplay_shell")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var shell := _get_top_screen()
+	assert_not_null(shell)
+	var location_surface := shell.find_child("GameplayLocationSurface", true, false) as Control
+	assert_not_null(location_surface)
+
+	var surface_snapshot_value: Variant = location_surface.call("get_debug_snapshot")
+	assert_true(surface_snapshot_value is Dictionary)
+	var surface_snapshot: Dictionary = surface_snapshot_value
+	var entities_value: Variant = surface_snapshot.get("entities", [])
+	assert_true(entities_value is Array)
+	var entities: Array = entities_value
+	assert_gt(entities.size(), 0)
+	var first_entity_value: Variant = entities[0]
+	assert_true(first_entity_value is Dictionary)
+	var first_entity: Dictionary = first_entity_value
+	assert_eq(str(first_entity.get("entity_id", "")), "base:test_vendor")
+
+	var trade_button := _find_button_with_text(location_surface, "Trade")
+	assert_not_null(trade_button)
+	assert_false(trade_button.disabled)
+	var talk_button := _find_button_with_text(location_surface, "Talk")
+	assert_not_null(talk_button)
+	assert_false(talk_button.disabled)
+
+
 func test_gameplay_shell_scrolls_when_viewport_is_short() -> void:
 	GameState.new_game()
 	var packed_scene := load(GAMEPLAY_SHELL_SCENE_PATH) as PackedScene
@@ -295,6 +336,24 @@ func _get_top_screen() -> Control:
 		return null
 	var child_value: Variant = _screen_container.get_child(_screen_container.get_child_count() - 1)
 	return child_value as Control
+
+
+func _register_runtime_screens() -> void:
+	for screen_id_value in UI_ROUTE_CATALOG.RUNTIME_SCREEN_REGISTRY.keys():
+		var screen_id := str(screen_id_value)
+		var scene_path := str(UI_ROUTE_CATALOG.RUNTIME_SCREEN_REGISTRY.get(screen_id_value, ""))
+		UIRouter.register_screen(screen_id, scene_path)
+
+
+func _find_button_with_text(root: Node, text: String) -> Button:
+	for child in root.get_children():
+		var button := child as Button
+		if button != null and button.text == text:
+			return button
+		var match := _find_button_with_text(child, text)
+		if match != null:
+			return match
+	return null
 
 
 func _delete_settings_file() -> void:

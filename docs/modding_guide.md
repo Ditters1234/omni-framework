@@ -347,6 +347,7 @@ Entities are the live actors and containers in the game. Players, NPCs, shops, c
 
 ### Important current details
 - Entity ids use `entity_id`
+- New games instantiate authored non-player entities into runtime state, so location presence and entity interactions can resolve live entity inventories/stats
 - Inventory holds **instances**, not just template ids
 - Interactions currently use **`label`**
 - `target_entity_id: "player"` is accepted by several backends as a convenience alias
@@ -447,6 +448,7 @@ Locations are graph nodes plus UI entry points.
   { "base:test_hub": 2 }
   ```
 - Location screens currently use **`display_name`**, not `label`
+- `entities_present` is rendered by the gameplay location surface. Each listed entity can expose its own `interactions` buttons.
 
 ### Current patch example
 

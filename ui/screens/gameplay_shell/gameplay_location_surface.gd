@@ -13,6 +13,7 @@ const GLOBAL_SHELL_SURFACE_IDS := {
 }
 
 @onready var _interactions_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer/VBoxContainer/InteractionsScroll/InteractionsContainer
+@onready var _entities_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/EntitiesPanel/MarginContainer/VBoxContainer/EntitiesScroll/EntitiesContainer
 @onready var _travel_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer/TravelScroll/TravelContainer
 @onready var _status_label: Label = $MarginContainer/VBoxContainer/StatusLabel
 
@@ -50,6 +51,7 @@ func _load_location() -> void:
 
 func _render_location_actions() -> void:
 	_clear_container(_interactions_container)
+	_clear_container(_entities_container)
 	_clear_container(_travel_container)
 
 	var interaction_entries: Array[Dictionary] = []
@@ -66,12 +68,14 @@ func _render_location_actions() -> void:
 	if interaction_entries.is_empty():
 		_add_empty_label(_interactions_container, "No local interactions are available here right now.")
 
+	var entity_entries := _render_entity_presence()
 	var travel_entries := _render_travel_actions()
 	_status_label.text = ""
 	_last_view_model = {
 		"surface_id": "location_surface",
 		"location_id": _location_id,
 		"interactions": interaction_entries,
+		"entities": entity_entries,
 		"travel": travel_entries,
 		"status_text": "",
 	}
@@ -140,6 +144,127 @@ func _render_travel_actions() -> Array[Dictionary]:
 	return rendered_connections
 
 
+func _render_entity_presence() -> Array[Dictionary]:
+	var rendered_entities: Array[Dictionary] = []
+	var entity_ids := _get_present_entity_ids()
+	for entity_id in entity_ids:
+		var entity_template := _get_entity_template_for_presence(entity_id)
+		if entity_template.is_empty():
+			continue
+		var display_name := str(entity_template.get("display_name", entity_id))
+		var description := str(entity_template.get("description", ""))
+		var interactions := _read_entity_interactions(entity_template)
+		rendered_entities.append({
+			"entity_id": entity_id,
+			"display_name": display_name,
+			"description": description,
+			"interactions": interactions,
+		})
+		_add_entity_presence(entity_id, display_name, description, interactions)
+	if rendered_entities.is_empty():
+		_add_empty_label(_entities_container, "No other entities are visible here right now.")
+	return rendered_entities
+
+
+func _get_present_entity_ids() -> Array[String]:
+	var entity_ids: Array[String] = []
+	var listed_entities_value: Variant = _location_template.get("entities_present", [])
+	if listed_entities_value is Array:
+		var listed_entities: Array = listed_entities_value
+		for entity_id_value in listed_entities:
+			_append_present_entity_id(entity_ids, str(entity_id_value))
+
+	var located_entities := DataManager.query_entities({"location_id": _location_id})
+	for entity_template in located_entities:
+		_append_present_entity_id(entity_ids, str(entity_template.get("entity_id", "")))
+
+	for instance_id_value in GameState.entity_instances.keys():
+		var instance_id := str(instance_id_value)
+		var entity := GameState.get_entity_instance(instance_id)
+		if entity == null or entity.location_id != _location_id:
+			continue
+		_append_present_entity_id(entity_ids, entity.entity_id)
+	return entity_ids
+
+
+func _append_present_entity_id(entity_ids: Array[String], entity_id: String) -> void:
+	if entity_id.is_empty() or entity_id == "player" or entity_ids.has(entity_id):
+		return
+	entity_ids.append(entity_id)
+
+
+func _get_entity_template_for_presence(entity_id: String) -> Dictionary:
+	var runtime_entity := GameState.get_entity_instance(entity_id)
+	if runtime_entity != null:
+		var runtime_template := runtime_entity.get_template()
+		if not runtime_template.is_empty():
+			return runtime_template
+	return DataManager.get_entity(entity_id)
+
+
+func _read_entity_interactions(entity_template: Dictionary) -> Array[Dictionary]:
+	var interactions: Array[Dictionary] = []
+	var interactions_value: Variant = entity_template.get("interactions", [])
+	if not interactions_value is Array:
+		return interactions
+	var raw_interactions: Array = interactions_value
+	for interaction_value in raw_interactions:
+		if interaction_value is Dictionary:
+			var interaction: Dictionary = interaction_value
+			interactions.append(interaction.duplicate(true))
+	return interactions
+
+
+func _add_entity_presence(entity_id: String, display_name: String, description: String, interactions: Array[Dictionary]) -> void:
+	var name_label := Label.new()
+	name_label.text = display_name
+	name_label.tooltip_text = description
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_entities_container.add_child(name_label)
+
+	if not description.is_empty():
+		var description_label := Label.new()
+		description_label.text = description
+		description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_entities_container.add_child(description_label)
+
+	if interactions.is_empty():
+		_add_empty_label(_entities_container, "No interactions are available for %s." % display_name)
+		return
+
+	for interaction in interactions:
+		_add_entity_interaction_button(entity_id, interaction)
+
+
+func _add_entity_interaction_button(entity_id: String, interaction: Dictionary) -> void:
+	var label := str(interaction.get("label", interaction.get("display_name", "Interact")))
+	var description := str(interaction.get("description", ""))
+	var backend_class := str(interaction.get("backend_class", ""))
+	var screen_id := UI_ROUTE_CATALOG.get_screen_id_for_backend(backend_class)
+
+	var button := Button.new()
+	button.text = label
+	button.tooltip_text = description
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button.custom_minimum_size = Vector2(0, 40)
+
+	if screen_id.is_empty():
+		button.disabled = true
+		button.tooltip_text += "\n[backend '%s' not mapped]" % backend_class
+	elif not UIRouter.is_registered(screen_id):
+		button.disabled = true
+		button.tooltip_text += "\n[screen '%s' not yet built]" % screen_id
+	else:
+		var push_params := interaction.duplicate(true)
+		push_params["source_entity_id"] = entity_id
+		push_params["opened_from_gameplay_shell"] = true
+		button.pressed.connect(_on_screen_button_pressed.bind(screen_id, push_params))
+
+	_entities_container.add_child(button)
+
+
 func _add_empty_label(container: VBoxContainer, text: String) -> void:
 	var label := Label.new()
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -155,6 +280,7 @@ func _clear_container(container: Node) -> void:
 
 func _show_error(message: String) -> void:
 	_clear_container(_interactions_container)
+	_clear_container(_entities_container)
 	_clear_container(_travel_container)
 	_add_empty_label(_interactions_container, message)
 	_status_label.text = message
@@ -162,6 +288,7 @@ func _show_error(message: String) -> void:
 		"surface_id": "location_surface",
 		"location_id": _location_id,
 		"interactions": [],
+		"entities": [],
 		"travel": [],
 		"status_text": message,
 	}

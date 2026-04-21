@@ -82,6 +82,7 @@ func new_game() -> void:
 			if discovered_location_id.is_empty() or not DataManager.has_location(discovered_location_id):
 				continue
 			player_entity.discover_location(discovered_location_id)
+	_instantiate_world_entities(player_entity.entity_id)
 	_sync_timekeeper()
 	GameEvents.game_started.emit()
 
@@ -101,6 +102,18 @@ func reset() -> void:
 	flags.clear()
 	achievement_stats.clear()
 	_sync_timekeeper()
+
+
+func _instantiate_world_entities(player_entity_id: String) -> void:
+	for entity_id_value in DataManager.entities.keys():
+		var entity_id := str(entity_id_value)
+		if entity_id.is_empty() or entity_id == player_entity_id or entity_instances.has(entity_id):
+			continue
+		var entity_template := DataManager.get_entity(entity_id)
+		if entity_template.is_empty():
+			continue
+		var entity := EntityInstance.from_template(entity_template)
+		entity_instances[entity.entity_id] = entity
 
 
 # ---------------------------------------------------------------------------
