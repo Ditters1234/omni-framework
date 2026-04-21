@@ -144,7 +144,7 @@ These are **always available**, navigation-owned by the engine.
 | Gameplay Shell | `gameplay_shell` | `ui/screens/gameplay_shell/gameplay_shell_screen.tscn` | In-game HUD. Displays player summary, location, available screens. |
 | World Map | `world_map` | `ui/screens/world_map/world_map_screen.tscn` | ⚠️ **PLANNED.** Visualization of location graph and fast travel. |
 | Pause Menu | `pause_menu` | `ui/screens/pause_menu/` | Layered pause overlay with continue/settings/quit. |
-| Settings | `settings` | `ui/screens/settings/` | Audio, graphics, accessibility options. |
+| Settings | `settings` | `ui/screens/settings/` | Audio, graphics, accessibility options, and engine-owned AI connect/disconnect controls. |
 | Save/Load Browser | `save_slot_list` | `ui/screens/save_slot_list/` | Autosave + manual save/load/delete. |
 | Credits & Loaded Mods | `credits` | `ui/screens/credits/` | Attribution and mod manifest. |
 

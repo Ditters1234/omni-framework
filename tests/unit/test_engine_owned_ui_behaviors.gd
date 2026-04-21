@@ -18,6 +18,7 @@ func before_each() -> void:
 	_delete_settings_file()
 	_cleanup_directory(TEST_SAVE_DIR)
 	SaveManager.set_save_directory_for_testing(TEST_SAVE_DIR)
+	AIManager.initialize(_make_ai_settings(APP_SETTINGS.AI_PROVIDER_DISABLED))
 	_test_viewport = _create_test_viewport()
 	while UIRouter.stack_depth() > 0:
 		UIRouter.pop()
@@ -39,6 +40,7 @@ func after_each() -> void:
 	_test_viewport = null
 	await get_tree().process_frame
 	SaveManager.reset_save_directory_for_testing()
+	AIManager.initialize(_make_ai_settings(APP_SETTINGS.AI_PROVIDER_DISABLED))
 	_cleanup_directory(TEST_SAVE_DIR)
 	_delete_settings_file()
 	APP_SETTINGS.reset_settings_path_for_testing()
@@ -144,6 +146,47 @@ func test_settings_back_persists_dirty_changes_and_pops_to_previous_route() -> v
 	assert_almost_eq(float(audio.get(APP_SETTINGS.AUDIO_MASTER_VOLUME, 0.0)), 0.42, 0.001)
 
 
+func test_settings_ai_button_toggles_to_disconnect_after_connection() -> void:
+	var settings_scene := load(SETTINGS_SCENE_PATH) as PackedScene
+	assert_not_null(settings_scene)
+	var instance_value: Variant = settings_scene.instantiate()
+	assert_true(instance_value is Control)
+	var settings_screen: Control = instance_value
+	_spawned_nodes.append(settings_screen)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(settings_screen)
+	await get_tree().process_frame
+
+	var provider_button := settings_screen.get_node("MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiProviderButton") as OptionButton
+	var connect_button := settings_screen.get_node("MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiButtonRow/ConnectAiButton") as Button
+	var status_label := settings_screen.get_node("MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/StatusLabel") as Label
+	assert_not_null(provider_button)
+	assert_not_null(connect_button)
+	assert_not_null(status_label)
+
+	provider_button.select(1)
+	settings_screen.call("_on_ai_provider_button_item_selected", 1)
+	await get_tree().process_frame
+
+	assert_eq(connect_button.text, "Connect AI")
+	assert_false(connect_button.disabled)
+
+	settings_screen.call("_on_connect_ai_button_pressed")
+	await get_tree().process_frame
+
+	assert_true(AIManager.is_available())
+	assert_eq(connect_button.text, "Disconnect AI")
+	assert_false(connect_button.disabled)
+
+	settings_screen.call("_on_connect_ai_button_pressed")
+	await get_tree().process_frame
+
+	assert_false(AIManager.is_available())
+	assert_eq(connect_button.text, "Connect AI")
+	assert_true(connect_button.disabled)
+	assert_true(status_label.text.contains("disconnected"))
+
+
 func test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)
@@ -205,3 +248,12 @@ func _create_test_viewport() -> SubViewport:
 	viewport.size = Vector2i(1920, 1080)
 	get_tree().root.add_child(viewport)
 	return viewport
+
+
+func _make_ai_settings(provider: String) -> Dictionary:
+	var settings := APP_SETTINGS.get_default_settings()
+	var ai_settings := APP_SETTINGS.get_ai_settings(settings)
+	ai_settings[APP_SETTINGS.AI_ENABLED] = provider != APP_SETTINGS.AI_PROVIDER_DISABLED
+	ai_settings[APP_SETTINGS.AI_PROVIDER] = provider
+	settings[APP_SETTINGS.SECTION_AI] = ai_settings
+	return settings

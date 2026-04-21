@@ -24,6 +24,9 @@ const AI_PROVIDER_LABELS := {
 	APP_SETTINGS.AI_PROVIDER_ANTHROPIC: "Server (Anthropic)",
 	APP_SETTINGS.AI_PROVIDER_NOBODYWHO: "On-Disk Model",
 }
+const AI_BUTTON_CONNECT := "Connect AI"
+const AI_BUTTON_UPDATE := "Update AI"
+const AI_BUTTON_DISCONNECT := "Disconnect AI"
 const RESOLUTION_PRESETS := [
 	Vector2i(1280, 720),
 	Vector2i(1600, 900),
@@ -69,6 +72,7 @@ var _persisted_settings: Dictionary = {}
 var _is_initializing: bool = false
 var _is_dirty: bool = false
 var _last_debug_snapshot: Dictionary = {}
+var _last_connected_ai_settings: Dictionary = {}
 
 
 func initialize(_params: Dictionary = {}) -> void:
@@ -109,6 +113,7 @@ func _load_settings_from_disk() -> void:
 	_apply_settings_to_controls()
 	_is_initializing = false
 	_is_dirty = false
+	_update_connected_ai_settings_from_manager()
 	_update_dirty_state()
 	_update_ai_info()
 	_status_label.text = "Settings loaded from user://settings.cfg."
@@ -151,6 +156,7 @@ func _apply_settings_to_controls() -> void:
 	_title_label.text = "Settings"
 	_subtitle_label.text = "Engine-owned application settings stored outside the mod data pipeline."
 	_update_ai_controls_state()
+	_update_ai_connection_button_state()
 
 
 func _collect_settings_from_controls() -> Dictionary:
@@ -219,6 +225,7 @@ func _persist_settings() -> bool:
 		return false
 	APP_SETTINGS.apply_settings(get_window(), _settings)
 	AIManager.initialize(_settings)
+	_update_connected_ai_settings_from_manager()
 	_persisted_settings = _settings.duplicate(true)
 	_is_dirty = false
 	_update_dirty_state()
@@ -235,6 +242,7 @@ func _revert_unsaved_changes() -> void:
 	_is_initializing = false
 	APP_SETTINGS.apply_settings(get_window(), _persisted_settings)
 	AIManager.initialize(_persisted_settings)
+	_update_connected_ai_settings_from_manager()
 	_is_dirty = false
 	_update_dirty_state()
 	_update_ai_info()
@@ -260,6 +268,7 @@ func _update_ai_info() -> void:
 		AI_PROVIDER_ORDER,
 		APP_SETTINGS.AI_PROVIDER_DISABLED
 	))
+	_update_ai_connection_button_state()
 	_capture_debug_snapshot()
 
 
@@ -289,7 +298,26 @@ func _update_ai_controls_state() -> void:
 	_ai_temperature_spinbox.visible = uses_server_fields or uses_disk_fields
 	_ai_context_window_label.visible = uses_disk_fields
 	_ai_context_window_spinbox.visible = uses_disk_fields
-	_connect_ai_button.disabled = provider == APP_SETTINGS.AI_PROVIDER_DISABLED
+	_update_ai_connection_button_state()
+
+
+func _update_ai_connection_button_state() -> void:
+	if not is_node_ready():
+		return
+	var selected_provider := _get_selected_ai_provider()
+	var manager_snapshot := AIManager.get_debug_snapshot()
+	var active_provider := str(manager_snapshot.get("provider_name", AIManager.PROVIDER_DISABLED))
+	var manager_available := bool(manager_snapshot.get("available", false))
+	var has_active_connection := manager_available and active_provider != AIManager.PROVIDER_DISABLED
+	if has_active_connection:
+		_connect_ai_button.disabled = false
+		if selected_provider == APP_SETTINGS.AI_PROVIDER_DISABLED or _ai_controls_match_connected_settings():
+			_connect_ai_button.text = AI_BUTTON_DISCONNECT
+			return
+		_connect_ai_button.text = AI_BUTTON_UPDATE
+		return
+	_connect_ai_button.text = AI_BUTTON_CONNECT
+	_connect_ai_button.disabled = selected_provider == APP_SETTINGS.AI_PROVIDER_DISABLED
 
 
 func _get_section_dict(source: Dictionary, section_name: String) -> Dictionary:
@@ -325,6 +353,46 @@ func _get_selected_order_value(button: OptionButton, order: Array, fallback: Str
 	if selected_index >= 0 and selected_index < order.size():
 		return str(order[selected_index])
 	return fallback
+
+
+func _get_selected_ai_provider() -> String:
+	return _get_selected_order_value(
+		_ai_provider_button,
+		AI_PROVIDER_ORDER,
+		APP_SETTINGS.AI_PROVIDER_DISABLED
+	)
+
+
+func _get_current_ai_settings() -> Dictionary:
+	var settings := _collect_settings_from_controls()
+	return APP_SETTINGS.get_ai_settings(settings)
+
+
+func _ai_controls_match_connected_settings() -> bool:
+	if _last_connected_ai_settings.is_empty():
+		return false
+	var current_ai_settings := _get_current_ai_settings()
+	if current_ai_settings.size() != _last_connected_ai_settings.size():
+		return false
+	for key_value in current_ai_settings.keys():
+		var key := str(key_value)
+		if not _last_connected_ai_settings.has(key):
+			return false
+		if current_ai_settings.get(key) != _last_connected_ai_settings.get(key):
+			return false
+	return true
+
+
+func _update_connected_ai_settings_from_manager() -> void:
+	if not AIManager.is_available():
+		_last_connected_ai_settings.clear()
+		return
+	var manager_snapshot := AIManager.get_debug_snapshot()
+	var active_provider := str(manager_snapshot.get("provider_name", AIManager.PROVIDER_DISABLED))
+	if active_provider == AIManager.PROVIDER_DISABLED:
+		_last_connected_ai_settings.clear()
+		return
+	_last_connected_ai_settings = APP_SETTINGS.get_ai_settings(_settings)
 
 
 func _build_ai_hint_text(provider: String) -> String:
@@ -430,6 +498,18 @@ func _on_ai_context_window_spinbox_value_changed(_value: float) -> void:
 
 
 func _on_connect_ai_button_pressed() -> void:
+	if _connect_ai_button.text == AI_BUTTON_DISCONNECT:
+		_select_option_by_value(_ai_provider_button, AI_PROVIDER_ORDER, APP_SETTINGS.AI_PROVIDER_DISABLED)
+		_settings = _collect_settings_from_controls()
+		AIManager.initialize(_settings)
+		_last_connected_ai_settings.clear()
+		_update_ai_controls_state()
+		_update_ai_info()
+		_is_dirty = true
+		_update_dirty_state()
+		_status_label.text = "AI disconnected. Save to persist this setting."
+		_capture_debug_snapshot()
+		return
 	_settings = _collect_settings_from_controls()
 	AIManager.initialize(_settings)
 	_update_ai_info()
@@ -439,9 +519,13 @@ func _on_connect_ai_button_pressed() -> void:
 	var available := bool(snapshot.get("available", false))
 	var last_error := str(snapshot.get("last_error", ""))
 	if available:
+		_last_connected_ai_settings = APP_SETTINGS.get_ai_settings(_settings)
+		_update_ai_connection_button_state()
 		_status_label.text = "AI connection updated from engine settings."
 		_capture_debug_snapshot()
 		return
+	_last_connected_ai_settings.clear()
+	_update_ai_connection_button_state()
 	if last_error.is_empty():
 		_status_label.text = "AI connection is configured but unavailable."
 		_capture_debug_snapshot()
@@ -479,5 +563,7 @@ func _capture_debug_snapshot() -> void:
 			"provider_name": str(ai_snapshot.get("provider_name", AIManager.PROVIDER_DISABLED)),
 			"available": bool(ai_snapshot.get("available", false)),
 			"last_error": str(ai_snapshot.get("last_error", "")),
+			"button_text": _connect_ai_button.text if is_node_ready() else "",
+			"button_disabled": _connect_ai_button.disabled if is_node_ready() else true,
 		},
 	}
