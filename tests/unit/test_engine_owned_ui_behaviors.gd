@@ -265,6 +265,9 @@ func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
 	assembly_screen.call("_on_begin_button_pressed")
 	await get_tree().process_frame
 
+	assert_false(GameState.current_location_id.is_empty())
+	assert_eq(GameState.current_location_id, "base:hub_safehouse")
+	assert_not_null(GameState.player)
 	assert_eq(UIRouter.current_screen_id(), "gameplay_shell")
 	assert_eq(UIRouter.stack_depth(), 1)
 	var snapshot := UIRouter.get_current_screen_debug_snapshot()
@@ -283,6 +286,7 @@ func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
 	var travel_container := location_surface.get_node("MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer/TravelScroll/TravelContainer") as VBoxContainer
 	assert_not_null(travel_container)
 	assert_gt(travel_container.get_child_count(), 0)
+	assert_null(_find_label_with_text(location_surface, "No active location."))
 
 
 func test_location_surface_lists_present_entities_and_entity_interactions() -> void:
@@ -323,6 +327,48 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 	var talk_button := _find_button_with_text(location_surface, "Talk")
 	assert_not_null(talk_button)
 	assert_false(talk_button.disabled)
+
+
+func test_location_surface_empty_location_param_falls_back_to_game_state_location() -> void:
+	_screen_container = CanvasLayer.new()
+	_spawned_nodes.append(_screen_container)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
+	UIRouter.initialize(_screen_container)
+	_register_runtime_screens()
+	GameState.new_game()
+
+	UIRouter.replace_all("gameplay_shell", {
+		"initial_surface_id": "assembly_editor",
+		"initial_surface_params": {
+			"target_entity_id": "player",
+			"pop_on_confirm": true,
+			"allow_confirm_without_changes": true,
+		},
+	})
+	await get_tree().process_frame
+
+	var shell := _get_top_screen()
+	assert_not_null(shell)
+	var assembly_screen := shell.find_child("AssemblyEditorScreen", true, false) as Control
+	assert_not_null(assembly_screen)
+	assembly_screen.call("_on_begin_button_pressed")
+	await get_tree().process_frame
+
+	var location_surface := shell.find_child("GameplayLocationSurface", true, false) as Control
+	assert_not_null(location_surface)
+	location_surface.call("initialize", {"location_id": ""})
+	await get_tree().process_frame
+
+	var surface_snapshot_value: Variant = location_surface.call("get_debug_snapshot")
+	assert_true(surface_snapshot_value is Dictionary)
+	var surface_snapshot: Dictionary = surface_snapshot_value
+	assert_eq(str(surface_snapshot.get("location_id", "")), GameState.current_location_id)
+	var travel_value: Variant = surface_snapshot.get("travel", [])
+	assert_true(travel_value is Array)
+	var travel_entries: Array = travel_value
+	assert_gt(travel_entries.size(), 0)
+	assert_null(_find_label_with_text(location_surface, "No active location."))
 
 
 func test_gameplay_shell_hosts_default_location_surface() -> void:
@@ -367,6 +413,17 @@ func _find_button_with_text(root: Node, text: String) -> Button:
 		if button != null and button.text == text:
 			return button
 		var match := _find_button_with_text(child, text)
+		if match != null:
+			return match
+	return null
+
+
+func _find_label_with_text(root: Node, text: String) -> Label:
+	for child in root.get_children():
+		var label := child as Label
+		if label != null and label.text == text:
+			return label
+		var match := _find_label_with_text(child, text)
 		if match != null:
 			return match
 	return null

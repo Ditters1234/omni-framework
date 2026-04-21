@@ -23,7 +23,9 @@ var _last_view_model: Dictionary = {}
 
 
 func initialize(params: Dictionary = {}) -> void:
-	_location_id = str(params.get("location_id", GameState.current_location_id))
+	_location_id = str(params.get("location_id", ""))
+	if _location_id.is_empty():
+		_location_id = GameState.current_location_id
 	_load_location()
 
 
@@ -39,6 +41,8 @@ func get_debug_snapshot() -> Dictionary:
 
 
 func _load_location() -> void:
+	if _location_id.is_empty():
+		_location_id = GameState.current_location_id
 	if _location_id.is_empty():
 		_show_error("No active location.")
 		return

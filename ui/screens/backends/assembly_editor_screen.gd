@@ -164,14 +164,14 @@ func _on_row_selected(slot_id: String) -> void:
 	_refresh_editor_state()
 
 func _on_back_button_pressed() -> void:
-	_execute_navigation_action(_backend.build_cancel_action())
+	_execute_navigation_action(_backend.build_cancel_action(), true)
 
 func _on_begin_button_pressed() -> void:
 	var navigation_action: Dictionary = _backend.confirm()
 	if navigation_action.is_empty():
 		_refresh_editor_state()
 		return
-	_execute_navigation_action(navigation_action)
+	_execute_navigation_action(navigation_action, false)
 
 func _navigate_back() -> void:
 	if _opened_from_gameplay_shell:
@@ -179,14 +179,14 @@ func _navigate_back() -> void:
 		return
 	UIRouter.pop()
 
-func _execute_navigation_action(action: Dictionary) -> void:
+func _execute_navigation_action(action: Dictionary, is_cancel_action: bool = false) -> void:
 	var action_type := str(action.get("type", ""))
 	var screen_id := str(action.get("screen_id", ""))
 	var params := _read_dictionary(action.get("params", {}))
 	if _opened_from_gameplay_shell:
 		match action_type:
 			"pop":
-				if _backend.build_cancel_action() == action:
+				if is_cancel_action:
 					UIRouter.replace_all("main_menu", {})
 				else:
 					UIRouter.close_gameplay_shell_screen()
