@@ -76,6 +76,26 @@ func test_ui_cancel_pushes_and_pops_pause_menu_from_gameplay_shell() -> void:
 	assert_eq(UIRouter.stack_depth(), 1)
 
 
+func test_main_menu_new_game_opens_character_creator_surface_without_crashing() -> void:
+	_main_scene = MAIN_SCENE.instantiate()
+	_spawned_nodes.append(_main_scene)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_main_scene)
+	await get_tree().process_frame
+
+	var menu := _get_top_screen()
+	assert_not_null(menu)
+	menu.call("_on_new_game_button_pressed")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_eq(UIRouter.current_screen_id(), "gameplay_shell")
+	assert_eq(UIRouter.stack_depth(), 1)
+	assert_not_null(GameState.player)
+	var snapshot := UIRouter.get_current_screen_debug_snapshot()
+	assert_eq(str(snapshot.get("active_surface_screen_id", "")), "assembly_editor")
+
+
 func test_save_slot_list_delete_requires_confirmation_before_removing_slot() -> void:
 	GameState.new_game()
 	SaveManager.save_game(1)
