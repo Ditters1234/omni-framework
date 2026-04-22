@@ -18,6 +18,7 @@ var _slot_states: Dictionary = {}
 var _selected_slot_id: String = ""
 var _status_override: String = ""
 var _pending_part_removed_events: Array[Dictionary] = []
+var _pending_transaction_events: Array[Dictionary] = []
 
 
 static func register_contract() -> void:
@@ -211,22 +212,26 @@ func confirm() -> Dictionary:
 
 	var staged_entities: Dictionary = {}
 	_pending_part_removed_events.clear()
+	_pending_transaction_events.clear()
 	_stage_entity(staged_entities, committed_entity, config.target_entity_lookup_id)
 	if committed_payer != null:
 		_stage_entity(staged_entities, committed_payer, config.budget_entity_lookup_id)
 
 	if not _stage_source_inventory_changes(staged_entities):
 		_pending_part_removed_events.clear()
+		_pending_transaction_events.clear()
 		_status_override = "Unable to consume the required source inventory for that build."
 		return {}
 
 	if not _apply_confirm_transaction_effects(staged_entities, committed_entity, committed_payer):
 		_pending_part_removed_events.clear()
+		_pending_transaction_events.clear()
 		_status_override = "Unable to apply the currency changes for that build."
 		return {}
 
 	_commit_staged_entities(staged_entities, committed_entity.entity_id, previous_entity)
 	_emit_pending_part_removed_events()
+	_emit_pending_transaction_events()
 
 	_status_override = ""
 	return config.build_confirm_navigation_action()
@@ -868,6 +873,20 @@ func _emit_pending_part_removed_events() -> void:
 	_pending_part_removed_events.clear()
 
 
+func _emit_pending_transaction_events() -> void:
+	if not GameEvents:
+		_pending_transaction_events.clear()
+		return
+	for event_data in _pending_transaction_events:
+		var event: Dictionary = event_data
+		var buyer_id := str(event.get("buyer_id", ""))
+		var seller_id := str(event.get("seller_id", ""))
+		var part_id := str(event.get("part_id", ""))
+		var amount := float(event.get("amount", 0.0))
+		GameEvents.transaction_completed.emit(buyer_id, seller_id, part_id, amount)
+	_pending_transaction_events.clear()
+
+
 func _apply_confirm_transaction_effects(staged_entities: Dictionary, committed_target: EntityInstance, committed_payer: EntityInstance) -> bool:
 	if _session == null:
 		return false
@@ -887,7 +906,15 @@ func _stage_payment_recipient(staged_entities: Dictionary, buyer: EntityInstance
 	var committed_recipient := _stage_entity(staged_entities, recipient.duplicate_instance(), _config.payment_recipient_lookup_id)
 	if committed_recipient == null:
 		return false
-	return TRANSACTION_SERVICE.transfer_currency(buyer, committed_recipient, _config.budget_currency_id, amount)
+	if not TRANSACTION_SERVICE.transfer_currency(buyer, committed_recipient, _config.budget_currency_id, amount, "", false):
+		return false
+	_pending_transaction_events.append({
+		"buyer_id": buyer.entity_id,
+		"seller_id": committed_recipient.entity_id,
+		"part_id": "",
+		"amount": amount,
+	})
+	return true
 
 
 func _can_confirm() -> bool:

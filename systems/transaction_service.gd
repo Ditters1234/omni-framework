@@ -5,7 +5,14 @@ extends RefCounted
 class_name TransactionService
 
 
-static func transfer_currency(buyer: EntityInstance, seller: EntityInstance, currency_id: String, amount: float, part_id: String = "") -> bool:
+static func transfer_currency(
+	buyer: EntityInstance,
+	seller: EntityInstance,
+	currency_id: String,
+	amount: float,
+	part_id: String = "",
+	emit_event: bool = true
+) -> bool:
 	if buyer == null or seller == null:
 		return false
 	if currency_id.is_empty() or amount <= 0.0:
@@ -15,7 +22,7 @@ static func transfer_currency(buyer: EntityInstance, seller: EntityInstance, cur
 	if not buyer.spend_currency(currency_id, amount):
 		return false
 	seller.add_currency(currency_id, amount)
-	if GameEvents:
+	if emit_event and GameEvents:
 		GameEvents.transaction_completed.emit(buyer.entity_id, seller.entity_id, part_id, amount)
 	return true
 

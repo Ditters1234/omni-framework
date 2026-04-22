@@ -131,7 +131,7 @@ func confirm() -> Dictionary:
 	if not source_clone.remove_part(source_part.instance_id):
 		_status_text = "The selected item could not be removed from the source inventory."
 		return {}
-	if price > 0.0 and not TransactionService.transfer_currency(destination_clone, source_clone, currency_id, price, moved_part.template_id):
+	if price > 0.0 and not TransactionService.transfer_currency(destination_clone, source_clone, currency_id, price, moved_part.template_id, false):
 		_status_text = "The buyer could not cover the item cost."
 		return {}
 	destination_clone.add_part(moved_part)
@@ -140,6 +140,8 @@ func confirm() -> Dictionary:
 	if GameEvents != null:
 		GameEvents.part_removed.emit(source_clone.entity_id, moved_part.template_id)
 		GameEvents.part_acquired.emit(destination_clone.entity_id, moved_part.template_id)
+		if price > 0.0:
+			GameEvents.transaction_completed.emit(destination_clone.entity_id, source_clone.entity_id, moved_part.template_id, price)
 	var transaction_sound := str(_params.get("transaction_sound", ""))
 	if not transaction_sound.is_empty():
 		AudioManager.play_sfx(transaction_sound)
@@ -178,7 +180,7 @@ func _get_stock_rows(source_entity: EntityInstance) -> Array[Dictionary]:
 	var currency_id := str(_params.get("currency_id", ""))
 	var destination_entity := _resolve_destination_entity()
 	for part_data in source_entity.inventory:
-		var part := part_data as PartInstance
+		var part: PartInstance = part_data as PartInstance
 		if part == null or part.is_equipped:
 			continue
 		var template := part.get_template()
@@ -265,7 +267,7 @@ func _find_inventory_part(entity: EntityInstance, instance_id: String) -> PartIn
 	if entity == null or instance_id.is_empty():
 		return null
 	for part_data in entity.inventory:
-		var part := part_data as PartInstance
+		var part: PartInstance = part_data as PartInstance
 		if part == null:
 			continue
 		if part.instance_id == instance_id:

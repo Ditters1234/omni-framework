@@ -130,8 +130,9 @@ func _apply_success(target_entity: EntityInstance) -> void:
 	var reward_value: Variant = _params.get("reward", {})
 	if reward_value is Dictionary:
 		var target_clone := target_entity.duplicate_instance()
-		RewardService.apply_reward(target_clone, reward_value)
+		var deferred_events: Array[Dictionary] = RewardService.apply_reward(target_clone, reward_value, false)
 		GameState.commit_entity_instance(target_clone, str(_params.get("target_entity_id", "player")))
+		_emit_deferred_reward_events(deferred_events, target_clone)
 	var action_payload_value: Variant = _params.get("action_payload", {})
 	if action_payload_value is Dictionary:
 		var action_payload: Dictionary = action_payload_value
@@ -143,6 +144,30 @@ func _apply_failure() -> void:
 	if failure_action_value is Dictionary:
 		var failure_action: Dictionary = failure_action_value
 		ActionDispatcher.dispatch(failure_action)
+
+
+func _emit_deferred_reward_events(events: Array[Dictionary], entity: EntityInstance) -> void:
+	if not GameEvents:
+		return
+	for event_data in events:
+		var event: Dictionary = event_data
+		var signal_name := str(event.get("signal", ""))
+		match signal_name:
+			"entity_currency_changed":
+				var currency_id := str(event.get("currency_id", ""))
+				var old_amount := float(event.get("old_amount", 0.0))
+				var new_amount := float(event.get("new_amount", 0.0))
+				GameEvents.entity_currency_changed.emit(entity.entity_id, currency_id, old_amount, new_amount)
+				if GameState.player == entity:
+					GameEvents.currency_changed.emit(currency_id, old_amount, new_amount)
+			"flag_changed":
+				GameEvents.flag_changed.emit(
+					entity.entity_id,
+					str(event.get("flag_id", "")),
+					event.get("value", true)
+				)
+			"part_acquired":
+				GameEvents.part_acquired.emit(entity.entity_id, str(event.get("template_id", "")))
 
 
 func _build_status_text(target_entity: EntityInstance, required_stat: String, current_value: float, required_value: float) -> String:

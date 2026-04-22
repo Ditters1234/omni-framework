@@ -87,6 +87,10 @@ func confirm() -> Dictionary:
 		return {}
 	if not action_payload.has("selected_id"):
 		action_payload["selected_id"] = str(selected_row.get("row_id", ""))
+	if not action_payload.has("instance_id") and not str(selected_row.get("instance_id", "")).is_empty():
+		action_payload["instance_id"] = str(selected_row.get("instance_id", ""))
+	if not action_payload.has("slot_id") and not str(selected_row.get("slot_id", "")).is_empty():
+		action_payload["slot_id"] = str(selected_row.get("slot_id", ""))
 	if not action_payload.has("template_id"):
 		action_payload["template_id"] = str(selected_row.get("template_id", ""))
 	if not action_payload.has("part_id"):
@@ -118,7 +122,7 @@ func _build_inventory_rows(data_source: String) -> Array[Dictionary]:
 		equipped_slots.sort()
 		for slot_value in equipped_slots:
 			var slot_id := str(slot_value)
-			var part := owner.get_equipped(slot_id)
+			var part: PartInstance = owner.get_equipped(slot_id)
 			if part == null:
 				continue
 			var template := part.get_template()
@@ -126,6 +130,8 @@ func _build_inventory_rows(data_source: String) -> Array[Dictionary]:
 				continue
 			rows.append({
 				"row_id": slot_id,
+				"slot_id": slot_id,
+				"instance_id": part.instance_id,
 				"template_id": part.template_id,
 				"display_name": str(template.get("display_name", part.template_id)),
 				"detail_text": BACKEND_HELPERS.humanize_id(slot_id),
@@ -145,7 +151,7 @@ func _build_inventory_rows(data_source: String) -> Array[Dictionary]:
 		return rows
 
 	for part_data in owner.inventory:
-		var part := part_data as PartInstance
+		var part: PartInstance = part_data as PartInstance
 		if part == null or part.is_equipped:
 			continue
 		var template := part.get_template()
@@ -153,6 +159,7 @@ func _build_inventory_rows(data_source: String) -> Array[Dictionary]:
 			continue
 		rows.append({
 			"row_id": part.instance_id,
+			"instance_id": part.instance_id,
 			"template_id": part.template_id,
 			"display_name": str(template.get("display_name", part.template_id)),
 			"detail_text": str(template.get("description", "")),
