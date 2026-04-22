@@ -28,6 +28,22 @@ func test_register_additions_rejects_wrong_section_type_without_mutating_registr
 	assert_true(str(issues[0].get("message", "")).contains("'parts' must be an array."))
 
 
+func test_register_additions_rejects_missing_required_fields_and_duplicate_ids() -> void:
+	var data_path := _write_data_file(
+		"invalid_parts",
+		OmniConstants.DATA_PARTS,
+		"{\"parts\": [{\"id\": \"base:dup\", \"display_name\": \"First\", \"description\": \"Valid\", \"tags\": []}, {\"id\": \"base:dup\", \"display_name\": \"Second\", \"description\": \"Duplicate\", \"tags\": []}, {\"id\": \"base:missing_display\", \"description\": \"Missing\", \"tags\": []}]}"
+	)
+
+	var issues := DataManager.register_additions("test:invalid_parts", data_path)
+	var issue_messages := _issue_messages(issues)
+
+	assert_eq(DataManager.parts.size(), 1)
+	assert_true(DataManager.parts.has("base:dup"))
+	assert_true(_messages_contain(issue_messages, "Duplicate parts id 'base:dup'"))
+	assert_true(_messages_contain(issue_messages, "missing required field 'display_name'"))
+
+
 func test_apply_patches_supports_definition_patches() -> void:
 	DataManager.definitions["currencies"] = ["credits"]
 	var data_path := _write_data_file(
@@ -55,20 +71,49 @@ func test_apply_patches_reports_missing_patch_targets() -> void:
 	assert_true(str(issues[0].get("message", "")).contains("Patch target 'base:missing_part'"))
 
 
-func test_validate_loaded_content_reports_cross_registry_reference_failures() -> void:
+func test_apply_patches_reports_unknown_patch_operations() -> void:
 	DataManager.parts["base:starter_arm"] = {
-		"id": "base:starter_arm"
+		"id": "base:starter_arm",
+		"display_name": "Starter Arm",
+		"description": "A test part.",
+		"tags": [],
+	}
+	var data_path := _write_data_file(
+		"unknown_patch_operation",
+		OmniConstants.DATA_PARTS,
+		"{\"patches\": [{\"target\": \"base:starter_arm\", \"teleport\": true}]}"
+	)
+
+	var issues := DataManager.apply_patches("test:unknown_patch_operation", data_path)
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "not a supported parts patch operation"))
+
+
+func test_validate_loaded_content_reports_cross_registry_reference_failures() -> void:
+	DataManager.definitions["currencies"] = ["credits"]
+	DataManager.definitions["stats"] = [
+		{"id": "power", "kind": "flat"}
+	]
+	DataManager.parts["base:starter_arm"] = {
+		"id": "base:starter_arm",
+		"display_name": "Starter Arm",
+		"description": "A test part.",
+		"tags": [],
 	}
 	DataManager.locations["base:start"] = {
 		"location_id": "base:start",
+		"display_name": "Start",
 		"connections": {"base:missing_location": 1}
 	}
 	DataManager.entities["base:player"] = {
 		"entity_id": "base:player",
+		"display_name": "Player",
 		"location_id": "base:start"
 	}
 	DataManager.entities["base:broken_vendor"] = {
 		"entity_id": "base:broken_vendor",
+		"display_name": "Broken Vendor",
 		"location_id": "base:missing_location",
 		"inventory": [
 			{"instance_id": "broken_arm", "template_id": "base:missing_part"}
@@ -92,6 +137,41 @@ func test_validate_loaded_content_reports_cross_registry_reference_failures() ->
 	assert_true(issue_messages.has("Entity 'base:broken_vendor' inventory references unknown part template 'base:missing_part'."))
 	assert_true(issue_messages.has("Entity 'base:broken_vendor' socket 'left_arm' references missing inventory instance 'missing_instance'."))
 	assert_true(issue_messages.has("Location 'base:start' connection 'base:missing_location' references unknown location 'base:missing_location'."))
+
+
+func test_validate_loaded_content_reports_unknown_stats_and_currencies() -> void:
+	DataManager.definitions["currencies"] = ["credits"]
+	DataManager.definitions["stats"] = [
+		{"id": "power", "kind": "flat"}
+	]
+	DataManager.parts["base:bad_part"] = {
+		"id": "base:bad_part",
+		"display_name": "Bad Part",
+		"description": "References invalid definitions.",
+		"tags": [],
+		"stats": {"mystery": 1},
+		"price": {"ghost_money": 5},
+	}
+	DataManager.entities["base:bad_entity"] = {
+		"entity_id": "base:bad_entity",
+		"display_name": "Bad Entity",
+		"stats": {"mystery": 2},
+		"currencies": {"ghost_money": 9},
+	}
+	DataManager.config = {
+		"game": {
+			"starting_money": {"ghost_money": 1}
+		}
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "base:bad_part.stats references unknown stat 'mystery'"))
+	assert_true(_messages_contain(issue_messages, "base:bad_part.price references unknown currency 'ghost_money'"))
+	assert_true(_messages_contain(issue_messages, "base:bad_entity.stats references unknown stat 'mystery'"))
+	assert_true(_messages_contain(issue_messages, "base:bad_entity.currencies references unknown currency 'ghost_money'"))
+	assert_true(_messages_contain(issue_messages, "config.game.starting_money references unknown currency 'ghost_money'"))
 
 
 func test_query_locations_filters_and_returns_copies() -> void:

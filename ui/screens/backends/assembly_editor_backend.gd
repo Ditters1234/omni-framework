@@ -120,6 +120,7 @@ func build_view_model() -> Dictionary:
 
 
 func select_slot(slot_id: String) -> void:
+	_ensure_slot_states()
 	if not _slot_states.has(slot_id):
 		return
 	_selected_slot_id = slot_id
@@ -127,6 +128,7 @@ func select_slot(slot_id: String) -> void:
 
 
 func cycle_slot(slot_id: String, direction: int) -> void:
+	_ensure_slot_states()
 	if _session == null or not _slot_states.has(slot_id):
 		return
 	_selected_slot_id = slot_id
@@ -146,6 +148,7 @@ func cycle_slot(slot_id: String, direction: int) -> void:
 
 
 func apply_slot(slot_id: String) -> void:
+	_ensure_slot_states()
 	if _session == null or not _slot_states.has(slot_id):
 		return
 	_selected_slot_id = slot_id
@@ -167,6 +170,7 @@ func apply_slot(slot_id: String) -> void:
 
 
 func clear_slot(slot_id: String) -> void:
+	_ensure_slot_states()
 	if _session == null or not _slot_states.has(slot_id):
 		return
 	_selected_slot_id = slot_id
@@ -292,6 +296,14 @@ func _build_row_view_models() -> Array[Dictionary]:
 			continue
 		rows.append(_build_row_view_model(slot_id))
 	return rows
+
+
+func _ensure_slot_states() -> void:
+	if _session == null:
+		return
+	if not _slot_states.is_empty():
+		return
+	_build_row_view_models()
 
 
 func _build_row_view_model(slot_id: String) -> Dictionary:

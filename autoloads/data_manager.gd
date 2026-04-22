@@ -67,6 +67,7 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 	if parts_data_value is Dictionary:
 		var parts_data: Dictionary = parts_data_value
 		var part_entries: Array = _get_array_field(parts_data, "parts", mod_id, parts_path, LOAD_PHASE_ADDITIONS)
+		part_entries = _filter_valid_additions(part_entries, parts, "parts", "id", ["id", "display_name", "description", "tags"], mod_id, parts_path, LOAD_PHASE_ADDITIONS)
 		PartsRegistry.load_additions(part_entries)
 
 	var entities_path := mod_data_path.path_join(OmniConstants.DATA_ENTITIES)
@@ -74,6 +75,7 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 	if entities_data_value is Dictionary:
 		var entities_data: Dictionary = entities_data_value
 		var entity_entries: Array = _get_array_field(entities_data, "entities", mod_id, entities_path, LOAD_PHASE_ADDITIONS)
+		entity_entries = _filter_valid_additions(entity_entries, entities, "entities", "entity_id", ["entity_id", "display_name"], mod_id, entities_path, LOAD_PHASE_ADDITIONS)
 		EntityRegistry.load_additions(entity_entries)
 
 	var locations_path := mod_data_path.path_join(OmniConstants.DATA_LOCATIONS)
@@ -81,6 +83,7 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 	if locations_data_value is Dictionary:
 		var locations_data: Dictionary = locations_data_value
 		var location_entries: Array = _get_array_field(locations_data, "locations", mod_id, locations_path, LOAD_PHASE_ADDITIONS)
+		location_entries = _filter_valid_additions(location_entries, locations, "locations", "location_id", ["location_id", "display_name"], mod_id, locations_path, LOAD_PHASE_ADDITIONS)
 		LocationGraph.load_additions(location_entries)
 
 	var factions_path := mod_data_path.path_join(OmniConstants.DATA_FACTIONS)
@@ -88,6 +91,7 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 	if factions_data_value is Dictionary:
 		var factions_data: Dictionary = factions_data_value
 		var faction_entries: Array = _get_array_field(factions_data, "factions", mod_id, factions_path, LOAD_PHASE_ADDITIONS)
+		faction_entries = _filter_valid_additions(faction_entries, factions, "factions", "faction_id", ["faction_id", "display_name"], mod_id, factions_path, LOAD_PHASE_ADDITIONS)
 		FactionRegistry.load_additions(faction_entries)
 
 	var quests_path := mod_data_path.path_join(OmniConstants.DATA_QUESTS)
@@ -95,6 +99,7 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 	if quests_data_value is Dictionary:
 		var quests_data: Dictionary = quests_data_value
 		var quest_entries: Array = _get_array_field(quests_data, "quests", mod_id, quests_path, LOAD_PHASE_ADDITIONS)
+		quest_entries = _filter_valid_additions(quest_entries, quests, "quests", "quest_id", ["quest_id", "display_name", "stages"], mod_id, quests_path, LOAD_PHASE_ADDITIONS)
 		QuestRegistry.load_additions(quest_entries)
 
 	var tasks_path := mod_data_path.path_join(OmniConstants.DATA_TASKS)
@@ -106,6 +111,7 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 			task_entries = _get_array_field(tasks_data, "task_templates", mod_id, tasks_path, LOAD_PHASE_ADDITIONS)
 		else:
 			task_entries = _get_array_field(tasks_data, "tasks", mod_id, tasks_path, LOAD_PHASE_ADDITIONS)
+		task_entries = _filter_valid_additions(task_entries, tasks, "tasks", "template_id", ["template_id", "type"], mod_id, tasks_path, LOAD_PHASE_ADDITIONS)
 		TaskRegistry.load_additions(task_entries)
 
 	var achievements_path := mod_data_path.path_join(OmniConstants.DATA_ACHIEVEMENTS)
@@ -113,6 +119,7 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 	if achievements_data_value is Dictionary:
 		var achievements_data: Dictionary = achievements_data_value
 		var achievement_entries: Array = _get_array_field(achievements_data, "achievements", mod_id, achievements_path, LOAD_PHASE_ADDITIONS)
+		achievement_entries = _filter_valid_additions(achievement_entries, achievements, "achievements", "achievement_id", ["achievement_id", "display_name", "stat_name", "requirement"], mod_id, achievements_path, LOAD_PHASE_ADDITIONS)
 		AchievementRegistry.load_additions(achievement_entries)
 
 	var config_path := mod_data_path.path_join(OmniConstants.DATA_CONFIG)
@@ -140,6 +147,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var definitions_data: Dictionary = definitions_data_value
 		var definition_patches: Array = _get_array_field(definitions_data, "patches", mod_id, definitions_path, LOAD_PHASE_PATCHES)
 		_validate_definition_patches(definition_patches, mod_id, definitions_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(definition_patches, ["category", "add", "remove"], "definitions", mod_id, definitions_path, LOAD_PHASE_PATCHES)
 		for patch_value in definition_patches:
 			if not patch_value is Dictionary:
 				continue
@@ -152,6 +160,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var parts_data: Dictionary = parts_data_value
 		var part_patches: Array = _get_array_field(parts_data, "patches", mod_id, parts_path, LOAD_PHASE_PATCHES)
 		_validate_patch_targets(part_patches, parts, "parts", mod_id, parts_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(part_patches, ["target", "set", "set_stats", "add_tags", "remove_tags", "remove_socket_ids"], "parts", mod_id, parts_path, LOAD_PHASE_PATCHES)
 		PartsRegistry.apply_patch(part_patches)
 
 	var entities_path := mod_data_path.path_join(OmniConstants.DATA_ENTITIES)
@@ -160,6 +169,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var entities_data: Dictionary = entities_data_value
 		var entity_patches: Array = _get_array_field(entities_data, "patches", mod_id, entities_path, LOAD_PHASE_PATCHES)
 		_validate_patch_targets(entity_patches, entities, "entities", mod_id, entities_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(entity_patches, ["target", "set", "set_currencies", "add_sockets", "remove_socket_ids"], "entities", mod_id, entities_path, LOAD_PHASE_PATCHES)
 		EntityRegistry.apply_patch(entity_patches)
 
 	var locations_path := mod_data_path.path_join(OmniConstants.DATA_LOCATIONS)
@@ -168,6 +178,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var locations_data: Dictionary = locations_data_value
 		var location_patches: Array = _get_array_field(locations_data, "patches", mod_id, locations_path, LOAD_PHASE_PATCHES)
 		_validate_patch_targets(location_patches, locations, "locations", mod_id, locations_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(location_patches, ["target", "set", "add_connections", "remove_connections", "add_screens", "remove_screens", "modify_screen"], "locations", mod_id, locations_path, LOAD_PHASE_PATCHES)
 		LocationGraph.apply_patch(location_patches)
 
 	var factions_path := mod_data_path.path_join(OmniConstants.DATA_FACTIONS)
@@ -176,6 +187,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var factions_data: Dictionary = factions_data_value
 		var faction_patches: Array = _get_array_field(factions_data, "patches", mod_id, factions_path, LOAD_PHASE_PATCHES)
 		_validate_patch_targets(faction_patches, factions, "factions", mod_id, factions_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(faction_patches, ["target", "set"], "factions", mod_id, factions_path, LOAD_PHASE_PATCHES)
 		FactionRegistry.apply_patch(faction_patches)
 
 	var quests_path := mod_data_path.path_join(OmniConstants.DATA_QUESTS)
@@ -184,6 +196,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var quests_data: Dictionary = quests_data_value
 		var quest_patches: Array = _get_array_field(quests_data, "patches", mod_id, quests_path, LOAD_PHASE_PATCHES)
 		_validate_patch_targets(quest_patches, quests, "quests", mod_id, quests_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(quest_patches, ["target", "set", "add_stages"], "quests", mod_id, quests_path, LOAD_PHASE_PATCHES)
 		QuestRegistry.apply_patch(quest_patches)
 
 	var tasks_path := mod_data_path.path_join(OmniConstants.DATA_TASKS)
@@ -192,6 +205,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var tasks_data: Dictionary = tasks_data_value
 		var task_patches: Array = _get_array_field(tasks_data, "patches", mod_id, tasks_path, LOAD_PHASE_PATCHES)
 		_validate_patch_targets(task_patches, tasks, "tasks", mod_id, tasks_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(task_patches, ["target", "set", "set_reward"], "tasks", mod_id, tasks_path, LOAD_PHASE_PATCHES)
 		TaskRegistry.apply_patch(task_patches)
 
 	var achievements_path := mod_data_path.path_join(OmniConstants.DATA_ACHIEVEMENTS)
@@ -200,6 +214,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var achievements_data: Dictionary = achievements_data_value
 		var achievement_patches: Array = _get_array_field(achievements_data, "patches", mod_id, achievements_path, LOAD_PHASE_PATCHES)
 		_validate_patch_targets(achievement_patches, achievements, "achievements", mod_id, achievements_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(achievement_patches, ["target", "set"], "achievements", mod_id, achievements_path, LOAD_PHASE_PATCHES)
 		AchievementRegistry.apply_patch(achievement_patches)
 
 	var config_path := mod_data_path.path_join(OmniConstants.DATA_CONFIG)
@@ -377,6 +392,8 @@ func get_load_issues(limit: int = 0) -> Array[Dictionary]:
 func validate_loaded_content() -> Array[Dictionary]:
 	_begin_load_phase(LOAD_PHASE_VALIDATION)
 	var issue_start := _load_issues.size()
+	_validate_definition_schema()
+	_validate_template_schemas()
 	_validate_config_references()
 	_validate_entity_references()
 	_validate_location_references()
@@ -516,6 +533,55 @@ func _get_array_field(document: Dictionary, field_name: String, mod_id: String, 
 	return []
 
 
+func _filter_valid_additions(
+	entries: Array,
+	registry: Dictionary,
+	registry_name: String,
+	id_field: String,
+	required_fields: Array[String],
+	mod_id: String,
+	file_path: String,
+	phase: String
+) -> Array:
+	var valid_entries: Array = []
+	var seen_ids: Dictionary = {}
+	for entry_index in range(entries.size()):
+		var entry_value: Variant = entries[entry_index]
+		if not entry_value is Dictionary:
+			_record_issue(mod_id, file_path, phase, "%s[%d] must be an object." % [registry_name, entry_index])
+			continue
+		var entry: Dictionary = entry_value
+		var entry_id := str(entry.get(id_field, ""))
+		var has_required_issue := false
+		for required_field in required_fields:
+			if _entry_has_required_field(entry, required_field):
+				continue
+			_record_issue(mod_id, file_path, phase, "%s[%d] is missing required field '%s'." % [registry_name, entry_index, required_field])
+			has_required_issue = true
+		if entry_id.is_empty():
+			continue
+		if seen_ids.has(entry_id):
+			_record_issue(mod_id, file_path, phase, "Duplicate %s id '%s' in this file." % [registry_name, entry_id])
+			continue
+		if registry.has(entry_id):
+			_record_issue(mod_id, file_path, phase, "Duplicate %s id '%s' already exists in the registry." % [registry_name, entry_id])
+			continue
+		seen_ids[entry_id] = true
+		if has_required_issue:
+			continue
+		valid_entries.append(entry)
+	return valid_entries
+
+
+func _entry_has_required_field(entry: Dictionary, field_name: String) -> bool:
+	if not entry.has(field_name):
+		return false
+	var field_value: Variant = entry.get(field_name)
+	if field_value is String:
+		return not str(field_value).is_empty()
+	return field_value != null
+
+
 func _get_dictionary_field(document: Dictionary, field_name: String, mod_id: String, file_path: String, phase: String) -> Dictionary:
 	if not document.has(field_name):
 		return {}
@@ -542,6 +608,19 @@ func _validate_patch_targets(patches: Array, registry: Dictionary, registry_name
 			_record_issue(mod_id, file_path, phase, "Patch target '%s' does not exist in the %s registry." % [target, registry_name])
 
 
+func _validate_patch_operations(patches: Array, allowed_operations: Array[String], registry_name: String, mod_id: String, file_path: String, phase: String) -> void:
+	for patch_index in range(patches.size()):
+		var patch_value: Variant = patches[patch_index]
+		if not patch_value is Dictionary:
+			continue
+		var patch_entry: Dictionary = patch_value
+		for operation_value in patch_entry.keys():
+			var operation := str(operation_value)
+			if allowed_operations.has(operation):
+				continue
+			_record_issue(mod_id, file_path, phase, "patches[%d].%s is not a supported %s patch operation." % [patch_index, operation, registry_name])
+
+
 func _validate_definition_patches(patches: Array, mod_id: String, file_path: String, phase: String) -> void:
 	for patch_index in range(patches.size()):
 		var patch_value: Variant = patches[patch_index]
@@ -556,6 +635,178 @@ func _validate_definition_patches(patches: Array, mod_id: String, file_path: Str
 			_record_issue(mod_id, file_path, phase, "patches[%d].add must be an array." % patch_index)
 		if patch_entry.has("remove") and not patch_entry.get("remove", []) is Array:
 			_record_issue(mod_id, file_path, phase, "patches[%d].remove must be an array." % patch_index)
+
+
+func _validate_definition_schema() -> void:
+	var currency_ids: Dictionary = {}
+	for currency_value in get_definitions("currencies"):
+		var currency_id := str(currency_value)
+		if currency_id.is_empty():
+			_record_issue("definitions", OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Currency ids must be non-empty strings.")
+			continue
+		if currency_ids.has(currency_id):
+			_record_issue("definitions", OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Duplicate currency id '%s'." % currency_id)
+		currency_ids[currency_id] = true
+
+	var stat_defs_by_id: Dictionary = {}
+	for stat_value in get_definitions("stats"):
+		if not stat_value is Dictionary:
+			_record_issue("definitions", OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Stat definitions must be objects.")
+			continue
+		var stat_def: Dictionary = stat_value
+		var stat_id := str(stat_def.get("id", ""))
+		if stat_id.is_empty():
+			_record_issue("definitions", OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Stat definitions must include a non-empty id.")
+			continue
+		if stat_defs_by_id.has(stat_id):
+			_record_issue("definitions", OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Duplicate stat id '%s'." % stat_id)
+		stat_defs_by_id[stat_id] = stat_def
+
+	for stat_id_value in stat_defs_by_id.keys():
+		var stat_id := str(stat_id_value)
+		var stat_def_value: Variant = stat_defs_by_id.get(stat_id_value, {})
+		if not stat_def_value is Dictionary:
+			continue
+		var stat_def: Dictionary = stat_def_value
+		var kind := str(stat_def.get("kind", "flat"))
+		if not ["flat", "resource", "capacity"].has(kind):
+			_record_issue(stat_id, OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Stat '%s' has unknown kind '%s'." % [stat_id, kind])
+		if kind == "resource":
+			var capacity_id := str(stat_def.get("paired_capacity_id", ""))
+			if capacity_id.is_empty() or not stat_defs_by_id.has(capacity_id):
+				_record_issue(stat_id, OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Resource stat '%s' references missing capacity stat '%s'." % [stat_id, capacity_id])
+			else:
+				var capacity_def_value: Variant = stat_defs_by_id.get(capacity_id, {})
+				if not capacity_def_value is Dictionary:
+					continue
+				var capacity_def: Dictionary = capacity_def_value
+				if str(capacity_def.get("paired_base_id", "")) != stat_id:
+					_record_issue(stat_id, OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Resource stat '%s' and capacity stat '%s' must reference each other." % [stat_id, capacity_id])
+		elif kind == "capacity":
+			var base_id := str(stat_def.get("paired_base_id", ""))
+			if base_id.is_empty() or not stat_defs_by_id.has(base_id):
+				_record_issue(stat_id, OmniConstants.DATA_DEFINITIONS, LOAD_PHASE_VALIDATION, "Capacity stat '%s' references missing base stat '%s'." % [stat_id, base_id])
+
+
+func _validate_template_schemas() -> void:
+	var stat_ids := _get_known_stat_ids()
+	var currency_ids := _get_known_currency_ids()
+	_validate_registry_required_fields(parts, OmniConstants.DATA_PARTS, "id", ["id", "display_name", "description", "tags"])
+	_validate_registry_required_fields(entities, OmniConstants.DATA_ENTITIES, "entity_id", ["entity_id", "display_name"])
+	_validate_registry_required_fields(locations, OmniConstants.DATA_LOCATIONS, "location_id", ["location_id", "display_name"])
+	_validate_registry_required_fields(factions, OmniConstants.DATA_FACTIONS, "faction_id", ["faction_id", "display_name"])
+	_validate_registry_required_fields(quests, OmniConstants.DATA_QUESTS, "quest_id", ["quest_id", "display_name", "stages"])
+	_validate_registry_required_fields(tasks, OmniConstants.DATA_TASKS, "template_id", ["template_id", "type"])
+	_validate_registry_required_fields(achievements, OmniConstants.DATA_ACHIEVEMENTS, "achievement_id", ["achievement_id", "display_name", "stat_name", "requirement"])
+
+	for part_value in parts.values():
+		if not part_value is Dictionary:
+			continue
+		var part: Dictionary = part_value
+		var part_id := str(part.get("id", ""))
+		_validate_array_field(part_id, OmniConstants.DATA_PARTS, "tags", part)
+		_validate_stat_map(part_id, OmniConstants.DATA_PARTS, "stats", part.get("stats", {}), stat_ids)
+		_validate_currency_map(part_id, OmniConstants.DATA_PARTS, "price", part.get("price", {}), currency_ids)
+		_validate_unique_object_ids(part_id, OmniConstants.DATA_PARTS, "provides_sockets", part.get("provides_sockets", []))
+		_validate_unique_object_ids(part_id, OmniConstants.DATA_PARTS, "custom_fields", part.get("custom_fields", []))
+
+	for entity_value in entities.values():
+		if not entity_value is Dictionary:
+			continue
+		var entity: Dictionary = entity_value
+		var entity_id := str(entity.get("entity_id", ""))
+		_validate_stat_map(entity_id, OmniConstants.DATA_ENTITIES, "stats", entity.get("stats", {}), stat_ids)
+		_validate_currency_map(entity_id, OmniConstants.DATA_ENTITIES, "currencies", entity.get("currencies", {}), currency_ids)
+		_validate_unique_object_ids(entity_id, OmniConstants.DATA_ENTITIES, "provides_sockets", entity.get("provides_sockets", []))
+
+	var starting_money_value: Variant = get_config_value("game.starting_money", {})
+	_validate_currency_map("config", OmniConstants.DATA_CONFIG, "game.starting_money", starting_money_value, currency_ids)
+
+
+func _validate_registry_required_fields(registry: Dictionary, file_path: String, id_field: String, required_fields: Array[String]) -> void:
+	for entry_value in registry.values():
+		if not entry_value is Dictionary:
+			continue
+		var entry: Dictionary = entry_value
+		var entry_id := str(entry.get(id_field, ""))
+		for required_field in required_fields:
+			if _entry_has_required_field(entry, required_field):
+				continue
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s '%s' is missing required field '%s'." % [file_path, entry_id, required_field])
+
+
+func _validate_array_field(entry_id: String, file_path: String, field_name: String, entry: Dictionary) -> void:
+	if not entry.has(field_name):
+		return
+	var field_value: Variant = entry.get(field_name, [])
+	if not field_value is Array:
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s must be an array." % [entry_id, field_name])
+
+
+func _validate_stat_map(entry_id: String, file_path: String, field_path: String, value: Variant, stat_ids: Dictionary) -> void:
+	if not value is Dictionary:
+		return
+	var stat_map: Dictionary = value
+	for stat_key_value in stat_map.keys():
+		var stat_id := str(stat_key_value)
+		if stat_ids.has(stat_id):
+			continue
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown stat '%s'." % [entry_id, field_path, stat_id])
+
+
+func _validate_currency_map(entry_id: String, file_path: String, field_path: String, value: Variant, currency_ids: Dictionary) -> void:
+	if not value is Dictionary:
+		return
+	var currency_map: Dictionary = value
+	for currency_key_value in currency_map.keys():
+		var currency_id := str(currency_key_value)
+		if currency_ids.has(currency_id):
+			continue
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown currency '%s'." % [entry_id, field_path, currency_id])
+
+
+func _validate_unique_object_ids(entry_id: String, file_path: String, field_name: String, value: Variant) -> void:
+	if not value is Array:
+		return
+	var entries: Array = value
+	var seen_ids: Dictionary = {}
+	for index in range(entries.size()):
+		var item_value: Variant = entries[index]
+		if not item_value is Dictionary:
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s[%d] must be an object." % [entry_id, field_name, index])
+			continue
+		var item: Dictionary = item_value
+		var item_id := str(item.get("id", ""))
+		if item_id.is_empty():
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s[%d].id must be a non-empty string." % [entry_id, field_name, index])
+			continue
+		if seen_ids.has(item_id):
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s contains duplicate id '%s'." % [entry_id, field_name, item_id])
+		seen_ids[item_id] = true
+
+
+func _get_known_stat_ids() -> Dictionary:
+	var stat_ids: Dictionary = {}
+	for stat_value in get_definitions("stats"):
+		if stat_value is Dictionary:
+			var stat_def: Dictionary = stat_value
+			var stat_id := str(stat_def.get("id", ""))
+			if not stat_id.is_empty():
+				stat_ids[stat_id] = true
+		else:
+			var legacy_stat_id := str(stat_value)
+			if not legacy_stat_id.is_empty():
+				stat_ids[legacy_stat_id] = true
+	return stat_ids
+
+
+func _get_known_currency_ids() -> Dictionary:
+	var currency_ids: Dictionary = {}
+	for currency_value in get_definitions("currencies"):
+		var currency_id := str(currency_value)
+		if not currency_id.is_empty():
+			currency_ids[currency_id] = true
+	return currency_ids
 
 
 func _validate_config_references() -> void:

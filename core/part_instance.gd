@@ -79,8 +79,8 @@ func set_custom_value(field_id: String, value: Variant) -> void:
 
 static func _build_default_custom_values(template: Dictionary) -> Dictionary:
 	var result: Dictionary = {}
-	var fields_value: Variant = template.get("custom_fields", [])
-	if fields_value is Array:
+	var fields_value: Variant = template.get("custom_fields", null)
+	if template.has("custom_fields") and fields_value is Array:
 		var fields: Array = fields_value
 		for field_value in fields:
 			if not field_value is Dictionary:
@@ -91,8 +91,8 @@ static func _build_default_custom_values(template: Dictionary) -> Dictionary:
 				continue
 			result[field_id] = field.get("default_value", "")
 		return result
-	var labels_value: Variant = template.get("custom_field_labels", [])
-	if labels_value is Array:
+	var labels_value: Variant = template.get("custom_field_labels", null)
+	if template.has("custom_field_labels") and labels_value is Array:
 		var labels: Array = labels_value
 		for label_value in labels:
 			var label := str(label_value)

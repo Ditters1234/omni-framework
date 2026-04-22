@@ -178,8 +178,8 @@ func test_remaining_component_library_renders_sample_view_models() -> void:
 
 	await get_tree().process_frame
 
-	var part_title := part_card.get_node("MarginContainer/VBoxContainer/TitleLabel") as Label
-	var part_price := part_card.get_node("MarginContainer/VBoxContainer/PriceLabel") as Label
+	var part_title := part_card.get_node("MarginContainer/HBoxContainer/VBoxContainer/TitleLabel") as Label
+	var part_price := part_card.get_node("MarginContainer/HBoxContainer/VBoxContainer2/PriceLabel") as Label
 	var badge_name := faction_badge.get_node("MarginContainer/HBoxContainer/TextColumn/NameLabel") as Label
 	var badge_rep := faction_badge.get_node("MarginContainer/HBoxContainer/TextColumn/ReputationLabel") as Label
 	var quest_title := quest_card.get_node("MarginContainer/VBoxContainer/TitleLabel") as Label

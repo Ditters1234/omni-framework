@@ -35,7 +35,7 @@ Current baseline suites cover:
 - basic GameState/save flow
 - save/load time resynchronization
 - DataManager query helpers and immutability
-- DataManager load diagnostics, patch target validation, and cross-registry integrity checks
+- DataManager load diagnostics, addition schema checks, duplicate ID rejection, patch operation validation, and cross-registry integrity checks
 - AI provider config selection, readiness gating, GameEvents emission, and debug snapshot coverage
 - AudioManager bus fallback, config reload hooks, pause/resume signal wiring, and music transition hardening
 - UIRouter stack semantics, failure-path hardening, and debug snapshot coverage

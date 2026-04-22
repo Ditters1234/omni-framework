@@ -162,7 +162,7 @@ func test_list_backend_actions_use_selected_inventory_instance() -> void:
 
 func test_list_backend_uses_shared_quest_card_view_model_for_active_quests() -> void:
 	TEST_FIXTURE_WORLD.seed_phase5_runtime()
-	GameState.set_flag("phase5_ready", true)
+	GameState.flags["phase5_ready"] = true
 	var backend: RefCounted = LIST_BACKEND.new()
 	backend.initialize({
 		"data_source": "game_state.active_quests",
@@ -344,3 +344,20 @@ func _inventory_has_instance(entity: EntityInstance, instance_id: String) -> boo
 		if part.instance_id == instance_id:
 			return true
 	return false
+
+
+func _inventory_has_template(entity: EntityInstance, template_id: String) -> bool:
+	if entity == null:
+		return false
+	for part_value in entity.inventory:
+		var part: PartInstance = part_value as PartInstance
+		if part == null:
+			continue
+		if part.template_id == template_id:
+			return true
+	return false
+
+
+func _event_history_contains(signal_name: String) -> bool:
+	var history := GameEvents.get_event_history(0, "", signal_name)
+	return not history.is_empty()

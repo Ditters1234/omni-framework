@@ -9,6 +9,8 @@ extends Node
 
 class_name QuestTracker
 
+var _refreshing_quests: Dictionary = {}
+
 
 # ---------------------------------------------------------------------------
 # Boot
@@ -166,6 +168,14 @@ func _refresh_active_quests() -> void:
 
 
 func _refresh_quest(quest_id: String) -> void:
+	if _refreshing_quests.has(quest_id):
+		return
+	_refreshing_quests[quest_id] = true
+	_refresh_quest_inner(quest_id)
+	_refreshing_quests.erase(quest_id)
+
+
+func _refresh_quest_inner(quest_id: String) -> void:
 	if not is_quest_active(quest_id):
 		return
 	var template := DataManager.get_quest(quest_id)
@@ -229,6 +239,9 @@ func _complete_active_quest(quest_id: String, template: Dictionary) -> void:
 	if not is_quest_active(quest_id):
 		return
 	var quest_instance_data: Variant = GameState.active_quests.get(quest_id, {})
+	GameState.active_quests.erase(quest_id)
+	if not quest_id in GameState.completed_quests:
+		GameState.completed_quests.append(quest_id)
 	var player := GameState.player as EntityInstance
 	if player != null:
 		RewardService.apply_reward(player, template.get("reward", {}))
@@ -239,9 +252,6 @@ func _complete_active_quest(quest_id: String, template: Dictionary) -> void:
 	if actions_data is Array:
 		var actions: Array = actions_data
 		ActionDispatcher.dispatch_all(actions)
-	GameState.active_quests.erase(quest_id)
-	if not quest_id in GameState.completed_quests:
-		GameState.completed_quests.append(quest_id)
 	if quest_instance_data is Dictionary:
 		var quest_instance: Dictionary = quest_instance_data
 		ScriptHookService.invoke_template_hook(template, "on_quest_complete", [quest_instance.duplicate(true)])
