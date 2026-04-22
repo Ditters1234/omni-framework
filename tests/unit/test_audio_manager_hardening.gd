@@ -53,6 +53,7 @@ func test_missing_audio_buses_fall_back_to_master_bus() -> void:
 	var resolved_bus := _audio_manager._resolve_audio_bus("DefinitelyMissingAudioBus")
 
 	assert_eq(resolved_bus, _audio_manager.DEFAULT_AUDIO_BUS)
+	assert_push_warning("DefinitelyMissingAudioBus")
 
 	var snapshot := _audio_manager.get_debug_snapshot()
 	var errors_value: Variant = snapshot.get("recent_errors", [])

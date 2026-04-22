@@ -34,6 +34,7 @@ func test_filter_loadable_mods_skips_missing_dependencies() -> void:
 
 	assert_eq(ModLoader._manifest_id_list(filtered), ["base"])
 	assert_true(errors.size() > 0)
+	assert_push_warning("Skipping mod because dependencies are unavailable")
 
 
 func test_validate_manifest_normalizes_fields_and_deduplicates_dependencies() -> void:
@@ -67,6 +68,7 @@ func test_validate_manifest_rejects_invalid_field_types() -> void:
 	}
 
 	assert_false(ModLoader._validate_manifest(manifest))
+	assert_push_warning("Manifest field 'load_order' must be an integer.")
 
 	var errors := ModLoader.get_load_errors()
 	assert_eq(errors.size(), 1)
@@ -103,6 +105,7 @@ func test_filter_loadable_mods_skips_duplicate_mod_ids() -> void:
 
 	assert_eq(ModLoader._manifest_id_list(filtered), ["base", "dup_mod"])
 	assert_eq(ModLoader.get_load_errors().size(), 1)
+	assert_push_warning("Duplicate mod id 'dup_mod' detected")
 
 
 func test_debug_snapshot_and_boot_events_reflect_ready_state() -> void:

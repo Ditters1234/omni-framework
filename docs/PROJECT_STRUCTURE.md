@@ -18,7 +18,7 @@ res://
 └── ui/
 ```
 
-Additional root-level project files include `project.godot`, `.gutconfig.json`, `README.md`, `DOCUMENT_REVIEW_REPORT.md`, `TEST_FAILURE_ANALYSIS.md`, `AGENTS.md`, and `CLAUDE.md`.
+Additional root-level project files currently include `project.godot`, `.gutconfig.json`, `README.md`, `AGENTS.md`, and `CLAUDE.md`.
 
 ## Autoloads
 

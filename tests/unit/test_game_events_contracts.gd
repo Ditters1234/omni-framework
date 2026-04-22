@@ -53,6 +53,8 @@ func test_emit_dynamic_rejects_unknown_signal_or_wrong_arity() -> void:
 
 	assert_false(GameEvents.emit_dynamic("not_a_real_signal", []))
 	assert_false(GameEvents.emit_dynamic("quest_started", []))
+	assert_push_warning("unknown signal 'not_a_real_signal'")
+	assert_push_warning("signal 'quest_started' expected 1 args but received 0")
 	assert_signal_not_emitted(GameEvents, "quest_started")
 	assert_eq(GameEvents.get_event_history().size(), 0)
 
@@ -189,6 +191,7 @@ func test_save_and_load_flow_matches_boot_suites() -> void:
 	GameState.current_day = 2
 
 	SaveManager.save_game(1)
+	assert_push_warning("TimeKeeper: resynchronized GameState.current_day")
 
 	GameState.player.set_stat("health", 1.0)
 	GameState.spend_currency("credits", 100.0)

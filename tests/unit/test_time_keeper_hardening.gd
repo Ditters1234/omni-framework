@@ -41,6 +41,7 @@ func test_sync_from_game_state_normalizes_current_day_from_current_tick() -> voi
 	TimeKeeper.sync_from_game_state()
 
 	assert_eq(GameState.current_day, 3)
+	assert_push_warning("TimeKeeper: resynchronized GameState.current_day")
 	assert_eq(TimeKeeper.get_ticks_into_day(), 1)
 
 	var snapshot := TimeKeeper.get_debug_snapshot()
@@ -62,6 +63,7 @@ func test_invalid_ticks_per_day_falls_back_to_default_clock_contract() -> void:
 	TimeKeeper.advance_tick()
 
 	assert_eq(TimeKeeper.get_ticks_per_day(), TimeKeeper.TICKS_PER_DAY)
+	assert_push_warning("TimeKeeper: invalid game.ticks_per_day value '0'")
 	assert_eq(GameState.current_tick, 24)
 	assert_eq(GameState.current_day, 2)
 	assert_eq(TimeKeeper.get_ticks_into_day(), 0)

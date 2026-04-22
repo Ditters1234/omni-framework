@@ -5,14 +5,14 @@
 
 Omni-Framework is a data-driven, genre-agnostic game engine built on Godot 4.
 
-This folder is the canonical reference for Omni-Framework. The main docs below are the single source of truth for the architecture direction, modding rules, and implementation guardrails.
+This folder is the documentation home for Omni-Framework. `PROJECT_STRUCTURE.md` is the current implementation snapshot; the other docs are domain references or planning notes as described below.
 
 ## Documents
 
 | File | Purpose |
 |---|---|
 | [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) | **Start here.** Complete inventory of all systems, subsystems, relationships, and links to relevant documentation. |
-| [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | Engine architecture, target folder layout, autoload responsibilities, UI architecture, and cross-system guardrails |
+| [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | Current repository structure, implemented folders, autoloads, systems, and documentation-scope guidance |
 | [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) | UI rollout plan: backend catalog, engine-owned screens, component library, and phased implementation priorities |
 | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) | The modder-facing contract: data schemas, patching rules, backend requirements, config keys, and safe extension patterns |
 | [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) | Canonical stat-pair rules, clamping behavior, validation requirements, and implementation patterns |
@@ -25,7 +25,7 @@ This folder is the canonical reference for Omni-Framework. The main docs below a
 ## Reading Order
 
 0. **Start here:** Read [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) for a high-level map of all systems and quick links to detailed docs.
-1. Read [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) to understand the engine's target architecture and implementation priorities.
+1. Read [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) to understand the current repository layout before making structural changes.
 2. Read [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) before expanding the routed UI surface, adding a backend, or introducing engine-owned screens.
 3. Read [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) before building the first loaders, registries, or autoload orchestration.
 4. Read [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) before implementing validation or patch application.
@@ -37,10 +37,10 @@ This folder is the canonical reference for Omni-Framework. The main docs below a
 
 ## Current Documentation Policy
 
-Each doc below is the source of truth for its domain:
+Each doc below has an explicit scope. Prefer `PROJECT_STRUCTURE.md` for what exists today, and use planning docs for intended future work.
 
 - [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) — complete inventory of all systems, subsystems, and their relationships; entry point for system discovery.
-- [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) — target architecture; explicitly calls out where hardening is still planned.
+- [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) - current repo snapshot and implementation structure.
 - [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) — backend catalog, engine-owned screen catalog, component rollout, and UI build order.
 - [`MODDING_GUIDE.md`](MODDING_GUIDE.md) — the contracts modders must satisfy, even where enforcement is still being implemented.
 - [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) — stat invariants and validation rules.
@@ -59,7 +59,3 @@ When making changes to the engine or base game:
 3. **Tests** should cover your changes — run the test suite before submitting
 4. **Documentation** must be updated if you change architecture or contracts
 5. **Backwards compatibility** is expected — use migration patterns from [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md)
-
-## Architecture Priorities
-
-The current documentation set assumes these 

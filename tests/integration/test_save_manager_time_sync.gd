@@ -10,6 +10,7 @@ func before_each():
 func test_load_game_resynchronizes_tick_position_within_day():
 	GameState.current_tick = 1234
 	SaveManager.save_game(SAVE_SLOT_TIME_SYNC)
+	assert_push_warning("TimeKeeper: resynchronized GameState.current_day")
 	GameState.current_tick = 0
 	SaveManager.load_game(SAVE_SLOT_TIME_SYNC)
 	assert_true(GameState.current_tick > 0)

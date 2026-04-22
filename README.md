@@ -41,11 +41,11 @@ The current repo structure shows these implemented high-level pieces:
 
 ## Documentation
 
-This replacement README intentionally points only to docs that are confirmed by the current repository snapshot.
+Start with `docs/README.md` for the full documentation map.
 
-- `docs/PROJECT_STRUCTURE.md` — current code-facing structure and implementation snapshot
+- `docs/PROJECT_STRUCTURE.md` - current code-facing structure and implementation snapshot
 
-If you keep additional planning docs in `docs/`, treat them as design references unless they explicitly state they match the current implementation.
+Other docs in `docs/` describe domain contracts, implementation guardrails, or planned work. Treat their stated scope as authoritative for that area, and prefer `PROJECT_STRUCTURE.md` when you need to know what exists in the repository today.
 
 ## Testing
 

@@ -103,6 +103,7 @@ func test_generate_async_emits_ai_error_when_provider_fails() -> void:
 	})
 
 	assert_eq(response, "")
+	assert_push_warning("FakeAIProvider: scripted failure.")
 	assert_signal_emitted(GameEvents, "ai_error")
 	var error_params_value: Variant = get_signal_parameters(GameEvents, "ai_error")
 	assert_true(error_params_value is Array)

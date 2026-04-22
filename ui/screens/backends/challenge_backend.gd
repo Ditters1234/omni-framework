@@ -133,17 +133,19 @@ func _apply_success(target_entity: EntityInstance) -> void:
 		var deferred_events: Array[Dictionary] = RewardService.apply_reward(target_clone, reward_value, false)
 		GameState.commit_entity_instance(target_clone, str(_params.get("target_entity_id", "player")))
 		_emit_deferred_reward_events(deferred_events, target_clone)
-	var action_payload_value: Variant = _params.get("action_payload", {})
+	var action_payload_value: Variant = _params.get("action_payload", null)
 	if action_payload_value is Dictionary:
 		var action_payload: Dictionary = action_payload_value
-		ActionDispatcher.dispatch(action_payload)
+		if not action_payload.is_empty():
+			ActionDispatcher.dispatch(action_payload)
 
 
 func _apply_failure() -> void:
-	var failure_action_value: Variant = _params.get("failure_action_payload", {})
+	var failure_action_value: Variant = _params.get("failure_action_payload", null)
 	if failure_action_value is Dictionary:
 		var failure_action: Dictionary = failure_action_value
-		ActionDispatcher.dispatch(failure_action)
+		if not failure_action.is_empty():
+			ActionDispatcher.dispatch(failure_action)
 
 
 func _emit_deferred_reward_events(events: Array[Dictionary], entity: EntityInstance) -> void:

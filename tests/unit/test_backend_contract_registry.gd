@@ -44,6 +44,7 @@ func test_lock_prevents_late_contract_mutation() -> void:
 	BACKEND_CONTRACT_REGISTRY.register("TestBackend", {
 		"required": ["second_field"],
 	})
+	assert_push_warning("attempted to register 'TestBackend' after the registry was locked")
 
 	var contract := BACKEND_CONTRACT_REGISTRY.get_contract("TestBackend")
 	var required_value: Variant = contract.get("required", [])
