@@ -694,10 +694,12 @@ Common fields:
 ```
 
 ### Important current notes
-- `game.starting_player_id` should point at a valid entity id
-- `starting_location` should be a valid location id
-- `starting_discovered_locations` is applied when a new game starts; include any connected locations that should be available in the first travel view
+- `game.starting_player_id` is required and must point at a valid entity id
+- `game.starting_location` should be a valid location id when provided
+- `game.starting_discovered_locations` must be an array of valid location ids when provided; include any connected locations that should be available in the first travel view
 - `starting_money` uses the currencies you declared in `definitions.json`
+- `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when provided
+- `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)` when provided, such as `"1 hour"` or `"1 day"`
 - The current base content also defines `game.new_game_flow`, which means the startup flow can be configured through data instead of hardcoding it all in scripts
 
 ---
@@ -1000,7 +1002,8 @@ Before shipping a mod, verify:
 - `mod.json` has a unique `id`
 - dependencies are declared
 - all ids are namespaced
-- `starting_player_id` references a real entity if you override it
+- `starting_player_id` references a real entity
+- `starting_discovered_locations` contains only valid location ids if present
 - `connections` use object form
 - entity interactions use `label`
 - location screens use `display_name`

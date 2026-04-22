@@ -3,6 +3,8 @@
     "title": "Omni Framework Base Starter",
     "tagline": "Minimal starter content for system validation.",
     "starting_location": "base:hub_safehouse",
+    "ticks_per_day": 24,
+    "ticks_per_hour": 1,
     "starting_discovered_locations": [
       "base:hub_safehouse",
       "base:test_hub"
@@ -45,6 +47,10 @@
     }
   },
   "ui": {
+    "time_advance_buttons": [
+      "1 hour",
+      "1 day"
+    ],
     "strings": {
       "base_pack_label": "Base starter pack loaded"
     }

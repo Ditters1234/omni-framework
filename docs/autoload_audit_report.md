@@ -3,6 +3,11 @@
 
 Date: 2026-04-18
 
+Update: 2026-04-22 sanity check follow-up
+- `game.ticks_per_hour` is now used by `gameplay_shell_presenter.gd` as an optional UI time-step override.
+- `GameState.new_game()` now follows the strict `game.starting_player_id` contract instead of falling back to `base:player`.
+- `DataManager.validate_loaded_content()` now validates `starting_discovered_locations`, `ticks_per_day`, `ticks_per_hour`, and `ui.time_advance_buttons`.
+
 This audit focuses on issues similar to the `DataManager.connections` bug we discovered:
 - runtime/doc mismatches
 - strict validation that is under-documented

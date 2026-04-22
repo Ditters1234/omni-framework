@@ -145,6 +145,14 @@ Rules:
 - Circular graphs are allowed only if graph traversal code supports them safely.
 - `screens[].backend_class` must validate against backend contracts.
 
+### Config
+
+- `game.starting_player_id` is required and must reference a known entity.
+- `game.starting_location` must reference a known location when present.
+- `game.starting_discovered_locations` must be an array of known location ids when present.
+- `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when present.
+- `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)` when present.
+
 ### Factions
 
 - Required: `faction_id`, `display_name`

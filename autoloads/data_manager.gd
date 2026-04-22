@@ -820,6 +820,78 @@ func _validate_config_references() -> void:
 	if not starting_location_id.is_empty() and not has_location(starting_location_id):
 		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'game.starting_location' references unknown location '%s'." % starting_location_id)
 
+	var game_config_value: Variant = config.get("game", {})
+	if game_config_value is Dictionary:
+		var game_config: Dictionary = game_config_value
+		_validate_starting_discovered_locations(game_config)
+		_validate_positive_integer_config("game.ticks_per_day", game_config.get("ticks_per_day", null), game_config.has("ticks_per_day"))
+		_validate_positive_integer_config("game.ticks_per_hour", game_config.get("ticks_per_hour", null), game_config.has("ticks_per_hour"))
+
+	var ui_config_value: Variant = config.get("ui", {})
+	if ui_config_value is Dictionary:
+		var ui_config: Dictionary = ui_config_value
+		_validate_time_advance_buttons(ui_config)
+
+
+func _validate_starting_discovered_locations(game_config: Dictionary) -> void:
+	if not game_config.has("starting_discovered_locations"):
+		return
+	var locations_value: Variant = game_config.get("starting_discovered_locations", [])
+	if not locations_value is Array:
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'game.starting_discovered_locations' must be an array of location ids.")
+		return
+	var location_ids: Array = locations_value
+	for index in range(location_ids.size()):
+		var location_id := str(location_ids[index]).strip_edges()
+		if location_id.is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'game.starting_discovered_locations[%d]' must be a non-empty location id." % index)
+		elif not has_location(location_id):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'game.starting_discovered_locations[%d]' references unknown location '%s'." % [index, location_id])
+
+
+func _validate_positive_integer_config(field_path: String, value: Variant, is_present: bool) -> void:
+	if not is_present:
+		return
+	if not _is_integral_number(value) or int(value) < 1:
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must be an integer greater than or equal to 1." % field_path)
+
+
+func _validate_time_advance_buttons(ui_config: Dictionary) -> void:
+	if not ui_config.has("time_advance_buttons"):
+		return
+	var buttons_value: Variant = ui_config.get("time_advance_buttons", [])
+	if not buttons_value is Array:
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons' must be an array of time labels.")
+		return
+	var buttons: Array = buttons_value
+	for index in range(buttons.size()):
+		var button_value: Variant = buttons[index]
+		if not button_value is String:
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must be a string." % index)
+			continue
+		var label := str(button_value).strip_edges()
+		if label.is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must be a non-empty string." % index)
+		elif not _is_time_advance_label(label):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must end with tick(s), hour(s), or day(s)." % index)
+
+
+func _is_time_advance_label(label: String) -> bool:
+	var parts := label.to_lower().split(" ", false)
+	if parts.is_empty():
+		return false
+	var unit := parts[parts.size() - 1]
+	return unit in ["tick", "ticks", "hour", "hours", "day", "days"]
+
+
+func _is_integral_number(value: Variant) -> bool:
+	if value is int:
+		return true
+	if value is float:
+		var numeric_value := float(value)
+		return is_equal_approx(numeric_value, roundf(numeric_value))
+	return false
+
 
 func _validate_entity_references() -> void:
 	for entity_value in entities.values():

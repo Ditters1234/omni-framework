@@ -174,6 +174,43 @@ func test_validate_loaded_content_reports_unknown_stats_and_currencies() -> void
 	assert_true(_messages_contain(issue_messages, "config.game.starting_money references unknown currency 'ghost_money'"))
 
 
+func test_validate_loaded_content_reports_runtime_config_shape_issues() -> void:
+	DataManager.definitions["currencies"] = ["credits"]
+	DataManager.locations["base:start"] = {
+		"location_id": "base:start",
+		"display_name": "Start",
+		"connections": {},
+	}
+	DataManager.entities["base:player"] = {
+		"entity_id": "base:player",
+		"display_name": "Player",
+		"location_id": "base:start",
+	}
+	DataManager.config = {
+		"game": {
+			"starting_player_id": "base:player",
+			"starting_location": "base:start",
+			"starting_discovered_locations": ["base:start", "base:missing", ""],
+			"ticks_per_day": 0,
+			"ticks_per_hour": "fast",
+		},
+		"ui": {
+			"time_advance_buttons": ["1 hour", "", 7, "soon"],
+		},
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "starting_discovered_locations[1]"))
+	assert_true(_messages_contain(issue_messages, "starting_discovered_locations[2]"))
+	assert_true(_messages_contain(issue_messages, "game.ticks_per_day"))
+	assert_true(_messages_contain(issue_messages, "game.ticks_per_hour"))
+	assert_true(_messages_contain(issue_messages, "ui.time_advance_buttons[1]"))
+	assert_true(_messages_contain(issue_messages, "ui.time_advance_buttons[2]"))
+	assert_true(_messages_contain(issue_messages, "ui.time_advance_buttons[3]"))
+
+
 func test_query_locations_filters_and_returns_copies() -> void:
 	DataManager.locations["base:market"] = {
 		"location_id": "base:market",

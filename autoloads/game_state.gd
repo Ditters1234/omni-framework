@@ -62,7 +62,10 @@ func _ready() -> void:
 func new_game() -> void:
 	reset()
 
-	var player_template_id := str(DataManager.get_config_value("game.starting_player_id", "base:player"))
+	var player_template_id := str(DataManager.get_config_value("game.starting_player_id", ""))
+	if player_template_id.is_empty():
+		push_warning("GameState: config key 'game.starting_player_id' must reference a player entity template.")
+		return
 	var player_template := DataManager.get_entity(player_template_id)
 	if player_template.is_empty():
 		push_warning("GameState: unable to find starting player template '%s'" % player_template_id)
@@ -71,7 +74,8 @@ func new_game() -> void:
 	var player_entity := EntityInstance.from_template(player_template)
 	player = player_entity
 	entity_instances[player_entity.entity_id] = player_entity
-	current_location_id = str(DataManager.get_config_value("game.starting_location", player_entity.location_id))
+	var configured_location_id := str(DataManager.get_config_value("game.starting_location", ""))
+	current_location_id = configured_location_id if not configured_location_id.is_empty() else player_entity.location_id
 	player_entity.location_id = current_location_id
 	player_entity.discover_location(current_location_id)
 	var discovered_locations_value: Variant = DataManager.get_config_value("game.starting_discovered_locations", [])

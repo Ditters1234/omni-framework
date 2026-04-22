@@ -2,9 +2,6 @@ extends Control
 
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
 const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn")
-const DIALOGUE_RESOURCE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_resource.gd")
-const DIALOGUE_LINE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_line.gd")
-const DIALOGUE_RESPONSE_SCRIPT := preload("res://addons/dialogue_manager/dialogue_response.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -40,6 +37,13 @@ func _ready() -> void:
 	_initialize_backend()
 	_refresh_context()
 	_start_dialogue_if_needed()
+
+func _exit_tree() -> void:
+	_request_token += 1
+	_current_line = null
+	_dialogue_resource = null
+	if is_instance_valid(_responses_container):
+		_clear_responses()
 
 func get_debug_snapshot() -> Dictionary:
 	var snapshot := _last_view_model.duplicate(true)
