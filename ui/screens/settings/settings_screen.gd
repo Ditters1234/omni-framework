@@ -64,7 +64,6 @@ const RESOLUTION_PRESETS := [
 @onready var _ai_info_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiInfoLabel
 @onready var _connect_ai_button: Button = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiButtonRow/ConnectAiButton
 @onready var _save_button: Button = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/ButtonRow/SaveButton
-@onready var _back_button: Button = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/ButtonRow/BackButton
 @onready var _status_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/StatusLabel
 
 var _settings: Dictionary = {}
