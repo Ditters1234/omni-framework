@@ -12,6 +12,23 @@ func test_base_bootstrap_content_exists() -> void:
 	assert_false(DataManager.get_location("base:hub_safehouse").is_empty())
 	assert_eq(DataManager.get_config_value("game.starting_player_id", ""), "base:player")
 	assert_eq(DataManager.get_config_value("game.starting_location", ""), "base:hub_safehouse")
+
+
+func test_base_player_head_has_custom_color_values_for_ui_testing() -> void:
+	var head_template := DataManager.get_part("base:human_head")
+	assert_false(head_template.is_empty())
+	var custom_fields_value: Variant = head_template.get("custom_fields", [])
+	assert_true(custom_fields_value is Array)
+	if custom_fields_value is Array:
+		var custom_fields: Array = custom_fields_value
+		assert_gt(custom_fields.size(), 1)
+
+	var player := EntityInstance.from_template(DataManager.get_entity("base:player"))
+	var head := player.get_inventory_part("player_head_001")
+	assert_not_null(head)
+	if head != null:
+		assert_eq(str(head.get_custom_value("eye_color", "")), "green")
+		assert_eq(str(head.get_custom_value("hair_color", "")), "black")
 	
 
 func test_resource_and_capacity_stats_have_valid_pair_links() -> void:

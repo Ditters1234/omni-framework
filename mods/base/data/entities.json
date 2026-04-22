@@ -60,6 +60,10 @@
         {
           "instance_id": "player_head_001",
           "template_id": "base:human_head",
+          "custom_values": {
+            "eye_color": "green",
+            "hair_color": "black"
+          },
           "condition": 1.0
         },
         {

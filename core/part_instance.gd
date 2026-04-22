@@ -19,6 +19,9 @@ var stat_overrides: Dictionary = {}
 ## Arbitrary instance flags set by script hooks: { flag_key → Variant }
 var flags: Dictionary = {}
 
+## Instance-level custom values for template-declared custom fields.
+var custom_values: Dictionary = {}
+
 ## The slot this part is equipped in, or "" if in inventory.
 var equipped_slot: String = ""
 
@@ -32,8 +35,9 @@ var is_equipped: bool = false
 ## Creates a PartInstance from a template dictionary.
 static func from_template(template: Dictionary) -> PartInstance:
 	var inst := PartInstance.new()
-	inst.template_id = template.get("id", "")
+	inst.template_id = str(template.get("id", ""))
 	inst.instance_id = _generate_id()
+	inst.custom_values = _build_default_custom_values(template)
 	return inst
 
 
@@ -56,8 +60,53 @@ func get_stat_modifier(stat_key: String) -> float:
 	if stat_overrides.has(stat_key):
 		return float(stat_overrides[stat_key])
 	var template := get_template()
-	var mods: Dictionary = template.get("stats", template.get("stat_modifiers", {}))
+	var mods: Dictionary = {}
+	var mods_value: Variant = template.get("stats", template.get("stat_modifiers", {}))
+	if mods_value is Dictionary:
+		mods = mods_value
 	return float(mods.get(stat_key, 0.0))
+
+
+func get_custom_value(field_id: String, default_value: Variant = null) -> Variant:
+	return custom_values.get(field_id, default_value)
+
+
+func set_custom_value(field_id: String, value: Variant) -> void:
+	if field_id.is_empty():
+		return
+	custom_values[field_id] = value
+
+
+static func _build_default_custom_values(template: Dictionary) -> Dictionary:
+	var result: Dictionary = {}
+	var fields_value: Variant = template.get("custom_fields", [])
+	if fields_value is Array:
+		var fields: Array = fields_value
+		for field_value in fields:
+			if not field_value is Dictionary:
+				continue
+			var field: Dictionary = field_value
+			var field_id := str(field.get("id", ""))
+			if field_id.is_empty():
+				continue
+			result[field_id] = field.get("default_value", "")
+		return result
+	var labels_value: Variant = template.get("custom_field_labels", [])
+	if labels_value is Array:
+		var labels: Array = labels_value
+		for label_value in labels:
+			var label := str(label_value)
+			var field_id := _custom_field_id_from_label(label)
+			if not field_id.is_empty():
+				result[field_id] = ""
+	return result
+
+
+static func _custom_field_id_from_label(label: String) -> String:
+	var field_id := label.strip_edges().to_lower()
+	field_id = field_id.replace(" ", "_")
+	field_id = field_id.replace("-", "_")
+	return field_id
 
 
 # ---------------------------------------------------------------------------
@@ -70,15 +119,30 @@ func to_dict() -> Dictionary:
 		"instance_id": instance_id,
 		"stat_overrides": stat_overrides.duplicate(),
 		"flags": flags.duplicate(),
+		"custom_values": custom_values.duplicate(true),
 		"equipped_slot": equipped_slot,
 		"is_equipped": is_equipped,
 	}
 
 
 func from_dict(data: Dictionary) -> void:
-	template_id = data.get("template_id", "")
-	instance_id = data.get("instance_id", "")
-	stat_overrides = data.get("stat_overrides", {})
-	flags = data.get("flags", {})
-	equipped_slot = data.get("equipped_slot", "")
-	is_equipped = data.get("is_equipped", false)
+	template_id = str(data.get("template_id", ""))
+	instance_id = str(data.get("instance_id", ""))
+	var stat_overrides_value: Variant = data.get("stat_overrides", {})
+	if stat_overrides_value is Dictionary:
+		stat_overrides = stat_overrides_value.duplicate(true)
+	else:
+		stat_overrides = {}
+	var flags_value: Variant = data.get("flags", {})
+	if flags_value is Dictionary:
+		flags = flags_value.duplicate(true)
+	else:
+		flags = {}
+	var custom_values_value: Variant = data.get("custom_values", {})
+	custom_values = _build_default_custom_values(get_template())
+	if data.has("custom_values") and custom_values_value is Dictionary:
+		var saved_custom_values: Dictionary = custom_values_value
+		for custom_key_value in saved_custom_values.keys():
+			custom_values[custom_key_value] = saved_custom_values.get(custom_key_value)
+	equipped_slot = str(data.get("equipped_slot", ""))
+	is_equipped = bool(data.get("is_equipped", false))

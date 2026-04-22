@@ -372,16 +372,26 @@ func can_equip_template_in_slot(slot: String, part_template_id: String) -> bool:
 
 func _init_inventory(template: Dictionary) -> void:
 	inventory.clear()
-	var inv_data: Array = template.get("inventory", [])
+	var inv_data: Array = []
+	var inv_data_value: Variant = template.get("inventory", [])
+	if inv_data_value is Array:
+		inv_data = inv_data_value
 	for entry in inv_data:
 		if not entry is Dictionary:
 			continue
-		var tmpl_id := str(entry.get("template_id", ""))
+		var inventory_entry: Dictionary = entry
+		var tmpl_id := str(inventory_entry.get("template_id", ""))
 		if tmpl_id.is_empty():
 			continue
-		var part := PartInstance.new()
+		var part_template := DataManager.get_part(tmpl_id)
+		var part := PartInstance.from_template(part_template)
 		part.template_id = tmpl_id
-		part.instance_id = str(entry.get("instance_id", PartInstance._generate_id()))
+		part.instance_id = str(inventory_entry.get("instance_id", PartInstance._generate_id()))
+		var custom_values_value: Variant = inventory_entry.get("custom_values", {})
+		if custom_values_value is Dictionary:
+			var custom_values: Dictionary = custom_values_value
+			for custom_key_value in custom_values.keys():
+				part.custom_values[custom_key_value] = custom_values.get(custom_key_value)
 		inventory.append(part)
 
 

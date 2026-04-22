@@ -123,6 +123,7 @@ Rules:
 - `stats` keys must exist in definitions.
 - `price` currencies must exist in definitions.
 - `provides_sockets[].id` must be unique within the part.
+- `custom_fields[].id` must be unique within the part.
 - `script_path` must point to a script under the owning mod.
 
 ### Entities
@@ -132,6 +133,7 @@ Rules:
 - `stats` keys must exist in definitions.
 - Resource stats should not initialize above their paired capacity.
 - `inventory[].template_id` must reference a known part.
+- `inventory[].custom_values` keys should match that part's `custom_fields[].id` values when the template declares custom fields.
 - `assembly_socket_map` instance IDs must exist in inventory or assembly state.
 - `interactions[].backend_class` must exist in the backend contract registry.
 

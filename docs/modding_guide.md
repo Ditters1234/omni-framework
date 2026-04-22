@@ -235,6 +235,15 @@ Parts are the core content building blocks. They can represent equipment, module
       ],
       "customizable": true,
       "custom_field_labels": ["Callsign"],
+      "custom_fields": [
+        {
+          "id": "finish_color",
+          "label": "Finish Color",
+          "type": "color_name",
+          "default_value": "red",
+          "options": ["red", "blue", "black"]
+        }
+      ],
       "script_path": "res://mods/my_name/my_mod/scripts/plasma_rifle.gd"
     }
   ]
@@ -253,12 +262,26 @@ Parts are the core content building blocks. They can represent equipment, module
 - `provides_sockets`
 - `customizable`
 - `custom_field_labels`
+- `custom_fields`
 - `sprite`
 - `ui_color`
 - `equip_sound`
 - `script_path`
 
 `required_tags` lists tags that must be present on other currently equipped parts for this part to remain equipped. If a required provider is removed, the engine automatically unequips dependent parts and returns them to inventory. For example, arms can require `torso`, hands can require `arms`, and an implant can require `head`.
+
+`custom_fields` declares instance-level values a part can carry. Each field should have an `id`, `label`, `type`, and optional `default_value` / `options`. Runtime instances store actual values in `custom_values`, either from the template defaults or from an entity inventory entry:
+
+```json
+{
+  "instance_id": "player_head_001",
+  "template_id": "base:human_head",
+  "custom_values": {
+    "eye_color": "green",
+    "hair_color": "black"
+  }
+}
+```
 
 ### Socket shape
 

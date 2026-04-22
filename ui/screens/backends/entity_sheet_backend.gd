@@ -133,7 +133,7 @@ func _build_equipped_rows(entity: EntityInstance) -> Array[Dictionary]:
 			"instance_id": part.instance_id,
 			"display_name": str(template.get("display_name", part.template_id)),
 			"description": str(template.get("description", "")),
-			"stat_summary": _build_part_stat_summary(template, part.stat_overrides),
+			"stat_summary": _build_part_instance_summary(template, part),
 		})
 	return rows
 
@@ -270,6 +270,50 @@ func _build_part_stat_summary(template: Dictionary, overrides: Dictionary) -> St
 		var amount_text := "%+.0f" % amount if absf(amount - roundf(amount)) < 0.001 else "%+.2f" % amount
 		parts.append("%s %s" % [BACKEND_HELPERS.humanize_id(stat_id), amount_text])
 	return ", ".join(parts)
+
+
+func _build_part_instance_summary(template: Dictionary, part: PartInstance) -> String:
+	var lines: Array[String] = []
+	lines.append(_build_part_stat_summary(template, part.stat_overrides))
+	var custom_summary := _build_part_custom_summary(template, part.custom_values)
+	if not custom_summary.is_empty():
+		lines.append(custom_summary)
+	return "\n".join(lines)
+
+
+func _build_part_custom_summary(template: Dictionary, custom_values: Dictionary) -> String:
+	if custom_values.is_empty():
+		return ""
+	var labels := _build_custom_field_label_map(template)
+	var keys: Array = custom_values.keys()
+	keys.sort()
+	var parts: Array[String] = []
+	for key_value in keys:
+		var field_id := str(key_value)
+		var label := str(labels.get(field_id, BACKEND_HELPERS.humanize_id(field_id)))
+		var value_text := str(custom_values.get(key_value, ""))
+		if value_text.is_empty():
+			continue
+		parts.append("%s: %s" % [label, value_text])
+	if parts.is_empty():
+		return ""
+	return "Custom: %s" % ", ".join(parts)
+
+
+func _build_custom_field_label_map(template: Dictionary) -> Dictionary:
+	var labels: Dictionary = {}
+	var fields_value: Variant = template.get("custom_fields", [])
+	if fields_value is Array:
+		var fields: Array = fields_value
+		for field_value in fields:
+			if not field_value is Dictionary:
+				continue
+			var field: Dictionary = field_value
+			var field_id := str(field.get("id", ""))
+			if field_id.is_empty():
+				continue
+			labels[field_id] = str(field.get("label", BACKEND_HELPERS.humanize_id(field_id)))
+	return labels
 
 
 func _build_summary_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_result: Dictionary) -> String:

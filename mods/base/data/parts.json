@@ -17,7 +17,23 @@
         }
       ],
       "customizable": true,
-      "custom_field_labels": ["Eye Color"]
+      "custom_field_labels": ["Eye Color", "Hair Color"],
+      "custom_fields": [
+        {
+          "id": "eye_color",
+          "label": "Eye Color",
+          "type": "color_name",
+          "default_value": "brown",
+          "options": ["brown", "blue", "green", "amber", "gray", "violet"]
+        },
+        {
+          "id": "hair_color",
+          "label": "Hair Color",
+          "type": "color_name",
+          "default_value": "black",
+          "options": ["black", "brown", "blonde", "red", "white", "silver", "blue"]
+        }
+      ]
     },
     {
       "id": "base:human_torso",
