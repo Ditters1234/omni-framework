@@ -138,6 +138,12 @@ func get_time_string() -> String:
 	return "Day %d, %02d:%02d" % [GameState.current_day, hour, minute]
 
 
+func can_accept_task(template_id: String) -> bool:
+	if _task_runner == null:
+		return false
+	return _task_runner.can_accept_task(template_id)
+
+
 func accept_task(template_id: String, params: Dictionary = {}) -> String:
 	if _task_runner == null:
 		return ""

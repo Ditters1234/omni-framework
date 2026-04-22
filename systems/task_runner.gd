@@ -23,6 +23,13 @@ func _ready() -> void:
 # Public API
 # ---------------------------------------------------------------------------
 
+func can_accept_task(template_id: String) -> bool:
+	var template := TaskRegistry.get_task(template_id)
+	if template.is_empty():
+		return false
+	return _can_accept_template(template)
+
+
 ## Accepts a task from a template and starts tracking it.
 ## Optional params may override the runtime entity owner via `entity_id`.
 ## Returns the runtime_id string for this instance, or "" on failure.
@@ -147,16 +154,14 @@ func _resolve_remaining_ticks(template: Dictionary) -> int:
 
 func _can_accept_template(template: Dictionary) -> bool:
 	var template_id := str(template.get("template_id", ""))
-	var repeatable := bool(template.get("repeatable", true))
-	if not repeatable and template_id in GameState.completed_task_templates:
-		return false
-	if repeatable:
-		return true
 	for task_instance in GameState.active_tasks.values():
 		if not task_instance is Dictionary:
 			continue
 		if str(task_instance.get("template_id", "")) == template_id:
 			return false
+	var repeatable := bool(template.get("repeatable", true))
+	if not repeatable and template_id in GameState.completed_task_templates:
+		return false
 	return true
 
 

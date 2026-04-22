@@ -91,6 +91,7 @@ func confirm() -> Dictionary:
 		AudioManager.play_sfx(accept_sound)
 	var task_template := TaskRegistry.get_task(template_id)
 	_status_text = "Accepted %s." % str(task_template.get("display_name", template_id))
+	_selected_template_id = ""
 	return {}
 
 
@@ -106,7 +107,7 @@ func _build_task_rows(faction_id: String) -> Array[Dictionary]:
 				continue
 			var task_template: Dictionary = task_template_value
 			var template_id := str(task_template.get("template_id", ""))
-			if template_id.is_empty():
+			if template_id.is_empty() or not TimeKeeper.can_accept_task(template_id):
 				continue
 			rows.append({
 				"template_id": template_id,
