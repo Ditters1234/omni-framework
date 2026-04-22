@@ -39,6 +39,10 @@ window/size/viewport_height=720.0
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[dotnet]
+
+project/assembly_name="Omni-Framework"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/A2J/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/gut/plugin.cfg", "res://addons/imgui-godot/plugin.cfg")

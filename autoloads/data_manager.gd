@@ -877,10 +877,10 @@ func _validate_time_advance_buttons(ui_config: Dictionary) -> void:
 
 
 func _is_time_advance_label(label: String) -> bool:
-	var parts := label.to_lower().split(" ", false)
-	if parts.is_empty():
+	var split_parts := label.to_lower().split(" ", false)
+	if split_parts.is_empty():
 		return false
-	var unit := parts[parts.size() - 1]
+	var unit := split_parts[split_parts.size() - 1]
 	return unit in ["tick", "ticks", "hour", "hours", "day", "days"]
 
 

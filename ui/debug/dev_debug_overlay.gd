@@ -76,11 +76,11 @@ func _build_ui() -> void:
 	column.add_child(_body_label)
 
 
-func _set_overlay_visible(is_visible: bool) -> void:
-	_overlay_visible = is_visible
-	visible = is_visible
+func _set_overlay_visible(p_is_visible: bool) -> void:
+	_overlay_visible = p_is_visible
+	visible = p_is_visible
 	if _panel:
-		_panel.visible = is_visible
+		_panel.visible = p_is_visible
 	_refresh_text()
 
 
