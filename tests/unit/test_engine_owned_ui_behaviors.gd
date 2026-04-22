@@ -232,6 +232,40 @@ func test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen()
 	assert_true(snapshot.has("location"))
 
 
+func test_gameplay_shell_debug_snapshot_includes_hosted_surface_snapshot_and_title() -> void:
+	_screen_container = CanvasLayer.new()
+	_spawned_nodes.append(_screen_container)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
+	UIRouter.initialize(_screen_container)
+	_register_runtime_screens()
+	GameState.new_game()
+
+	UIRouter.replace_all("gameplay_shell")
+	await get_tree().process_frame
+
+	var shell := _get_top_screen()
+	assert_not_null(shell)
+	shell.call("open_surface_screen", "entity_sheet", {
+		"target_entity_id": "player",
+		"screen_title": "Inspect Player",
+	})
+	await get_tree().process_frame
+
+	var snapshot := UIRouter.get_current_screen_debug_snapshot()
+	assert_eq(str(snapshot.get("active_surface_screen_id", "")), "entity_sheet")
+	assert_eq(str(snapshot.get("surface_title", "")), "Inspect Player")
+	var surface_snapshot_value: Variant = snapshot.get("active_surface_snapshot", {})
+	assert_true(surface_snapshot_value is Dictionary)
+	var surface_snapshot: Dictionary = surface_snapshot_value
+	assert_eq(str(surface_snapshot.get("title", "")), "Inspect Player")
+	assert_true(bool(surface_snapshot.get("opened_from_gameplay_shell", false)))
+
+	var surface_title_label := shell.get_node("MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceTitleLabel") as Label
+	assert_not_null(surface_title_label)
+	assert_eq(surface_title_label.text, "Inspect Player")
+
+
 func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)

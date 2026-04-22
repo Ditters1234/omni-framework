@@ -73,8 +73,9 @@ func open_surface_screen(screen_id: String, params: Dictionary = {}) -> void:
 	var surface_params := params.duplicate(true)
 	surface_params["opened_from_gameplay_shell"] = true
 	_close_active_surface_internal(false)
-	_mount_surface(surface, screen_id, surface_params)
 	_surface_title_label.text = _build_surface_title(screen_id)
+	_mount_surface(surface, screen_id, surface_params)
+	_sync_surface_title_from_active_surface()
 	_refresh_surface_chrome()
 
 
@@ -87,6 +88,7 @@ func show_location_surface(params: Dictionary = {}) -> void:
 	_close_active_surface_internal(false)
 	_mount_surface(location_surface, DEFAULT_SURFACE_ID, params)
 	_surface_title_label.text = "Location Actions"
+	_sync_surface_title_from_active_surface()
 	_refresh_surface_chrome()
 
 
@@ -98,6 +100,8 @@ func get_debug_snapshot() -> Dictionary:
 	var snapshot := _last_view_model.duplicate(true)
 	snapshot["active_surface_screen_id"] = _active_surface_screen_id
 	snapshot["surface_visible"] = _surface_panel.visible
+	snapshot["surface_title"] = _surface_title_label.text
+	snapshot["active_surface_snapshot"] = _get_active_surface_debug_snapshot()
 	return snapshot
 
 
@@ -183,6 +187,27 @@ func _refresh_surface_chrome() -> void:
 		_surface_close_button.text = "Back"
 	else:
 		_surface_close_button.text = "Close"
+
+
+func _sync_surface_title_from_active_surface() -> void:
+	var surface_snapshot := _get_active_surface_debug_snapshot()
+	var title := str(surface_snapshot.get("title", ""))
+	if not title.is_empty():
+		_surface_title_label.text = title
+
+
+func _get_active_surface_debug_snapshot() -> Dictionary:
+	if _active_surface == null or not is_instance_valid(_active_surface):
+		return {}
+	if _active_surface.has_method("get_debug_snapshot"):
+		var snapshot_value: Variant = _active_surface.call("get_debug_snapshot")
+		if snapshot_value is Dictionary:
+			var snapshot: Dictionary = snapshot_value
+			return snapshot.duplicate(true)
+	return {
+		"screen_id": _active_surface_screen_id,
+		"node_name": _active_surface.name,
+	}
 
 
 func _build_surface_title(screen_id: String) -> String:
