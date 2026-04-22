@@ -432,9 +432,11 @@ Deliverable: full boot → menu → settings → save-slot → game shell loop u
 **Helper boundary for this phase:**
 
 - `backend_helpers.gd` is generic and can be used by any current or future backend.
+- Component view-model builders stay centralized in `backend_helpers.gd`; backends should use `build_part_card_view_model`, `build_quest_card_view_model`, `build_task_card_view_model`, `build_entity_portrait_view_model`, `build_stat_sheet_view_model`, and `build_faction_badge_view_model` instead of recreating those payload shapes locally.
 - `assembly_editor_config.gd` — Configuration and state management helper.
 - `assembly_editor_option_provider.gd` — Part option sourcing and filtering logic.
 - Assembly editor helpers are intentionally specific. Do not move their logic into `backend_helpers.gd` unless another backend has the same concrete need.
+- Inventory-backed assembly options are exact `PartInstance` selections, not template placeholders. Owned inventory installs are free moves from inventory to equipment; vendor/source installs stage source removal, payment, and target equipment as one commit.
 
 Historical build order:
 

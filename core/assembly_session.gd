@@ -38,6 +38,15 @@ func get_equipped_template_id(slot: String) -> String:
 	return draft_entity.get_equipped_template_id(slot)
 
 
+func get_equipped_instance_id(slot: String) -> String:
+	if draft_entity == null:
+		return ""
+	var part: PartInstance = draft_entity.get_equipped(slot)
+	if part == null:
+		return ""
+	return part.instance_id
+
+
 func get_budget_currency_id() -> String:
 	return budget_currency_id
 
@@ -57,11 +66,32 @@ func can_afford_template(slot: String, template_id: String) -> bool:
 	return _compute_total_cost(candidate) <= starting_budget
 
 
+func can_afford_part_instance(slot: String, source_part: PartInstance) -> bool:
+	var candidate := get_preview_entity_with_part(slot, source_part)
+	if candidate == null:
+		return false
+	return _compute_total_cost(candidate) <= starting_budget
+
+
+func can_apply_part_instance(slot: String, source_part: PartInstance) -> bool:
+	return get_preview_entity_with_part(slot, source_part) != null
+
+
 func apply_template(slot: String, template_id: String) -> bool:
 	var candidate := get_preview_entity(slot, template_id)
 	if candidate == null:
 		return false
 	if _compute_total_cost(candidate) > starting_budget:
+		return false
+	draft_entity = candidate
+	return true
+
+
+func apply_part_instance(slot: String, source_part: PartInstance, enforce_budget: bool = true) -> bool:
+	var candidate := get_preview_entity_with_part(slot, source_part)
+	if candidate == null:
+		return false
+	if enforce_budget and _compute_total_cost(candidate) > starting_budget:
 		return false
 	draft_entity = candidate
 	return true
@@ -109,8 +139,41 @@ func get_preview_entity(slot: String, template_id: String) -> EntityInstance:
 	return candidate
 
 
+func get_preview_entity_with_part(slot: String, source_part: PartInstance) -> EntityInstance:
+	if draft_entity == null or source_part == null:
+		return null
+	var candidate := _clone_entity(draft_entity)
+	if candidate == null:
+		return null
+	var instance_id := source_part.instance_id
+	if instance_id.is_empty():
+		return null
+	var current_part: PartInstance = candidate.get_equipped(slot)
+	if current_part != null and current_part.instance_id == instance_id:
+		return candidate
+	if candidate.get_inventory_part(instance_id) == null:
+		if _equipped_instance_exists(candidate, instance_id):
+			return null
+		var cloned_part := _clone_part(source_part)
+		if cloned_part == null:
+			return null
+		cloned_part.is_equipped = false
+		cloned_part.equipped_slot = ""
+		candidate.add_part(cloned_part)
+	if not candidate.equip(instance_id, slot):
+		return null
+	return candidate
+
+
 func get_preview_effective_stats(slot: String, template_id: String) -> Dictionary:
 	var candidate := get_preview_entity(slot, template_id)
+	if candidate == null:
+		return get_projected_effective_stats()
+	return StatManager.compute_effective_stats(candidate)
+
+
+func get_preview_effective_stats_for_part_instance(slot: String, source_part: PartInstance) -> Dictionary:
+	var candidate := get_preview_entity_with_part(slot, source_part)
 	if candidate == null:
 		return get_projected_effective_stats()
 	return StatManager.compute_effective_stats(candidate)
@@ -123,8 +186,19 @@ func get_preview_total_cost(slot: String, template_id: String) -> float:
 	return _compute_total_cost(candidate)
 
 
+func get_preview_total_cost_for_part_instance(slot: String, source_part: PartInstance) -> float:
+	var candidate := get_preview_entity_with_part(slot, source_part)
+	if candidate == null:
+		return get_total_cost()
+	return _compute_total_cost(candidate)
+
+
 func get_remaining_budget_after_preview(slot: String, template_id: String) -> float:
 	return starting_budget - get_preview_total_cost(slot, template_id)
+
+
+func get_remaining_budget_after_part_preview(slot: String, source_part: PartInstance) -> float:
+	return starting_budget - get_preview_total_cost_for_part_instance(slot, source_part)
 
 
 ## Returns the finalized target entity clone. Economic side effects are applied
@@ -151,6 +225,20 @@ func get_newly_equipped_template_ids() -> Array[String]:
 		if new_template_id.is_empty() or new_template_id == old_template_id:
 			continue
 		result.append(new_template_id)
+	return result
+
+
+func get_newly_equipped_instance_ids() -> Array[String]:
+	var result: Array[String] = []
+	if draft_entity == null:
+		return result
+	for slot_value in draft_entity.equipped.keys():
+		var slot := str(slot_value)
+		var new_instance_id := _get_equipped_instance_id(draft_entity, slot)
+		var old_instance_id := "" if original_entity == null else _get_equipped_instance_id(original_entity, slot)
+		if new_instance_id.is_empty() or new_instance_id == old_instance_id:
+			continue
+		result.append(new_instance_id)
 	return result
 
 
@@ -237,9 +325,9 @@ func _collect_slot_ids(entity: EntityInstance = null) -> Array[String]:
 func _has_layout_changes() -> bool:
 	var slot_ids := _collect_slot_ids()
 	for slot_id in slot_ids:
-		var old_template_id := "" if original_entity == null else original_entity.get_equipped_template_id(slot_id)
-		var new_template_id := "" if draft_entity == null else draft_entity.get_equipped_template_id(slot_id)
-		if old_template_id != new_template_id:
+		var old_instance_id := "" if original_entity == null else _get_equipped_instance_id(original_entity, slot_id)
+		var new_instance_id := "" if draft_entity == null else _get_equipped_instance_id(draft_entity, slot_id)
+		if old_instance_id != new_instance_id:
 			return true
 	return false
 
@@ -248,6 +336,36 @@ func _clone_entity(source_entity: EntityInstance) -> EntityInstance:
 	if source_entity == null:
 		return null
 	return source_entity.duplicate_instance()
+
+
+func _clone_part(source_part: PartInstance) -> PartInstance:
+	if source_part == null:
+		return null
+	var clone := PartInstance.new()
+	clone.from_dict(source_part.to_dict())
+	return clone
+
+
+func _get_equipped_instance_id(entity: EntityInstance, slot: String) -> String:
+	if entity == null:
+		return ""
+	var part: PartInstance = entity.get_equipped(slot)
+	if part == null:
+		return ""
+	return part.instance_id
+
+
+func _equipped_instance_exists(entity: EntityInstance, instance_id: String) -> bool:
+	if entity == null or instance_id.is_empty():
+		return false
+	for slot_value in entity.equipped.keys():
+		var slot := str(slot_value)
+		var part: PartInstance = entity.get_equipped(slot)
+		if part == null:
+			continue
+		if part.instance_id == instance_id:
+			return true
+	return false
 
 
 func _resolve_currency_id(source_entity: EntityInstance, preferred_currency_id: String) -> String:

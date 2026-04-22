@@ -778,6 +778,8 @@ No required params, but common useful ones are:
 - `reset_game_state_on_cancel`
 - `allow_confirm_without_changes`
 
+`option_source_entity_id` changes the option list from a template catalog to exact inventory part instances. When the source entity resolves to the same runtime entity as `target_entity_id` (for example `player` building from their own inventory), applying a part moves that owned instance into the slot and does not spend currency. When the source is a different entity, pair it with `payment_recipient_id` for a vendor-style install; the source instance is removed, the exact instance is equipped on the target, and currency is transferred during the same staged commit.
+
 ### Two important authored-data distinctions
 
 #### Entity interaction shape

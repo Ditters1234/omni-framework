@@ -74,6 +74,48 @@ func test_unequip_prunes_parts_when_required_tags_disappear() -> void:
 	assert_false(arm.is_equipped)
 
 
+func test_inventory_replacement_prunes_only_after_new_part_is_equipped() -> void:
+	DataManager.parts["base:test_torso"] = {
+		"id": "base:test_torso",
+		"display_name": "Test Torso",
+		"tags": ["torso"],
+	}
+	DataManager.parts["base:test_arm"] = {
+		"id": "base:test_arm",
+		"display_name": "Test Arm",
+		"tags": ["arm"],
+		"required_tags": ["torso"],
+	}
+	DataManager.entities["base:test_body"] = {
+		"entity_id": "base:test_body",
+		"provides_sockets": [
+			{"id": "torso", "accepted_tags": ["torso"], "label": "Torso"},
+			{"id": "arm", "accepted_tags": ["arm"], "label": "Arm"},
+		],
+		"inventory": [
+			{"instance_id": "test_torso_001", "template_id": "base:test_torso"},
+			{"instance_id": "test_torso_002", "template_id": "base:test_torso"},
+			{"instance_id": "test_arm_001", "template_id": "base:test_arm"},
+		],
+		"assembly_socket_map": {
+			"torso": "test_torso_001",
+			"arm": "test_arm_001",
+		},
+	}
+	var entity := EntityInstance.from_template(DataManager.get_entity("base:test_body"))
+
+	assert_true(entity.equip("test_torso_002", "torso"))
+
+	var torso: PartInstance = entity.get_equipped("torso")
+	var arm: PartInstance = entity.get_equipped("arm")
+	assert_not_null(torso)
+	assert_not_null(arm)
+	if torso == null or arm == null:
+		return
+	assert_eq(torso.instance_id, "test_torso_002")
+	assert_eq(arm.instance_id, "test_arm_001")
+
+
 func test_unequip_prunes_parts_when_dynamic_socket_disappears() -> void:
 	DataManager.parts["base:test_frame"] = {
 		"id": "base:test_frame",

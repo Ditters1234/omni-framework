@@ -299,7 +299,7 @@ func equip(instance_id: String, slot: String) -> bool:
 	if not can_equip_template_in_slot(slot, part.template_id):
 		return false
 	if equipped.has(slot):
-		unequip(slot)
+		_unequip_slot_without_prune(slot)
 	if not remove_part(instance_id):
 		return false
 	part.equipped_slot = slot

@@ -183,7 +183,7 @@ func _build_active_quest_rows() -> Array[Dictionary]:
 		if quest_instance_value is Dictionary:
 			var quest_instance: Dictionary = quest_instance_value
 			stage_index = int(quest_instance.get("stage_index", 0))
-		var stage_view_model := _build_quest_card_view_model(quest_template, stage_index)
+		var stage_view_model := BACKEND_HELPERS.build_quest_card_view_model(quest_template, stage_index, false)
 		rows.append({
 			"row_id": quest_id,
 			"quest_id": quest_id,
@@ -197,36 +197,6 @@ func _build_active_quest_rows() -> Array[Dictionary]:
 		return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
 	rows.sort_custom(sort_callable)
 	return rows
-
-
-func _build_quest_card_view_model(quest_template: Dictionary, stage_index: int) -> Dictionary:
-	var objectives: Array[Dictionary] = []
-	var current_stage: Dictionary = {}
-	var stages_value: Variant = quest_template.get("stages", [])
-	if stages_value is Array:
-		var stages: Array = stages_value
-		if stage_index >= 0 and stage_index < stages.size():
-			var current_stage_value: Variant = stages[stage_index]
-			if current_stage_value is Dictionary:
-				current_stage = current_stage_value
-				var objective_values: Variant = current_stage.get("objectives", [])
-				if objective_values is Array:
-					var raw_objectives: Array = objective_values
-					for objective_value in raw_objectives:
-						if not objective_value is Dictionary:
-							continue
-						var objective: Dictionary = objective_value
-						objectives.append({
-							"label": str(objective.get("description", objective.get("type", "Objective"))),
-							"satisfied": false,
-						})
-	return {
-		"quest_id": str(quest_template.get("quest_id", "")),
-		"display_name": str(quest_template.get("display_name", quest_template.get("quest_id", ""))),
-		"current_stage": str(current_stage.get("description", current_stage.get("title", ""))),
-		"objectives": objectives,
-		"rewards": _read_dictionary(quest_template.get("reward", {})),
-	}
 
 
 func _resolve_owner_from_source(data_source: String) -> EntityInstance:

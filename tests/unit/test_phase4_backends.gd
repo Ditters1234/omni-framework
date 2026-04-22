@@ -130,6 +130,33 @@ func test_list_backend_builds_inventory_rows_from_player_inventory() -> void:
 	assert_eq(str(view_model.get("detail_kind", "")), "part_card")
 
 
+func test_list_backend_uses_shared_quest_card_view_model_for_active_quests() -> void:
+	TEST_FIXTURE_WORLD.seed_phase5_runtime()
+	GameState.set_flag("phase5_ready", true)
+	var backend: RefCounted = LIST_BACKEND.new()
+	backend.initialize({
+		"data_source": "game_state.active_quests",
+		"screen_title": "Quest List",
+	})
+
+	var view_model: Dictionary = backend.build_view_model()
+	var selected_detail_value: Variant = view_model.get("selected_detail", {})
+
+	assert_eq(str(view_model.get("detail_kind", "")), "quest_card")
+	assert_true(selected_detail_value is Dictionary)
+	if selected_detail_value is Dictionary:
+		var selected_detail: Dictionary = selected_detail_value
+		assert_eq(str(selected_detail.get("quest_id", "")), "base:phase5_quest")
+		var objectives_value: Variant = selected_detail.get("objectives", [])
+		assert_true(objectives_value is Array)
+		if objectives_value is Array:
+			var objectives: Array = objectives_value
+			assert_eq(objectives.size(), 1)
+			if objectives[0] is Dictionary:
+				var objective: Dictionary = objectives[0]
+				assert_true(bool(objective.get("satisfied", false)))
+
+
 func test_challenge_backend_applies_success_reward_to_player() -> void:
 	var player := GameState.player as EntityInstance
 	assert_not_null(player)
@@ -180,8 +207,17 @@ func test_task_provider_backend_lists_faction_tasks_and_accepts_selected_task() 
 
 	var view_model: Dictionary = backend.build_view_model()
 	var rows_value: Variant = view_model.get("rows", [])
+	var portrait_value: Variant = view_model.get("portrait", {})
 
 	assert_true(rows_value is Array)
+	assert_true(portrait_value is Dictionary)
+	if portrait_value is Dictionary:
+		var portrait: Dictionary = portrait_value
+		var faction_badge_value: Variant = portrait.get("faction_badge", {})
+		assert_true(faction_badge_value is Dictionary)
+		if faction_badge_value is Dictionary:
+			var faction_badge: Dictionary = faction_badge_value
+			assert_eq(str(faction_badge.get("faction_id", "")), "base:test_faction")
 	var rows: Array = rows_value
 	assert_eq(rows.size(), 1)
 

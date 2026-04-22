@@ -133,17 +133,11 @@ func _build_provider_portrait(faction_id: String) -> Dictionary:
 			"stat_preview": [],
 		}
 	var player := GameState.player as EntityInstance
-	var reputation_value := 0.0 if player == null else player.get_reputation(faction_id)
 	return {
 		"display_name": str(faction.get("display_name", BACKEND_HELPERS.humanize_id(faction_id))),
 		"description": str(faction.get("description", "Accept work from the configured faction task pool.")),
 		"emblem_path": str(faction.get("emblem_path", "")),
-		"faction_badge": {
-			"faction_id": faction_id,
-			"reputation_tier": _reputation_tier_for_value(reputation_value),
-			"reputation_value": reputation_value,
-			"color": str(faction.get("faction_color", "secondary")),
-		},
+		"faction_badge": BACKEND_HELPERS.build_faction_badge_view_model(player, faction_id),
 		"stat_preview": [],
 	}
 
@@ -173,18 +167,6 @@ func _build_status_text(rows: Array[Dictionary], selected_row: Dictionary, empty
 	if selected_row.is_empty():
 		return "Select a task to inspect its details."
 	return "Ready to accept %s." % str(selected_row.get("display_name", "the selected task"))
-
-
-func _reputation_tier_for_value(value: float) -> String:
-	if value >= 75.0:
-		return "Allied"
-	if value >= 25.0:
-		return "Friendly"
-	if value <= -75.0:
-		return "Hostile"
-	if value <= -25.0:
-		return "Unfriendly"
-	return "Neutral"
 
 
 func _read_dictionary(value: Variant) -> Dictionary:

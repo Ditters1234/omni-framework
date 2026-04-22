@@ -33,7 +33,7 @@ func get_inventory_template_counts() -> Dictionary:
 	if _source_entity == null:
 		return counts
 	for inventory_part in _source_entity.inventory:
-		var part := inventory_part as PartInstance
+		var part: PartInstance = inventory_part as PartInstance
 		if part == null or part.is_equipped:
 			continue
 		var template_id := part.template_id
@@ -79,10 +79,11 @@ func _get_inventory_options_for_slot(slot_id: String) -> Array[Dictionary]:
 	if _source_entity == null:
 		return results
 	var counts := get_inventory_template_counts()
-	var template_ids: Array = counts.keys()
-	template_ids.sort()
-	for template_id_value in template_ids:
-		var template_id := str(template_id_value)
+	for inventory_part in _source_entity.inventory:
+		var part: PartInstance = inventory_part as PartInstance
+		if part == null or part.is_equipped:
+			continue
+		var template_id := part.template_id
 		if template_id.is_empty():
 			continue
 		if not _session.can_equip_template_in_slot(slot_id, template_id):
@@ -95,6 +96,9 @@ func _get_inventory_options_for_slot(slot_id: String) -> Array[Dictionary]:
 		if not _matches_tag_filters(template):
 			continue
 		var option_template := template.duplicate(true)
+		option_template["_part_instance_id"] = part.instance_id
+		option_template["_source_kind"] = "inventory"
+		option_template["_custom_values"] = part.custom_values.duplicate(true)
 		option_template["_inventory_count"] = int(counts.get(template_id, 0))
 		results.append(option_template)
 	results.sort_custom(_sort_options_by_display_name)
@@ -117,7 +121,12 @@ func _matches_tag_filters(template: Dictionary) -> bool:
 func _sort_options_by_display_name(a: Dictionary, b: Dictionary) -> bool:
 	var a_name := str(a.get("display_name", a.get("id", "")))
 	var b_name := str(b.get("display_name", b.get("id", "")))
-	return a_name.naturalnocasecmp_to(b_name) < 0
+	var name_compare := a_name.naturalnocasecmp_to(b_name)
+	if name_compare != 0:
+		return name_compare < 0
+	var a_instance_id := str(a.get("_part_instance_id", ""))
+	var b_instance_id := str(b.get("_part_instance_id", ""))
+	return a_instance_id.naturalnocasecmp_to(b_instance_id) < 0
 
 
 func _get_part_template(template_id: String) -> Dictionary:
