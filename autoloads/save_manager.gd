@@ -283,12 +283,14 @@ func load_game(slot: int) -> bool:
 		GameEvents.load_failed.emit(slot, deserialize_reason)
 		return false
 
-	var previous_state_snapshot := GameState.to_dict()
 	var game_state_payload: Dictionary = state_data
-	GameState.from_dict(game_state_payload)
-	var runtime_issues := GameState.validate_runtime_state()
+	
+	var temp_state := OmniGameState.new()
+	temp_state.from_dict(game_state_payload)
+	var runtime_issues := temp_state.validate_runtime_state()
+	temp_state.free()
+	
 	if not runtime_issues.is_empty():
-		_restore_game_state(previous_state_snapshot)
 		var runtime_reason := "Save file failed runtime validation: %s" % runtime_issues[0]
 		last_operation_summary = {
 			"kind": "load",
@@ -299,6 +301,8 @@ func load_game(slot: int) -> bool:
 		}
 		GameEvents.load_failed.emit(slot, runtime_reason)
 		return false
+		
+	GameState.from_dict(game_state_payload)
 	_sync_timekeeper_from_game_state()
 	last_operation_summary = {
 		"kind": "load",
@@ -546,11 +550,6 @@ func _validate_raw_payload(data: Dictionary) -> String:
 	if not state_data is Dictionary:
 		return "Save file field 'game_state' must be a dictionary."
 	return ""
-
-
-func _restore_game_state(snapshot: Dictionary) -> void:
-	GameState.from_dict(snapshot)
-	_sync_timekeeper_from_game_state()
 
 
 func _sync_timekeeper_from_game_state() -> void:
