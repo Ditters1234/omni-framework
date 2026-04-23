@@ -192,7 +192,10 @@ func test_validate_loaded_content_reports_recipe_reference_failures() -> void:
 		"inputs": [
 			{"template_id": "base:missing_input", "count": 0},
 		],
-		"required_stats": {"mystery": 1},
+		"required_stats": {"mystery": 1, "power": "high"},
+		"required_stations": ["base:bench", 9, ""],
+		"required_flags": ["base:flag", 4, ""],
+		"tags": ["fixture", false, ""],
 		"craft_time_ticks": -1,
 		"discovery": "forgotten",
 	}
@@ -207,6 +210,13 @@ func test_validate_loaded_content_reports_recipe_reference_failures() -> void:
 	assert_true(_messages_contain(issue_messages, "craft_time_ticks"))
 	assert_true(_messages_contain(issue_messages, "discovery has unknown mode"))
 	assert_true(_messages_contain(issue_messages, "required_stats references unknown stat 'mystery'"))
+	assert_true(_messages_contain(issue_messages, "required_stats.power must be numeric"))
+	assert_true(_messages_contain(issue_messages, "required_stations[1] must be a string"))
+	assert_true(_messages_contain(issue_messages, "required_stations[2] must be a non-empty string"))
+	assert_true(_messages_contain(issue_messages, "required_flags[1] must be a string"))
+	assert_true(_messages_contain(issue_messages, "required_flags[2] must be a non-empty string"))
+	assert_true(_messages_contain(issue_messages, "tags[1] must be a string"))
+	assert_true(_messages_contain(issue_messages, "tags[2] must be a non-empty string"))
 
 
 func test_validate_loaded_content_reports_runtime_config_shape_issues() -> void:

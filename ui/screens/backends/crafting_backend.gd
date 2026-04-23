@@ -114,6 +114,9 @@ func confirm() -> Dictionary:
 	if recipe.is_empty():
 		_status_text = "Select a valid recipe before crafting."
 		return {}
+	if not _recipe_is_available_for_current_context(recipe, crafter, input_source):
+		_status_text = "The selected recipe is not available from this crafting station."
+		return {}
 	var row := _build_recipe_row(recipe, crafter, input_source)
 	if row.is_empty() or not bool(row.get("craftable", false)):
 		_status_text = str(row.get("status_text", "The selected recipe requirements are not satisfied."))
@@ -147,6 +150,7 @@ func confirm() -> Dictionary:
 		if runtime_id.is_empty():
 			_refund_inputs(recipe, input_source)
 			_status_text = "Timed crafting could not be started; inputs were returned."
+			return {}
 		else:
 			_status_text = "Started crafting %s. It will finish in %d ticks." % [_get_recipe_display_name(recipe), craft_time_ticks]
 	else:
@@ -163,6 +167,35 @@ func confirm() -> Dictionary:
 	if bool(_params.get("pop_on_confirm", false)):
 		return {"type": "pop"}
 	return {}
+
+
+func _recipe_is_available_for_current_context(recipe: Dictionary, crafter: EntityInstance, input_source: EntityInstance) -> bool:
+	return _recipe_matches_current_filters(recipe) and _is_recipe_visible(recipe, crafter, input_source)
+
+
+func _recipe_matches_current_filters(recipe: Dictionary) -> bool:
+	var recipe_id := str(recipe.get("recipe_id", ""))
+	var recipe_ids := _read_string_array(_params.get("recipe_ids", []))
+	if not recipe_ids.is_empty() and not recipe_ids.has(recipe_id):
+		return false
+	var recipe_tags := _read_string_array(recipe.get("tags", []))
+	var tag_filters := _read_string_array(_params.get("recipe_tags", []))
+	for tag_filter in tag_filters:
+		if not recipe_tags.has(tag_filter):
+			return false
+	return _recipe_matches_station(recipe, str(_params.get("station_id", "")))
+
+
+func _recipe_matches_station(recipe: Dictionary, station_id: String) -> bool:
+	if station_id.is_empty():
+		return true
+	var stations_value: Variant = recipe.get("required_stations", [])
+	if not stations_value is Array:
+		return true
+	var stations: Array = stations_value
+	if stations.is_empty():
+		return true
+	return stations.has(station_id)
 
 
 func _can_start_timed_craft(craft_time_ticks: int) -> bool:
@@ -315,7 +348,10 @@ func _required_stats_are_satisfied(recipe: Dictionary, crafter: EntityInstance) 
 	var required_stats: Dictionary = required_stats_value
 	for stat_key_value in required_stats.keys():
 		var stat_key := str(stat_key_value)
-		var required_value := _read_float(required_stats.get(stat_key_value, 0.0))
+		var required_stat_value: Variant = required_stats.get(stat_key_value, 0.0)
+		if not _is_number(required_stat_value):
+			return false
+		var required_value := float(required_stat_value)
 		if crafter.effective_stat(stat_key) < required_value:
 			return false
 	return true
@@ -449,7 +485,7 @@ func _read_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
-func _read_float(value: Variant) -> float:
+func _is_number(value: Variant) -> bool:
 	if value is int or value is float:
-		return float(value)
-	return 0.0
+		return true
+	return false

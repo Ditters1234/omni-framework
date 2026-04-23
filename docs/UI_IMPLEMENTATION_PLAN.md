@@ -276,6 +276,7 @@ Schema notes:
 - `required_stats` and `required_flags` reuse existing condition shapes.
 - `discovery` is one of `"always"` (visible from the start), `"learned_on_flag"` (visible when `learned:<recipe_id>` flag is set on the player), or `"auto_on_ingredient_owned"` (visible once the player has all inputs at least once).
 - `craft_time_ticks: 0` = instant (default); >0 routes through `TaskRunner` as a timed production task.
+- Confirm-time hardening rechecks station filters, recipe allowlists, tags, discovery, and stat gates before any inputs are consumed.
 
 ### 7.2 `CraftingBackend` params
 

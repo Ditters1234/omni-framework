@@ -796,6 +796,9 @@ func _validate_template_schemas() -> void:
 		_validate_array_field(recipe_id, OmniConstants.DATA_RECIPES, "required_stations", recipe)
 		_validate_array_field(recipe_id, OmniConstants.DATA_RECIPES, "required_flags", recipe)
 		_validate_array_field(recipe_id, OmniConstants.DATA_RECIPES, "tags", recipe)
+		_validate_string_array_elements(recipe_id, OmniConstants.DATA_RECIPES, "required_stations", recipe.get("required_stations", []))
+		_validate_string_array_elements(recipe_id, OmniConstants.DATA_RECIPES, "required_flags", recipe.get("required_flags", []))
+		_validate_string_array_elements(recipe_id, OmniConstants.DATA_RECIPES, "tags", recipe.get("tags", []))
 		_validate_stat_map(recipe_id, OmniConstants.DATA_RECIPES, "required_stats", recipe.get("required_stats", {}), stat_ids)
 		_validate_recipe_shape(recipe)
 
@@ -821,6 +824,19 @@ func _validate_array_field(entry_id: String, file_path: String, field_name: Stri
 	var field_value: Variant = entry.get(field_name, [])
 	if not field_value is Array:
 		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s must be an array." % [entry_id, field_name])
+
+
+func _validate_string_array_elements(entry_id: String, file_path: String, field_path: String, value: Variant) -> void:
+	if not value is Array:
+		return
+	var values: Array = value
+	for index in range(values.size()):
+		var item_value: Variant = values[index]
+		if not item_value is String:
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s[%d] must be a string." % [entry_id, field_path, index])
+			continue
+		if str(item_value).strip_edges().is_empty():
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s[%d] must be a non-empty string." % [entry_id, field_path, index])
 
 
 func _validate_stat_map(entry_id: String, file_path: String, field_path: String, value: Variant, stat_ids: Dictionary) -> void:
@@ -862,6 +878,14 @@ func _validate_recipe_shape(recipe: Dictionary) -> void:
 	var discovery := str(recipe.get("discovery", "always"))
 	if not ["always", "learned_on_flag", "auto_on_ingredient_owned"].has(discovery):
 		_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' discovery has unknown mode '%s'." % [recipe_id, discovery])
+
+	var required_stats_value: Variant = recipe.get("required_stats", {})
+	if required_stats_value is Dictionary:
+		var required_stats: Dictionary = required_stats_value
+		for stat_key_value in required_stats.keys():
+			var required_value: Variant = required_stats.get(stat_key_value, 0.0)
+			if not (required_value is int or required_value is float):
+				_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' required_stats.%s must be numeric." % [recipe_id, str(stat_key_value)])
 
 	var inputs_value: Variant = recipe.get("inputs", [])
 	if not inputs_value is Array:

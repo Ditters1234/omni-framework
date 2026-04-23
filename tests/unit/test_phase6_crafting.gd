@@ -60,6 +60,20 @@ func test_crafting_backend_consumes_inputs_and_adds_output() -> void:
 		assert_eq(TransactionService.count_inventory_template(updated_player, "base:crafted_grip"), 1)
 
 
+func test_instant_craft_emits_inventory_signals_per_consumed_and_created_part() -> void:
+	var backend: RefCounted = CRAFTING_BACKEND.new()
+	backend.initialize({
+		"station_id": "base:test_bench",
+		"recipe_ids": ["base:test_grip_recipe"],
+	})
+	backend.build_view_model()
+
+	backend.confirm()
+
+	assert_eq(GameEvents.get_event_history(0, "inventory", "part_removed").size(), 2)
+	assert_eq(GameEvents.get_event_history(0, "inventory", "part_acquired").size(), 1)
+
+
 func test_crafting_backend_starts_timed_recipe_task() -> void:
 	_seed_timed_recipe_fixture()
 	var backend: RefCounted = CRAFTING_BACKEND.new()
@@ -77,6 +91,22 @@ func test_crafting_backend_starts_timed_recipe_task() -> void:
 	if updated_player != null:
 		assert_eq(TransactionService.count_inventory_template(updated_player, "base:craft_material"), 0)
 		assert_eq(TransactionService.count_inventory_template(updated_player, "base:crafted_grip"), 0)
+
+
+func test_timed_craft_emits_task_started_without_output_signal() -> void:
+	_seed_timed_recipe_fixture()
+	var backend: RefCounted = CRAFTING_BACKEND.new()
+	backend.initialize({
+		"station_id": "base:test_bench",
+		"recipe_ids": ["base:timed_grip_recipe"],
+	})
+	backend.build_view_model()
+
+	backend.confirm()
+
+	assert_eq(GameEvents.get_event_history(0, "inventory", "part_removed").size(), 2)
+	assert_eq(GameEvents.get_event_history(0, "quests_tasks", "task_started").size(), 1)
+	assert_eq(GameEvents.get_event_history(0, "inventory", "part_acquired").size(), 0)
 
 
 func test_timed_recipe_without_task_template_does_not_consume_or_output() -> void:
@@ -99,6 +129,67 @@ func test_timed_recipe_without_task_template_does_not_consume_or_output() -> voi
 		assert_eq(TransactionService.count_inventory_template(updated_player, "base:crafted_grip"), 0)
 	var view_model: Dictionary = backend.build_view_model()
 	assert_true(str(view_model.get("status_text", "")).contains("Timed crafting is unavailable"))
+
+
+func test_confirm_rejects_directly_selected_recipe_outside_station_filters() -> void:
+	DataManager.recipes["base:other_bench_recipe"] = _recipe_fixture({
+		"recipe_id": "base:other_bench_recipe",
+		"required_stations": ["base:other_bench"],
+	})
+	var backend: RefCounted = CRAFTING_BACKEND.new()
+	backend.initialize({
+		"station_id": "base:test_bench",
+	})
+	backend.select_row("base:other_bench_recipe")
+
+	backend.confirm()
+
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_player)
+	if updated_player != null:
+		assert_eq(TransactionService.count_inventory_template(updated_player, "base:craft_material"), 2)
+		assert_eq(TransactionService.count_inventory_template(updated_player, "base:crafted_grip"), 0)
+	var view_model: Dictionary = backend.build_view_model()
+	assert_true(str(view_model.get("status_text", "")).contains("not available"))
+
+
+func test_confirm_rejects_directly_selected_hidden_recipe() -> void:
+	DataManager.recipes["base:hidden_grip_recipe"] = _recipe_fixture({
+		"recipe_id": "base:hidden_grip_recipe",
+		"discovery": "learned_on_flag",
+	})
+	var backend: RefCounted = CRAFTING_BACKEND.new()
+	backend.initialize({
+		"station_id": "base:test_bench",
+	})
+	backend.select_row("base:hidden_grip_recipe")
+
+	backend.confirm()
+
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_player)
+	if updated_player != null:
+		assert_eq(TransactionService.count_inventory_template(updated_player, "base:craft_material"), 2)
+		assert_eq(TransactionService.count_inventory_template(updated_player, "base:crafted_grip"), 0)
+	var view_model: Dictionary = backend.build_view_model()
+	assert_true(str(view_model.get("status_text", "")).contains("not available"))
+
+
+func test_non_numeric_required_stat_makes_recipe_uncraftable() -> void:
+	DataManager.recipes["base:bad_stat_recipe"] = _recipe_fixture({
+		"recipe_id": "base:bad_stat_recipe",
+		"required_stats": {"strength": "high"},
+	})
+	var backend: RefCounted = CRAFTING_BACKEND.new()
+	backend.initialize({
+		"station_id": "base:test_bench",
+		"recipe_ids": ["base:bad_stat_recipe"],
+	})
+
+	var view_model: Dictionary = backend.build_view_model()
+
+	assert_false(bool(view_model.get("confirm_enabled", true)))
+	assert_true(str(view_model.get("status_text", "")).contains("stats"))
 
 
 func _seed_recipe_fixture() -> void:
@@ -146,6 +237,29 @@ func _seed_recipe_fixture() -> void:
 		return
 	player.add_part(PartInstance.from_template(DataManager.get_part("base:craft_material")))
 	player.add_part(PartInstance.from_template(DataManager.get_part("base:craft_material")))
+
+
+func _recipe_fixture(overrides: Dictionary = {}) -> Dictionary:
+	var recipe: Dictionary = {
+		"recipe_id": "base:test_grip_recipe",
+		"display_name": "Test Grip",
+		"description": "Fixture recipe.",
+		"output_template_id": "base:crafted_grip",
+		"output_count": 1,
+		"inputs": [
+			{"template_id": "base:craft_material", "count": 2},
+		],
+		"required_stations": ["base:test_bench"],
+		"required_stats": {"strength": 1},
+		"required_flags": [],
+		"craft_time_ticks": 0,
+		"discovery": "always",
+		"tags": ["fixture_recipe"],
+	}
+	for key_value in overrides.keys():
+		var key := str(key_value)
+		recipe[key] = overrides.get(key_value)
+	return recipe
 
 
 func _seed_timed_recipe_fixture() -> void:
