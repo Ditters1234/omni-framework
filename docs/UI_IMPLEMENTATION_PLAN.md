@@ -463,7 +463,7 @@ The remaining read-only view backends depend on existing runtime state and the c
 
 ### Phase 6 — Crafting (~3–4 days)
 
-Current status: initial pass complete. The repository now has `recipes.json`, `RecipeRegistry`, recipe query/validation APIs on `DataManager`, `CraftingBackend`, `crafting_screen`, `recipe_card` integration, timed-craft handoff through `TaskRunner`, and a base diagnostic recipe/station.
+Current status: final polish complete. The repository now has `recipes.json`, `RecipeRegistry`, recipe query/validation APIs on `DataManager`, `CraftingBackend`, `crafting_screen`, `recipe_card` integration, timed-craft handoff through `TaskRunner`, confirm-time hardening, polished empty/row screen states, and a base diagnostic recipe/station.
 
 1. New data type: `recipes.json` schema + `RecipeRegistry` loader + `DataManager.get_recipe` / `query_recipes` / `query_recipes_by_tag`. Done.
 2. `CraftingBackend` + `crafting_screen` + `recipe_card` integration. Done.

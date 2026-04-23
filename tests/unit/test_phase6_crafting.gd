@@ -3,6 +3,7 @@ extends GutTest
 const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const CRAFTING_BACKEND := preload("res://ui/screens/backends/crafting_backend.gd")
+const CRAFTING_SCREEN_SCENE := preload("res://ui/screens/backends/crafting_screen.tscn")
 
 
 func before_each() -> void:
@@ -192,6 +193,48 @@ func test_non_numeric_required_stat_makes_recipe_uncraftable() -> void:
 	assert_true(str(view_model.get("status_text", "")).contains("stats"))
 
 
+func test_crafting_screen_hides_recipe_card_when_station_has_no_rows() -> void:
+	var screen := _spawn_crafting_screen({
+		"station_id": "base:empty_bench",
+	})
+	await get_tree().process_frame
+
+	var card_host := screen.get_node("MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/CardHost") as VBoxContainer
+	assert_not_null(card_host)
+	if card_host != null and card_host.get_child_count() > 0:
+		var recipe_card := card_host.get_child(0) as Control
+		assert_not_null(recipe_card)
+		if recipe_card != null:
+			assert_false(recipe_card.visible)
+
+	screen.queue_free()
+	await get_tree().process_frame
+
+
+func test_crafting_screen_row_text_includes_output_and_confirm_tooltip() -> void:
+	var screen := _spawn_crafting_screen({
+		"station_id": "base:test_bench",
+		"recipe_ids": ["base:test_grip_recipe"],
+	})
+	await get_tree().process_frame
+
+	var rows_container := screen.get_node("MarginContainer/PanelContainer/VBoxContainer/MainContent/RowsScroll/RowsContainer") as VBoxContainer
+	assert_not_null(rows_container)
+	if rows_container != null and rows_container.get_child_count() > 0:
+		var row_button := rows_container.get_child(0) as Button
+		assert_not_null(row_button)
+		if row_button != null:
+			assert_true(row_button.text.contains("Creates Crafted Grip x1"))
+			assert_true(row_button.tooltip_text.contains("Ready to craft"))
+	var confirm_button := screen.get_node("MarginContainer/PanelContainer/VBoxContainer/ButtonRow/ConfirmButton") as Button
+	assert_not_null(confirm_button)
+	if confirm_button != null:
+		assert_eq(confirm_button.tooltip_text, "Craft Selected")
+
+	screen.queue_free()
+	await get_tree().process_frame
+
+
 func _seed_recipe_fixture() -> void:
 	DataManager.parts["base:craft_material"] = {
 		"id": "base:craft_material",
@@ -260,6 +303,16 @@ func _recipe_fixture(overrides: Dictionary = {}) -> Dictionary:
 		var key := str(key_value)
 		recipe[key] = overrides.get(key_value)
 	return recipe
+
+
+func _spawn_crafting_screen(params: Dictionary) -> Control:
+	var instance_value: Variant = CRAFTING_SCREEN_SCENE.instantiate()
+	assert_true(instance_value is Control)
+	var screen := instance_value as Control
+	get_tree().root.add_child(screen)
+	if screen.has_method("initialize"):
+		screen.call("initialize", params)
+	return screen
 
 
 func _seed_timed_recipe_fixture() -> void:

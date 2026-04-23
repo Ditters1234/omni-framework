@@ -58,6 +58,7 @@ func _refresh_state() -> void:
 	_confirm_button.text = str(view_model.get("confirm_label", "Craft Selected"))
 	_back_button.text = str(view_model.get("cancel_label", "Back"))
 	_confirm_button.disabled = not bool(view_model.get("confirm_enabled", false))
+	_confirm_button.tooltip_text = _build_confirm_tooltip(view_model)
 	_render_rows(_read_dictionary_array(view_model.get("rows", [])))
 	_render_recipe_card(_read_dictionary(view_model.get("selected_recipe_card", {})))
 
@@ -78,10 +79,8 @@ func _render_rows(rows: Array[Dictionary]) -> void:
 		button.button_pressed = bool(row.get("selected", false))
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.text = "%s\n%s" % [
-			str(row.get("display_name", "Unnamed Recipe")),
-			str(row.get("status_text", "")),
-		]
+		button.text = _build_row_text(row)
+		button.tooltip_text = str(row.get("status_text", ""))
 		button.pressed.connect(_on_row_pressed.bind(str(row.get("recipe_id", ""))))
 		_rows_container.add_child(button)
 
@@ -93,7 +92,34 @@ func _render_recipe_card(view_model: Dictionary) -> void:
 			_recipe_card = recipe_card_value
 			_card_host.add_child(_recipe_card)
 	if _recipe_card != null:
+		_recipe_card.visible = not view_model.is_empty()
+		if view_model.is_empty():
+			return
 		_recipe_card.call("render", view_model)
+
+
+func _build_row_text(row: Dictionary) -> String:
+	var lines: Array[String] = [
+		str(row.get("display_name", "Unnamed Recipe")),
+	]
+	var card := _read_dictionary(row.get("card_view_model", {}))
+	var recipe := _read_dictionary(card.get("recipe", {}))
+	var output_template := _read_dictionary(card.get("output_template", {}))
+	var output_name := str(output_template.get("display_name", recipe.get("output_template_id", "")))
+	var output_count := maxi(int(recipe.get("output_count", 1)), 1)
+	if not output_name.is_empty():
+		lines.append("Creates %s x%d" % [output_name, output_count])
+	var craft_time_ticks := maxi(int(recipe.get("craft_time_ticks", 0)), 0)
+	if craft_time_ticks > 0:
+		lines.append("Time: %d ticks" % craft_time_ticks)
+	lines.append(str(row.get("status_text", "")))
+	return "\n".join(lines)
+
+
+func _build_confirm_tooltip(view_model: Dictionary) -> String:
+	if bool(view_model.get("confirm_enabled", false)):
+		return str(view_model.get("confirm_label", "Craft Selected"))
+	return str(view_model.get("status_text", "Select a craftable recipe."))
 
 
 func _on_row_pressed(recipe_id: String) -> void:
