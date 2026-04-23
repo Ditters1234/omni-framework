@@ -64,7 +64,8 @@ static func from_template(template: Dictionary) -> EntityInstance:
 
 
 static func _generate_id() -> String:
-	return str(randi())
+	# Use a combination of time + random to avoid collisions from randi() alone.
+	return "%d_%d" % [Time.get_ticks_usec(), randi()]
 
 
 func get_template() -> Dictionary:

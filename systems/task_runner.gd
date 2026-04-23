@@ -144,7 +144,8 @@ func _on_tick(tick: int) -> void:
 
 
 func _generate_runtime_id() -> String:
-	return str(randi())
+	# Use a combination of time + random to avoid collisions from randi() alone.
+	return "task_%d_%d" % [Time.get_ticks_usec(), randi()]
 
 
 func _resolve_remaining_ticks(template: Dictionary, params: Dictionary = {}) -> int:
