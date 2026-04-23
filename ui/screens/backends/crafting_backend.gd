@@ -118,12 +118,17 @@ func confirm() -> Dictionary:
 	if row.is_empty() or not bool(row.get("craftable", false)):
 		_status_text = str(row.get("status_text", "The selected recipe requirements are not satisfied."))
 		return {}
-	if not _consume_inputs(recipe, input_source, output_destination):
-		_status_text = "Crafting failed while consuming inputs."
-		return {}
 	var output_template_id := str(recipe.get("output_template_id", ""))
 	var output_count := maxi(int(recipe.get("output_count", 1)), 1)
 	var craft_time_ticks := maxi(int(recipe.get("craft_time_ticks", 0)), 0)
+	if output_template_id.is_empty() or not DataManager.has_part(output_template_id):
+		_status_text = "Crafting failed because the recipe output is not registered."
+		return {}
+	if not _can_start_timed_craft(craft_time_ticks):
+		return {}
+	if not _consume_inputs(recipe, input_source, output_destination):
+		_status_text = "Crafting failed while consuming inputs."
+		return {}
 	if craft_time_ticks > 0:
 		var runtime_id := TimeKeeper.accept_task(RECIPE_CRAFT_TASK_ID, {
 			"entity_id": output_destination.entity_id,
@@ -140,9 +145,8 @@ func confirm() -> Dictionary:
 			},
 		})
 		if runtime_id.is_empty():
-			TransactionService.add_part_template_count(output_destination, output_template_id, output_count)
-			GameState.commit_entity_instance(output_destination, _resolve_output_destination_lookup())
-			_status_text = "Crafted %s instantly because the timed task could not be started." % _get_recipe_display_name(recipe)
+			_refund_inputs(recipe, input_source)
+			_status_text = "Timed crafting could not be started; inputs were returned."
 		else:
 			_status_text = "Started crafting %s. It will finish in %d ticks." % [_get_recipe_display_name(recipe), craft_time_ticks]
 	else:
@@ -159,6 +163,18 @@ func confirm() -> Dictionary:
 	if bool(_params.get("pop_on_confirm", false)):
 		return {"type": "pop"}
 	return {}
+
+
+func _can_start_timed_craft(craft_time_ticks: int) -> bool:
+	if craft_time_ticks <= 0:
+		return true
+	if not DataManager.has_task(RECIPE_CRAFT_TASK_ID):
+		_status_text = "Timed crafting is unavailable because the craft task template is not registered."
+		return false
+	if TimeKeeper == null:
+		_status_text = "Timed crafting is unavailable because the time keeper is not ready."
+		return false
+	return true
 
 
 func _build_recipe_rows(crafter: EntityInstance, input_source: EntityInstance) -> Array[Dictionary]:
@@ -232,6 +248,19 @@ func _consume_inputs(recipe: Dictionary, input_source: EntityInstance, output_de
 	if input_source.entity_id != output_destination.entity_id:
 		GameState.commit_entity_instance(output_destination, _resolve_output_destination_lookup())
 	return true
+
+
+func _refund_inputs(recipe: Dictionary, input_source: EntityInstance) -> void:
+	var inputs_value: Variant = recipe.get("inputs", [])
+	if not inputs_value is Array:
+		return
+	var inputs: Array = inputs_value
+	var required_by_template := _aggregate_required_inputs(inputs)
+	for template_id_value in required_by_template.keys():
+		var template_id := str(template_id_value)
+		var count := int(required_by_template.get(template_id_value, 0))
+		TransactionService.add_part_template_count(input_source, template_id, count)
+	GameState.commit_entity_instance(input_source, _resolve_input_source_lookup())
 
 
 func _aggregate_required_inputs(inputs: Array) -> Dictionary:

@@ -61,19 +61,7 @@ func test_crafting_backend_consumes_inputs_and_adds_output() -> void:
 
 
 func test_crafting_backend_starts_timed_recipe_task() -> void:
-	DataManager.recipes["base:timed_grip_recipe"] = {
-		"recipe_id": "base:timed_grip_recipe",
-		"display_name": "Timed Grip",
-		"output_template_id": "base:crafted_grip",
-		"output_count": 1,
-		"inputs": [
-			{"template_id": "base:craft_material", "count": 2},
-		],
-		"required_stations": ["base:test_bench"],
-		"craft_time_ticks": 2,
-		"discovery": "always",
-		"tags": ["fixture_recipe"],
-	}
+	_seed_timed_recipe_fixture()
 	var backend: RefCounted = CRAFTING_BACKEND.new()
 	backend.initialize({
 		"station_id": "base:test_bench",
@@ -89,6 +77,28 @@ func test_crafting_backend_starts_timed_recipe_task() -> void:
 	if updated_player != null:
 		assert_eq(TransactionService.count_inventory_template(updated_player, "base:craft_material"), 0)
 		assert_eq(TransactionService.count_inventory_template(updated_player, "base:crafted_grip"), 0)
+
+
+func test_timed_recipe_without_task_template_does_not_consume_or_output() -> void:
+	_seed_timed_recipe_fixture()
+	DataManager.tasks.erase("base:recipe_craft")
+	var backend: RefCounted = CRAFTING_BACKEND.new()
+	backend.initialize({
+		"station_id": "base:test_bench",
+		"recipe_ids": ["base:timed_grip_recipe"],
+	})
+	backend.build_view_model()
+
+	backend.confirm()
+
+	assert_eq(GameState.active_tasks.size(), 0)
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_player)
+	if updated_player != null:
+		assert_eq(TransactionService.count_inventory_template(updated_player, "base:craft_material"), 2)
+		assert_eq(TransactionService.count_inventory_template(updated_player, "base:crafted_grip"), 0)
+	var view_model: Dictionary = backend.build_view_model()
+	assert_true(str(view_model.get("status_text", "")).contains("Timed crafting is unavailable"))
 
 
 func _seed_recipe_fixture() -> void:
@@ -136,3 +146,19 @@ func _seed_recipe_fixture() -> void:
 		return
 	player.add_part(PartInstance.from_template(DataManager.get_part("base:craft_material")))
 	player.add_part(PartInstance.from_template(DataManager.get_part("base:craft_material")))
+
+
+func _seed_timed_recipe_fixture() -> void:
+	DataManager.recipes["base:timed_grip_recipe"] = {
+		"recipe_id": "base:timed_grip_recipe",
+		"display_name": "Timed Grip",
+		"output_template_id": "base:crafted_grip",
+		"output_count": 1,
+		"inputs": [
+			{"template_id": "base:craft_material", "count": 2},
+		],
+		"required_stations": ["base:test_bench"],
+		"craft_time_ticks": 2,
+		"discovery": "always",
+		"tags": ["fixture_recipe"],
+	}
