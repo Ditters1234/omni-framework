@@ -202,7 +202,15 @@ func _refresh_quest_inner(quest_id: String) -> void:
 		var stage: Dictionary = stage_data
 		if not _is_stage_complete(stage):
 			return
-		advance_quest(quest_id, "objectives_met")
+		_apply_stage_completion(stage)
+		var next_stage_index := stage_index + 1
+		quest_instance["last_transition"] = "objectives_met"
+		if next_stage_index >= stages.size():
+			_complete_active_quest(quest_id, template)
+			return
+		quest_instance["stage_index"] = next_stage_index
+		GameState.active_quests[quest_id] = quest_instance
+		GameEvents.quest_stage_advanced.emit(quest_id, next_stage_index)
 
 
 func _is_stage_complete(stage: Dictionary) -> bool:
