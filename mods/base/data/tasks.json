@@ -25,6 +25,15 @@
       "description": "A simple tick-based wait task for time system validation.",
       "difficulty": 0,
       "repeatable": true
+    },
+    {
+      "template_id": "base:recipe_craft",
+      "type": "CRAFT",
+      "duration": 1,
+      "reward": {},
+      "description": "Generic runtime task shell used by timed recipe crafting.",
+      "difficulty": 0,
+      "repeatable": true
     }
   ]
 }

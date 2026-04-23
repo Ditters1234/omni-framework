@@ -35,6 +35,7 @@ mods/<author_id>/<mod_id>/
 │   ├── factions.json
 │   ├── tasks.json
 │   ├── quests.json
+│   ├── recipes.json
 │   ├── achievements.json
 │   └── config.json
 ├── dialogue/
@@ -147,6 +148,7 @@ The current base pack uses these files:
 - `factions.json`
 - `tasks.json`
 - `quests.json`
+- `recipes.json`
 - `achievements.json`
 - `config.json`
 
@@ -572,6 +574,42 @@ Use:
 - `travel_cost` for travel-based tasks
 - `duration` for pure timed waits/crafting
 - `reward` for currencies, reputation, and other rewards
+
+---
+
+## 11.5 `recipes.json`
+
+Recipes are inventory-driven crafting templates loaded by `RecipeRegistry` into `DataManager.recipes`.
+
+### Current addition format
+
+```json
+{
+  "recipes": [
+    {
+      "recipe_id": "my_name:my_mod:iron_grip",
+      "display_name": "Iron Grip",
+      "description": "Turns salvage into a usable arm mod.",
+      "output_template_id": "my_name:my_mod:iron_grip_part",
+      "output_count": 1,
+      "inputs": [
+        { "template_id": "my_name:my_mod:salvage_chip", "count": 2 }
+      ],
+      "required_stations": ["my_name:my_mod:workbench"],
+      "required_stats": { "power": 1 },
+      "required_flags": [],
+      "craft_time_ticks": 0,
+      "discovery": "always",
+      "tags": ["arm_mod"]
+    }
+  ],
+  "patches": []
+}
+```
+
+`CraftingBackend` requires `station_id`; optional `recipe_tags` and `recipe_ids` filter visible recipes. Instant recipes produce output immediately. Recipes with `craft_time_ticks > 0` consume inputs immediately and start the generic `base:recipe_craft` timed task, which grants the output when completed.
+
+Supported discovery modes are `always`, `learned_on_flag`, and `auto_on_ingredient_owned`.
 
 ---
 

@@ -89,6 +89,7 @@ These systems parse JSON templates and populate in-memory registries. All are in
 | `FactionRegistry` | `FactionRegistry` | `systems/loaders/faction_registry.gd` | `factions.json` | `faction_id` | Faction definitions, reputation tiers, task boards. |
 | `QuestRegistry` | `QuestRegistry` | `systems/loaders/quest_registry.gd` | `quests.json` | `quest_id` | Quest templates with branching objectives and rewards. |
 | `TaskRegistry` | `TaskRegistry` | `systems/loaders/task_registry.gd` | `tasks.json` | `template_id` | Repeatable tasks issued by factions; includes difficulty, reward, objectives. |
+| `RecipeRegistry` | `RecipeRegistry` | `systems/loaders/recipe_registry.gd` | `recipes.json` | `recipe_id` | Crafting recipes that consume inventory parts and produce part templates. |
 | `AchievementRegistry` | `AchievementRegistry` | `systems/loaders/achievement_registry.gd` | `achievements.json` | `achievement_id` | Achievements with unlock conditions and rewards. |
 | `ConfigLoader` | — | `systems/loaders/config_loader.gd` | `config.json` | — (deep-merged) | Engine-wide configuration: AI provider, theme overrides, debug settings. |
 
@@ -160,6 +161,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `ChallengeBackend` | `ui/screens/backends/challenge_screen.tscn` | Stat check rules, pass/fail actions | Stat-check pass/fail outcome. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `TaskProviderBackend` | `ui/screens/backends/task_provider_screen.tscn` | Faction ID, difficulty filter, task list | Faction job board with repeatable tasks. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `CraftingBackend` | `ui/screens/backends/crafting_screen.tscn` | Station ID, recipe filters, crafter/input/output entities | Recipe crafting with input status and timed production support. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager .dialogue file ref | NPC branching dialogue (wraps Dialogue Manager). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Read-only entity stats, equipment, inventory, and faction standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `ActiveQuestLogBackend` | `ui/screens/backends/active_quest_log_screen.tscn` | Optional completed quest display | Active quest cards with stages, objectives, and rewards. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
@@ -192,7 +194,7 @@ These are **reusable widgets** used inside screens. Located in `ui/components/`.
 | `entity_portrait` | `entity_portrait.tscn` | Gameplay Shell, Dialogue, Tasks | Entity card (NPC or player). |
 | `tab_panel` | `tab_panel.tscn` | Tabbed backends | Generic tab host for multi-surface layouts. |
 | `notification_popup` | `notification_popup.tscn` | Global (ScreenLayer) | Toast popup for transient messages. |
-| `recipe_card` | `recipe_card.tscn` | Crafting surfaces (future) | Recipe summary with requirement/status. |
+| `recipe_card` | `recipe_card.tscn` | Crafting surfaces | Recipe summary with requirement/status. |
 | `quest_card` | `quest_card.tscn` | Quest surfaces | Quest summary with objective checklist. |
 | `faction_badge` | `faction_badge.tscn` | Task boards, dialogue | Faction identity with reputation tier. |
 

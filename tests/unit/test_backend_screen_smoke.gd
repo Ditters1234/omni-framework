@@ -33,6 +33,14 @@ const SCREEN_CASES := [
 		},
 	},
 	{
+		"scene_path": UI_ROUTE_CATALOG.CRAFTING_SCENE,
+		"params": {
+			"station_id": "base:screen_smoke_bench",
+			"recipe_ids": ["base:screen_smoke_recipe"],
+			"screen_title": "Smoke Crafting",
+		},
+	},
+	{
 		"scene_path": UI_ROUTE_CATALOG.LIST_VIEW_SCENE,
 		"params": {
 			"data_source": "player:inventory",
@@ -152,6 +160,16 @@ func _seed_backend_screen_runtime() -> void:
 	var part_template := DataManager.get_part("base:body_arm_standard")
 	if not part_template.is_empty():
 		player.add_part(PartInstance.from_template(part_template))
+	var material_template := {
+		"id": "base:screen_smoke_material",
+		"display_name": "Smoke Material",
+		"description": "A smoke-test crafting material.",
+		"tags": ["material"],
+		"price": {"credits": 1},
+		"stats": {},
+	}
+	DataManager.parts["base:screen_smoke_material"] = material_template.duplicate(true)
+	player.add_part(PartInstance.from_template(material_template))
 	var vendor_template := {
 		"entity_id": "base:screen_smoke_vendor",
 		"display_name": "Smoke Vendor",
@@ -179,6 +197,20 @@ func _seed_backend_screen_runtime() -> void:
 		"travel_cost": 1,
 		"reward": {"credits": 1},
 		"repeatable": true,
+	}
+	DataManager.recipes["base:screen_smoke_recipe"] = {
+		"recipe_id": "base:screen_smoke_recipe",
+		"display_name": "Smoke Recipe",
+		"description": "Used by backend screen smoke tests.",
+		"output_template_id": "base:body_arm_standard",
+		"output_count": 1,
+		"inputs": [
+			{"template_id": "base:screen_smoke_material", "count": 1},
+		],
+		"required_stations": ["base:screen_smoke_bench"],
+		"craft_time_ticks": 0,
+		"discovery": "always",
+		"tags": ["smoke"],
 	}
 	DataManager.quests["base:screen_smoke_quest"] = {
 		"quest_id": "base:screen_smoke_quest",

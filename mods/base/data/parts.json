@@ -146,6 +146,24 @@
       "price": { "credits": 60 },
       "stats": { "power": 3 },
       "equippable": true
+    },
+    {
+      "id": "base:salvage_chip",
+      "display_name": "Salvage Chip",
+      "description": "Reusable diagnostic scrap for validating recipe-driven crafting.",
+      "tags": ["material", "salvage", "test_part"],
+      "price": { "credits": 5 },
+      "stats": {},
+      "equippable": false
+    },
+    {
+      "id": "base:diagnostic_grip",
+      "display_name": "Diagnostic Grip",
+      "description": "A simple crafted arm mod that proves recipes can produce fresh part instances.",
+      "tags": ["arm_mod", "crafted", "test_part"],
+      "price": { "credits": 40 },
+      "stats": { "power": 1 },
+      "equippable": true
     }
   ]
 }

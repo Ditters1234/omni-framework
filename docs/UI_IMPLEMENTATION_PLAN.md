@@ -65,7 +65,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 
 ### Planned but not yet implemented
 
-- Backend-driven screen plus data schema: `crafting` / `CraftingBackend` and `recipes.json` (Phase 6).
+- Backend-driven screen plus data schema: `crafting` / `CraftingBackend` and `recipes.json` (Phase 6 initial pass complete).
 - Backend-driven screen: `world_map` / `WorldMapBackend` (deferred to Phase 7).
 
 ---
@@ -83,7 +83,7 @@ Implementation note: the repository has completed the current Phase 4 backend sc
 | `AssemblyEditorBackend` | `assembly_editor` | ✅ Implemented | Slot+part editor — character creator, workbench, ripperdoc, shipyard, cyberware install |
 | `ExchangeBackend` | `exchange` | ✅ Implemented | Two-sided trade: move instances between two entity inventories with currency transfer |
 | `CatalogListBackend` | `catalog_list` | ✅ Implemented | Infinite vendor — buy fresh `PartInstance`s minted from `PartsRegistry` |
-| `CraftingBackend` | `crafting` | 🆕 **Proposed** | Recipe-driven: consume N inputs from an inventory, produce 1 output template |
+| `CraftingBackend` | `crafting` | Implemented (Phase 6 initial pass) | Recipe-driven: consume N inputs from an inventory, produce 1 output template |
 | `ListBackend` | `list_view` | ✅ Implemented | Generic filtered list with pluggable row templates and `action_payload` dispatch |
 | `ChallengeBackend` | `challenge` | ✅ Implemented | Single stat check → branch to `reward` or `action_payload` |
 | `TaskProviderBackend` | `task_provider` | ✅ Implemented | Faction job board — accept tasks from `faction.quest_pool` |
@@ -462,10 +462,12 @@ The remaining read-only view backends depend on existing runtime state and the c
 
 ### Phase 6 — Crafting (~3–4 days)
 
-1. New data type: `recipes.json` schema + `RecipeRegistry` loader + `DataManager.get_recipe` / `query_recipes` / `query_recipes_by_tag`.
-2. `CraftingBackend` + `crafting_screen` + `recipe_card` integration.
-3. Timed-craft task type wired through `TaskRunner` for `craft_time_ticks > 0`.
-4. Base mod ships at least one example recipe and one `base:forge` crafting station on a test location for the integration test.
+Current status: initial pass complete. The repository now has `recipes.json`, `RecipeRegistry`, recipe query/validation APIs on `DataManager`, `CraftingBackend`, `crafting_screen`, `recipe_card` integration, timed-craft handoff through `TaskRunner`, and a base diagnostic recipe/station.
+
+1. New data type: `recipes.json` schema + `RecipeRegistry` loader + `DataManager.get_recipe` / `query_recipes` / `query_recipes_by_tag`. Done.
+2. `CraftingBackend` + `crafting_screen` + `recipe_card` integration. Done.
+3. Timed-craft task type wired through `TaskRunner` for `craft_time_ticks > 0`. Done via the generic `base:recipe_craft` task shell and runtime reward overrides.
+4. Base mod ships at least one example recipe and one crafting station on a test location for the integration test. Done with the diagnostic crafting bench.
 
 ### Phase 7 — World Map (~2 days)
 
@@ -475,7 +477,7 @@ The remaining read-only view backends depend on existing runtime state and the c
 
 Not built in this plan. When combat lands, it follows the same pattern as every other backend. See §6.
 
-**Remaining estimated effort for Phases 5–7: ~8–10 engineering days.** The original Phase 1–4 foundation is now complete for the current scope, so future estimates should focus on the read-only backend set, crafting, and world map.
+**Remaining estimated effort for Phase 7: ~2 engineering days.** The original Phase 1–6 foundation is now complete for the current scope, so future estimates should focus on world map and polish.
 
 ---
 

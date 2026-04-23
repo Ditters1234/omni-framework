@@ -50,3 +50,48 @@ static func remove_one_inventory_template(entity: EntityInstance, template_id: S
 			GameEvents.part_removed.emit(entity.entity_id, template_id)
 		return true
 	return false
+
+
+static func count_inventory_template(entity: EntityInstance, template_id: String, include_equipped: bool = false) -> int:
+	if entity == null or template_id.is_empty():
+		return 0
+	var count := 0
+	for part_data in entity.inventory:
+		var part := part_data as PartInstance
+		if part == null:
+			continue
+		if part.template_id != template_id:
+			continue
+		if part.is_equipped and not include_equipped:
+			continue
+		count += 1
+	return count
+
+
+static func remove_inventory_template_count(entity: EntityInstance, template_id: String, count: int) -> bool:
+	if entity == null or template_id.is_empty() or count <= 0:
+		return false
+	if count_inventory_template(entity, template_id) < count:
+		return false
+	var removed := 0
+	while removed < count:
+		if not remove_one_inventory_template(entity, template_id):
+			return false
+		removed += 1
+	return true
+
+
+static func add_part_template_count(entity: EntityInstance, template_id: String, count: int) -> Array[PartInstance]:
+	var added_parts: Array[PartInstance] = []
+	if entity == null or template_id.is_empty() or count <= 0:
+		return added_parts
+	var template := DataManager.get_part(template_id)
+	if template.is_empty():
+		return added_parts
+	for _i in range(count):
+		var part := PartInstance.from_template(template)
+		entity.add_part(part)
+		added_parts.append(part)
+		if GameEvents:
+			GameEvents.part_acquired.emit(entity.entity_id, part.template_id)
+	return added_parts

@@ -77,6 +77,7 @@ systems/
 │   ├── location_graph.gd
 │   ├── parts_registry.gd
 │   ├── quest_registry.gd
+│   ├── recipe_registry.gd
 │   └── task_registry.gd
 ├── action_dispatcher.gd
 ├── assembly_commit_service.gd
@@ -139,6 +140,8 @@ ui/
 │   │   ├── catalog_list_screen.gd / .tscn
 │   │   ├── challenge_backend.gd
 │   │   ├── challenge_screen.gd / .tscn
+│   │   ├── crafting_backend.gd
+│   │   ├── crafting_screen.gd / .tscn
 │   │   ├── dialogue_backend.gd
 │   │   ├── dialogue_screen.gd / .tscn
 │   │   ├── entity_sheet_backend.gd
@@ -176,7 +179,7 @@ The UI layer includes:
 
 - A root entry scene (`main.tscn`) and accompanying controller (`main.gd`)
 - A route catalog (`ui_route_catalog.gd`) — the shared catalog for `backend_class → screen_id` mapping and the runtime `screen_id → scene_path` registry
-- **12 backend-driven screens** (Phase 4 + Phase 5 complete): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `DialogueBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`
+- **13 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting initial pass): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`
 - A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts
 - Debug overlay at `ui/debug/dev_debug_overlay.gd`
 - Theme system: `omni_theme.tres` + `theme_applier.gd`

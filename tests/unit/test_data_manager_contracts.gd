@@ -174,6 +174,41 @@ func test_validate_loaded_content_reports_unknown_stats_and_currencies() -> void
 	assert_true(_messages_contain(issue_messages, "config.game.starting_money references unknown currency 'ghost_money'"))
 
 
+func test_validate_loaded_content_reports_recipe_reference_failures() -> void:
+	DataManager.definitions["stats"] = [
+		{"id": "power", "kind": "flat"}
+	]
+	DataManager.parts["base:known_output"] = {
+		"id": "base:known_output",
+		"display_name": "Known Output",
+		"description": "Valid output.",
+		"tags": [],
+	}
+	DataManager.recipes["base:broken_recipe"] = {
+		"recipe_id": "base:broken_recipe",
+		"display_name": "Broken Recipe",
+		"output_template_id": "base:missing_output",
+		"output_count": 0,
+		"inputs": [
+			{"template_id": "base:missing_input", "count": 0},
+		],
+		"required_stats": {"mystery": 1},
+		"craft_time_ticks": -1,
+		"discovery": "forgotten",
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "output_template_id references unknown part 'base:missing_output'"))
+	assert_true(_messages_contain(issue_messages, "inputs[0] references unknown part 'base:missing_input'"))
+	assert_true(_messages_contain(issue_messages, "inputs[0].count"))
+	assert_true(_messages_contain(issue_messages, "output_count"))
+	assert_true(_messages_contain(issue_messages, "craft_time_ticks"))
+	assert_true(_messages_contain(issue_messages, "discovery has unknown mode"))
+	assert_true(_messages_contain(issue_messages, "required_stats references unknown stat 'mystery'"))
+
+
 func test_validate_loaded_content_reports_runtime_config_shape_issues() -> void:
 	DataManager.definitions["currencies"] = ["credits"]
 	DataManager.locations["base:start"] = {

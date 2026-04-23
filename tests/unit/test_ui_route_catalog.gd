@@ -27,6 +27,7 @@ func test_backend_screen_ids_map_to_known_routes() -> void:
 		"ChallengeBackend",
 		"TaskProviderBackend",
 		"CatalogListBackend",
+		"CraftingBackend",
 		"DialogueBackend",
 		"EntitySheetBackend",
 		"ActiveQuestLogBackend",

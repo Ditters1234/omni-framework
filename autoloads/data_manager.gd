@@ -29,6 +29,7 @@ var locations: Dictionary = {}         # location_id → location template
 var factions: Dictionary = {}          # faction_id → faction template
 var quests: Dictionary = {}            # quest_id → quest template
 var tasks: Dictionary = {}             # template_id → task template
+var recipes: Dictionary = {}           # recipe_id → recipe template
 var achievements: Dictionary = {}      # achievement_id → achievement template
 var config: Dictionary = {}            # deep-merged runtime config
 var is_loaded: bool = false
@@ -113,6 +114,14 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 			task_entries = _get_array_field(tasks_data, "tasks", mod_id, tasks_path, LOAD_PHASE_ADDITIONS)
 		task_entries = _filter_valid_additions(task_entries, tasks, "tasks", "template_id", ["template_id", "type"], mod_id, tasks_path, LOAD_PHASE_ADDITIONS)
 		TaskRegistry.load_additions(task_entries)
+
+	var recipes_path := mod_data_path.path_join(OmniConstants.DATA_RECIPES)
+	var recipes_data_value: Variant = _load_json_document(mod_id, recipes_path, LOAD_PHASE_ADDITIONS)
+	if recipes_data_value is Dictionary:
+		var recipes_data: Dictionary = recipes_data_value
+		var recipe_entries: Array = _get_array_field(recipes_data, "recipes", mod_id, recipes_path, LOAD_PHASE_ADDITIONS)
+		recipe_entries = _filter_valid_additions(recipe_entries, recipes, "recipes", "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"], mod_id, recipes_path, LOAD_PHASE_ADDITIONS)
+		RecipeRegistry.load_additions(recipe_entries)
 
 	var achievements_path := mod_data_path.path_join(OmniConstants.DATA_ACHIEVEMENTS)
 	var achievements_data_value: Variant = _load_json_document(mod_id, achievements_path, LOAD_PHASE_ADDITIONS)
@@ -208,6 +217,15 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		_validate_patch_operations(task_patches, ["target", "set", "set_reward"], "tasks", mod_id, tasks_path, LOAD_PHASE_PATCHES)
 		TaskRegistry.apply_patch(task_patches)
 
+	var recipes_path := mod_data_path.path_join(OmniConstants.DATA_RECIPES)
+	var recipes_data_value: Variant = _load_json_document(mod_id, recipes_path, LOAD_PHASE_PATCHES)
+	if recipes_data_value is Dictionary:
+		var recipes_data: Dictionary = recipes_data_value
+		var recipe_patches: Array = _get_array_field(recipes_data, "patches", mod_id, recipes_path, LOAD_PHASE_PATCHES)
+		_validate_patch_targets(recipe_patches, recipes, "recipes", mod_id, recipes_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(recipe_patches, ["target", "set", "add_tags", "remove_tags"], "recipes", mod_id, recipes_path, LOAD_PHASE_PATCHES)
+		RecipeRegistry.apply_patch(recipe_patches)
+
 	var achievements_path := mod_data_path.path_join(OmniConstants.DATA_ACHIEVEMENTS)
 	var achievements_data_value: Variant = _load_json_document(mod_id, achievements_path, LOAD_PHASE_PATCHES)
 	if achievements_data_value is Dictionary:
@@ -255,6 +273,10 @@ func get_task(template_id: String) -> Dictionary:
 	return _duplicate_dictionary(tasks.get(template_id, {}))
 
 
+func get_recipe(recipe_id: String) -> Dictionary:
+	return _duplicate_dictionary(recipes.get(recipe_id, {}))
+
+
 func get_achievement(achievement_id: String) -> Dictionary:
 	return _duplicate_dictionary(achievements.get(achievement_id, {}))
 
@@ -285,6 +307,10 @@ func has_quest(quest_id: String) -> bool:
 
 func has_task(template_id: String) -> bool:
 	return tasks.has(template_id)
+
+
+func has_recipe(recipe_id: String) -> bool:
+	return recipes.has(recipe_id)
 
 
 func has_achievement(achievement_id: String) -> bool:
@@ -356,6 +382,34 @@ func query_locations(filters: Dictionary = {}) -> Array[Dictionary]:
 	return results
 
 
+func query_recipes(filters: Dictionary = {}) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var recipe_ids := _variant_to_string_array(filters.get("recipe_ids", filters.get("template_ids", [])))
+	var tag_filters := _variant_to_string_array(filters.get("tags", filters.get("recipe_tags", [])))
+	var station_id := str(filters.get("station_id", ""))
+	for recipe_id_value in recipes.keys():
+		var recipe_id := str(recipe_id_value)
+		if not recipe_ids.is_empty() and not recipe_ids.has(recipe_id):
+			continue
+		var recipe_value: Variant = recipes.get(recipe_id_value, {})
+		if not recipe_value is Dictionary:
+			continue
+		var recipe: Dictionary = recipe_value
+		if not _recipe_matches_station(recipe, station_id):
+			continue
+		var recipe_tags := _variant_to_string_array(recipe.get("tags", []))
+		if not _contains_all_strings(recipe_tags, tag_filters):
+			continue
+		results.append(recipe.duplicate(true))
+	return results
+
+
+func query_recipes_by_tag(tag: String) -> Array[Dictionary]:
+	if tag.is_empty():
+		return query_recipes()
+	return query_recipes({"tags": [tag]})
+
+
 func get_registry_counts() -> Dictionary:
 	return {
 		"stats": get_definitions("stats").size(),
@@ -366,6 +420,7 @@ func get_registry_counts() -> Dictionary:
 		"factions": factions.size(),
 		"quests": quests.size(),
 		"tasks": tasks.size(),
+		"recipes": recipes.size(),
 		"achievements": achievements.size(),
 	}
 
@@ -520,6 +575,18 @@ func _location_has_screen_value(location: Dictionary, field_name: String, expect
 		if str(screen.get(field_name, "")) == expected_value:
 			return true
 	return false
+
+
+func _recipe_matches_station(recipe: Dictionary, station_id: String) -> bool:
+	if station_id.is_empty():
+		return true
+	var stations_value: Variant = recipe.get("required_stations", [])
+	if not stations_value is Array:
+		return true
+	var stations: Array = stations_value
+	if stations.is_empty():
+		return true
+	return stations.has(station_id)
 
 
 func _get_array_field(document: Dictionary, field_name: String, mod_id: String, file_path: String, phase: String) -> Array:
@@ -697,6 +764,7 @@ func _validate_template_schemas() -> void:
 	_validate_registry_required_fields(factions, OmniConstants.DATA_FACTIONS, "faction_id", ["faction_id", "display_name"])
 	_validate_registry_required_fields(quests, OmniConstants.DATA_QUESTS, "quest_id", ["quest_id", "display_name", "stages"])
 	_validate_registry_required_fields(tasks, OmniConstants.DATA_TASKS, "template_id", ["template_id", "type"])
+	_validate_registry_required_fields(recipes, OmniConstants.DATA_RECIPES, "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"])
 	_validate_registry_required_fields(achievements, OmniConstants.DATA_ACHIEVEMENTS, "achievement_id", ["achievement_id", "display_name", "stat_name", "requirement"])
 
 	for part_value in parts.values():
@@ -718,6 +786,18 @@ func _validate_template_schemas() -> void:
 		_validate_stat_map(entity_id, OmniConstants.DATA_ENTITIES, "stats", entity.get("stats", {}), stat_ids)
 		_validate_currency_map(entity_id, OmniConstants.DATA_ENTITIES, "currencies", entity.get("currencies", {}), currency_ids)
 		_validate_unique_object_ids(entity_id, OmniConstants.DATA_ENTITIES, "provides_sockets", entity.get("provides_sockets", []))
+
+	for recipe_value in recipes.values():
+		if not recipe_value is Dictionary:
+			continue
+		var recipe: Dictionary = recipe_value
+		var recipe_id := str(recipe.get("recipe_id", ""))
+		_validate_array_field(recipe_id, OmniConstants.DATA_RECIPES, "inputs", recipe)
+		_validate_array_field(recipe_id, OmniConstants.DATA_RECIPES, "required_stations", recipe)
+		_validate_array_field(recipe_id, OmniConstants.DATA_RECIPES, "required_flags", recipe)
+		_validate_array_field(recipe_id, OmniConstants.DATA_RECIPES, "tags", recipe)
+		_validate_stat_map(recipe_id, OmniConstants.DATA_RECIPES, "required_stats", recipe.get("required_stats", {}), stat_ids)
+		_validate_recipe_shape(recipe)
 
 	var starting_money_value: Variant = get_config_value("game.starting_money", {})
 	_validate_currency_map("config", OmniConstants.DATA_CONFIG, "game.starting_money", starting_money_value, currency_ids)
@@ -763,6 +843,46 @@ func _validate_currency_map(entry_id: String, file_path: String, field_path: Str
 		if currency_ids.has(currency_id):
 			continue
 		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown currency '%s'." % [entry_id, field_path, currency_id])
+
+
+func _validate_recipe_shape(recipe: Dictionary) -> void:
+	var recipe_id := str(recipe.get("recipe_id", ""))
+	var output_template_id := str(recipe.get("output_template_id", ""))
+	if not output_template_id.is_empty() and not has_part(output_template_id):
+		_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' output_template_id references unknown part '%s'." % [recipe_id, output_template_id])
+
+	var output_count_value: Variant = recipe.get("output_count", 1)
+	if not _is_integral_number(output_count_value) or int(output_count_value) < 1:
+		_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' output_count must be an integer greater than or equal to 1." % recipe_id)
+
+	var craft_time_value: Variant = recipe.get("craft_time_ticks", 0)
+	if not _is_integral_number(craft_time_value) or int(craft_time_value) < 0:
+		_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' craft_time_ticks must be an integer greater than or equal to 0." % recipe_id)
+
+	var discovery := str(recipe.get("discovery", "always"))
+	if not ["always", "learned_on_flag", "auto_on_ingredient_owned"].has(discovery):
+		_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' discovery has unknown mode '%s'." % [recipe_id, discovery])
+
+	var inputs_value: Variant = recipe.get("inputs", [])
+	if not inputs_value is Array:
+		return
+	var inputs: Array = inputs_value
+	if inputs.is_empty():
+		_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' must include at least one input." % recipe_id)
+	for index in range(inputs.size()):
+		var input_value: Variant = inputs[index]
+		if not input_value is Dictionary:
+			_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' inputs[%d] must be an object." % [recipe_id, index])
+			continue
+		var input: Dictionary = input_value
+		var template_id := str(input.get("template_id", ""))
+		if template_id.is_empty():
+			_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' inputs[%d].template_id must be a non-empty part id." % [recipe_id, index])
+		elif not has_part(template_id):
+			_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' inputs[%d] references unknown part '%s'." % [recipe_id, index, template_id])
+		var count_value: Variant = input.get("count", 1)
+		if not _is_integral_number(count_value) or int(count_value) < 1:
+			_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' inputs[%d].count must be an integer greater than or equal to 1." % [recipe_id, index])
 
 
 func _validate_unique_object_ids(entry_id: String, file_path: String, field_name: String, value: Variant) -> void:
@@ -1204,6 +1324,7 @@ func clear_all() -> void:
 	factions.clear()
 	quests.clear()
 	tasks.clear()
+	recipes.clear()
 	achievements.clear()
 	config.clear()
 

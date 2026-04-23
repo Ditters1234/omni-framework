@@ -95,6 +95,16 @@
           "instance_id": "player_weapon_001",
           "template_id": "base:test_weapon",
           "condition": 1.0
+        },
+        {
+          "instance_id": "player_salvage_chip_001",
+          "template_id": "base:salvage_chip",
+          "condition": 1.0
+        },
+        {
+          "instance_id": "player_salvage_chip_002",
+          "template_id": "base:salvage_chip",
+          "condition": 1.0
         }
       ],
       "assembly_socket_map": {

@@ -52,6 +52,18 @@
           }
         },
         {
+          "tab_id": "hub_crafting",
+          "display_name": "Crafting Bench",
+          "description": "Craft test parts from player inventory materials.",
+          "backend_class": "CraftingBackend",
+          "station_id": "base:diagnostic_bench",
+          "recipe_tags": ["test_recipe"],
+          "crafter_entity_id": "player",
+          "input_source_entity_id": "player",
+          "output_destination_entity_id": "player",
+          "screen_title": "Diagnostic Crafting Bench"
+        },
+        {
           "tab_id": "hub_sheet",
           "display_name": "Player Sheet",
           "description": "Review current player stats, equipment, and inventory.",

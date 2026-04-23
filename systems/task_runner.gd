@@ -41,21 +41,21 @@ func accept_task(template_id: String, params: Dictionary = {}) -> String:
 	var entity := _resolve_entity(str(params.get("entity_id", "player")))
 	if entity == null:
 		return ""
-	if not _can_accept_template(template):
+	if not bool(params.get("allow_duplicate", false)) and not _can_accept_template(template):
 		return ""
 	var runtime_id := _generate_runtime_id()
-	var task_type := str(template.get("type", TASK_TYPE_WAIT))
+	var task_type := str(params.get("task_type", template.get("type", TASK_TYPE_WAIT)))
 	var task_instance := {
 		"runtime_id": runtime_id,
 		"template_id": template_id,
 		"entity_id": entity.entity_id,
 		"type": task_type,
-		"target": str(template.get("target", "")),
-		"remaining_ticks": _resolve_remaining_ticks(template),
+		"target": str(params.get("target", template.get("target", ""))),
+		"remaining_ticks": _resolve_remaining_ticks(template, params),
 		"started_day": GameState.current_day,
 		"started_tick": GameState.current_tick,
-		"reward": _duplicate_dict(template.get("reward", {})),
-		"complete_sound": str(template.get("complete_sound", "")),
+		"reward": _duplicate_dict(params.get("reward", template.get("reward", {}))),
+		"complete_sound": str(params.get("complete_sound", template.get("complete_sound", ""))),
 	}
 	GameState.active_tasks[runtime_id] = task_instance
 	ScriptHookService.invoke_template_hook(template, "on_task_start", [task_instance.duplicate(true)])
@@ -147,7 +147,10 @@ func _generate_runtime_id() -> String:
 	return str(randi())
 
 
-func _resolve_remaining_ticks(template: Dictionary) -> int:
+func _resolve_remaining_ticks(template: Dictionary, params: Dictionary = {}) -> int:
+	var duration_override_value: Variant = params.get("duration", params.get("remaining_ticks", null))
+	if duration_override_value is int or duration_override_value is float:
+		return maxi(int(duration_override_value), DEFAULT_TASK_DURATION)
 	var task_type := str(template.get("type", TASK_TYPE_WAIT))
 	if task_type == TASK_TYPE_DELIVER or task_type == TASK_TYPE_TRAVEL:
 		var travel_cost := int(template.get("travel_cost", DataManager.get_config_value("balance.default_travel_cost_ticks", DEFAULT_TASK_DURATION)))

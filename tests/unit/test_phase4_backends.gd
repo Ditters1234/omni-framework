@@ -9,6 +9,7 @@ const CHALLENGE_BACKEND := preload("res://ui/screens/backends/challenge_backend.
 const TASK_PROVIDER_BACKEND := preload("res://ui/screens/backends/task_provider_backend.gd")
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
 const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_backend.gd")
+const CRAFTING_BACKEND := preload("res://ui/screens/backends/crafting_backend.gd")
 
 
 func before_each() -> void:
@@ -25,6 +26,7 @@ func test_mod_loader_registers_phase4_backend_contracts() -> void:
 	assert_true(registered_backend_classes.has("ChallengeBackend"))
 	assert_true(registered_backend_classes.has("TaskProviderBackend"))
 	assert_true(registered_backend_classes.has("CatalogListBackend"))
+	assert_true(registered_backend_classes.has("CraftingBackend"))
 	assert_true(registered_backend_classes.has("DialogueBackend"))
 	assert_true(registered_backend_classes.has("EntitySheetBackend"))
 	assert_true(registered_backend_classes.has("ActiveQuestLogBackend"))
