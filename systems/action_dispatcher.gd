@@ -39,6 +39,8 @@ static func dispatch(action: Dictionary) -> void:
 		"unlock_achievement": _action_unlock_achievement(action)
 		"emit_signal":      _action_emit_signal(action)
 		"push_screen":      _action_push_screen(action)
+		"pop_screen":       _action_pop_screen(action)
+		"replace_all_screens": _action_replace_all_screens(action)
 		_:
 			push_warning("ActionDispatcher: unknown action type '%s'" % action_type)
 
@@ -202,6 +204,26 @@ static func _action_push_screen(action: Dictionary) -> void:
 		params = raw_params.duplicate(true)
 	router.push(screen_id, params)
 
+static func _action_pop_screen(_action: Dictionary) -> void:
+	var router := UIRouter as OmniUIRouter
+	if router == null:
+		return
+	router.pop()
+
+static func _action_replace_all_screens(action: Dictionary) -> void:
+	var router := UIRouter as OmniUIRouter
+	if router == null:
+		return
+	var screen_id := str(action.get("screen_id", ""))
+	if screen_id.is_empty():
+		push_warning("ActionDispatcher: replace_all_screens requires a non-empty screen_id.")
+		return
+	var params_data: Variant = action.get("params", {})
+	var params: Dictionary = {}
+	if params_data is Dictionary:
+		var raw_params: Dictionary = params_data
+		params = raw_params.duplicate(true)
+	router.replace_all(screen_id, params)
 
 static func _resolve_entity(entity_id: String) -> EntityInstance:
 	if entity_id.is_empty() or entity_id == "player":

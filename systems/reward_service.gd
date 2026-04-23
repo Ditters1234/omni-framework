@@ -21,7 +21,10 @@ static func apply_reward(entity: EntityInstance, reward_data: Variant, emit_even
 			"flags":
 				_apply_flag_reward(entity, reward_value, emit_events, deferred_events)
 			_:
-				_apply_currency_reward(entity, reward_key, float(reward_value), emit_events, deferred_events)
+				var amount := 0.0
+				if reward_value is int or reward_value is float:
+					amount = float(reward_value)
+				_apply_currency_reward(entity, reward_key, amount, emit_events, deferred_events)
 	return deferred_events
 
 

@@ -27,6 +27,9 @@ static func register_contract() -> void:
 			"next_screen_id",
 			"next_screen_params",
 			"pop_on_confirm",
+			"failure_next_screen_id",
+			"failure_next_screen_params",
+			"failure_pop_on_confirm",
 		],
 		"field_types": {
 			"required_stat": TYPE_STRING,
@@ -45,6 +48,9 @@ static func register_contract() -> void:
 			"next_screen_id": TYPE_STRING,
 			"next_screen_params": TYPE_DICTIONARY,
 			"pop_on_confirm": TYPE_BOOL,
+			"failure_next_screen_id": TYPE_STRING,
+			"failure_next_screen_params": TYPE_DICTIONARY,
+			"failure_pop_on_confirm": TYPE_BOOL,
 		},
 	})
 
