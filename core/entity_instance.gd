@@ -44,8 +44,11 @@ var location_id: String = ""
 ## Creates a new EntityInstance from a template dictionary.
 static func from_template(template: Dictionary) -> EntityInstance:
 	var inst := EntityInstance.new()
-	inst.template_id = template.get("entity_id", "")
-	inst.entity_id = template.get("entity_id", _generate_id())
+	inst.template_id = str(template.get("entity_id", ""))
+	# Always generate a unique runtime entity_id so that multiple instances
+	# created from the same template never share an id.  The template_id field
+	# already records which template this instance came from.
+	inst.entity_id = _generate_id()
 	inst.location_id = template.get("location_id", "")
 	inst.currencies = template.get("currencies", {}).duplicate(true)
 	inst.reputation = template.get("reputation", {}).duplicate(true)

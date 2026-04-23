@@ -171,8 +171,8 @@ func save_game(slot: int) -> void:
 		GameEvents.save_failed.emit(slot, reason)
 		return
 	file.store_string(JSON.stringify(payload, "\t"))
-	var write_error := file.get_error()
 	file.flush()
+	var write_error := file.get_error()
 	file.close()
 	if write_error != OK:
 		var write_reason := "Unable to write the save file."
@@ -441,7 +441,12 @@ func _enforce_test_save_isolation() -> void:
 ## Checks schema version and runs any needed migrations before loading.
 func _migrate_if_needed(data: Dictionary) -> Dictionary:
 	var version := int(data.get("save_schema_version", 0))
-	if version <= 0:
+	# Run any future migration steps here, keyed on version, e.g.:
+	# if version < 2:
+	#     _migrate_v1_to_v2(data)
+	# Stamp the schema version AFTER migrations so future bumps can still detect
+	# which path a save came from.
+	if version <= 0 or data.get("save_schema_version", SCHEMA_VERSION) != SCHEMA_VERSION:
 		data["save_schema_version"] = SCHEMA_VERSION
 	for field_name in OPTIONAL_SAVE_FIELDS:
 		if data.has(field_name):

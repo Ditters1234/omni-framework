@@ -136,7 +136,11 @@ func _on_tick(tick: int) -> void:
 		if int(task_instance.get("remaining_ticks", 0)) <= 0:
 			to_complete.append(runtime_id)
 	for runtime_id in to_complete:
-		complete_task(runtime_id)
+		var completed := complete_task(runtime_id)
+		if not completed:
+			# complete_task returned false (e.g. entity no longer exists).
+			# Erase the task so it does not re-trigger on every subsequent tick.
+			GameState.active_tasks.erase(runtime_id)
 
 
 func _generate_runtime_id() -> String:

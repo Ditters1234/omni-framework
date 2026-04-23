@@ -180,15 +180,15 @@ static func _evaluate_logic_block(conditions: Dictionary) -> bool:
 		if not or_conditions_data is Array:
 			return false
 		var or_conditions: Array = or_conditions_data
-		if or_conditions.is_empty():
-			return false
-		var any_passed := false
-		for child in or_conditions:
-			if _evaluate_node(child):
-				any_passed = true
-				break
-		if not any_passed:
-			return false
+		# An empty OR list is vacuously satisfied (no constraints); skip it.
+		if not or_conditions.is_empty():
+			var any_passed := false
+			for child in or_conditions:
+				if _evaluate_node(child):
+					any_passed = true
+					break
+			if not any_passed:
+				return false
 	if conditions.has("NOT"):
 		var not_condition: Variant = conditions.get("NOT", null)
 		if _evaluate_node(not_condition):

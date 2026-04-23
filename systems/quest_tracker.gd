@@ -71,20 +71,26 @@ func advance_quest(quest_id: String, transition: String) -> void:
 	if current_stage_index < 0 or current_stage_index >= stages.size():
 		complete_quest(quest_id)
 		return
+	# Advance the index first so that any hook fired by _apply_stage_completion
+	# sees the updated stage number rather than the old one.
+	var next_stage_index := current_stage_index + 1
+	if transition != "":
+		quest_instance["last_transition"] = transition
+	quest_instance["stage_index"] = next_stage_index
+	GameState.active_quests[quest_id] = quest_instance
+	# Apply completion rewards for the stage we just finished.
 	var current_stage_data: Variant = stages[current_stage_index]
 	if current_stage_data is Dictionary:
 		var current_stage: Dictionary = current_stage_data
 		_apply_stage_completion(current_stage)
-	var next_stage_index := current_stage_index + 1
-	if transition != "":
-		quest_instance["last_transition"] = transition
 	if next_stage_index >= stages.size():
 		_complete_active_quest(quest_id, template)
 		return
-	quest_instance["stage_index"] = next_stage_index
-	GameState.active_quests[quest_id] = quest_instance
 	GameEvents.quest_stage_advanced.emit(quest_id, next_stage_index)
-	_refresh_quest(quest_id)
+	# Do NOT call _refresh_quest here — _apply_stage_completion may have already
+	# triggered an auto-advance via event listeners, and calling it again would
+	# double-fire rewards for any stages whose objectives are already met.
+	# The next tick / event will naturally trigger _refresh_active_quests.
 
 
 ## Completes a quest manually (e.g. from a script hook).
