@@ -18,7 +18,7 @@ res://
 └── ui/
 ```
 
-Additional root-level project files currently include `project.godot`, `.gutconfig.json`, `README.md`, `AGENTS.md`, and `CLAUDE.md`.
+Additional root-level project files currently include `project.godot`, `.gutconfig.json`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `icon.svg`, and `default_bus_layout.tres`. Ad hoc debug or probe scripts should not live at `res://`; convert useful checks into GUT tests under `tests/`, or keep throwaway local scripts outside the project tree.
 
 ## Autoloads
 
