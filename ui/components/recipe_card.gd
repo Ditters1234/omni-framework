@@ -8,6 +8,7 @@ extends PanelContainer
 
 class_name RecipeCard
 
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const FALLBACK_POSITIVE_COLOR := Color("#8fd18f")
 const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
@@ -66,7 +67,7 @@ func _render_inputs(input_status_value: Variant) -> void:
 		var required := int(input_status_entry.get("required", 0))
 		var have := int(input_status_entry.get("have", 0))
 		var satisfied := bool(input_status_entry.get("satisfied", false))
-		var label := "%s: %d / %d" % [_humanize_id(template_id), have, required]
+		var label := "%s: %d / %d" % [BACKEND_HELPERS.humanize_id(template_id), have, required]
 		_add_input_label(label, satisfied, false)
 
 
@@ -92,7 +93,7 @@ func _build_output_label(recipe: Dictionary, output_template_value: Variant) -> 
 	var output_template_text := str(output_template_value)
 	if output_template_text.is_empty():
 		output_template_text = str(recipe.get("output_template_id", "Output"))
-	return "Output: %s x%d" % [_humanize_id(output_template_text), output_count]
+	return "Output: %s x%d" % [BACKEND_HELPERS.humanize_id(output_template_text), output_count]
 
 
 func _build_meta_label(recipe: Dictionary) -> String:
@@ -106,7 +107,7 @@ func _build_meta_label(recipe: Dictionary) -> String:
 		if not stations.is_empty():
 			var station_names: Array[String] = []
 			for station_value in stations:
-				station_names.append(_humanize_id(str(station_value)))
+				station_names.append(BACKEND_HELPERS.humanize_id(str(station_value)))
 			parts.append("Stations: %s" % ", ".join(station_names))
 	var required_stats_value: Variant = recipe.get("required_stats", {})
 	if required_stats_value is Dictionary:
@@ -116,23 +117,9 @@ func _build_meta_label(recipe: Dictionary) -> String:
 			var stat_keys: Array = required_stats.keys()
 			stat_keys.sort()
 			for stat_key_value in stat_keys:
-				stat_parts.append("%s %s" % [_humanize_id(str(stat_key_value)), str(required_stats.get(stat_key_value, 0))])
+				stat_parts.append("%s %s" % [BACKEND_HELPERS.humanize_id(str(stat_key_value)), str(required_stats.get(stat_key_value, 0))])
 			parts.append("Requires: %s" % ", ".join(stat_parts))
 	return "\n".join(parts)
-
-
-func _humanize_id(value: String) -> String:
-	if value.is_empty():
-		return ""
-	var trimmed := value.get_slice(":", value.get_slice_count(":") - 1)
-	var words := trimmed.split("_", false)
-	var formatted_words: Array[String] = []
-	for word_value in words:
-		var word := str(word_value)
-		if word.is_empty():
-			continue
-		formatted_words.append(word.left(1).to_upper() + word.substr(1))
-	return " ".join(formatted_words)
 
 
 func _get_semantic_color(color_name: String, fallback: Color) -> Color:

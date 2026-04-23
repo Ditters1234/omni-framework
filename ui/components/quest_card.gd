@@ -10,6 +10,7 @@ extends PanelContainer
 
 class_name QuestCard
 
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const FALLBACK_POSITIVE_COLOR := Color("#8fd18f")
 const FALLBACK_MUTED_TEXT_COLOR := Color("#9aa8bf")
@@ -99,25 +100,12 @@ func _format_rewards(rewards_value: Variant) -> String:
 		var keys: Array = rewards.keys()
 		keys.sort()
 		for key_value in keys:
-			parts.append("%s: %s" % [_humanize_id(str(key_value)), str(rewards.get(key_value, ""))])
+			parts.append("%s: %s" % [BACKEND_HELPERS.humanize_id(str(key_value)), str(rewards.get(key_value, ""))])
 		return "Rewards: %s" % ", ".join(parts)
 	if rewards_value == null:
 		return ""
 	var rewards_text := str(rewards_value)
 	return "" if rewards_text.is_empty() else "Rewards: %s" % rewards_text
-
-
-func _humanize_id(value: String) -> String:
-	if value.is_empty():
-		return ""
-	var words := value.split("_", false)
-	var formatted_words: Array[String] = []
-	for word_value in words:
-		var word := str(word_value)
-		if word.is_empty():
-			continue
-		formatted_words.append(word.left(1).to_upper() + word.substr(1))
-	return " ".join(formatted_words)
 
 
 func _get_semantic_color(color_name: String, fallback: Color) -> Color:

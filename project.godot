@@ -16,6 +16,7 @@ config/version="0.1.0"
 run/main_scene="res://ui/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+config/main_scene="res://ui/main.tscn"
 
 [autoload]
 
@@ -38,6 +39,10 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[dotnet]
+
+project/assembly_name="Omni-Framework"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/A2J/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/gut/plugin.cfg", "res://addons/imgui-godot/plugin.cfg")
@@ -48,4 +53,4 @@ theme/custom="res://ui/theme/omni_theme.tres"
 
 [internationalization]
 
-locale/translations_pot_files=PackedStringArray("res://mods/base/dialogue/quartermaster_theta.dialogue", "res://tests/fixtures/dialogue/sample_greeting.dialogue")
+locale/translations_pot_files=PackedStringArray("res://mods/base/dialogue/quartermaster_theta.dialogue", "res://tests/fixtures/dialogue/sample_greeting.dialogue", "res://mods/base/dialogue/kael.dialogue")

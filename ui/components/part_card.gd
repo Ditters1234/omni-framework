@@ -105,7 +105,7 @@ func _build_stat_lines(template: Dictionary) -> PackedStringArray:
 		var stat_id := str(key_value)
 		var amount := float(stats.get(key_value, 0.0))
 		var amount_text := "%+.0f" % amount if absf(amount - roundf(amount)) < 0.001 else "%+.2f" % amount
-		result.append("%s: %s" % [_humanize_id(stat_id), amount_text])
+		result.append("%s: %s" % [BACKEND_HELPERS.humanize_id(stat_id), amount_text])
 	return result
 
 
@@ -120,22 +120,8 @@ func _build_price_text(template: Dictionary) -> String:
 	keys.sort()
 	var parts: Array[String] = []
 	for key_value in keys:
-		parts.append("%s %s" % [str(price.get(key_value, 0)), _humanize_id(str(key_value))])
+		parts.append("%s %s" % [str(price.get(key_value, 0)), BACKEND_HELPERS.humanize_id(str(key_value))])
 	return "Price: %s" % ", ".join(parts)
-
-
-func _humanize_id(value: String) -> String:
-	if value.is_empty():
-		return ""
-	var trimmed := value.get_slice(":", value.get_slice_count(":") - 1)
-	var words := trimmed.split("_", false)
-	var formatted_words: Array[String] = []
-	for word_value in words:
-		var word := str(word_value)
-		if word.is_empty():
-			continue
-		formatted_words.append(word.left(1).to_upper() + word.substr(1))
-	return " ".join(formatted_words)
 
 
 func _get_semantic_color(color_name: String, fallback: Color) -> Color:

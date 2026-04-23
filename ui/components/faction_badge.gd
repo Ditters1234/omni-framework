@@ -42,7 +42,7 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	var reputation_value := float(view_model.get("reputation_value", 0.0))
 	var accent_color := _resolve_color(view_model.get("color", null))
 
-	_name_label.text = _humanize_id(faction_id) if not faction_id.is_empty() else "Faction"
+	_name_label.text = BACKEND_HELPERS.humanize_id(faction_id) if not faction_id.is_empty() else "Faction"
 	_reputation_label.text = _build_reputation_text(reputation_tier, reputation_value)
 	_reputation_label.visible = not _reputation_label.text.is_empty()
 	_name_label.modulate = accent_color
@@ -106,17 +106,3 @@ func _apply_panel_style(accent_color: Color) -> void:
 	style.corner_radius_bottom_right = 8
 	style.corner_radius_bottom_left = 8
 	add_theme_stylebox_override("panel", style)
-
-
-func _humanize_id(value: String) -> String:
-	if value.is_empty():
-		return ""
-	var trimmed := value.get_slice(":", value.get_slice_count(":") - 1)
-	var words := trimmed.split("_", false)
-	var formatted_words: Array[String] = []
-	for word_value in words:
-		var word := str(word_value)
-		if word.is_empty():
-			continue
-		formatted_words.append(word.left(1).to_upper() + word.substr(1))
-	return " ".join(formatted_words)

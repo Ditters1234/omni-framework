@@ -7,6 +7,7 @@ extends PanelContainer
 
 class_name StatSheet
 
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const STAT_BAR_SCENE := preload("res://ui/components/stat_bar.tscn")
 
 @onready var _title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
@@ -67,7 +68,8 @@ func _build_group_section(group_name: String, lines: Array) -> VBoxContainer:
 	section.add_theme_constant_override("separation", 6)
 
 	var header := Label.new()
-	header.text = _humanize_id(group_name)
+	var header_text := BACKEND_HELPERS.humanize_id(group_name)
+	header.text = header_text if not header_text.is_empty() else "Stats"
 	header.add_theme_font_size_override("font_size", 16)
 	section.add_child(header)
 
@@ -90,16 +92,3 @@ func _add_empty_state(message: String) -> void:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.text = message
 	_groups_container.add_child(label)
-
-
-func _humanize_id(value: String) -> String:
-	if value.is_empty():
-		return "Stats"
-	var words := value.split("_", false)
-	var formatted_words: Array[String] = []
-	for word_value in words:
-		var word := str(word_value)
-		if word.is_empty():
-			continue
-		formatted_words.append(word.left(1).to_upper() + word.substr(1))
-	return " ".join(formatted_words)

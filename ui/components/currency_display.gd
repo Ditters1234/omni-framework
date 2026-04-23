@@ -10,6 +10,7 @@ extends PanelContainer
 
 class_name CurrencyDisplay
 
+const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const FALLBACK_PRIMARY_COLOR := Color("#4fb3ff")
 
@@ -32,7 +33,7 @@ func render(view_model: Dictionary) -> void:
 
 func _apply_view_model(view_model: Dictionary) -> void:
 	var currency_id := str(view_model.get("currency_id", ""))
-	var label := str(view_model.get("label", _humanize_id(currency_id)))
+	var label := str(view_model.get("label", BACKEND_HELPERS.humanize_id(currency_id)))
 	var amount := float(view_model.get("amount", 0.0))
 	var symbol := str(view_model.get("symbol", ""))
 	var color_token := str(view_model.get("color_token", "primary"))
@@ -53,19 +54,6 @@ func _format_number(amount: float) -> String:
 	if absf(amount - roundf(amount)) < 0.001:
 		return str(int(roundf(amount)))
 	return "%.2f" % amount
-
-
-func _humanize_id(value: String) -> String:
-	if value.is_empty():
-		return ""
-	var words := value.split("_", false)
-	var formatted_words: Array[String] = []
-	for word_value in words:
-		var word := str(word_value)
-		if word.is_empty():
-			continue
-		formatted_words.append(word.left(1).to_upper() + word.substr(1))
-	return " ".join(formatted_words)
 
 
 func _get_semantic_color(color_name: String, fallback: Color) -> Color:

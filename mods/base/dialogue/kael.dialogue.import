@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://dg15moxxyi6sa"
+path="res://.godot/imported/kael.dialogue-dafcbb0fc6e6555194c4c34768eefa6d.tres"
+
+[deps]
+
+source_file="res://mods/base/dialogue/kael.dialogue"
+dest_files=["res://.godot/imported/kael.dialogue-dafcbb0fc6e6555194c4c34768eefa6d.tres"]
+
+[params]
+
+defaults=true
