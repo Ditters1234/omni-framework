@@ -441,8 +441,6 @@ func _enforce_test_save_isolation() -> void:
 ## Checks schema version and runs any needed migrations before loading.
 func _migrate_if_needed(data: Dictionary) -> Dictionary:
 	var version := int(data.get("save_schema_version", 0))
-	if version > SCHEMA_VERSION:
-		return data
 	if version <= 0:
 		data["save_schema_version"] = SCHEMA_VERSION
 	for field_name in OPTIONAL_SAVE_FIELDS:
