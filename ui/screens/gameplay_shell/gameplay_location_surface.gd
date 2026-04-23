@@ -10,6 +10,7 @@ const GLOBAL_SHELL_SURFACE_IDS := {
 	"faction_rep": true,
 	"achievement_list": true,
 	"event_log": true,
+	"world_map": true,
 }
 
 @onready var _interactions_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer/VBoxContainer/InteractionsScroll/InteractionsContainer

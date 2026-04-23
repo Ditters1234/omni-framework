@@ -143,6 +143,7 @@ These are **always available**, navigation-owned by the engine.
 |---|---|---|---|
 | Main Menu | `main_menu` | `ui/screens/main_menu/main_menu_screen.tscn` | Boot/menu entry point. |
 | Gameplay Shell | `gameplay_shell` | `ui/screens/gameplay_shell/gameplay_shell_screen.tscn` | In-game HUD. Displays player summary, location, available screens. |
+| World Map | `world_map` | `ui/screens/backends/world_map_screen.tscn` | Shell top-menu surface for location graph navigation and fast travel. |
 | Pause Menu | `pause_menu` | `ui/screens/pause_menu/` | Layered pause overlay with continue/settings/quit. |
 | Settings | `settings` | `ui/screens/settings/` | Audio, graphics, accessibility options, and engine-owned AI connect/disconnect controls. |
 | Save/Load Browser | `save_slot_list` | `ui/screens/save_slot_list/` | Autosave + manual save/load/delete. |

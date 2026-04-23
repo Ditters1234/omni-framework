@@ -62,7 +62,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - **Phase 4 Backend Implementation (completed for the current scope):** `AssemblyEditorBackend`, `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
 - **Backend helper strategy:** `backend_helpers.gd` contains phase-neutral helpers shared by multiple backends. Assembly-editor-only logic stays in `assembly_editor_config.gd` and `assembly_editor_option_provider.gd` so generic helpers do not become a junk drawer.
 - **Phase 5 Backend Implementation (complete — basic pass):** `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, and `EventLogBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
-- **Phase 7 Backend Implementation (initial pass complete):** `WorldMapBackend` is implemented as a routed graph screen with contract registration, route-catalog entry, base content access points, faction-tinted nodes, and travel-on-click.
+- **Phase 7 Backend Implementation (initial pass complete):** `WorldMapBackend` is implemented as a routed graph screen with contract registration, route-catalog entry, gameplay shell top-menu access, faction-tinted nodes, and travel-on-click.
 
 ### Planned but not yet implemented
 
@@ -154,7 +154,7 @@ The gameplay shell is now the current engine-owned gameplay hub. Its current res
 - **Session summary:** current location, description, interaction count, player identity, currencies, stats, inventory, and equipped loadout snapshot.
 - **Location presence:** the shell-owned location surface shows local screens, entities present at the location, entity interaction buttons, and travel exits.
 - **Time controls:** current time string, buttons derived from `config.ui.time_advance_buttons`, and a quick autosave surface.
-- **Action hub:** "Explore Location", direct loadout access, save browser access, and pause routing.
+- **Action hub:** "Explore Location", direct loadout access, world map access, save browser access, and pause routing.
 - **Responsive hosting:** the shell scrolls as a whole on short viewports, and embedded backend/location surfaces are hosted in a scrollable surface area so full-screen-style routed scenes do not clip their top or bottom chrome inside the shell.
 - **Hosted surface routing:** every backend screen mounted inside the shell, including an initial `game.new_game_flow` surface such as character creation, receives `opened_from_gameplay_shell` so pop/close actions dismiss the surface and reveal the location surface instead of popping the shell route.
 - **Hosted assembly navigation:** assembly-editor cancel actions may reset the game state during character creation, so Begin/confirm flows must not rebuild or compare against the cancel action when deciding how to close the hosted surface.

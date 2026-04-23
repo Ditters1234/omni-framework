@@ -2,6 +2,7 @@ extends Control
 
 const SCREEN_ENTITY_SHEET := "entity_sheet"
 const SCREEN_PAUSE_MENU := "pause_menu"
+const SCREEN_WORLD_MAP := "world_map"
 const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gameplay_shell_presenter.gd")
 const GAMEPLAY_LOCATION_SURFACE_SCENE := preload("res://ui/screens/gameplay_shell/gameplay_location_surface.tscn")
 const DEFAULT_SURFACE_ID := "location_surface"
@@ -9,6 +10,7 @@ const DEFAULT_SURFACE_ID := "location_surface"
 var _title_label: Label = null
 var _subtitle_label: Label = null
 @onready var _character_menu_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/CharacterMenuButton
+@onready var _world_map_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/WorldMapButton
 @onready var _quick_autosave_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/QuickAutosaveButton
 @onready var _pause_menu_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/PauseMenuButton
 @onready var _location_title_label: Label = $MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer/LocationTitleLabel
@@ -279,6 +281,7 @@ func _apply_view_model(view_model: Dictionary) -> void:
 
 func _set_buttons_enabled(enabled: bool) -> void:
 	_character_menu_button.disabled = not enabled
+	_world_map_button.disabled = not enabled
 	_quick_autosave_button.disabled = not enabled
 	_advance_tick_button.disabled = not enabled
 	_pause_menu_button.disabled = not enabled
@@ -331,6 +334,13 @@ func _on_character_menu_button_pressed() -> void:
 	})
 
 
+func _on_world_map_button_pressed() -> void:
+	open_surface_screen(SCREEN_WORLD_MAP, {
+		"screen_title": "World Map",
+		"opened_from_gameplay_shell": true,
+	})
+
+
 func _on_quick_autosave_button_pressed() -> void:
 	SaveManager.save_game(SaveManager.AUTOSAVE_SLOT)
 	var summary := SaveManager.last_operation_summary
@@ -360,9 +370,10 @@ func _on_day_advanced(_day: int) -> void:
 
 func _on_location_changed(_old_id: String, _new_id: String) -> void:
 	_refresh()
-	show_location_surface({
-		"location_id": GameState.current_location_id,
-	})
+	if _active_surface_screen_id == DEFAULT_SURFACE_ID:
+		show_location_surface({
+			"location_id": GameState.current_location_id,
+		})
 
 
 func _grab_default_focus() -> void:

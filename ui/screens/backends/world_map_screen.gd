@@ -26,6 +26,7 @@ func initialize(params: Dictionary = {}) -> void:
 
 func _ready() -> void:
 	_connect_graph_signals()
+	_connect_runtime_signals()
 	_initialize_backend()
 	_refresh_state()
 
@@ -62,17 +63,19 @@ func _connect_graph_signals() -> void:
 		_graph.connect("location_selected", select_callable)
 
 
+func _connect_runtime_signals() -> void:
+	var location_changed_callable := Callable(self, "_on_location_changed")
+	if not GameEvents.is_connected("location_changed", location_changed_callable):
+		GameEvents.location_changed.connect(_on_location_changed)
+
+
 func _on_graph_location_selected(location_id: String) -> void:
 	var result_value: Variant = _backend.call("travel_to", location_id)
-	var status := ""
 	if result_value is Dictionary:
 		var result: Dictionary = result_value
-		status = str(result.get("status", ""))
 		_status_override = str(result.get("message", ""))
 	else:
 		_status_override = ""
-	if _opened_from_gameplay_shell and status == "ok":
-		return
 	_refresh_state()
 
 
@@ -81,3 +84,7 @@ func _on_back_button_pressed() -> void:
 		UIRouter.close_gameplay_shell_screen()
 		return
 	UIRouter.pop()
+
+
+func _on_location_changed(_old_id: String, _new_id: String) -> void:
+	_refresh_state()

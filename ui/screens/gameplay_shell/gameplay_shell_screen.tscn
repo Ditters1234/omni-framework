@@ -99,6 +99,11 @@ layout_mode = 2
 size_flags_vertical = 4
 text = "Character Menu"
 
+[node name="WorldMapButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+text = "World Map"
+
 [node name="QuickAutosaveButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer" unique_id=1461825073]
 layout_mode = 2
 size_flags_vertical = 4
@@ -147,6 +152,7 @@ autowrap_mode = 3
 
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/TimeButtonsHBox/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/CharacterMenuButton" to="." method="_on_character_menu_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/WorldMapButton" to="." method="_on_world_map_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/QuickAutosaveButton" to="." method="_on_quick_autosave_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/PauseMenuButton" to="." method="_on_pause_menu_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton" to="." method="_on_surface_close_button_pressed"]

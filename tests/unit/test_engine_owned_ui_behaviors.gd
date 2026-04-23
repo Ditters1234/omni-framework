@@ -441,6 +441,65 @@ func test_gameplay_shell_hosts_default_location_surface() -> void:
 	assert_not_null(active_surface)
 
 
+func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_after_travel_signal() -> void:
+	_screen_container = CanvasLayer.new()
+	_spawned_nodes.append(_screen_container)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
+	UIRouter.initialize(_screen_container)
+	_register_runtime_screens()
+	GameState.new_game()
+
+	UIRouter.replace_all("gameplay_shell")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var shell := _get_top_screen()
+	assert_not_null(shell)
+	var world_map_button := _find_button_with_text(shell, "World Map")
+	assert_not_null(world_map_button)
+	assert_false(world_map_button.disabled)
+	world_map_button.pressed.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var shell_snapshot := UIRouter.get_current_screen_debug_snapshot()
+	assert_eq(str(shell_snapshot.get("active_surface_screen_id", "")), "world_map")
+	var map_screen := shell.find_child("WorldMapScreen", true, false) as Control
+	assert_not_null(map_screen)
+	var map_snapshot_value: Variant = map_screen.call("get_debug_snapshot")
+	assert_true(map_snapshot_value is Dictionary)
+	if not map_snapshot_value is Dictionary:
+		return
+	var map_snapshot: Dictionary = map_snapshot_value
+	var locations_value: Variant = map_snapshot.get("locations", [])
+	assert_true(locations_value is Array)
+	if not locations_value is Array:
+		return
+	var locations: Array = locations_value
+	assert_gt(locations.size(), 1)
+	assert_true(_map_rows_contain_location(locations, GameState.current_location_id))
+
+	var destination_id := _first_non_current_map_location(locations, GameState.current_location_id)
+	assert_false(destination_id.is_empty())
+	if destination_id.is_empty():
+		return
+	var graph := map_screen.find_child("WorldMapGraph", true, false) as Control
+	assert_not_null(graph)
+	graph.emit_signal("location_selected", destination_id)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_eq(GameState.current_location_id, destination_id)
+	var after_travel_snapshot := UIRouter.get_current_screen_debug_snapshot()
+	assert_eq(str(after_travel_snapshot.get("active_surface_screen_id", "")), "world_map")
+	var after_map_snapshot_value: Variant = map_screen.call("get_debug_snapshot")
+	assert_true(after_map_snapshot_value is Dictionary)
+	if after_map_snapshot_value is Dictionary:
+		var after_map_snapshot: Dictionary = after_map_snapshot_value
+		assert_eq(str(after_map_snapshot.get("current_location_id", "")), destination_id)
+
+
 func _get_top_screen() -> Control:
 	if _screen_container == null or _screen_container.get_child_count() == 0:
 		return null
@@ -475,6 +534,27 @@ func _find_label_with_text(root: Node, text: String) -> Label:
 		if match != null:
 			return match
 	return null
+
+
+func _map_rows_contain_location(rows: Array, location_id: String) -> bool:
+	for row_value in rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		if str(row.get("location_id", "")) == location_id:
+			return true
+	return false
+
+
+func _first_non_current_map_location(rows: Array, current_location_id: String) -> String:
+	for row_value in rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		var location_id := str(row.get("location_id", ""))
+		if not location_id.is_empty() and location_id != current_location_id:
+			return location_id
+	return ""
 
 
 func _delete_settings_file() -> void:
