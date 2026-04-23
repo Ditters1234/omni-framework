@@ -151,7 +151,7 @@ static func _action_unlock_location(action: Dictionary) -> void:
 
 
 static func _action_spawn_entity(action: Dictionary) -> void:
-	var template_id := str(action.get("entity_id", action.get("template_id", "")))
+	var template_id := str(action.get("template_id", action.get("entity_template_id", "")))
 	if template_id.is_empty():
 		return
 	var template := DataManager.get_entity(template_id)
