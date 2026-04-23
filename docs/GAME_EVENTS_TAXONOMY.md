@@ -49,14 +49,15 @@ Avoid names like:
 
 ## Domain Groups
 
-The event surface should stay grouped by domain.
+The event surface should stay grouped by domain. The authoritative catalog lives in `autoloads/game_events.gd` under `SIGNAL_CATALOG`.
 
 ### Boot And Mod Loading
 
 - `mod_loaded(mod_id)` after the loader finishes both JSON phases and script-hook preloading for the current boot
 - `all_mods_loaded()`
 - `mod_load_error(mod_id, message)`
-- `data_validation_failed(mod_id, file_path, issue_count)`
+
+Note: `data_validation_failed` is described in earlier planning docs but is not currently declared in the signal catalog. Use `mod_load_error` for validation issues until that signal is added.
 
 ### Time
 
@@ -70,7 +71,8 @@ The event surface should stay grouped by domain.
 - `game_resumed()`
 - `game_over()`
 - `location_changed(old_id, new_id)`
-- `entity_stat_changed(entity_id, stat_id, old_value, new_value)`
+- `player_stat_changed(stat_key, old_value, new_value)` — convenience signal for the player entity specifically
+- `entity_stat_changed(entity_id, stat_key, old_value, new_value)` — preferred general form
 - `flag_changed(entity_id, flag_id, value)`
 
 ### Inventory And Assembly
@@ -82,8 +84,9 @@ The event surface should stay grouped by domain.
 
 ### Economy
 
-- `entity_currency_changed(entity_id, currency_id, old_amount, new_amount)`
+- `entity_currency_changed(entity_id, currency_key, old_amount, new_amount)` — preferred form
 - `transaction_completed(buyer_id, seller_id, part_id, price)`
+- ~~`currency_changed(currency_key, old_amount, new_amount)`~~ — **deprecated**, use `entity_currency_changed`
 
 ### Quests And Tasks
 
@@ -93,6 +96,8 @@ The event surface should stay grouped by domain.
 - `quest_failed(quest_id)`
 - `task_started(task_id, entity_id)`
 - `task_completed(task_id, entity_id)`
+- `dialogue_started(entity_id, dialogue_resource)`
+- `dialogue_ended(entity_id, dialogue_resource)`
 
 ### Achievements
 
@@ -100,9 +105,14 @@ The event surface should stay grouped by domain.
 
 ### UI
 
-- `ui_screen_pushed(screen_id)`
-- `ui_screen_popped(screen_id)`
-- `ui_notification_requested(message, level)`
+- `ui_screen_pushed(screen_id)` — preferred form
+- `ui_screen_popped(screen_id)` — preferred form
+- `ui_notification_requested(message, level)` — preferred form
+- ~~`screen_pushed(screen_id)`~~ — **deprecated**, use `ui_screen_pushed`
+- ~~`screen_popped(screen_id)`~~ — **deprecated**, use `ui_screen_popped`
+- ~~`notification_requested(message, level)`~~ — **deprecated**, use `ui_notification_requested`
+
+New consumers should use the `ui_`-prefixed forms. Deprecated signals remain declared for backwards compatibility but should not be referenced in new code.
 
 ### AI
 
@@ -110,9 +120,7 @@ The event surface should stay grouped by domain.
 - `ai_token_received(context_id, token)`
 - `ai_error(context_id, error)`
 
-Current implementation note:
-
-- `ai_token_received` is part of the public event surface now, even though some providers currently fall back to whole-response delivery instead of true token streaming.
+`ai_token_received` is part of the public event surface. Some providers fall back to whole-response delivery instead of true token streaming; consumers should handle both.
 
 ### Save And Load
 
@@ -122,6 +130,10 @@ Current implementation note:
 - `load_completed(slot)`
 - `save_failed(slot, reason)`
 - `load_failed(slot, reason)`
+
+## Event History
+
+`GameEvents` maintains a bounded in-memory event history (max 200 entries) in `_event_history`. Debug surfaces and test assertions should read from this shared history. Do not build separate partial event logs in individual systems.
 
 ## When To Add A New Event
 
@@ -149,8 +161,4 @@ Do not add a new event when:
 - Once gameplay or UI depends on an event, treat its name and payload as a public contract.
 - If an event must change, deprecate it intentionally and document the replacement.
 - Do not reuse an old event name for a new meaning.
-
-Current implementation note:
-
-- `GameEvents` now maintains a central signal catalog plus a bounded in-memory event history for debug surfaces and tests.
-- Legacy signals such as `screen_pushe
+- Deprecated signals remain declared in `game_events.gd` until all internal consumers are migrated. Mark them with `"deprecated": true` in `SIGNAL_CATALOG`.

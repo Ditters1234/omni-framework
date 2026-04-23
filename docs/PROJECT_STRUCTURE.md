@@ -1,6 +1,6 @@
 # Omni-Framework — Project Structure
 
-This document is a **current-structure replacement** for the repository's broader architecture note. It is intentionally grounded in the visible repository layout rather than mixing present implementation with future-state planning.
+This document is a **current-structure reference** for the repository. It is intentionally grounded in the visible repository layout rather than mixing present implementation with future-state planning.
 
 ## What the Repository Clearly Contains
 
@@ -37,6 +37,12 @@ autoloads/
 └── ui_router.gd
 ```
 
+### Autoload Contracts
+
+- **`UIRouter`** — Requires a `CanvasLayer` container. `UIRouter.initialize()` will error if passed anything other than a `CanvasLayer`. Do not describe this as a generic screen container.
+- **`GameState`** — `new_game()` requires `game.starting_player_id` to be explicitly set in config. There is no runtime fallback to `base:player`; missing or empty config causes boot to abort with a warning.
+- **`SaveManager`** — Currently registers `EntityInstance` and `PartInstance` with A2J. Any new first-class runtime object that participates in save/load must also be registered here.
+
 ### What this implies
 
 The project is organized around a classic Godot singleton model with dedicated autoloads for:
@@ -59,7 +65,19 @@ The `systems/` folder currently contains both direct service scripts and subfold
 systems/
 ├── ai/
 │   └── providers/
+│       ├── anthropic_provider.gd
+│       ├── nobodywho_provider.gd
+│       └── openai_provider.gd
 ├── loaders/
+│   ├── achievement_registry.gd
+│   ├── config_loader.gd
+│   ├── definition_loader.gd
+│   ├── entity_registry.gd
+│   ├── faction_registry.gd
+│   ├── location_graph.gd
+│   ├── parts_registry.gd
+│   ├── quest_registry.gd
+│   └── task_registry.gd
 ├── action_dispatcher.gd
 ├── assembly_commit_service.gd
 ├── backend_contract_registry.gd
@@ -73,17 +91,13 @@ systems/
 └── transaction_service.gd
 ```
 
-### Notable differences from broader planning docs
-
-Compared with the more aspirational architecture descriptions, the current repo clearly includes several implemented service scripts that deserve first-class mention:
+All of the following service scripts are fully implemented and should not be omitted from any architecture reference:
 
 - `assembly_commit_service.gd`
 - `backend_contract_registry.gd`
 - `reward_service.gd`
 - `script_hook_service.gd`
 - `transaction_service.gd`
-
-Any structure doc that omits those files now understates the current implementation.
 
 ## UI
 
@@ -92,9 +106,65 @@ The `ui/` folder currently contains:
 ```text
 ui/
 ├── components/
+│   ├── assembly_slot_row.gd / .tscn
+│   ├── currency_display.gd / .tscn
+│   ├── currency_summary_panel.gd / .tscn
+│   ├── entity_portrait.gd / .tscn
+│   ├── faction_badge.gd / .tscn
+│   ├── notification_popup.gd / .tscn
+│   ├── part_card.gd / .tscn
+│   ├── part_detail_panel.gd / .tscn
+│   ├── quest_card.gd / .tscn
+│   ├── recipe_card.gd / .tscn
+│   ├── stat_bar.gd / .tscn
+│   ├── stat_delta_sheet.gd / .tscn
+│   ├── stat_sheet.gd / .tscn
+│   └── tab_panel.gd / .tscn
 ├── debug/
+│   └── dev_debug_overlay.gd
 ├── screens/
+│   ├── backends/
+│   │   ├── achievement_list_backend.gd
+│   │   ├── achievement_list_screen.gd / .tscn
+│   │   ├── active_quest_log_backend.gd
+│   │   ├── active_quest_log_screen.gd / .tscn
+│   │   ├── assembly_editor_backend.gd
+│   │   ├── assembly_editor_config.gd
+│   │   ├── assembly_editor_option_provider.gd
+│   │   ├── assembly_editor_screen.gd / .tscn
+│   │   ├── backend_base.gd
+│   │   ├── backend_helpers.gd
+│   │   ├── backend_navigation_helper.gd
+│   │   ├── catalog_list_backend.gd
+│   │   ├── catalog_list_screen.gd / .tscn
+│   │   ├── challenge_backend.gd
+│   │   ├── challenge_screen.gd / .tscn
+│   │   ├── dialogue_backend.gd
+│   │   ├── dialogue_screen.gd / .tscn
+│   │   ├── entity_sheet_backend.gd
+│   │   ├── entity_sheet_screen.gd / .tscn
+│   │   ├── event_log_backend.gd
+│   │   ├── event_log_screen.gd / .tscn
+│   │   ├── exchange_backend.gd
+│   │   ├── exchange_screen.gd / .tscn
+│   │   ├── faction_reputation_backend.gd
+│   │   ├── faction_reputation_screen.gd / .tscn
+│   │   ├── list_backend.gd
+│   │   ├── list_screen.gd / .tscn
+│   │   ├── task_provider_backend.gd
+│   │   └── task_provider_screen.gd / .tscn
+│   ├── credits/
+│   ├── gameplay_shell/
+│   │   ├── gameplay_location_surface.gd / .tscn
+│   │   ├── gameplay_shell_presenter.gd
+│   │   └── gameplay_shell_screen.gd / .tscn
+│   ├── main_menu/
+│   ├── pause_menu/
+│   ├── save_slot_list/
+│   └── settings/
 ├── theme/
+│   ├── omni_theme.tres
+│   └── theme_applier.gd
 ├── main.gd
 ├── main.tscn
 └── ui_route_catalog.gd
@@ -102,63 +172,67 @@ ui/
 
 ### What this implies
 
-The UI layer is not just a collection of scenes. It already includes:
+The UI layer includes:
 
-- a root entry scene (`main.tscn`)
-- an accompanying root controller script (`main.gd`)
-- a route catalog (`ui_route_catalog.gd`)
-- separated folders for reusable widgets, debug tooling, routed screens, and theming
-
-Any doc that describes the UI tree but leaves out `main.gd` or `ui_route_catalog.gd` is no longer fully aligned with the codebase.
+- A root entry scene (`main.tscn`) and accompanying controller (`main.gd`)
+- A route catalog (`ui_route_catalog.gd`) — the shared catalog for `backend_class → screen_id` mapping and the runtime `screen_id → scene_path` registry
+- **12 backend-driven screens** (Phase 4 + Phase 5 complete): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `DialogueBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`
+- A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts
+- Debug overlay at `ui/debug/dev_debug_overlay.gd`
+- Theme system: `omni_theme.tres` + `theme_applier.gd`
 
 ## Core
 
-The repository contains a top-level `core/` folder, confirming that shared runtime classes/utilities are separated from autoloads and systems. This replacement doc does **not** enumerate files inside `core/` unless they are directly verified in a visible repository listing.
+`core/` contains shared runtime classes separated from autoloads and systems:
 
-That is intentional: structure docs should not imply file-level certainty when only folder-level certainty has been confirmed.
+```text
+core/
+├── app_settings.gd
+├── assembly_session.gd
+├── constants.gd
+├── entity_instance.gd
+├── part_instance.gd
+└── script_hook.gd
+```
 
 ## Mods
 
-The repository contains a top-level `mods/` folder, and the public README states that `mods/base/` is required for boot. That aligns with the engine's mod-first design and should remain part of the documented contract.
+`mods/` contains all game content. `mods/base/` is required for boot. The base mod:
+
+- must use `"id": "base"` in `mod.json`
+- must use `"load_order": 0`
+- must NOT declare `"dependencies"` — the loader treats this as a fatal error
+- lives directly at `mods/base/`, not under an author subfolder
+
+User/community mods live under `mods/<author_id>/<mod_id>/`.
 
 ## Tests
 
-The repository contains a top-level `tests/` folder and a `.gutconfig.json` file. That strongly indicates GUT-based test coverage is part of the project baseline and should be documented as such.
+`tests/` contains GUT-based test coverage, organized into `unit/`, `integration/`, and `content/` subfolders. `.gutconfig.json` at the project root controls headless test runner discovery.
+
+Tests are dev-only and must be excluded from release export presets.
 
 ## Documentation Guidance
 
-For this repo, there are really two different doc types:
+Two distinct doc types exist in this repo:
 
-1. **Code-facing docs** — should match what is implemented now.
+1. **Current-reference docs** — should match what is implemented now.
 2. **Planning docs** — should describe target architecture and future rollout.
 
-The original structure document tries to do both. That is useful for internal planning, but it becomes misleading as a reference when readers want to know what is already in the repo today.
+### Rules for current-reference docs
 
-### Recommended rule going forward
+- Prefer observed repository structure over roadmap language
+- Clearly mark any unimplemented item as planned or proposed
+- Avoid describing future folders/files as if they already exist
+- Include newly added service files once they land in the repo
 
-When a document is meant to be a **current reference**, it should:
+### Confirmed Mismatches From Earlier Versions (Resolved)
 
-- prefer observed repository structure over roadmap language
-- clearly mark any unimplemented item as planned
-- avoid describing future folders/files as if they already exist
-- include newly added service files once they land in the repo
-
-## Confirmed Mismatches This Replacement Fixes
-
-This replacement corrects or tightens the following mismatches:
-
-- documents the actual clone target indirectly by matching the real repo owner/name
-- updates the autoload list to match the visible repository listing
-- updates the systems section to include visible service files omitted by broader planning text
-- updates the UI section to include `main.gd` and `ui_route_catalog.gd`
-- removes file-level certainty for folders that were not directly verified in the visible listing
-- separates present-state documentation from future-state planning language
-
-## Suggested Split for Long-Term Maintainability
-
-If you want cleaner docs long term, split the original broad structure doc into:
-
-- `docs/PROJECT_STRUCTURE.md` — current repo snapshot only
-- `docs/ARCHITECTURE_ROADMAP.md` — future target structure and phased design goals
-
-That prevents the same document from trying to be both a map of today and a promise about tomorrow.
+- Documents the actual clone target indirectly by matching the real repo owner/name
+- Updates the autoload list to match the visible repository listing
+- Updates the systems section to include all visible service files
+- Updates the UI section to include `main.gd`, `ui_route_catalog.gd`, and all Phase 4/5 backends
+- Notes `UIRouter` requires a `CanvasLayer` specifically
+- Notes `game.starting_player_id` is strictly required with no runtime fallback
+- Notes `A2J` registration requirement for new runtime classes
+- Reflects `ticks_per_hour` as an implemented config key used by `gameplay_shell_presenter.gd`

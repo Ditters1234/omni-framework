@@ -37,12 +37,14 @@ The current repo structure shows these implemented high-level pieces:
 - **Autoload-driven boot flow** with dedicated managers for AI, audio, data, events, save/load, time, routing, game state, and mod loading.
 - **System layer** that includes action dispatching, stat evaluation, quest tracking, task running, rewards, transactions, script hook services, assembly commit support, backend contract registration, and loader/provider subfolders.
 - **UI layer** with `main.tscn`, `main.gd`, `ui_route_catalog.gd`, plus `components/`, `debug/`, `screens/`, and `theme/` folders.
+- **12 backend-driven screens** fully implemented (Phase 4 + Phase 5): Assembly Editor, Exchange, List, Challenge, Task Provider, Catalog List, Dialogue, Entity Sheet, Active Quest Log, Faction Reputation, Achievement List, and Event Log.
 - **Mod-first content layout** under `mods/`, with the engine expecting a base mod to exist.
 
 ## Documentation
 
 Start with `docs/README.md` for the full documentation map.
 
+- `docs/SYSTEM_CATALOG.md` — **start here** for a complete inventory of all systems and quick links
 - `docs/PROJECT_STRUCTURE.md` - current code-facing structure and implementation snapshot
 
 Other docs in `docs/` describe domain contracts, implementation guardrails, or planned work. Treat their stated scope as authoritative for that area, and prefer `PROJECT_STRUCTURE.md` when you need to know what exists in the repository today.
@@ -50,6 +52,18 @@ Other docs in `docs/` describe domain contracts, implementation guardrails, or p
 ## Testing
 
 The repository includes a `tests/` folder and a `.gutconfig.json`, indicating GUT-based automated tests are part of the workflow.
+
+Run tests headlessly:
+
+```bash
+godot --headless -s res://addons/gut/gut_cmdln.gd -gexit
+```
+
+For a focused run:
+
+```bash
+godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gselect=test_entity_instance_stats
+```
 
 ## Notes on Scope
 

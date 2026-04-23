@@ -89,7 +89,7 @@ res://
 5. `SaveManager` — Registers A2J runtime classes, loads autosave or boots a new game.
 6. `TimeKeeper` — Starts tick clock; dispatches tick signals every frame.
 7. `AudioManager` — Initializes SFX pools and music channels.
-8. `UIRouter` — Pushes initial screen (main menu or gameplay) onto the stack.
+8. `UIRouter` — Pushes initial screen (main menu or gameplay) onto the stack. Requires a `CanvasLayer` container — `UIRouter.initialize()` will error if passed anything other than a `CanvasLayer`.
 9. `AIManager` — Initializes configured AI provider (OpenAI, Anthropic, NobodyWho, or disabled).
 
 **Helper systems availability:**
@@ -126,6 +126,8 @@ Plugins requiring enable: A2J, dialogue_manager, gut — already set in project.
 
 Never use A2J for template parsing. Never use plain JSON for save data.
 
+**A2J registration:** Every runtime class that participates in save/load must be registered with A2J. Currently registered: `EntityInstance` and `PartInstance`. If you introduce a new first-class runtime class (e.g. `QuestInstance`, `TaskInstance`), add it to `SaveManager`'s A2J registration block and write a save/load round-trip test before shipping.
+
 ---
 
 ## Data Systems & JSON Schemas
@@ -161,6 +163,11 @@ Each `backend_class` value in JSON maps to a scene in `ui/screens/backends/`:
 | `TaskProviderBackend` | `task_provider_screen.tscn` | Faction job board |
 | `CatalogListBackend` | `catalog_list_screen.tscn` | Infinite template vendor |
 | `DialogueBackend` | `dialogue_screen.tscn` | NPC branching dialogue |
+| `EntitySheetBackend` | `entity_sheet_screen.tscn` | Read-only entity stats/equipment/inventory |
+| `ActiveQuestLogBackend` | `active_quest_log_screen.tscn` | Active quest cards with stages and objectives |
+| `FactionReputationBackend` | `faction_reputation_screen.tscn` | Faction badges and standing |
+| `AchievementListBackend` | `achievement_list_screen.tscn` | Achievement unlock state and progress |
+| `EventLogBackend` | `event_log_screen.tscn` | Recent GameEvents history |
 
 ### Backend Contract System
 
@@ -171,6 +178,8 @@ Each backend class is validated against a **contract** — a schema that defines
 2. Each backend registers its contract with `BackendContractRegistry.register(backend_class, contract)`.
 3. After all mods load, `BackendContractRegistry.lock()` is called — no new contracts can be registered.
 4. At runtime, when a screen uses a `backend_class`, the registry validates that the backend exists and the payload matches the contract.
+
+**Important:** Backend payloads are strict load-time contract data. Optional fields should be omitted unless needed, and all provided values must match expected runtime types exactly. Type mismatches are hard failures at load time, not runtime warnings.
 
 **Modders extending backends:**
 - Backends are defined in JSON with a `backend_class` string and a `backend_config` dict.
@@ -253,6 +262,22 @@ mods/<author_id>/<mod_id>/  # User/community mods
 ```
 
 Two-phase load: Phase 1 adds new content, Phase 2 applies patches. Patches run last so Mod B can patch Mod A's additions. Base mod always loads first.
+
+**Base mod constraint:** `mods/base/mod.json` must NOT declare a `dependencies` array. The loader treats any dependencies on the base mod as a fatal validation error. All other mods may declare dependencies.
+
+---
+
+## Config Keys Reference
+
+| Key | Type | Required | Notes |
+|---|---|---|---|
+| `game.starting_player_id` | string | **Required** | Must reference a valid entity id. No runtime fallback — missing or empty causes boot to abort. |
+| `game.starting_location` | string | Optional | Must reference a valid location id when present. |
+| `game.starting_discovered_locations` | array | Optional | Array of valid location ids. All entries are validated at load time. |
+| `game.ticks_per_day` | int | Optional | Must be a positive integer. Default 24. |
+| `game.ticks_per_hour` | int | Optional | Must be a positive integer. Used by `GameplayShellPresenter` to resolve "1 hour" time advance buttons. Default 0 (falls back to 1-tick increments for hour buttons). |
+| `game.new_game_flow` | dict | Optional | Configures the initial screen/params pushed after a new game starts. |
+| `ui.time_advance_buttons` | array | Optional | Labels ending in `tick(s)`, `hour(s)`, or `day(s)`. Example: `["1 hour", "1 day"]`. |
 
 ---
 
