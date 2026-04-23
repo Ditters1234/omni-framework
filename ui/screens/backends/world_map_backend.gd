@@ -60,7 +60,7 @@ func travel_to(location_id: String) -> Dictionary:
 		return {"status": "error", "message": "Location '%s' does not exist." % location_id}
 	if location_id == GameState.current_location_id:
 		return {"status": "ok", "message": "Already at %s." % _get_location_display_name(location_id)}
-	GameState.travel_to(location_id)
+	GameState.travel_to(location_id, _get_travel_cost_to(location_id))
 	return {"status": "ok", "message": "Traveled to %s." % _get_location_display_name(location_id)}
 
 
@@ -144,17 +144,25 @@ func _build_edge_key(first_id: String, second_id: String) -> String:
 	return "%s|%s" % [second_id, first_id]
 
 
+func _get_travel_cost_to(location_id: String) -> int:
+	var connections := LocationGraph.get_connections(GameState.current_location_id)
+	if not connections.has(location_id):
+		return 0
+	return maxi(int(connections.get(location_id, 0)), 0)
+
+
 func _resolve_location_position(location: Dictionary, index: int, total: int) -> Dictionary:
 	var map_position_value: Variant = location.get("map_position", {})
 	if map_position_value is Dictionary:
 		var map_position: Dictionary = map_position_value
-		var x_value: Variant = map_position.get("x", 0.5)
-		var y_value: Variant = map_position.get("y", 0.5)
-		if (x_value is int or x_value is float) and (y_value is int or y_value is float):
-			return {
-				"x": clampf(float(x_value), 0.05, 0.95),
-				"y": clampf(float(y_value), 0.05, 0.95),
-			}
+		if map_position.has("x") and map_position.has("y"):
+			var x_value: Variant = map_position.get("x", 0.5)
+			var y_value: Variant = map_position.get("y", 0.5)
+			if (x_value is int or x_value is float) and (y_value is int or y_value is float):
+				return {
+					"x": clampf(float(x_value), 0.05, 0.95),
+					"y": clampf(float(y_value), 0.05, 0.95),
+				}
 	if map_position_value is Array:
 		var map_position_array: Array = map_position_value
 		if map_position_array.size() >= 2:

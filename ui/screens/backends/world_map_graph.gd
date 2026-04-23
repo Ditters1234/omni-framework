@@ -33,6 +33,7 @@ var _pan_offset: Vector2 = Vector2.ZERO
 var _content_size: Vector2 = RADIAL_CONTENT_SIZE
 var _has_user_view: bool = false
 var _is_panning: bool = false
+var _render_layout_refresh_pending: bool = false
 
 
 func _ready() -> void:
@@ -51,6 +52,7 @@ func render(view_model: Dictionary) -> void:
 		_fit_view_to_content(false)
 	_layout_location_buttons()
 	queue_redraw()
+	_schedule_post_layout_refresh()
 
 
 func _draw() -> void:
@@ -108,7 +110,7 @@ func _layout_location_buttons() -> void:
 			continue
 		var center := _world_to_screen(_read_world_position(location_id))
 		button.position = center - button.size * 0.5
-		button.visible = _is_screen_position_near_viewport(center)
+		button.visible = true
 
 
 func _rebuild_world_positions() -> void:
@@ -309,7 +311,8 @@ func _screen_to_world(screen_position: Vector2) -> Vector2:
 
 func _is_screen_position_near_viewport(screen_position: Vector2) -> bool:
 	var margin := maxf(NODE_SIZE.x, NODE_SIZE.y) * 1.5
-	var bounds := Rect2(Vector2(-margin, -margin), size + Vector2(margin * 2.0, margin * 2.0))
+	var viewport_size := _get_effective_viewport_size()
+	var bounds := Rect2(Vector2(-margin, -margin), viewport_size + Vector2(margin * 2.0, margin * 2.0))
 	return bounds.has_point(screen_position)
 
 
@@ -408,11 +411,11 @@ func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
 
 
 func zoom_in() -> void:
-	_zoom_about(size * 0.5, _zoom * ZOOM_STEP, true)
+	_zoom_about(_get_effective_viewport_size() * 0.5, _zoom * ZOOM_STEP, true)
 
 
 func zoom_out() -> void:
-	_zoom_about(size * 0.5, _zoom / ZOOM_STEP, true)
+	_zoom_about(_get_effective_viewport_size() * 0.5, _zoom / ZOOM_STEP, true)
 
 
 func fit_view() -> void:
@@ -456,27 +459,54 @@ func get_viewport_snapshot() -> Dictionary:
 
 func _fit_view_to_content(mark_user_view: bool) -> void:
 	var bounds := _get_world_bounds()
-	var graph_size := size
-	if graph_size.x <= 0.0 or graph_size.y <= 0.0:
-		graph_size = custom_minimum_size
+	var graph_size := _get_effective_viewport_size()
 	var padded_size := bounds.size + NODE_SIZE + Vector2(120.0, 120.0)
 	var zoom_x := graph_size.x / maxf(padded_size.x, 1.0)
 	var zoom_y := graph_size.y / maxf(padded_size.y, 1.0)
 	_zoom = clampf(minf(zoom_x, zoom_y), MIN_ZOOM, MAX_ZOOM)
-	_center_on_world_position(bounds.get_center(), mark_user_view, false)
+	_center_on_world_position(bounds.get_center(), mark_user_view, false, graph_size)
 	_layout_location_buttons()
 	queue_redraw()
 	_emit_viewport_changed()
 
 
-func _center_on_world_position(world_position: Vector2, mark_user_view: bool, redraw: bool = true) -> void:
-	_pan_offset = size * 0.5 - world_position * _zoom
+func _center_on_world_position(world_position: Vector2, mark_user_view: bool, redraw: bool = true, viewport_size: Vector2 = Vector2.ZERO) -> void:
+	var target_size := viewport_size
+	if target_size.x <= 0.0 or target_size.y <= 0.0:
+		target_size = _get_effective_viewport_size()
+	_pan_offset = target_size * 0.5 - world_position * _zoom
 	if mark_user_view:
 		_has_user_view = true
 	if redraw:
 		_layout_location_buttons()
 		queue_redraw()
 		_emit_viewport_changed()
+
+
+func _get_effective_viewport_size() -> Vector2:
+	if size.x > 0.0 and size.y > 0.0:
+		return size
+	if custom_minimum_size.x > 0.0 and custom_minimum_size.y > 0.0:
+		return custom_minimum_size
+	return RADIAL_CONTENT_SIZE
+
+
+func _schedule_post_layout_refresh() -> void:
+	if _render_layout_refresh_pending:
+		return
+	_render_layout_refresh_pending = true
+	call_deferred("_run_post_layout_refresh")
+
+
+func _run_post_layout_refresh() -> void:
+	_render_layout_refresh_pending = false
+	if not is_inside_tree():
+		return
+	if not _has_user_view:
+		_fit_view_to_content(false)
+	else:
+		_layout_location_buttons()
+		queue_redraw()
 
 
 func _get_world_bounds() -> Rect2:

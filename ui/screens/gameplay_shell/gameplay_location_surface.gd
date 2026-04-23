@@ -144,7 +144,7 @@ func _render_travel_actions() -> Array[Dictionary]:
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size = Vector2(0, 44)
-		button.pressed.connect(_on_travel_button_pressed.bind(dest_id))
+		button.pressed.connect(_on_travel_button_pressed.bind(dest_id, travel_cost))
 		_travel_container.add_child(button)
 	return rendered_connections
 
@@ -306,8 +306,8 @@ func _on_screen_button_pressed(screen_id: String, params: Dictionary) -> void:
 	UIRouter.open_in_gameplay_shell(screen_id, params)
 
 
-func _on_travel_button_pressed(dest_location_id: String) -> void:
-	GameState.travel_to(dest_location_id)
+func _on_travel_button_pressed(dest_location_id: String, travel_cost: int) -> void:
+	GameState.travel_to(dest_location_id, maxi(travel_cost, 0))
 	_location_id = dest_location_id
 	_load_location()
 

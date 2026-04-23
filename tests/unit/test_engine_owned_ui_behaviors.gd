@@ -377,6 +377,37 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 	assert_null(_find_label_with_text(dialogue_screen, "The configured dialogue resource could not be loaded."))
 
 
+func test_location_surface_travel_button_advances_time_by_connection_cost() -> void:
+	_screen_container = CanvasLayer.new()
+	_spawned_nodes.append(_screen_container)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_screen_container)
+	UIRouter.initialize(_screen_container)
+	_register_runtime_screens()
+	GameState.new_game()
+
+	UIRouter.replace_all("gameplay_shell")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var shell := _get_top_screen()
+	assert_not_null(shell)
+	var location_surface := shell.find_child("GameplayLocationSurface", true, false) as Control
+	assert_not_null(location_surface)
+
+	var tick_before := GameState.current_tick
+	var destination_button := _find_button_with_text(location_surface, "Diagnostics Hub (1)")
+	assert_not_null(destination_button)
+	if destination_button == null:
+		return
+	destination_button.pressed.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_eq(GameState.current_location_id, "base:test_hub")
+	assert_eq(GameState.current_tick, tick_before + 1)
+
+
 func test_location_surface_empty_location_param_falls_back_to_game_state_location() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)
@@ -491,6 +522,25 @@ func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_
 		return
 	var graph := map_screen.find_child("WorldMapGraph", true, false) as Control
 	assert_not_null(graph)
+	var graph_buttons_value: Variant = graph.get("_buttons_by_id")
+	assert_true(graph_buttons_value is Dictionary)
+	if graph_buttons_value is Dictionary:
+		var graph_buttons: Dictionary = graph_buttons_value
+		var effective_viewport_size_value: Variant = graph.call("_get_effective_viewport_size")
+		assert_true(effective_viewport_size_value is Vector2)
+		var effective_viewport_size := Vector2.ZERO
+		if effective_viewport_size_value is Vector2:
+			effective_viewport_size = effective_viewport_size_value
+		var viewport_bounds := Rect2(Vector2.ZERO, effective_viewport_size)
+		assert_true(graph_buttons.has("base:hub_safehouse"))
+		assert_true(graph_buttons.has("base:test_hub"))
+		for location_id_value in graph_buttons.keys():
+			var location_button := graph_buttons.get(location_id_value) as Button
+			assert_not_null(location_button)
+			if location_button != null:
+				assert_true(location_button.visible, "%s map button should be visible." % str(location_id_value))
+				var location_center := location_button.position + location_button.size * 0.5
+				assert_true(viewport_bounds.has_point(location_center), "%s map button should land inside the graph viewport." % str(location_id_value))
 
 	var zoom_in_button := _find_button_with_text(map_screen, "+")
 	var zoom_out_button := _find_button_with_text(map_screen, "-")
@@ -541,6 +591,7 @@ func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_
 	await get_tree().process_frame
 
 	assert_eq(GameState.current_location_id, destination_id)
+	assert_eq(GameState.current_tick, 1)
 	var after_travel_snapshot := UIRouter.get_current_screen_debug_snapshot()
 	assert_eq(str(after_travel_snapshot.get("active_surface_screen_id", "")), "world_map")
 	var after_map_snapshot_value: Variant = map_screen.call("get_debug_snapshot")

@@ -324,17 +324,20 @@ func test_world_map_backend_builds_graph_and_travels() -> void:
 	assert_gt(locations.size(), 0)
 	assert_gt(edges.size(), 0)
 	assert_true(_map_rows_contain_location(locations, TEST_FIXTURE_WORLD.starting_location_id()))
+	assert_true(_map_rows_have_distinct_positions(locations))
 
 	var destination_id := _first_non_current_map_location(locations, GameState.current_location_id)
 	assert_false(destination_id.is_empty())
 	if destination_id.is_empty():
 		return
+	var tick_before := GameState.current_tick
 	var result_value: Variant = backend.call("travel_to", destination_id)
 	assert_true(result_value is Dictionary)
 	if result_value is Dictionary:
 		var result: Dictionary = result_value
 		assert_eq(str(result.get("status", "")), "ok")
 	assert_eq(GameState.current_location_id, destination_id)
+	assert_eq(GameState.current_tick, tick_before + 1)
 
 
 func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() -> void:
@@ -408,6 +411,23 @@ func _map_rows_contain_location(rows: Array, location_id: String) -> bool:
 		if str(row.get("location_id", "")) == location_id:
 			return true
 	return false
+
+
+func _map_rows_have_distinct_positions(rows: Array) -> bool:
+	var seen_positions: Dictionary = {}
+	for row_value in rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		var position_value: Variant = row.get("position", {})
+		if not position_value is Dictionary:
+			continue
+		var position: Dictionary = position_value
+		var position_key := "%s|%s" % [str(position.get("x", "")), str(position.get("y", ""))]
+		if seen_positions.has(position_key):
+			return false
+		seen_positions[position_key] = true
+	return true
 
 
 func _first_non_current_map_location(rows: Array, current_location_id: String) -> String:

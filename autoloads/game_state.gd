@@ -142,12 +142,16 @@ func _instantiate_world_entities(player_template_id: String) -> void:
 # ---------------------------------------------------------------------------
 
 ## Moves the player to a new location and emits location_changed.
-func travel_to(location_id: String) -> void:
+## travel_ticks is optional so callers can charge time for routed travel
+## without forcing teleports or scripted relocations to consume time.
+func travel_to(location_id: String, travel_ticks: int = 0) -> void:
 	if location_id.is_empty():
 		return
 	var old_id := current_location_id
 	if old_id == location_id:
 		return
+	if travel_ticks > 0:
+		TimeKeeper.advance_ticks(travel_ticks)
 	var player_entity := player as EntityInstance
 	var old_template := DataManager.get_location(old_id)
 	var new_template := DataManager.get_location(location_id)
