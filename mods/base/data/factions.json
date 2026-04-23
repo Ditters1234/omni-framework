@@ -1,24 +1,23 @@
 {
   "factions": [
     {
-      "faction_id": "base:test_faction",
-      "display_name": "Systems Audit Collective",
-      "description": "A purely administrative faction used to validate reputation, territory, and task board integration.",
-      "faction_color": "#4dc3ff",
-      "territory": [
-        "base:test_hub"
-      ],
-      "roster": [
-        "base:test_vendor"
-      ],
+      "faction_id": "base:threshold_syndicate",
+      "display_name": "Threshold Syndicate",
+      "description": "A loose network of fixers, smugglers, and freelance operatives who keep the district running outside corporate oversight. They value reliability over loyalty.",
+      "faction_color": "#00d4aa",
+      "territory": ["base:warehouse", "base:market_row"],
+      "roster": ["base:npc_fixer", "base:npc_theta"],
       "reputation_thresholds": {
         "allied": 100,
+        "trusted": 50,
         "friendly": 25,
         "neutral": 0,
-        "hostile": -25
+        "distrusted": -25,
+        "hostile": -50
       },
       "quest_pool": [
-        "base:deliver_report"
+        "base:deliver_package",
+        "base:supply_run"
       ]
     }
   ]

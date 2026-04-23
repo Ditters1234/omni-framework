@@ -11,7 +11,19 @@
       "ui_group": "combat"
     },
     {
+      "id": "armor",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "combat"
+    },
+    {
       "id": "charisma",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "social"
+    },
+    {
+      "id": "luck",
       "kind": "flat",
       "default_value": 0,
       "ui_group": "social"

@@ -1,38 +1,60 @@
 {
   "quests": [
     {
-      "quest_id": "base:starter_checklist",
-      "display_name": "Starter Checklist",
-      "description": "A short two-stage quest for validating item and location objectives.",
+      "quest_id": "base:first_steps",
+      "display_name": "First Steps",
+      "description": "Get oriented in the Threshold district. Arm yourself, find the market, and meet the people who matter.",
       "stages": [
         {
-          "description": "Obtain any weapon.",
+          "description": "Acquire a weapon.",
           "objectives": [
-            {
-              "type": "has_item_tag",
-              "tag": "weapon",
-              "count": 1
-            }
+            { "type": "has_item_tag", "tag": "weapon", "count": 1 }
           ],
-          "reward": {
-            "credits": 25
-          }
+          "reward": { "credits": 25 }
         },
         {
-          "description": "Reach the Diagnostics Hub.",
+          "description": "Travel to Market Row.",
           "objectives": [
-            {
-              "type": "reach_location",
-              "location_id": "base:test_hub"
-            }
+            { "type": "reach_location", "location_id": "base:market_row" }
+          ],
+          "reward": { "credits": 50 }
+        },
+        {
+          "description": "Visit the Warehouse to meet Kael.",
+          "objectives": [
+            { "type": "reach_location", "location_id": "base:warehouse" }
           ]
         }
       ],
       "reward": {
         "credits": 100,
-        "reputation": {
-          "base:test_faction": 20
+        "reputation": { "base:threshold_syndicate": 20 },
+        "flags": { "intro_complete": true }
+      },
+      "repeatable": false
+    },
+    {
+      "quest_id": "base:undercity_run",
+      "display_name": "Into the Dark",
+      "description": "Kael wants you to prove you can handle the Undercity. Get down there and survive the scavenger gauntlet.",
+      "stages": [
+        {
+          "description": "Reach the Undercity.",
+          "objectives": [
+            { "type": "reach_location", "location_id": "base:undercity" }
+          ]
+        },
+        {
+          "description": "Build up enough stamina to clear the gauntlet. You need at least 60 stamina capacity.",
+          "objectives": [
+            { "type": "stat_check", "stat": "stamina_max", "op": ">=", "value": 60 }
+          ]
         }
+      ],
+      "reward": {
+        "credits": 200,
+        "data_shards": 2,
+        "reputation": { "base:threshold_syndicate": 30 }
       },
       "repeatable": false
     }

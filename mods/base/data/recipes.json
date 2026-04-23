@@ -3,24 +3,34 @@
     {
       "recipe_id": "base:diagnostic_grip",
       "display_name": "Diagnostic Grip",
-      "description": "Combine two salvage chips into a small test arm mod.",
+      "description": "Combine two salvage chips into a crude arm-mounted scanner. Not pretty, but functional.",
       "output_template_id": "base:diagnostic_grip",
       "output_count": 1,
       "inputs": [
-        {
-          "template_id": "base:salvage_chip",
-          "count": 2
-        }
+        { "template_id": "base:salvage_chip", "count": 2 }
       ],
-      "required_stations": ["base:diagnostic_bench"],
-      "required_stats": {
-        "power": 1
-      },
+      "required_stations": ["base:street_bench"],
+      "required_stats": { "power": 1 },
       "required_flags": [],
       "craft_time_ticks": 0,
       "discovery": "always",
-      "tags": ["test_recipe", "arm_mod"]
+      "tags": ["arm_mod"]
+    },
+    {
+      "recipe_id": "base:improvised_plating",
+      "display_name": "Improvised Plating",
+      "description": "Weld two scrap plates into a rough but serviceable subdermal insert.",
+      "output_template_id": "base:kevlar_weave",
+      "output_count": 1,
+      "inputs": [
+        { "template_id": "base:scrap_plate", "count": 2 }
+      ],
+      "required_stations": ["base:street_bench"],
+      "required_stats": { "power": 2 },
+      "required_flags": [],
+      "craft_time_ticks": 1,
+      "discovery": "always",
+      "tags": ["armor"]
     }
-  ],
-  "patches": []
+  ]
 }

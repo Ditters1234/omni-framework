@@ -1,8 +1,9 @@
 {
   "name": "Base",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "schema_version": 1,
   "load_order": 0,
   "enabled": true,
-  "id": "base"
+  "id": "base",
+  "description": "Core content pack for the Omni-Framework. Provides a starter world with locations, NPCs, quests, items, factions, crafting, and achievements."
 }

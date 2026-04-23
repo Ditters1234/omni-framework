@@ -3,18 +3,48 @@
     {
       "achievement_id": "base:first_purchase",
       "icon": "res://mods/base/assets/ach_buy.svg",
-      "display_name": "Procurement Confirmed",
-      "description": "Buy your first test item.",
+      "display_name": "Consumer Grade",
+      "description": "Buy your first item from a vendor.",
       "stat_name": "items_bought",
       "requirement": 1
     },
     {
-      "achievement_id": "base:first_trip",
+      "achievement_id": "base:big_spender",
+      "icon": "res://mods/base/assets/ach_buy.svg",
+      "display_name": "Big Spender",
+      "description": "Buy 10 items total.",
+      "stat_name": "items_bought",
+      "requirement": 10
+    },
+    {
+      "achievement_id": "base:explorer",
       "icon": "res://mods/base/assets/ach_trip.svg",
-      "display_name": "Field Verified",
-      "description": "Discover one new location in the starter flow.",
+      "display_name": "Explorer",
+      "description": "Discover a new location.",
       "stat_name": "locations_discovered",
       "requirement": 1
+    },
+    {
+      "achievement_id": "base:cartographer",
+      "icon": "res://mods/base/assets/ach_trip.svg",
+      "display_name": "Cartographer",
+      "description": "Discover all four districts.",
+      "stat_name": "locations_discovered",
+      "requirement": 4
+    },
+    {
+      "achievement_id": "base:first_contract",
+      "display_name": "On The Payroll",
+      "description": "Complete your first repeatable contract.",
+      "stat_name": "tasks_completed",
+      "requirement": 1
+    },
+    {
+      "achievement_id": "base:grinder",
+      "display_name": "Grinder",
+      "description": "Complete 10 contracts.",
+      "stat_name": "tasks_completed",
+      "requirement": 10
     }
   ]
 }

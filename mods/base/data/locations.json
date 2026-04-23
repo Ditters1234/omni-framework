@@ -1,133 +1,159 @@
 {
   "locations": [
     {
-      "location_id": "base:hub_safehouse",
-      "display_name": "Safehouse",
-      "description": "A minimal starting location that anchors the base pack and links into the diagnostics area.",
+      "location_id": "base:apartment",
+      "display_name": "Your Apartment",
+      "description": "A cramped studio on the 14th floor. The lock works, the water runs, and nobody asks questions. Good enough.",
       "connections": {
-        "base:test_hub": 1
+        "base:market_row": 1
       },
       "screens": [
         {
-          "tab_id": "safehouse_sheet",
-          "display_name": "Player Sheet",
-          "description": "Review current player stats, equipment, and inventory.",
+          "tab_id": "apt_sheet",
+          "display_name": "Check Status",
+          "description": "Review your body, stats, and inventory.",
           "backend_class": "EntitySheetBackend",
           "target_entity_id": "player",
-          "screen_title": "Player Diagnostic Sheet"
+          "screen_title": "Personal Status"
         },
         {
-          "tab_id": "safehouse_quests",
-          "display_name": "Quest Log",
-          "description": "Review active quest state.",
+          "tab_id": "apt_quests",
+          "display_name": "Job Board",
+          "description": "Review your active contracts.",
           "backend_class": "ActiveQuestLogBackend",
-          "screen_title": "Quest Log"
+          "screen_title": "Active Contracts"
+        },
+        {
+          "tab_id": "apt_achievements",
+          "display_name": "Milestones",
+          "description": "Track what you've accomplished so far.",
+          "backend_class": "AchievementListBackend"
         }
       ]
     },
     {
-      "location_id": "base:test_hub",
-      "display_name": "Diagnostics Hub",
-      "description": "A compact validation zone that exposes location screens, travel, factions, quests, and NPC interactions.",
+      "location_id": "base:market_row",
+      "display_name": "Market Row",
+      "description": "A strip of neon-lit vendor stalls wedged between two megastructures. You can buy almost anything here if you know who to ask.",
       "connections": {
-        "base:hub_safehouse": 1
+        "base:apartment": 1,
+        "base:warehouse": 2,
+        "base:undercity": 3
       },
       "screens": [
         {
-          "tab_id": "hub_inventory",
-          "display_name": "Inventory View",
-          "description": "Open a simple list view of the player's inventory.",
-          "backend_class": "ListBackend",
-          "data_source": "player:inventory"
-        },
-        {
-          "tab_id": "hub_catalog",
-          "display_name": "Infinite Vendor",
-          "description": "Buy test parts from the catalog.",
+          "tab_id": "market_catalog",
+          "display_name": "Street Vendor",
+          "description": "Buy basic supplies and scrap from the open market.",
           "backend_class": "CatalogListBackend",
           "data_source": "catalog",
           "currency_id": "credits",
-          "action_payload": {
-            "type": "buy_item"
-          }
+          "action_payload": { "type": "buy_item" }
         },
         {
-          "tab_id": "hub_crafting",
-          "display_name": "Crafting Bench",
-          "description": "Craft test parts from player inventory materials.",
+          "tab_id": "market_crafting",
+          "display_name": "Workbench",
+          "description": "An open-air workbench behind the stalls. Craft what you can from what you have.",
           "backend_class": "CraftingBackend",
-          "station_id": "base:diagnostic_bench",
-          "recipe_tags": ["test_recipe"],
+          "station_id": "base:street_bench",
+          "recipe_tags": [],
           "crafter_entity_id": "player",
           "input_source_entity_id": "player",
           "output_destination_entity_id": "player",
-          "screen_title": "Diagnostic Crafting Bench"
+          "screen_title": "Street Workbench"
         },
         {
-          "tab_id": "hub_sheet",
-          "display_name": "Player Sheet",
-          "description": "Review current player stats, equipment, and inventory.",
-          "backend_class": "EntitySheetBackend",
-          "target_entity_id": "player",
-          "screen_title": "Player Diagnostic Sheet"
-        },
-        {
-          "tab_id": "hub_quests",
-          "display_name": "Quest Log",
-          "description": "Review active quest state.",
-          "backend_class": "ActiveQuestLogBackend",
-          "screen_title": "Quest Log"
-        },
-        {
-          "tab_id": "hub_factions",
-          "display_name": "Faction Standing",
-          "description": "Inspect test faction reputation.",
-          "backend_class": "FactionReputationBackend",
-          "target_entity_id": "player"
-        },
-        {
-          "tab_id": "hub_achievements",
-          "display_name": "Achievements",
-          "description": "Inspect test achievement state.",
-          "backend_class": "AchievementListBackend"
-        },
-        {
-          "tab_id": "hub_events",
-          "display_name": "Event Log",
-          "description": "View recent event history.",
-          "backend_class": "EventLogBackend"
-        },
-        {
-          "tab_id": "hub_tasks",
-          "display_name": "Syndicate Jobs",
-          "description": "Pull repeatable tasks from the test faction.",
-          "backend_class": "TaskProviderBackend",
-          "faction_id": "base:test_faction"
-        },
-        {
-          "tab_id": "hub_assembly",
-          "display_name": "Ripperdoc Bench",
-          "description": "Open a basic assembly screen for the player to swap biological parts and install implants.",
+          "tab_id": "market_assembly",
+          "display_name": "Theta's Clinic",
+          "description": "Quartermaster Theta runs a ripperdoc shop out of a converted shipping container.",
           "backend_class": "AssemblyEditorBackend",
           "target_entity_id": "player",
           "budget_entity_id": "player",
           "budget_currency_id": "credits",
-          "option_tags": [
-            "head",
-            "torso",
-            "arms",
-            "legs",
-            "hands",
-            "feet",
-            "neural_implant",
-            "subdermal_armor",
-            "weapon"
-          ],
-          "screen_title": "Ripperdoc Operating Table"
+          "option_tags": ["head", "torso", "arms", "legs", "hands", "feet", "neural_implant", "subdermal_armor", "weapon"],
+          "screen_title": "Theta's Clinic"
+        },
+        {
+          "tab_id": "market_inventory",
+          "display_name": "Check Inventory",
+          "description": "See what you're carrying.",
+          "backend_class": "ListBackend",
+          "data_source": "player:inventory"
+        },
+        {
+          "tab_id": "market_events",
+          "display_name": "Scanner Feed",
+          "description": "Review recent events from your neural log.",
+          "backend_class": "EventLogBackend"
         }
       ],
-      "entities_present": [
-        "base:test_vendor"
+      "entities_present": ["base:npc_theta"]
+    },
+    {
+      "location_id": "base:warehouse",
+      "display_name": "The Warehouse",
+      "description": "An abandoned shipping depot repurposed by the Threshold Syndicate. Kael runs operations from the back office. The coffee is terrible but the contracts pay well.",
+      "connections": {
+        "base:market_row": 2
+      },
+      "screens": [
+        {
+          "tab_id": "warehouse_tasks",
+          "display_name": "Contract Board",
+          "description": "Pick up work from the Threshold Syndicate.",
+          "backend_class": "TaskProviderBackend",
+          "faction_id": "base:threshold_syndicate"
+        },
+        {
+          "tab_id": "warehouse_factions",
+          "display_name": "Syndicate Standing",
+          "description": "Check your reputation with local factions.",
+          "backend_class": "FactionReputationBackend",
+          "target_entity_id": "player"
+        },
+        {
+          "tab_id": "warehouse_quests",
+          "display_name": "Active Contracts",
+          "description": "Review your active contract status.",
+          "backend_class": "ActiveQuestLogBackend",
+          "screen_title": "Active Contracts"
+        }
+      ],
+      "entities_present": ["base:npc_fixer"]
+    },
+    {
+      "location_id": "base:undercity",
+      "display_name": "The Undercity",
+      "description": "Below the market, the infrastructure gives way to unmapped tunnels and flooded service corridors. Dangerous, but the scavengers down here find things nobody else can.",
+      "connections": {
+        "base:market_row": 3
+      },
+      "screens": [
+        {
+          "tab_id": "under_sheet",
+          "display_name": "Check Status",
+          "description": "Review your condition before going deeper.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "player",
+          "screen_title": "Status Check"
+        },
+        {
+          "tab_id": "under_challenge",
+          "display_name": "Scavenger Gauntlet",
+          "description": "A makeshift obstacle course. Clear it to prove you belong down here. Requires stamina 60+.",
+          "backend_class": "ChallengeBackend",
+          "required_stat": "stamina_max",
+          "required_value": 60,
+          "action_payload": {
+            "type": "reward",
+            "reward": {
+              "credits": 150,
+              "data_shards": 1,
+              "items": [{ "template_id": "base:scrap_plate", "count": 2 }],
+              "reputation": { "base:threshold_syndicate": 15 }
+            }
+          }
+        }
       ]
     }
   ]

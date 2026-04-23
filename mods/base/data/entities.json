@@ -2,198 +2,145 @@
   "entities": [
     {
       "entity_id": "base:player",
-      "display_name": "Player",
-      "description": "Starter human player entity for validating inventory, equipment, quests, factions, and location travel.",
-      "location_id": "base:hub_safehouse",
-      "currencies": {
-        "credits": 500,
-        "data_shards": 3
-      },
+      "display_name": "Operative",
+      "description": "Freshly assembled and dropped into the threshold. No history. No allegiance. Just parts and potential.",
+      "location_id": "base:apartment",
+      "currencies": { "credits": 400, "data_shards": 2 },
       "stats": {
-        "power": 1,
-        "charisma": 1,
-        "health": 100,
-        "health_max": 100,
-        "stamina": 50,
-        "stamina_max": 50
+        "power": 1, "armor": 0, "charisma": 1, "luck": 0,
+        "health": 100, "health_max": 100, "stamina": 50, "stamina_max": 50
       },
-      "flags": {
-        "tutorial_complete": false
-      },
-      "discovered_locations": [
-        "base:hub_safehouse",
-        "base:test_hub"
-      ],
+      "flags": { "tutorial_complete": false },
+      "discovered_locations": ["base:apartment", "base:market_row"],
       "provides_sockets": [
-        {
-          "id": "head",
-          "accepted_tags": ["head"],
-          "label": "Head"
-        },
-        {
-          "id": "torso",
-          "accepted_tags": ["torso"],
-          "label": "Torso"
-        },
-        {
-          "id": "arms",
-          "accepted_tags": ["arms"],
-          "label": "Arms"
-        },
-        {
-          "id": "legs",
-          "accepted_tags": ["legs"],
-          "label": "Legs"
-        },
-        {
-          "id": "hands",
-          "accepted_tags": ["hands"],
-          "label": "Hands"
-        },
-        {
-          "id": "feet",
-          "accepted_tags": ["feet"],
-          "label": "Feet"
-        }
+        { "id": "head", "accepted_tags": ["head"], "label": "Head" },
+        { "id": "torso", "accepted_tags": ["torso"], "label": "Torso" },
+        { "id": "arms", "accepted_tags": ["arms"], "label": "Arms" },
+        { "id": "legs", "accepted_tags": ["legs"], "label": "Legs" },
+        { "id": "hands", "accepted_tags": ["hands"], "label": "Hands" },
+        { "id": "feet", "accepted_tags": ["feet"], "label": "Feet" }
       ],
       "inventory": [
-        {
-          "instance_id": "player_head_001",
-          "template_id": "base:human_head",
-          "custom_values": {
-            "eye_color": "green",
-            "hair_color": "black"
-          },
-          "condition": 1.0
-        },
-        {
-          "instance_id": "player_torso_001",
-          "template_id": "base:human_torso",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "player_arms_001",
-          "template_id": "base:human_arms",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "player_legs_001",
-          "template_id": "base:human_legs",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "player_hands_001",
-          "template_id": "base:human_hands",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "player_feet_001",
-          "template_id": "base:human_feet",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "player_weapon_001",
-          "template_id": "base:test_weapon",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "player_salvage_chip_001",
-          "template_id": "base:salvage_chip",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "player_salvage_chip_002",
-          "template_id": "base:salvage_chip",
-          "condition": 1.0
-        }
+        { "instance_id": "p_head_001", "template_id": "base:human_head", "custom_values": { "eye_color": "green", "hair_color": "black" } },
+        { "instance_id": "p_torso_001", "template_id": "base:human_torso" },
+        { "instance_id": "p_arms_001", "template_id": "base:human_arms" },
+        { "instance_id": "p_legs_001", "template_id": "base:human_legs" },
+        { "instance_id": "p_hands_001", "template_id": "base:human_hands" },
+        { "instance_id": "p_feet_001", "template_id": "base:human_feet" },
+        { "instance_id": "p_baton_001", "template_id": "base:stun_baton" },
+        { "instance_id": "p_chip_001", "template_id": "base:salvage_chip" },
+        { "instance_id": "p_chip_002", "template_id": "base:salvage_chip" },
+        { "instance_id": "p_medkit_001", "template_id": "base:field_medkit" }
       ],
       "assembly_socket_map": {
-        "head": "player_head_001",
-        "torso": "player_torso_001",
-        "arms": "player_arms_001",
-        "legs": "player_legs_001",
-        "hands": "player_hands_001",
-        "feet": "player_feet_001"
-      },
-      "assembly_instance_ids": [
-        "player_head_001",
-        "player_torso_001",
-        "player_arms_001",
-        "player_legs_001",
-        "player_hands_001",
-        "player_feet_001"
-      ]
+        "head": "p_head_001",
+        "torso": "p_torso_001",
+        "arms": "p_arms_001",
+        "legs": "p_legs_001",
+        "hands": "p_hands_001",
+        "feet": "p_feet_001"
+      }
     },
     {
-      "entity_id": "base:test_vendor",
+      "entity_id": "base:npc_theta",
       "display_name": "Quartermaster Theta",
-      "description": "A ripperdoc/quartermaster entity that exposes trade, dialogue, sheet, and challenge interactions for system validation.",
-      "location_id": "base:test_hub",
-      "currencies": {
-        "credits": 9999,
-        "data_shards": 25
-      },
-      "stats": {
-        "charisma": 4,
-        "health": 100,
-        "health_max": 100
-      },
-      "flags": {
-        "met_player": false,
-        "passed_diagnostic": false
-      },
+      "description": "A heavily augmented ripperdoc who runs the clinic in Market Row. She'll sell you parts, install them, and only judge you a little.",
+      "location_id": "base:market_row",
+      "currencies": { "credits": 9999, "data_shards": 50 },
+      "stats": { "charisma": 4, "power": 2, "health": 150, "health_max": 150 },
+      "flags": { "met_player": false },
       "inventory": [
-        {
-          "instance_id": "theta_implant_001",
-          "template_id": "base:optic_implant",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "theta_armor_001",
-          "template_id": "base:kevlar_weave",
-          "condition": 1.0
-        },
-        {
-          "instance_id": "theta_weapon_001",
-          "template_id": "base:test_weapon",
-          "condition": 1.0
-        }
+        { "instance_id": "theta_optic_001", "template_id": "base:optic_implant" },
+        { "instance_id": "theta_armor_001", "template_id": "base:kevlar_weave" },
+        { "instance_id": "theta_baton_001", "template_id": "base:stun_baton" },
+        { "instance_id": "theta_reflex_001", "template_id": "base:reflex_booster" },
+        { "instance_id": "theta_ceramic_001", "template_id": "base:ceramic_plating" },
+        { "instance_id": "theta_mono_001", "template_id": "base:mono_blade" },
+        { "instance_id": "theta_synth_head_001", "template_id": "base:synth_head" },
+        { "instance_id": "theta_synth_torso_001", "template_id": "base:synth_torso" },
+        { "instance_id": "theta_synth_arms_001", "template_id": "base:synth_arms" },
+        { "instance_id": "theta_synth_legs_001", "template_id": "base:synth_legs" }
       ],
       "interactions": [
         {
           "tab_id": "theta_trade",
-          "label": "Trade",
+          "label": "Browse Stock",
+          "description": "Buy augments, weapons, and body parts.",
           "backend_class": "ExchangeBackend",
-          "source_inventory": "entity:base:test_vendor",
+          "source_inventory": "entity:base:npc_theta",
           "destination_inventory": "player",
           "currency_id": "credits"
         },
         {
           "tab_id": "theta_talk",
           "label": "Talk",
+          "description": "Have a conversation.",
           "backend_class": "DialogueBackend",
           "dialogue_resource": "res://mods/base/dialogue/quartermaster_theta.dialogue",
           "dialogue_start": "start"
         },
         {
           "tab_id": "theta_sheet",
-          "label": "Inspect Quartermaster",
+          "label": "Scan",
+          "description": "Run a bioscan on Theta.",
           "backend_class": "EntitySheetBackend",
-          "target_entity_id": "base:test_vendor",
-          "screen_title": "Quartermaster Theta"
+          "target_entity_id": "base:npc_theta",
+          "screen_title": "Quartermaster Theta — Bioscan"
         },
         {
           "tab_id": "theta_challenge",
-          "label": "Run Power Check",
+          "label": "Arm Wrestle",
+          "description": "Prove your power. Requires power 3 or higher.",
           "backend_class": "ChallengeBackend",
           "required_stat": "power",
           "required_value": 3,
           "action_payload": {
             "type": "set_flag",
-            "entity_id": "base:test_vendor",
-            "flag_id": "passed_diagnostic",
+            "entity_id": "base:npc_theta",
+            "flag_id": "respects_player",
             "value": true
           }
+        }
+      ]
+    },
+    {
+      "entity_id": "base:npc_fixer",
+      "display_name": "Kael",
+      "description": "A soft-spoken fixer who operates out of the old warehouse. Hands out contracts for the Threshold Syndicate and always pays on time.",
+      "location_id": "base:warehouse",
+      "currencies": { "credits": 5000 },
+      "stats": { "charisma": 5, "luck": 3, "health": 80, "health_max": 80 },
+      "flags": {},
+      "inventory": [
+        { "instance_id": "kael_charm_001", "template_id": "base:lucky_charm" },
+        { "instance_id": "kael_medkit_001", "template_id": "base:field_medkit" },
+        { "instance_id": "kael_medkit_002", "template_id": "base:field_medkit" }
+      ],
+      "interactions": [
+        {
+          "tab_id": "kael_trade",
+          "label": "Buy Supplies",
+          "description": "Kael keeps a few useful items on hand.",
+          "backend_class": "ExchangeBackend",
+          "source_inventory": "entity:base:npc_fixer",
+          "destination_inventory": "player",
+          "currency_id": "credits"
+        },
+        {
+          "tab_id": "kael_talk",
+          "label": "Talk",
+          "description": "Speak with Kael.",
+          "backend_class": "DialogueBackend",
+          "dialogue_resource": "res://mods/base/dialogue/kael.dialogue",
+          "dialogue_start": "start"
+        },
+        {
+          "tab_id": "kael_sheet",
+          "label": "Read",
+          "description": "Size Kael up.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "base:npc_fixer",
+          "screen_title": "Kael — Street Profile"
         }
       ]
     }

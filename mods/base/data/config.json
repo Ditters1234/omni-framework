@@ -1,17 +1,17 @@
 {
   "game": {
-    "title": "Omni Framework Base Starter",
-    "tagline": "Minimal starter content for system validation.",
-    "starting_location": "base:hub_safehouse",
+    "title": "Neon Threshold",
+    "tagline": "Scrap it. Rebuild. Survive.",
+    "starting_location": "base:apartment",
     "ticks_per_day": 24,
     "ticks_per_hour": 1,
     "starting_discovered_locations": [
-      "base:hub_safehouse",
-      "base:test_hub"
+      "base:apartment",
+      "base:market_row"
     ],
     "starting_money": {
-      "credits": 500,
-      "data_shards": 3
+      "credits": 400,
+      "data_shards": 2
     },
     "starting_player_id": "base:player",
     "new_game_flow": {
@@ -20,9 +20,9 @@
         "initial_surface_id": "assembly_editor",
         "disable_shell_chrome": true,
         "initial_surface_params": {
-          "screen_title": "Character Creator",
-          "screen_description": "Choose a starter core, extend into any open sockets you want, and spend from your starting credits before you enter the world.",
-          "screen_summary": "Preview a part on the left, inspect its price and stats on the right, then apply it to your starting build. Any credits you do not spend carry into the game.",
+          "screen_title": "Body Configuration",
+          "screen_description": "Assemble your starting body. Choose a head, torso, and limbs from biological or synthetic stock, then install any implants you can afford.",
+          "screen_summary": "Preview a part on the left, inspect its stats on the right, then apply it. Unspent credits carry into the game.",
           "target_entity_id": "player",
           "budget_currency_id": "credits",
           "option_tags": [
@@ -36,7 +36,7 @@
             "subdermal_armor",
             "weapon"
           ],
-          "confirm_label": "Begin",
+          "confirm_label": "Enter Neon Threshold",
           "cancel_label": "Back",
           "pop_on_confirm": true,
           "cancel_screen_id": "main_menu",
@@ -47,21 +47,45 @@
     }
   },
   "ui": {
+    "main_menu": {
+      "title": "Neon Threshold",
+      "subtitle": "Build yourself. Break the system.",
+      "new_game_label": "New Body",
+      "continue_label": "Resume Session",
+      "load_label": "Load Save",
+      "settings_label": "Settings",
+      "credits_label": "Credits",
+      "quit_label": "Exit"
+    },
     "time_advance_buttons": [
       "1 hour",
+      "4 hours",
       "1 day"
     ],
     "strings": {
-      "base_pack_label": "Base starter pack loaded"
+      "boot_status": "Neon Threshold ready."
+    },
+    "theme": {
+      "primary_color": "#00d4aa",
+      "secondary_color": "#ff6b9d",
+      "bg_color": "#0a0e17",
+      "text_color": "#e8ecf4",
+      "text_muted": "#6b7a94",
+      "color_positive": "#4ade80",
+      "color_negative": "#f87171",
+      "color_warning": "#fbbf24",
+      "color_info": "#60a5fa"
     }
   },
   "stats": {
     "groups": {
       "combat": [
-        "power"
+        "power",
+        "armor"
       ],
       "social": [
-        "charisma"
+        "charisma",
+        "luck"
       ],
       "survival": [
         "health",

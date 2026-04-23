@@ -1,37 +1,40 @@
 {
   "task_templates": [
     {
-      "template_id": "base:deliver_report",
+      "template_id": "base:deliver_package",
       "type": "DELIVER",
-      "target": "base:hub_safehouse",
-      "travel_cost": 1,
+      "target": "base:apartment",
+      "travel_cost": 2,
       "reward": {
         "credits": 75,
-        "reputation": {
-          "base:test_faction": 10
-        }
+        "reputation": { "base:threshold_syndicate": 10 }
       },
-      "description": "Carry a test report to the safehouse and confirm task flow.",
+      "description": "Deliver a sealed package to a dead drop near your apartment. Don't open it.",
       "difficulty": 1,
       "repeatable": true
     },
     {
-      "template_id": "base:wait_calibration",
-      "type": "WAIT",
-      "duration": 1,
+      "template_id": "base:supply_run",
+      "type": "DELIVER",
+      "target": "base:warehouse",
+      "travel_cost": 3,
       "reward": {
-        "credits": 10
+        "credits": 120,
+        "reputation": { "base:threshold_syndicate": 15 },
+        "items": [{ "template_id": "base:salvage_chip", "count": 1 }]
       },
-      "description": "A simple tick-based wait task for time system validation.",
-      "difficulty": 0,
+      "description": "Pick up a crate from the Undercity salvage crews and haul it back to the Warehouse.",
+      "difficulty": 2,
       "repeatable": true
     },
     {
-      "template_id": "base:recipe_craft",
-      "type": "CRAFT",
-      "duration": 1,
-      "reward": {},
-      "description": "Generic runtime task shell used by timed recipe crafting.",
+      "template_id": "base:downtime",
+      "type": "WAIT",
+      "duration": 4,
+      "reward": {
+        "credits": 20
+      },
+      "description": "Lay low for a while. Sometimes the best move is no move.",
       "difficulty": 0,
       "repeatable": true
     }

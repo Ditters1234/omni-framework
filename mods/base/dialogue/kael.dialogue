@@ -1,0 +1,22 @@
+~ start
+Kael: You look new. That's fine — everyone starts somewhere. I'm Kael. I run contracts for the Syndicate.
+- What's the Threshold Syndicate?
+	=> about_syndicate
+- Got any work?
+	=> about_work
+- Just passing through.
+	=> END
+
+~ about_syndicate
+Kael: We're the people who keep this district functional while the corps pretend it doesn't exist. Deliveries, supply runs, problem solving.
+Kael: Do good work, build trust, and better contracts open up. It's straightforward.
+- Got any work?
+	=> about_work
+- I'll keep that in mind.
+	=> END
+
+~ about_work
+Kael: Check the contract board. I post new jobs regularly. Start with deliveries — they're simple and they pay.
+Kael: Once you've proven you can handle yourself, I'll have something more interesting for you.
+- Sounds good.
+	=> END

@@ -1,10 +1,22 @@
 ~ start
-Quartermaster Theta: Systems check online. Welcome to the Diagnostics Hub.
-- Ask about the hub
-	=> hub
-- End conversation
+Quartermaster Theta: Another walk-in. At least you still have most of your original parts. What do you need?
+- What is this place?
+	=> about_clinic
+- What do you sell?
+	=> about_stock
+- Just looking.
 	=> END
 
-~ hub
-Quartermaster Theta: This base pack exists to test inventory, travel, dialogue, quests, tasks, factions, and achievements.
-=> END
+~ about_clinic
+Quartermaster Theta: This is a clinic. I install augments, swap out limbs, and keep people running. No questions, no records, no refunds.
+Quartermaster Theta: If you need work done, browse my stock and pick what fits your budget. Or your body. Preferably both.
+- What do you sell?
+	=> about_stock
+- Thanks.
+	=> END
+
+~ about_stock
+Quartermaster Theta: Optics, subdermal plating, synthetic limbs, neural boosters — the usual. Everything I sell is tested and functional. Mostly.
+Quartermaster Theta: If you're broke, the street vendor in Market Row has cheaper scrap. But you get what you pay for.
+- Got it. Thanks.
+	=> END

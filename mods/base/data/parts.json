@@ -3,167 +3,239 @@
     {
       "id": "base:human_head",
       "sprite": "res://mods/base/assets/head.svg",
-      "display_name": "Biological Head",
-      "description": "Standard organic processing unit. Provides a neural socket.",
+      "display_name": "Organic Skull Assembly",
+      "description": "Stock biological cranium. Houses standard neural pathways and one implant socket.",
       "tags": ["head", "organic"],
-      "price": { "credits": 500 },
+      "price": { "credits": 0 },
       "stats": { "charisma": 1 },
       "equippable": true,
       "provides_sockets": [
-        {
-          "id": "neural_slot",
-          "accepted_tags": ["neural_implant"],
-          "label": "Neural Socket"
-        }
+        { "id": "neural_slot", "accepted_tags": ["neural_implant"], "label": "Neural Socket" }
       ],
-      "customizable": true,
-      "custom_field_labels": ["Eye Color", "Hair Color"],
       "custom_fields": [
-        {
-          "id": "eye_color",
-          "label": "Eye Color",
-          "type": "color_name",
-          "default_value": "brown",
-          "options": ["brown", "blue", "green", "amber", "gray", "violet"]
-        },
-        {
-          "id": "hair_color",
-          "label": "Hair Color",
-          "type": "color_name",
-          "default_value": "black",
-          "options": ["black", "brown", "blonde", "red", "white", "silver", "blue"]
-        }
+        { "id": "eye_color", "label": "Eye Color", "type": "color_name", "default_value": "brown", "options": ["brown", "blue", "green", "amber", "gray", "violet"] },
+        { "id": "hair_color", "label": "Hair Color", "type": "color_name", "default_value": "black", "options": ["black", "brown", "blonde", "red", "white", "silver", "blue"] }
+      ]
+    },
+    {
+      "id": "base:synth_head",
+      "sprite": "res://mods/base/assets/head.svg",
+      "display_name": "Composite Faceplate",
+      "description": "Reinforced polymer shell with embedded threat scanner. Trades personality for durability.",
+      "tags": ["head", "synthetic"],
+      "price": { "credits": 200 },
+      "stats": { "armor": 2, "health_max": 10 },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "neural_slot", "accepted_tags": ["neural_implant"], "label": "Neural Socket" }
       ]
     },
     {
       "id": "base:human_torso",
       "sprite": "res://mods/base/assets/torso.svg",
-      "display_name": "Biological Torso",
-      "description": "Core vital chassis. Provides subdermal and core sockets.",
+      "display_name": "Organic Chassis",
+      "description": "Standard ribcage and organ housing. Accepts subdermal plating.",
       "tags": ["torso", "organic"],
-      "price": { "credits": 1000 },
+      "price": { "credits": 0 },
       "stats": { "health": 20, "health_max": 20 },
       "equippable": true,
       "provides_sockets": [
-        {
-          "id": "core_slot",
-          "accepted_tags": ["core_implant"],
-          "label": "Core Socket"
-        },
-        {
-          "id": "subdermal_slot",
-          "accepted_tags": ["subdermal_armor"],
-          "label": "Subdermal Slot"
-        }
+        { "id": "subdermal_slot", "accepted_tags": ["subdermal_armor"], "label": "Subdermal Slot" }
+      ]
+    },
+    {
+      "id": "base:synth_torso",
+      "sprite": "res://mods/base/assets/torso.svg",
+      "display_name": "Hardshell Frame",
+      "description": "Military-surplus exo-torso. Heavy, expensive, and nearly indestructible.",
+      "tags": ["torso", "synthetic"],
+      "price": { "credits": 350 },
+      "stats": { "health": 10, "health_max": 40, "armor": 3 },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "subdermal_slot", "accepted_tags": ["subdermal_armor"], "label": "Subdermal Slot" }
       ]
     },
     {
       "id": "base:human_arms",
       "sprite": "res://mods/base/assets/arms.svg",
-      "display_name": "Biological Arms",
-      "description": "Standard manipulation appendages.",
+      "display_name": "Organic Arms",
+      "description": "Flesh and bone manipulators. Reliable and cheap to repair.",
       "tags": ["arms", "organic"],
       "required_tags": ["torso"],
-      "price": { "credits": 400 },
+      "price": { "credits": 0 },
       "stats": { "power": 1 },
       "equippable": true,
       "provides_sockets": [
-        {
-          "id": "arm_mod_slot",
-          "accepted_tags": ["arm_mod"],
-          "label": "Arm Mod"
-        }
+        { "id": "arm_mod_slot", "accepted_tags": ["arm_mod"], "label": "Arm Mod" }
+      ]
+    },
+    {
+      "id": "base:synth_arms",
+      "sprite": "res://mods/base/assets/arms.svg",
+      "display_name": "Hydraulic Arms",
+      "description": "Pneumatic servos replace muscle fiber. Grip strength exceeds human limits.",
+      "tags": ["arms", "synthetic"],
+      "required_tags": ["torso"],
+      "price": { "credits": 250 },
+      "stats": { "power": 3 },
+      "equippable": true,
+      "provides_sockets": [
+        { "id": "arm_mod_slot", "accepted_tags": ["arm_mod"], "label": "Arm Mod" }
       ]
     },
     {
       "id": "base:human_legs",
       "sprite": "res://mods/base/assets/legs.svg",
-      "display_name": "Biological Legs",
-      "description": "Bipedal locomotion units.",
+      "display_name": "Organic Legs",
+      "description": "Standard bipedal locomotion. Good endurance on flat ground.",
       "tags": ["legs", "organic"],
       "required_tags": ["torso"],
-      "price": { "credits": 400 },
+      "price": { "credits": 0 },
       "stats": { "stamina": 10, "stamina_max": 10 },
-      "equippable": true,
-      "provides_sockets": [
-        {
-          "id": "leg_mod_slot",
-          "accepted_tags": ["leg_mod"],
-          "label": "Leg Mod"
-        }
-      ]
+      "equippable": true
+    },
+    {
+      "id": "base:synth_legs",
+      "sprite": "res://mods/base/assets/legs.svg",
+      "display_name": "Piston Legs",
+      "description": "Carbon-fiber struts with shock absorbers. Sprint without fatigue.",
+      "tags": ["legs", "synthetic"],
+      "required_tags": ["torso"],
+      "price": { "credits": 220 },
+      "stats": { "stamina": 20, "stamina_max": 20 },
+      "equippable": true
     },
     {
       "id": "base:human_hands",
       "sprite": "res://mods/base/assets/hands.svg",
-      "display_name": "Biological Hands",
-      "description": "Fine manipulation end effectors.",
+      "display_name": "Organic Hands",
+      "description": "Ten fingers. Good for locks, triggers, and handshakes.",
       "tags": ["hands", "organic"],
       "required_tags": ["arms"],
-      "price": { "credits": 200 },
+      "price": { "credits": 0 },
       "stats": { "power": 1 },
       "equippable": true
     },
     {
       "id": "base:human_feet",
       "sprite": "res://mods/base/assets/feet.svg",
-      "display_name": "Biological Feet",
-      "description": "Ground contact stabilizers.",
+      "display_name": "Organic Feet",
+      "description": "Standard ground contact. Gets the job done.",
       "tags": ["feet", "organic"],
       "required_tags": ["legs"],
-      "price": { "credits": 200 },
+      "price": { "credits": 0 },
       "stats": { "stamina": 5, "stamina_max": 5 },
       "equippable": true
     },
     {
       "id": "base:optic_implant",
       "sprite": "res://mods/base/assets/optic.svg",
-      "display_name": "Optic Kiroshi",
-      "description": "A low-tier optical scanner.",
+      "display_name": "Kiroshi Optic Scanner",
+      "description": "Entry-level optical augment. Highlights threats and reads barcodes at fifty meters.",
       "tags": ["neural_implant", "device"],
       "required_tags": ["head"],
       "price": { "credits": 150 },
-      "stats": { "charisma": 1, "power": 1 },
+      "stats": { "charisma": 1, "luck": 1 },
+      "equippable": true
+    },
+    {
+      "id": "base:reflex_booster",
+      "sprite": "res://mods/base/assets/optic.svg",
+      "display_name": "Synaptic Accelerator",
+      "description": "Neural co-processor that shaves milliseconds off reaction time. Expensive but worth it in a fight.",
+      "tags": ["neural_implant", "device"],
+      "required_tags": ["head"],
+      "price": { "credits": 300 },
+      "stats": { "power": 2, "stamina_max": 5 },
       "equippable": true
     },
     {
       "id": "base:kevlar_weave",
       "sprite": "res://mods/base/assets/armor.svg",
       "display_name": "Kevlar Weave",
-      "description": "Subdermal ballistic protection.",
+      "description": "Subdermal ballistic mesh. Stops small caliber rounds and knife edges.",
       "tags": ["subdermal_armor", "armor"],
       "required_tags": ["torso"],
-      "price": { "credits": 300 },
-      "stats": { "health_max": 20 },
+      "price": { "credits": 200 },
+      "stats": { "health_max": 15, "armor": 2 },
       "equippable": true
     },
     {
-      "id": "base:test_weapon",
+      "id": "base:ceramic_plating",
+      "sprite": "res://mods/base/assets/armor.svg",
+      "display_name": "Ceramic Trauma Plates",
+      "description": "Military-grade ceramic inserts. Heavy but they take the hit so you don't have to.",
+      "tags": ["subdermal_armor", "armor"],
+      "required_tags": ["torso"],
+      "price": { "credits": 350 },
+      "stats": { "health_max": 25, "armor": 4, "stamina_max": -5 },
+      "equippable": true
+    },
+    {
+      "id": "base:stun_baton",
       "sprite": "res://mods/base/assets/baton.svg",
-      "display_name": "Training Baton",
-      "description": "A harmless-looking but fully registered test weapon.",
-      "tags": ["weapon", "melee", "test_part"],
+      "display_name": "Stun Baton",
+      "description": "Close-range crowd control. Low lethality, high compliance.",
+      "tags": ["weapon", "melee"],
       "price": { "credits": 60 },
-      "stats": { "power": 3 },
+      "stats": { "power": 2 },
+      "equippable": true
+    },
+    {
+      "id": "base:mono_blade",
+      "sprite": "res://mods/base/assets/baton.svg",
+      "display_name": "Monomolecular Blade",
+      "description": "Forearm-mounted cutting edge one atom wide. Cuts through anything, including your budget.",
+      "tags": ["weapon", "melee"],
+      "price": { "credits": 400 },
+      "stats": { "power": 5 },
       "equippable": true
     },
     {
       "id": "base:salvage_chip",
       "display_name": "Salvage Chip",
-      "description": "Reusable diagnostic scrap for validating recipe-driven crafting.",
-      "tags": ["material", "salvage", "test_part"],
+      "description": "Recovered circuitry. Used as a crafting component.",
+      "tags": ["material", "salvage"],
       "price": { "credits": 5 },
+      "stats": {},
+      "equippable": false
+    },
+    {
+      "id": "base:scrap_plate",
+      "display_name": "Scrap Plate",
+      "description": "Sheet metal off a wrecked drone. Useful for improvised armor.",
+      "tags": ["material", "salvage"],
+      "price": { "credits": 8 },
       "stats": {},
       "equippable": false
     },
     {
       "id": "base:diagnostic_grip",
       "display_name": "Diagnostic Grip",
-      "description": "A simple crafted arm mod that proves recipes can produce fresh part instances.",
-      "tags": ["arm_mod", "crafted", "test_part"],
-      "price": { "credits": 40 },
+      "description": "Improvised arm-mounted scanner cobbled from salvage chips. Weak but free.",
+      "tags": ["arm_mod", "crafted"],
+      "price": { "credits": 30 },
       "stats": { "power": 1 },
       "equippable": true
+    },
+    {
+      "id": "base:field_medkit",
+      "display_name": "Field Medkit",
+      "description": "Single-use trauma sealant. Restores health on consumption.",
+      "tags": ["consumable", "medical"],
+      "price": { "credits": 40 },
+      "stats": {},
+      "equippable": false
+    },
+    {
+      "id": "base:lucky_charm",
+      "display_name": "Loaded Coin",
+      "description": "A coin with both sides showing heads. Supposedly brings luck.",
+      "tags": ["accessory", "trinket"],
+      "price": { "credits": 75 },
+      "stats": { "luck": 2 },
+      "equippable": false
     }
   ]
 }
