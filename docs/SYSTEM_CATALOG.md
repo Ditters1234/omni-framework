@@ -143,7 +143,7 @@ These are **always available**, navigation-owned by the engine.
 |---|---|---|---|
 | Main Menu | `main_menu` | `ui/screens/main_menu/main_menu_screen.tscn` | Boot/menu entry point. |
 | Gameplay Shell | `gameplay_shell` | `ui/screens/gameplay_shell/gameplay_shell_screen.tscn` | In-game HUD. Displays player summary, location, available screens. |
-| World Map | `world_map` | `ui/screens/backends/world_map_screen.tscn` | Shell top-menu surface for location graph navigation and fast travel. |
+| World Map | `world_map` | `ui/screens/backends/world_map_screen.tscn` | Shell top-menu surface for zoomable, pannable location graph navigation and fast travel. |
 | Pause Menu | `pause_menu` | `ui/screens/pause_menu/` | Layered pause overlay with continue/settings/quit. |
 | Settings | `settings` | `ui/screens/settings/` | Audio, graphics, accessibility options, and engine-owned AI connect/disconnect controls. |
 | Save/Load Browser | `save_slot_list` | `ui/screens/save_slot_list/` | Autosave + manual save/load/delete. |
@@ -168,7 +168,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `AchievementListBackend` | `ui/screens/backends/achievement_list_screen.tscn` | Optional locked/unlocked filters | Achievement unlock state and stat progress. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `EventLogBackend` | `ui/screens/backends/event_log_screen.tscn` | Optional event limit/domain/signal filters | Recent `GameEvents` history. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `WorldMapBackend` | `ui/screens/backends/world_map_screen.tscn` | Optional title/description and display filters | Location graph with faction-tinted nodes and travel-on-click. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `WorldMapBackend` | `ui/screens/backends/world_map_screen.tscn` | Optional title/description and display filters | Location graph with faction-tinted nodes, route lines, zoom/pan/orientation controls, and travel-on-click. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 
 **How it works:**
 1. Modders define a location/NPC with a `backend_class` and `backend_config` dict in JSON.

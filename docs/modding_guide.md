@@ -811,7 +811,7 @@ No required params. Common useful optional fields:
 - `show_travel_costs`
 - `discovered_only`
 
-The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location.
+The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location. The runtime screen also provides route lines, mouse-wheel zoom, drag panning, fit/current centering controls, and radial/horizontal/vertical orientation modes.
 
 #### `AssemblyEditorBackend`
 No required params, but common useful ones are:

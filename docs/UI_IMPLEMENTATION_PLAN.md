@@ -62,7 +62,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - **Phase 4 Backend Implementation (completed for the current scope):** `AssemblyEditorBackend`, `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
 - **Backend helper strategy:** `backend_helpers.gd` contains phase-neutral helpers shared by multiple backends. Assembly-editor-only logic stays in `assembly_editor_config.gd` and `assembly_editor_option_provider.gd` so generic helpers do not become a junk drawer.
 - **Phase 5 Backend Implementation (complete — basic pass):** `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, and `EventLogBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
-- **Phase 7 Backend Implementation (initial pass complete):** `WorldMapBackend` is implemented as a routed graph screen with contract registration, route-catalog entry, gameplay shell top-menu access, faction-tinted nodes, and travel-on-click.
+- **Phase 7 Backend Implementation (interaction pass complete):** `WorldMapBackend` is implemented as a routed graph screen with contract registration, route-catalog entry, gameplay shell top-menu access, faction-tinted nodes, route lines, travel-on-click, zoom, pan, fit/current controls, and radial/horizontal/vertical orientation modes.
 
 ### Planned but not yet implemented
 
@@ -472,7 +472,7 @@ Current status: final polish complete. The repository now has `recipes.json`, `R
 
 ### Phase 7 — World Map (~2 days)
 
-Current status: initial pass complete. `WorldMapBackend` builds a graph view model from `LocationGraph.get_all_locations()`, resolves faction tint from explicit `faction_id` or faction territory, supports optional authored `map_position` coordinates, and falls back to a deterministic circular layout. The routed `world_map` screen renders node buttons, route lines, travel costs, and travels on node click. Fog-of-war and region overlays remain deferred additions.
+Current status: interaction pass complete. `WorldMapBackend` builds a graph view model from `LocationGraph.get_all_locations()`, resolves faction tint from explicit `faction_id` or faction territory, supports optional authored `map_position` coordinates, and falls back to a deterministic circular layout. The routed `world_map` screen renders node buttons, route lines, travel costs, and travels on node click. The graph supports mouse-wheel zoom, drag panning, fit/current centering controls, and radial/horizontal/vertical orientation modes for different map shapes. Fog-of-war and region overlays remain deferred additions.
 
 ### Phase 8 — Combat placeholder (deferred)
 

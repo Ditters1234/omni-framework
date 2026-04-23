@@ -479,6 +479,11 @@ func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_
 	var locations: Array = locations_value
 	assert_gt(locations.size(), 1)
 	assert_true(_map_rows_contain_location(locations, GameState.current_location_id))
+	var edges_value: Variant = map_snapshot.get("edges", [])
+	assert_true(edges_value is Array)
+	if edges_value is Array:
+		var edges: Array = edges_value
+		assert_gt(edges.size(), 0)
 
 	var destination_id := _first_non_current_map_location(locations, GameState.current_location_id)
 	assert_false(destination_id.is_empty())
@@ -486,6 +491,51 @@ func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_
 		return
 	var graph := map_screen.find_child("WorldMapGraph", true, false) as Control
 	assert_not_null(graph)
+
+	var zoom_in_button := _find_button_with_text(map_screen, "+")
+	var zoom_out_button := _find_button_with_text(map_screen, "-")
+	assert_not_null(zoom_in_button)
+	assert_not_null(zoom_out_button)
+	var initial_viewport := _read_dictionary(map_snapshot.get("viewport", {}))
+	var initial_zoom := float(initial_viewport.get("zoom", 1.0))
+	if initial_zoom >= 2.5:
+		zoom_out_button.pressed.emit()
+	else:
+		zoom_in_button.pressed.emit()
+	await get_tree().process_frame
+	var zoomed_snapshot_value: Variant = map_screen.call("get_debug_snapshot")
+	assert_true(zoomed_snapshot_value is Dictionary)
+	if zoomed_snapshot_value is Dictionary:
+		var zoomed_snapshot: Dictionary = zoomed_snapshot_value
+		var zoomed_viewport := _read_dictionary(zoomed_snapshot.get("viewport", {}))
+		assert_ne(float(zoomed_viewport.get("zoom", 1.0)), initial_zoom)
+
+	var orientation_button := map_screen.get_node("MarginContainer/PanelContainer/VBoxContainer/ControlRow/OrientationButton") as OptionButton
+	assert_not_null(orientation_button)
+	orientation_button.select(1)
+	orientation_button.item_selected.emit(1)
+	await get_tree().process_frame
+	var oriented_snapshot_value: Variant = map_screen.call("get_debug_snapshot")
+	assert_true(oriented_snapshot_value is Dictionary)
+	if oriented_snapshot_value is Dictionary:
+		var oriented_snapshot: Dictionary = oriented_snapshot_value
+		var oriented_viewport := _read_dictionary(oriented_snapshot.get("viewport", {}))
+		assert_eq(str(oriented_viewport.get("orientation", "")), "horizontal")
+
+	var pan_before_value: Variant = graph.call("get_viewport_snapshot")
+	assert_true(pan_before_value is Dictionary)
+	if pan_before_value is Dictionary:
+		var pan_before: Dictionary = pan_before_value
+		var pan_before_position := _read_dictionary(pan_before.get("pan", {}))
+		_drag_graph_for_test(graph, Vector2(42.0, -18.0))
+		await get_tree().process_frame
+		var pan_after_value: Variant = graph.call("get_viewport_snapshot")
+		assert_true(pan_after_value is Dictionary)
+		if pan_after_value is Dictionary:
+			var pan_after: Dictionary = pan_after_value
+			var pan_after_position := _read_dictionary(pan_after.get("pan", {}))
+			assert_ne(float(pan_after_position.get("x", 0.0)), float(pan_before_position.get("x", 0.0)))
+
 	graph.emit_signal("location_selected", destination_id)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -555,6 +605,30 @@ func _first_non_current_map_location(rows: Array, current_location_id: String) -
 		if not location_id.is_empty() and location_id != current_location_id:
 			return location_id
 	return ""
+
+
+func _drag_graph_for_test(graph: Control, relative: Vector2) -> void:
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_RIGHT
+	press.pressed = true
+	press.position = Vector2(100.0, 100.0)
+	graph.call("_gui_input", press)
+	var motion := InputEventMouseMotion.new()
+	motion.position = Vector2(100.0, 100.0) + relative
+	motion.relative = relative
+	graph.call("_gui_input", motion)
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_RIGHT
+	release.pressed = false
+	release.position = Vector2(100.0, 100.0) + relative
+	graph.call("_gui_input", release)
+
+
+func _read_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary_value: Dictionary = value
+		return dictionary_value
+	return {}
 
 
 func _delete_settings_file() -> void:
