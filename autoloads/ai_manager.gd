@@ -391,9 +391,8 @@ func _store_completed_request(request_id: String, request_entry: Dictionary) -> 
 
 func _get_active_request_entry(request_id: String) -> Dictionary:
 	var request_value: Variant = _active_requests.get(request_id, {})
-	if request_value is Dictionary:
-		var request_entry: Dictionary = request_value
-		return request_entry.duplicate(true)
+	if request_value is Dictionary and not (request_value as Dictionary).is_empty():
+		return request_value as Dictionary
 	return {
 		"request_id": request_id,
 		"mode": "",
