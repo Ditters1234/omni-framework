@@ -170,6 +170,8 @@ static func _evaluate_logic_block(conditions: Dictionary) -> bool:
 		if not and_conditions_data is Array:
 			return false
 		var and_conditions: Array = and_conditions_data
+		if and_conditions.is_empty():
+			return false
 		for child in and_conditions:
 			if not _evaluate_node(child):
 				return false
