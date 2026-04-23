@@ -125,12 +125,13 @@ func save_game(slot: int) -> void:
 		GameEvents.save_failed.emit(slot, reason)
 		return
 	GameEvents.save_started.emit(slot)
-	if not _save_dir_ready and not _ensure_save_dir():
-		var directory_reason := "Unable to create the save directory."
-		last_operation_summary = {"kind": "save", "slot": slot, "status": "failed", "reason": directory_reason}
-		GameEvents.save_failed.emit(slot, directory_reason)
-		return
-	_save_dir_ready = true
+	if not _save_dir_ready:
+		_save_dir_ready = _ensure_save_dir()
+		if not _save_dir_ready:
+			var directory_reason := "Unable to create the save directory."
+			last_operation_summary = {"kind": "save", "slot": slot, "status": "failed", "reason": directory_reason}
+			GameEvents.save_failed.emit(slot, directory_reason)
+			return
 	var missing_runtime_classes := _get_missing_runtime_classes()
 	if not missing_runtime_classes.is_empty():
 		var registry_reason := "SaveManager is missing required A2J registrations: %s." % ", ".join(missing_runtime_classes)
@@ -446,7 +447,7 @@ func _migrate_if_needed(data: Dictionary) -> Dictionary:
 	#     _migrate_v1_to_v2(data)
 	# Stamp the schema version AFTER migrations so future bumps can still detect
 	# which path a save came from.
-	if version <= 0 or data.get("save_schema_version", SCHEMA_VERSION) != SCHEMA_VERSION:
+	if version != SCHEMA_VERSION:
 		data["save_schema_version"] = SCHEMA_VERSION
 	for field_name in OPTIONAL_SAVE_FIELDS:
 		if data.has(field_name):

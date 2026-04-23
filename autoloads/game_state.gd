@@ -112,9 +112,23 @@ func _instantiate_world_entities(player_template_id: String) -> void:
 	for entity_id_value in DataManager.entities.keys():
 		var entity_id := str(entity_id_value)
 		# Skip the player template and any template already instantiated.
-		# entity_instances is keyed by template id for world entities, so checking
-		# has(entity_id) correctly prevents duplicate instances for the same template.
-		if entity_id.is_empty() or entity_id == player_template_id or entity_instances.has(entity_id):
+		# World entities are singletons keyed by their template id.  We check
+		# both the DataManager key *and* entity_instances to handle spawned
+		# entities whose runtime id was changed by ActionDispatcher.
+		if entity_id.is_empty() or entity_id == player_template_id:
+			continue
+		if entity_instances.has(entity_id):
+			continue
+		# Also guard against duplicate instances when a previous spawn_entity
+		# action already created an instance from this template under a
+		# different runtime id.
+		var already_instantiated := false
+		for existing_entity_data in entity_instances.values():
+			var existing_entity := existing_entity_data as EntityInstance
+			if existing_entity != null and existing_entity.template_id == entity_id:
+				already_instantiated = true
+				break
+		if already_instantiated:
 			continue
 		var entity_template := DataManager.get_entity(entity_id)
 		if entity_template.is_empty():

@@ -68,11 +68,22 @@ static func _check_flag(flag_check: Variant) -> bool:
 	var flag_id := str(flag_dict.get("flag_id", flag_dict.get("key", "")))
 	var expected: Variant = flag_dict.get("value", true)
 	if entity_id == "global":
-		return GameState.get_flag(flag_id) == expected
+		return _flag_values_match(GameState.get_flag(flag_id), expected)
 	var entity := _resolve_entity(entity_id)
 	if entity == null:
 		return false
-	return entity.get_flag(flag_id, null) == expected
+	return _flag_values_match(entity.get_flag(flag_id, null), expected)
+
+
+## Compares flag values with type coercion so that bool true/false matches
+## int 1/0 and vice-versa.  All other types use strict equality.
+static func _flag_values_match(actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		return true
+	# Coerce bool <-> int: true==1, false==0
+	if (actual is bool or actual is int or actual is float) and (expected is bool or expected is int or expected is float):
+		return float(actual) == float(expected)
+	return false
 
 
 static func _check_has_part(part_check: Variant) -> bool:
@@ -170,8 +181,7 @@ static func _evaluate_logic_block(conditions: Dictionary) -> bool:
 		if not and_conditions_data is Array:
 			return false
 		var and_conditions: Array = and_conditions_data
-		if and_conditions.is_empty():
-			return false
+		# An empty AND list is vacuously satisfied (no constraints); skip it.
 		for child in and_conditions:
 			if not _evaluate_node(child):
 				return false
@@ -207,7 +217,7 @@ static func _evaluate_typed_condition(condition: Dictionary) -> bool:
 	var condition_type := str(condition.get("type", ""))
 	match condition_type:
 		"has_flag":
-			return _check_flag(condition)
+			return _check_typed_has_flag(condition)
 		"stat_check":
 			return _check_stat(condition)
 		"stat_greater_than":
@@ -229,6 +239,20 @@ static func _evaluate_typed_condition(condition: Dictionary) -> bool:
 		_:
 			push_warning("ConditionEvaluator: unknown condition type '%s'" % condition_type)
 			return false
+
+
+## Extracts the flag payload from a typed condition dict so _check_flag
+## receives the same shape it gets from the legacy path (a string or sub-dict),
+## not the entire typed condition wrapper.
+static func _check_typed_has_flag(condition: Dictionary) -> bool:
+	if condition.has("entity_id") or condition.has("value"):
+		var flag_payload := {
+			"entity_id": condition.get("entity_id", "global"),
+			"flag_id": str(condition.get("flag_id", condition.get("key", ""))),
+			"value": condition.get("value", true),
+		}
+		return _check_flag(flag_payload)
+	return _check_flag(str(condition.get("flag_id", condition.get("key", ""))))
 
 
 static func _evaluate_legacy_condition(conditions: Dictionary) -> bool:

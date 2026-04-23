@@ -77,6 +77,12 @@ func advance_quest(quest_id: String, transition: String) -> void:
 	if transition != "":
 		quest_instance["last_transition"] = transition
 	quest_instance["stage_index"] = next_stage_index
+	# Mark the stage we just completed so _refresh_quest_inner won't re-apply
+	# its rewards if it runs before the next tick.
+	var completed_stages: Array = quest_instance.get("_completed_stages", [])
+	if current_stage_index not in completed_stages:
+		completed_stages.append(current_stage_index)
+	quest_instance["_completed_stages"] = completed_stages
 	GameState.active_quests[quest_id] = quest_instance
 	# Apply completion rewards for the stage we just finished.
 	var current_stage_data: Variant = stages[current_stage_index]
@@ -208,6 +214,13 @@ func _refresh_quest_inner(quest_id: String) -> void:
 		var stage: Dictionary = stage_data
 		if not _is_stage_complete(stage):
 			return
+		# Guard against double-applying rewards for stages already completed
+		# by advance_quest() on the same frame.
+		var completed_stages: Array = quest_instance.get("_completed_stages", [])
+		if stage_index in completed_stages:
+			return
+		completed_stages.append(stage_index)
+		quest_instance["_completed_stages"] = completed_stages
 		_apply_stage_completion(stage)
 		var next_stage_index := stage_index + 1
 		quest_instance["last_transition"] = "objectives_met"

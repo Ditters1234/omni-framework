@@ -108,6 +108,11 @@ func advance_ticks(count: int) -> void:
 func advance_to_next_day() -> void:
 	var ticks_per_day := _get_ticks_per_day()
 	var remaining := ticks_per_day - _tick_accumulator
+	# When _tick_accumulator == 0, remaining == ticks_per_day, which is
+	# correct: we are at the start of the current day and need a full day of
+	# ticks to reach the *next* day boundary.  If the caller intends "skip
+	# zero ticks because we're already at a boundary", they should check
+	# get_ticks_into_day() == 0 before calling.
 	if remaining <= 0:
 		remaining = ticks_per_day
 	advance_ticks(remaining)
