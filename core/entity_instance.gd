@@ -45,10 +45,13 @@ var location_id: String = ""
 static func from_template(template: Dictionary) -> EntityInstance:
 	var inst := EntityInstance.new()
 	inst.template_id = str(template.get("entity_id", ""))
-	# Always generate a unique runtime entity_id so that multiple instances
-	# created from the same template never share an id.  The template_id field
-	# already records which template this instance came from.
-	inst.entity_id = _generate_id()
+	# Default entity_id to the template id.  World entities are singletons — one
+	# instance per template — so reusing the template id as the runtime id is safe
+	# and allows all lookup-by-template-id code to work without a separate index.
+	# The one exception (spawning multiple instances from the same template via
+	# ActionDispatcher's spawn_entity) is handled in _action_spawn_entity by
+	# generating a unique id before committing to GameState.
+	inst.entity_id = str(template.get("entity_id", _generate_id()))
 	inst.location_id = template.get("location_id", "")
 	inst.currencies = template.get("currencies", {}).duplicate(true)
 	inst.reputation = template.get("reputation", {}).duplicate(true)

@@ -158,6 +158,10 @@ static func _action_spawn_entity(action: Dictionary) -> void:
 	if template.is_empty():
 		return
 	var instance := EntityInstance.from_template(template)
+	# Spawned entities (unlike singleton world entities) may need to coexist with
+	# others from the same template, so give each a unique runtime id.
+	if GameState.entity_instances.has(instance.entity_id):
+		instance.entity_id = template_id + ":" + str(randi())
 	var location_id := str(action.get("location_id", instance.location_id))
 	if not location_id.is_empty():
 		instance.location_id = location_id
