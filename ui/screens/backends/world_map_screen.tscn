@@ -1,0 +1,68 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/screens/backends/world_map_screen.gd" id="1_screen"]
+[ext_resource type="Script" path="res://ui/screens/backends/world_map_graph.gd" id="2_graph"]
+
+[node name="WorldMapScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "World Map"
+
+[node name="DescriptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="MapPanel" type="PanelContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 420)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MapPanel"]
+layout_mode = 2
+
+[node name="WorldMapGraph" type="Control" parent="MarginContainer/PanelContainer/VBoxContainer/MapPanel/MarginContainer"]
+custom_minimum_size = Vector2(600, 360)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("2_graph")
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+focus_mode = 2
+text = "Back"
+
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]

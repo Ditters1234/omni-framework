@@ -22,6 +22,13 @@
           "description": "Review active quest state.",
           "backend_class": "ActiveQuestLogBackend",
           "screen_title": "Quest Log"
+        },
+        {
+          "tab_id": "safehouse_world_map",
+          "display_name": "World Map",
+          "description": "Open the full location graph and travel directly.",
+          "backend_class": "WorldMapBackend",
+          "screen_title": "World Map"
         }
       ]
     },
@@ -96,6 +103,13 @@
           "display_name": "Event Log",
           "description": "View recent event history.",
           "backend_class": "EventLogBackend"
+        },
+        {
+          "tab_id": "hub_world_map",
+          "display_name": "World Map",
+          "description": "Open the full location graph and travel directly.",
+          "backend_class": "WorldMapBackend",
+          "screen_title": "World Map"
         },
         {
           "tab_id": "hub_tasks",

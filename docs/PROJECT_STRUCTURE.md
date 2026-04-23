@@ -179,7 +179,7 @@ The UI layer includes:
 
 - A root entry scene (`main.tscn`) and accompanying controller (`main.gd`)
 - A route catalog (`ui_route_catalog.gd`) — the shared catalog for `backend_class → screen_id` mapping and the runtime `screen_id → scene_path` registry
-- **13 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting initial pass): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`
+- **14 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting complete, Phase 7 world map initial pass): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`, `WorldMapBackend`
 - A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts
 - Debug overlay at `ui/debug/dev_debug_overlay.gd`
 - Theme system: `omni_theme.tres` + `theme_applier.gd`

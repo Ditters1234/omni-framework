@@ -760,6 +760,7 @@ The current loader registers these backend classes:
 - `FactionReputationBackend`
 - `AchievementListBackend`
 - `EventLogBackend`
+- `WorldMapBackend`
 
 If you reference an unknown `backend_class`, load validation will fail.
 
@@ -800,6 +801,17 @@ Required:
 Required in practical use:
 - `data_source`
 - `action_payload`
+
+#### `WorldMapBackend`
+No required params. Common useful optional fields:
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+- `empty_label`
+- `show_travel_costs`
+- `discovered_only`
+
+The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location.
 
 #### `AssemblyEditorBackend`
 No required params, but common useful ones are:

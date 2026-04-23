@@ -62,11 +62,11 @@ Recap of what exists today, so later sections can reference specific facts rathe
 - **Phase 4 Backend Implementation (completed for the current scope):** `AssemblyEditorBackend`, `DialogueBackend`, `ExchangeBackend`, `CatalogListBackend`, `ListBackend`, `ChallengeBackend`, and `TaskProviderBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
 - **Backend helper strategy:** `backend_helpers.gd` contains phase-neutral helpers shared by multiple backends. Assembly-editor-only logic stays in `assembly_editor_config.gd` and `assembly_editor_option_provider.gd` so generic helpers do not become a junk drawer.
 - **Phase 5 Backend Implementation (complete — basic pass):** `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, and `EventLogBackend` are implemented as routed screens with backend scripts, contract registration, and route-catalog entries.
+- **Phase 7 Backend Implementation (initial pass complete):** `WorldMapBackend` is implemented as a routed graph screen with contract registration, route-catalog entry, base content access points, faction-tinted nodes, and travel-on-click.
 
 ### Planned but not yet implemented
 
-- Backend-driven screen plus data schema: `crafting` / `CraftingBackend` and `recipes.json` (Phase 6 initial pass complete).
-- Backend-driven screen: `world_map` / `WorldMapBackend` (deferred to Phase 7).
+- No backend-driven screens from the current UI plan remain unimplemented. Combat remains deferred outside this UI rollout.
 
 ---
 
@@ -93,7 +93,7 @@ Implementation note: the repository has completed the current Phase 4 backend sc
 | `AchievementListBackend` | `achievement_list` | Implemented (Phase 5 basic) | Browse achievement progress including locked/unlocked state and thresholds |
 | `EventLogBackend` | `event_log` | Implemented (Phase 5 basic) | Rolling history from `GameEvents._event_history` |
 | `DialogueBackend` | `dialogue` | ✅ Implemented | Wraps Dialogue Manager with entity portrait and `dialogue_blip` SFX |
-| `WorldMapBackend` | `world_map` | ⚠️ Planned | Graph of discovered locations with faction-tinted nodes |
+| `WorldMapBackend` | `world_map` | Implemented (Phase 7 initial pass) | Graph of locations with faction-tinted nodes and travel-on-click |
 
 Notes on the new proposals:
 
@@ -472,13 +472,13 @@ Current status: final polish complete. The repository now has `recipes.json`, `R
 
 ### Phase 7 — World Map (~2 days)
 
-`WorldMapBackend` with a graph render of `LocationGraph.get_all_locations()`, faction-tinted nodes, travel-on-click. Keep it simple — no fog-of-war, no region overlays. Those can be later additions.
+Current status: initial pass complete. `WorldMapBackend` builds a graph view model from `LocationGraph.get_all_locations()`, resolves faction tint from explicit `faction_id` or faction territory, supports optional authored `map_position` coordinates, and falls back to a deterministic circular layout. The routed `world_map` screen renders node buttons, route lines, travel costs, and travels on node click. Fog-of-war and region overlays remain deferred additions.
 
 ### Phase 8 — Combat placeholder (deferred)
 
 Not built in this plan. When combat lands, it follows the same pattern as every other backend. See §6.
 
-**Remaining estimated effort for Phase 7: ~2 engineering days.** The original Phase 1–6 foundation is now complete for the current scope, so future estimates should focus on world map and polish.
+**Remaining estimated effort for Phase 7: polish only.** The original Phase 1–7 foundation is now complete for the current UI rollout, so future estimates should focus on optional map features, visual polish, and the separately deferred combat placeholder.
 
 ---
 

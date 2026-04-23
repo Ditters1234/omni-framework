@@ -103,6 +103,12 @@ const SCREEN_CASES := [
 			"limit": 10,
 		},
 	},
+	{
+		"scene_path": UI_ROUTE_CATALOG.WORLD_MAP_SCENE,
+		"params": {
+			"screen_title": "Smoke World Map",
+		},
+	},
 ]
 
 var _spawned_screens: Array[Control] = []

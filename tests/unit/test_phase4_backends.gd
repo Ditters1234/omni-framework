@@ -10,6 +10,7 @@ const TASK_PROVIDER_BACKEND := preload("res://ui/screens/backends/task_provider_
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
 const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_backend.gd")
 const CRAFTING_BACKEND := preload("res://ui/screens/backends/crafting_backend.gd")
+const WORLD_MAP_BACKEND := preload("res://ui/screens/backends/world_map_backend.gd")
 
 
 func before_each() -> void:
@@ -33,6 +34,7 @@ func test_mod_loader_registers_phase4_backend_contracts() -> void:
 	assert_true(registered_backend_classes.has("FactionReputationBackend"))
 	assert_true(registered_backend_classes.has("AchievementListBackend"))
 	assert_true(registered_backend_classes.has("EventLogBackend"))
+	assert_true(registered_backend_classes.has("WorldMapBackend"))
 
 
 func test_exchange_backend_moves_stocked_part_and_transfers_currency() -> void:
@@ -302,6 +304,39 @@ func test_dialogue_backend_resolves_sample_dialogue_resource() -> void:
 	assert_eq(str(view_model.get("status_text", "")), "")
 
 
+func test_world_map_backend_builds_graph_and_travels() -> void:
+	var backend: RefCounted = WORLD_MAP_BACKEND.new()
+	backend.initialize({
+		"screen_title": "Map",
+	})
+
+	var view_model: Dictionary = backend.build_view_model()
+	var locations_value: Variant = view_model.get("locations", [])
+	var edges_value: Variant = view_model.get("edges", [])
+
+	assert_eq(str(view_model.get("title", "")), "Map")
+	assert_true(locations_value is Array)
+	assert_true(edges_value is Array)
+	if not locations_value is Array or not edges_value is Array:
+		return
+	var locations: Array = locations_value
+	var edges: Array = edges_value
+	assert_gt(locations.size(), 0)
+	assert_gt(edges.size(), 0)
+	assert_true(_map_rows_contain_location(locations, TEST_FIXTURE_WORLD.starting_location_id()))
+
+	var destination_id := _first_non_current_map_location(locations, GameState.current_location_id)
+	assert_false(destination_id.is_empty())
+	if destination_id.is_empty():
+		return
+	var result_value: Variant = backend.call("travel_to", destination_id)
+	assert_true(result_value is Dictionary)
+	if result_value is Dictionary:
+		var result: Dictionary = result_value
+		assert_eq(str(result.get("status", "")), "ok")
+	assert_eq(GameState.current_location_id, destination_id)
+
+
 func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() -> void:
 	var player := GameState.player as EntityInstance
 	assert_not_null(player)
@@ -363,3 +398,24 @@ func _inventory_has_template(entity: EntityInstance, template_id: String) -> boo
 func _event_history_contains(signal_name: String) -> bool:
 	var history := GameEvents.get_event_history(0, "", signal_name)
 	return not history.is_empty()
+
+
+func _map_rows_contain_location(rows: Array, location_id: String) -> bool:
+	for row_value in rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		if str(row.get("location_id", "")) == location_id:
+			return true
+	return false
+
+
+func _first_non_current_map_location(rows: Array, current_location_id: String) -> String:
+	for row_value in rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		var location_id := str(row.get("location_id", ""))
+		if not location_id.is_empty() and location_id != current_location_id:
+			return location_id
+	return ""
