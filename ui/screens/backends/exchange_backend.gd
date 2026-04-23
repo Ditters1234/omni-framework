@@ -158,12 +158,12 @@ func confirm() -> Dictionary:
 	var next_screen_id := str(_params.get("next_screen_id", ""))
 	if not next_screen_id.is_empty():
 		return {
-			"type": "push_screen",
+			"type": "push",
 			"screen_id": next_screen_id,
-			"params": _params.get("next_screen_params", {}),
+			"params": _params.get("next_screen_params", {}).duplicate(true),
 		}
 	if _params.get("pop_on_confirm", false):
-		return {"type": "pop_screen"}
+		return {"type": "pop"}
 	return {}
 
 

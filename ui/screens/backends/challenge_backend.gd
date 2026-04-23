@@ -24,6 +24,9 @@ static func register_contract() -> void:
 			"failure_action_payload",
 			"success_sound",
 			"failure_sound",
+			"next_screen_id",
+			"next_screen_params",
+			"pop_on_confirm",
 		],
 		"field_types": {
 			"required_stat": TYPE_STRING,
@@ -39,6 +42,9 @@ static func register_contract() -> void:
 			"failure_action_payload": TYPE_DICTIONARY,
 			"success_sound": TYPE_STRING,
 			"failure_sound": TYPE_STRING,
+			"next_screen_id": TYPE_STRING,
+			"next_screen_params": TYPE_DICTIONARY,
+			"pop_on_confirm": TYPE_BOOL,
 		},
 	})
 
@@ -112,6 +118,16 @@ func confirm() -> Dictionary:
 		if not failure_sound.is_empty():
 			AudioManager.play_sfx(failure_sound)
 		_apply_failure()
+	
+	var next_screen_id := str(_params.get("next_screen_id", ""))
+	if not next_screen_id.is_empty():
+		return {
+			"type": "push",
+			"screen_id": next_screen_id,
+			"params": _params.get("next_screen_params", {}).duplicate(true),
+		}
+	if _params.get("pop_on_confirm", false):
+		return {"type": "pop"}
 	return {}
 
 

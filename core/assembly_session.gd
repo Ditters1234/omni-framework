@@ -63,13 +63,16 @@ func can_afford_template(slot: String, template_id: String) -> bool:
 	var candidate := get_preview_entity(slot, template_id)
 	if candidate == null:
 		return false
+	if budget_currency_id.is_empty():
+		return true
 	return _compute_total_cost(candidate) <= starting_budget
-
 
 func can_afford_part_instance(slot: String, source_part: PartInstance) -> bool:
 	var candidate := get_preview_entity_with_part(slot, source_part)
 	if candidate == null:
 		return false
+	if budget_currency_id.is_empty():
+		return true
 	return _compute_total_cost(candidate) <= starting_budget
 
 
