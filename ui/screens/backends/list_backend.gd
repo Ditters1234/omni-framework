@@ -213,12 +213,15 @@ func _resolve_owner_from_source(data_source: String) -> EntityInstance:
 	if normalized_source.begins_with("entity:"):
 		var segments := normalized_source.split(":", false)
 		if segments.size() < 3:
+			push_warning("ListBackend: Invalid entity data source format '%s'." % data_source)
 			return null
 		var suffix := str(segments[segments.size() - 1])
 		if suffix != "inventory" and suffix != "equipped":
+			push_warning("ListBackend: Unknown entity source suffix in '%s'." % data_source)
 			return null
 		var entity_id := ":".join(segments.slice(1, segments.size() - 1))
 		return GameState.get_entity_instance(entity_id)
+	push_warning("ListBackend: Unknown data_source '%s'." % data_source)
 	return null
 
 

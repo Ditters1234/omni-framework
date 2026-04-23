@@ -237,8 +237,12 @@ func confirm() -> Dictionary:
 	_emit_pending_part_removed_events()
 	_emit_pending_transaction_events()
 
-	_status_override = ""
-	return config.build_confirm_navigation_action()
+	var nav_action := config.build_confirm_navigation_action()
+	if nav_action.is_empty():
+		_status_override = "Build confirmed and applied."
+	else:
+		_status_override = ""
+	return nav_action
 
 
 func get_required_params() -> Array[String]:
@@ -903,6 +907,8 @@ func _apply_confirm_transaction_effects(staged_entities: Dictionary, committed_t
 	if _session == null:
 		return false
 	var total_cost := _get_confirm_total_cost()
+	if total_cost <= 0.0 or _config.budget_currency_id.is_empty():
+		return true
 	var buyer := committed_target if committed_payer == null else committed_payer
 	if buyer == null:
 		return false

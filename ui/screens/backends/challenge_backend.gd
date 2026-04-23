@@ -93,25 +93,25 @@ func confirm() -> Dictionary:
 	var required_value := _read_required_value()
 	var passed := current_value >= required_value
 	if passed:
-		_apply_success(target_entity)
-		var success_sound := str(_params.get("success_sound", ""))
-		if not success_sound.is_empty():
-			AudioManager.play_sfx(success_sound)
 		_status_text = "Success: %s met the %s threshold." % [
 			BACKEND_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id),
 			BACKEND_HELPERS.humanize_id(required_stat),
 		]
+		var success_sound := str(_params.get("success_sound", ""))
+		if not success_sound.is_empty():
+			AudioManager.play_sfx(success_sound)
+		_apply_success(target_entity)
 	else:
-		_apply_failure()
-		var failure_sound := str(_params.get("failure_sound", ""))
-		if not failure_sound.is_empty():
-			AudioManager.play_sfx(failure_sound)
 		_status_text = "Failure: %s needs %.0f %s but only has %.0f." % [
 			BACKEND_HELPERS.get_entity_display_name(target_entity, target_entity.entity_id),
 			required_value,
 			BACKEND_HELPERS.humanize_id(required_stat),
 			current_value,
 		]
+		var failure_sound := str(_params.get("failure_sound", ""))
+		if not failure_sound.is_empty():
+			AudioManager.play_sfx(failure_sound)
+		_apply_failure()
 	return {}
 
 

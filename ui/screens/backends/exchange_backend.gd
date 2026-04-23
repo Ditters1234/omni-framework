@@ -22,6 +22,9 @@ static func register_contract() -> void:
 			"price_modifier",
 			"transaction_sound",
 			"empty_label",
+			"next_screen_id",
+			"next_screen_params",
+			"pop_on_confirm",
 		],
 		"field_types": {
 			"source_inventory": TYPE_STRING,
@@ -35,6 +38,9 @@ static func register_contract() -> void:
 			"price_modifier": TYPE_FLOAT,
 			"transaction_sound": TYPE_STRING,
 			"empty_label": TYPE_STRING,
+			"next_screen_id": TYPE_STRING,
+			"next_screen_params": TYPE_DICTIONARY,
+			"pop_on_confirm": TYPE_BOOL,
 		},
 	})
 
@@ -149,6 +155,15 @@ func confirm() -> Dictionary:
 		str(template.get("display_name", moved_part.template_id)),
 		BACKEND_HELPERS.build_price_text(template, currency_id, price_modifier).trim_prefix("Price: "),
 	]
+	var next_screen_id := str(_params.get("next_screen_id", ""))
+	if not next_screen_id.is_empty():
+		return {
+			"type": "push_screen",
+			"screen_id": next_screen_id,
+			"params": _params.get("next_screen_params", {}),
+		}
+	if _params.get("pop_on_confirm", false):
+		return {"type": "pop_screen"}
 	return {}
 
 

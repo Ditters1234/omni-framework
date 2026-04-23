@@ -51,6 +51,8 @@ func _build_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	var show_locked := _get_bool_param(_params, "show_locked", true)
 	var show_unlocked := _get_bool_param(_params, "show_unlocked", true)
+	if not AchievementRegistry:
+		return rows
 	var achievements_value: Variant = AchievementRegistry.get_all()
 	if not achievements_value is Array:
 		return rows
