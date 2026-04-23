@@ -125,15 +125,26 @@ func confirm() -> Dictionary:
 			AudioManager.play_sfx(failure_sound)
 		_apply_failure()
 	
-	var next_screen_id := str(_params.get("next_screen_id", ""))
-	if not next_screen_id.is_empty():
-		return {
-			"type": "push",
-			"screen_id": next_screen_id,
-			"params": _params.get("next_screen_params", {}).duplicate(true),
-		}
-	if _params.get("pop_on_confirm", false):
-		return {"type": "pop"}
+	if passed:
+		var next_screen_id := str(_params.get("next_screen_id", ""))
+		if not next_screen_id.is_empty():
+			return {
+				"type": "push",
+				"screen_id": next_screen_id,
+				"params": _params.get("next_screen_params", {}).duplicate(true),
+			}
+		if _params.get("pop_on_confirm", false):
+			return {"type": "pop"}
+	else:
+		var fail_id := str(_params.get("failure_next_screen_id", ""))
+		if not fail_id.is_empty():
+			return {
+				"type": "push",
+				"screen_id": fail_id,
+				"params": _params.get("failure_next_screen_params", {}).duplicate(true),
+			}
+		if _params.get("failure_pop_on_confirm", false):
+			return {"type": "pop"}
 	return {}
 
 
