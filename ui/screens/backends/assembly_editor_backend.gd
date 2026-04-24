@@ -196,6 +196,13 @@ func set_custom_field_value(slot_id: String, field_id: String, value: Variant) -
 	if part == null:
 		return
 	part.set_custom_value(field_id, value)
+	if GameEvents != null:
+		GameEvents.part_custom_value_changed.emit(
+			_session.draft_entity.entity_id,
+			part.template_id,
+			field_id,
+			value
+		)
 	_status_override = ""
 
 

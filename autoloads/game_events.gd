@@ -33,6 +33,7 @@ const SIGNAL_CATALOG := {
 		{"name": "part_removed", "args": ["entity_id", "part_id"]},
 		{"name": "part_equipped", "args": ["entity_id", "part_id", "slot"]},
 		{"name": "part_unequipped", "args": ["entity_id", "part_id", "slot"]},
+		{"name": "part_custom_value_changed", "args": ["entity_id", "part_id", "field_id", "value"]},
 	],
 	"economy": [
 		{"name": "currency_changed", "args": ["currency_key", "old_amount", "new_amount"], "deprecated": true},
@@ -50,7 +51,7 @@ const SIGNAL_CATALOG := {
 		{"name": "dialogue_ended", "args": ["entity_id", "dialogue_resource"]},
 	],
 	"achievements": [
-		{"name": "achievement_unlocked", "args": ["achievement_id", "unlock_vfx"]},
+		{"name": "achievement_unlocked", "args": ["achievement_id"]},
 	],
 	"ui": [
 		{"name": "screen_pushed", "args": ["screen_id"], "deprecated": true},
@@ -115,6 +116,7 @@ signal part_acquired(entity_id: String, part_id: String)
 signal part_removed(entity_id: String, part_id: String)
 signal part_equipped(entity_id: String, part_id: String, slot: String)
 signal part_unequipped(entity_id: String, part_id: String, slot: String)
+signal part_custom_value_changed(entity_id: String, part_id: String, field_id: String, value: Variant)
 
 # ---------------------------------------------------------------------------
 # Economy
@@ -138,7 +140,7 @@ signal dialogue_ended(entity_id: String, dialogue_resource: String)
 # ---------------------------------------------------------------------------
 # Achievements
 # ---------------------------------------------------------------------------
-signal achievement_unlocked(achievement_id: String, unlock_vfx: String)
+signal achievement_unlocked(achievement_id: String)
 
 # ---------------------------------------------------------------------------
 # UI
