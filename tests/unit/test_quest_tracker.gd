@@ -67,7 +67,7 @@ func test_stage_auto_advances_when_objectives_are_already_met() -> void:
 	assert_true(quest_data is Dictionary)
 	if quest_data is Dictionary:
 		var quest_dict: Dictionary = quest_data
-		assert_eq(int(quest_dict.get("current_stage", -1)), 1)
+		assert_eq(int(quest_dict.get("stage_index", -1)), 1)
 
 
 func test_location_objective_completes_quest_on_travel() -> void:

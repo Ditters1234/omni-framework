@@ -147,18 +147,18 @@ func test_unlock_achievement_action_unlocks() -> void:
 # ---------------------------------------------------------------------------
 
 func test_spawn_entity_creates_runtime_instance() -> void:
-	assert_false(GameState.entity_instances.has("base:fixture_vendor"))
-	# fixture_vendor is in DataManager.entities but not instantiated in data-only fixture
-	DataManager.entities["base:spawn_target"] = {
-		"entity_id": "base:spawn_target",
+	var spawn_id := "base:spawned_npc_%d" % randi()
+	DataManager.entities[spawn_id] = {
+		"entity_id": spawn_id,
 		"display_name": "Spawned NPC",
 		"description": "Created by spawn action.",
 		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
 		"currencies": {},
 		"stats": {},
 	}
-	ActionDispatcher.dispatch({"type": "spawn_entity", "template_id": "base:spawn_target"})
-	assert_true(GameState.entity_instances.has("base:spawn_target"))
+	assert_false(GameState.entity_instances.has(spawn_id))
+	ActionDispatcher.dispatch({"type": "spawn_entity", "template_id": spawn_id})
+	assert_true(GameState.entity_instances.has(spawn_id))
 
 
 # ---------------------------------------------------------------------------
