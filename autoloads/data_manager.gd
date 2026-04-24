@@ -802,9 +802,6 @@ func _validate_template_schemas() -> void:
 		_validate_stat_map(recipe_id, OmniConstants.DATA_RECIPES, "required_stats", recipe.get("required_stats", {}), stat_ids)
 		_validate_recipe_shape(recipe)
 
-	var starting_money_value: Variant = get_config_value("game.starting_money", {})
-	_validate_currency_map("config", OmniConstants.DATA_CONFIG, "game.starting_money", starting_money_value, currency_ids)
-
 
 func _validate_registry_required_fields(registry: Dictionary, file_path: String, id_field: String, required_fields: Array[String]) -> void:
 	for entry_value in registry.values():

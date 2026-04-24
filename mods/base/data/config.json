@@ -9,10 +9,6 @@
       "base:apartment",
       "base:market_row"
     ],
-    "starting_money": {
-      "credits": 400,
-      "data_shards": 2
-    },
     "starting_player_id": "base:player",
     "new_game_flow": {
       "screen_id": "gameplay_shell",

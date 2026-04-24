@@ -756,10 +756,7 @@ Common fields:
     "title": "My Total Conversion",
     "tagline": "A new world built on Omni-Framework.",
     "starting_player_id": "base:player",
-    "starting_location": "my_name:my_mod:back_alley",
-    "starting_money": {
-      "credits": 300
-    }
+    "starting_location": "my_name:my_mod:back_alley"
   },
   "ui": {
     "strings": {
@@ -779,7 +776,7 @@ Common fields:
 - `game.starting_player_id` is required and must point at a valid entity id
 - `game.starting_location` should be a valid location id when provided
 - `game.starting_discovered_locations` must be an array of valid location ids when provided; include any connected locations that should be available in the first travel view
-- `starting_money` uses the currencies you declared in `definitions.json`
+- Starting currencies are set on the player entity template in `entities.json`, not in `config.json`. To change starting money, patch the player entity's `currencies` field.
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when provided
 - `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)` when provided, such as `"1 hour"` or `"1 day"`
 - The current base content also defines `game.new_game_flow`, which means the startup flow can be configured through data instead of hardcoding it all in scripts
