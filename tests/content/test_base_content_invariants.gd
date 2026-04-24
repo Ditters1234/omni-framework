@@ -127,3 +127,11 @@ func test_base_mod_ships_reference_dialogue_and_script_hook_fixtures() -> void:
 	assert_true(FileAccess.file_exists("res://mods/base/dialogue/quartermaster_theta.dialogue"))
 	# Remove this unless base actually promises a sample hook file:
 	# assert_true(FileAccess.file_exists("res://mods/base/scripts/sample_script_hook.gd"))
+
+
+func test_base_ships_the_timed_recipe_craft_task_shell() -> void:
+	var craft_task := DataManager.get_task("base:recipe_craft")
+	assert_false(craft_task.is_empty())
+	assert_eq(str(craft_task.get("type", "")), "CRAFT")
+	assert_eq(int(craft_task.get("duration", 0)), 1)
+	assert_true(bool(craft_task.get("repeatable", false)))

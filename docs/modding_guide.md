@@ -628,7 +628,7 @@ Recipes are inventory-driven crafting templates loaded by `RecipeRegistry` into 
 }
 ```
 
-`CraftingBackend` requires `station_id`; optional `recipe_tags` and `recipe_ids` filter visible recipes. The backend rechecks those filters, station requirements, and discovery state when craft is confirmed, so a recipe that is not visible from the current station cannot be crafted by stale UI state. Instant recipes produce output immediately. Recipes with `craft_time_ticks > 0` consume inputs immediately and start the generic `base:recipe_craft` timed task, which grants the output when completed.
+`CraftingBackend` requires `station_id`; optional `recipe_tags` and `recipe_ids` filter visible recipes. The backend rechecks those filters, station requirements, and discovery state when craft is confirmed, so a recipe that is not visible from the current station cannot be crafted by stale UI state. Instant recipes produce output immediately. Recipes with `craft_time_ticks > 0` consume inputs immediately and start the generic `base:recipe_craft` timed task, which grants the output when completed. The base mod ships that task shell in `mods/base/data/tasks.json`; authored timed-craft content should keep an equivalent `CRAFT` task template available if the base one is replaced or removed by a total conversion.
 
 Supported discovery modes are `always`, `learned_on_flag`, and `auto_on_ingredient_owned`.
 

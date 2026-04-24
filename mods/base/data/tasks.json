@@ -40,6 +40,14 @@
       "description": "Lay low for a while. Sometimes the best move is no move.",
       "difficulty": 0,
       "repeatable": true
+    },
+    {
+      "template_id": "base:recipe_craft",
+      "type": "CRAFT",
+      "duration": 1,
+      "description": "Crafting in progress.",
+      "difficulty": 0,
+      "repeatable": true
     }
   ]
 }
