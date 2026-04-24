@@ -60,7 +60,13 @@ func travel_to(location_id: String) -> Dictionary:
 		return {"status": "error", "message": "Location '%s' does not exist." % location_id}
 	if location_id == GameState.current_location_id:
 		return {"status": "ok", "message": "Already at %s." % _get_location_display_name(location_id)}
-	GameState.travel_to(location_id, _get_travel_cost_to(location_id))
+	var travel_cost := _get_travel_cost_to(location_id)
+	if travel_cost < 0:
+		return {
+			"status": "error",
+			"message": "No route is available to %s." % _get_location_display_name(location_id),
+		}
+	GameState.travel_to(location_id, travel_cost)
 	return {"status": "ok", "message": "Traveled to %s." % _get_location_display_name(location_id)}
 
 
@@ -145,10 +151,7 @@ func _build_edge_key(first_id: String, second_id: String) -> String:
 
 
 func _get_travel_cost_to(location_id: String) -> int:
-	var connections := LocationGraph.get_connections(GameState.current_location_id)
-	if not connections.has(location_id):
-		return 0
-	return maxi(int(connections.get(location_id, 0)), 0)
+	return LocationGraph.get_route_travel_cost(GameState.current_location_id, location_id)
 
 
 func _resolve_location_position(location: Dictionary, index: int, total: int) -> Dictionary:

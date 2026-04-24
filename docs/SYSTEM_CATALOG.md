@@ -168,7 +168,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `AchievementListBackend` | `ui/screens/backends/achievement_list_screen.tscn` | Optional locked/unlocked filters | Achievement unlock state and stat progress. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `EventLogBackend` | `ui/screens/backends/event_log_screen.tscn` | Optional event limit/domain/signal filters | Recent `GameEvents` history. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `WorldMapBackend` | `ui/screens/backends/world_map_screen.tscn` | Optional title/description and display filters | Location graph with faction-tinted nodes, route lines, zoom/pan/orientation controls, and travel-on-click that consumes connection `travel_cost` ticks. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `WorldMapBackend` | `ui/screens/backends/world_map_screen.tscn` | Optional title/description and display filters | Location graph with faction-tinted nodes, route lines, zoom/pan/orientation controls, and travel-on-click that consumes the cheapest routed total `travel_cost` in ticks. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 
 **How it works:**
 1. Modders define a location/NPC with a `backend_class` and `backend_config` dict in JSON.

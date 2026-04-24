@@ -340,6 +340,44 @@ func test_world_map_backend_builds_graph_and_travels() -> void:
 	assert_eq(GameState.current_tick, tick_before + 1)
 
 
+func test_world_map_backend_uses_total_route_cost_for_multi_hop_travel() -> void:
+	var field_value: Variant = DataManager.locations.get("base:field", {})
+	assert_true(field_value is Dictionary)
+	if not field_value is Dictionary:
+		return
+	var field_location: Dictionary = field_value
+	var field_connections_value: Variant = field_location.get("connections", {})
+	assert_true(field_connections_value is Dictionary)
+	if not field_connections_value is Dictionary:
+		return
+	var field_connections: Dictionary = field_connections_value
+	field_connections["base:outpost"] = 2
+	field_location["connections"] = field_connections
+	DataManager.locations["base:field"] = field_location
+	DataManager.locations["base:outpost"] = {
+		"location_id": "base:outpost",
+		"display_name": "Outpost",
+		"description": "Fixture outpost location.",
+		"connections": {
+			"base:field": 2,
+		},
+		"screens": [],
+	}
+
+	var backend: RefCounted = WORLD_MAP_BACKEND.new()
+	backend.initialize({})
+
+	var tick_before := GameState.current_tick
+	var result_value: Variant = backend.call("travel_to", "base:outpost")
+
+	assert_true(result_value is Dictionary)
+	if result_value is Dictionary:
+		var result: Dictionary = result_value
+		assert_eq(str(result.get("status", "")), "ok")
+	assert_eq(GameState.current_location_id, "base:outpost")
+	assert_eq(GameState.current_tick, tick_before + 3)
+
+
 func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() -> void:
 	var player := GameState.player as EntityInstance
 	assert_not_null(player)

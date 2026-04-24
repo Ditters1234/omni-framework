@@ -48,9 +48,68 @@ static func get_connections(location_id: String) -> Dictionary:
 	return {}
 
 
+## Returns the cheapest routed travel cost between two locations.
+## Returns -1 when no route exists or either location is invalid.
+static func get_route_travel_cost(from_location_id: String, to_location_id: String) -> int:
+	if from_location_id.is_empty() or to_location_id.is_empty():
+		return -1
+	if from_location_id == to_location_id:
+		return 0
+	if not DataManager.locations.has(from_location_id) or not DataManager.locations.has(to_location_id):
+		return -1
+
+	var frontier: Array[String] = [from_location_id]
+	var best_costs: Dictionary = {
+		from_location_id: 0,
+	}
+
+	while not frontier.is_empty():
+		var current_location_id := _pop_lowest_cost_location(frontier, best_costs)
+		if current_location_id.is_empty():
+			break
+		if current_location_id == to_location_id:
+			return int(best_costs.get(current_location_id, -1))
+
+		var current_cost := int(best_costs.get(current_location_id, 0))
+		var connections := get_connections(current_location_id)
+		for neighbor_id_value in connections.keys():
+			var neighbor_id := str(neighbor_id_value)
+			if neighbor_id.is_empty():
+				continue
+			var connection_cost := maxi(int(connections.get(neighbor_id_value, 0)), 0)
+			var candidate_cost := current_cost + connection_cost
+			var known_cost := int(best_costs.get(neighbor_id, -1))
+			if known_cost >= 0 and candidate_cost >= known_cost:
+				continue
+			best_costs[neighbor_id] = candidate_cost
+			if not frontier.has(neighbor_id):
+				frontier.append(neighbor_id)
+
+	return -1
+
+
 ## Returns all location templates as an Array.
 static func get_all_locations() -> Array:
 	return DataManager.locations.values()
+
+
+static func _pop_lowest_cost_location(frontier: Array[String], best_costs: Dictionary) -> String:
+	if frontier.is_empty():
+		return ""
+
+	var best_index := 0
+	var best_location_id := frontier[0]
+	var best_cost := int(best_costs.get(best_location_id, 0))
+	for index in range(1, frontier.size()):
+		var candidate_location_id := frontier[index]
+		var candidate_cost := int(best_costs.get(candidate_location_id, 0))
+		if candidate_cost < best_cost:
+			best_index = index
+			best_location_id = candidate_location_id
+			best_cost = candidate_cost
+
+	frontier.remove_at(best_index)
+	return best_location_id
 
 
 ## Applies add/remove operations to the connections dict within a location entry.
