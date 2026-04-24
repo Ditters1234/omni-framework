@@ -67,8 +67,6 @@ Current required fields:
 }
 ```
 
-`equip_sound` can point at a one-shot audio resource such as a `.wav` or `.ogg`. When a committed assembly change equips that part into a slot, the engine plays that sound through `AudioManager.play_sfx()`.
-
 ### Required fields
 - `id` — string, non-empty, unique
 - `name` — string, non-empty
@@ -264,15 +262,15 @@ Parts are the core content building blocks. They can represent equipment, module
 - `stats`
 - `equippable`
 - `provides_sockets`
-- `customizable`
 - `custom_field_labels`
 - `custom_fields`
 - `sprite`
-- `ui_color`
 - `equip_sound`
 - `script_path`
 
 `sprite` can point directly at imported image assets such as `.png` files inside your mod's `assets/` folder.
+
+`equip_sound` can point at a one-shot audio resource such as a `.wav` or `.ogg`. When a committed assembly change equips that part into a slot, the engine plays that sound through `AudioManager.play_sfx()`.
 
 `required_tags` lists tags that must be present on other currently equipped parts for this part to remain equipped. If a required provider is removed, the engine automatically unequips dependent parts and returns them to inventory. For example, arms can require `torso`, hands can require `arms`, and an implant can require `head`.
 
@@ -357,8 +355,7 @@ Entities are the live actors and containers in the game. Players, NPCs, shops, c
       "inventory": [
         {
           "instance_id": "street_doc_implant_001",
-          "template_id": "my_name:my_mod:optic_implant",
-          "condition": 1.0
+          "template_id": "my_name:my_mod:optic_implant"
         }
       ],
       "interactions": [
@@ -389,10 +386,11 @@ Entities are the live actors and containers in the game. Players, NPCs, shops, c
 ```json
 {
   "instance_id": "unique_copy_id",
-  "template_id": "my_name:my_mod:plasma_rifle",
-  "condition": 1.0
+  "template_id": "my_name:my_mod:plasma_rifle"
 }
 ```
+
+Inventory entries may also include `custom_values` to override template-declared custom field defaults:
 
 ### Useful entity fields
 - `currencies`
@@ -424,8 +422,7 @@ Entity-facing UI such as `EntityPortrait` can render optional portrait/emblem ar
       "add_inventory": [
         {
           "instance_id": "my_name:my_mod:vendor_stock_001",
-          "template_id": "my_name:my_mod:plasma_rifle",
-          "condition": 1.0
+          "template_id": "my_name:my_mod:plasma_rifle"
         }
       ],
       "add_interactions": [
@@ -581,13 +578,18 @@ Tasks are time-based operations.
 ```
 
 ### Current task types referenced in the existing guide
+
+The following types have special runtime handling in `TaskRunner`:
+- `WAIT` — pure duration-based. Completes after `duration` ticks.
+- `CRAFT` — used internally by `CraftingBackend` for timed recipes.
+- `DELIVER` / `TRAVEL` — auto-complete when the player reaches the `target` location.
+
+The following types are accepted but behave identically to `WAIT` (duration-based, no special logic):
 - `BUILD`
 - `FIGHT`
-- `DELIVER`
-- `TRAVEL`
 - `SURVIVE`
-- `WAIT`
-- `CRAFT`
+
+Modders can use any string as a task type; unrecognized types fall through to duration-based behavior.
 
 Use:
 - `travel_cost` for travel-based tasks
@@ -679,9 +681,24 @@ Quests are progression/state-tracking structures.
 }
 ```
 
-### Objective types confirmed by current base content and guide
-- `has_item_tag`
-- `reach_location`
+### Objective types
+
+Quest objectives are evaluated by `ConditionEvaluator`. Each objective in the `objectives` array is a condition dictionary. Supported typed conditions (`"type"` field):
+
+- `has_item_tag` — entity owns a part with the given tag. Fields: `tag`, `count` (default 1), optional `entity_id`.
+- `reach_location` — entity is at the given location. Fields: `location_id`, optional `entity_id`.
+- `has_part` — entity owns a specific part template. Fields: `template_id`, `count` (default 1), optional `entity_id`.
+- `has_flag` — flag is set. Fields: `flag_id`, optional `entity_id` (default `"global"`), optional `value` (default `true`).
+- `stat_check` — stat comparison. Fields: `stat`, `op` (`>=`, `>`, `<=`, `<`, `==`, `!=`), `value`, optional `entity_id`.
+- `stat_greater_than` — shorthand for stat > value. Fields: `stat`, `value`.
+- `stat_less_than` — shorthand for stat < value. Fields: `stat`, `value`.
+- `has_currency` — entity has at least the given currency amount. Fields: `currency_id` (or `key`), `amount`, optional `entity_id`.
+- `reputation_threshold` — faction reputation check. Fields: `faction_id`, `threshold`, `comparison` (default `>=`), optional `entity_id`.
+- `quest_complete` — a quest has been completed. Fields: `quest_id`.
+
+Objectives also support logic blocks for compound conditions: `AND` (array, all must pass), `OR` (array, any must pass), `NOT` (single condition, must fail). These can be nested.
+
+Legacy dict-key conditions (without `"type"`) are also supported for backward compatibility — see `ConditionEvaluator` source for details.
 
 ---
 
@@ -713,8 +730,6 @@ Common fields:
 - `requirement`
 - `icon`
 - `unlock_sound`
-- `unlock_vfx`
-- `hidden`
 
 ---
 
@@ -775,6 +790,7 @@ The current loader registers these backend classes:
 - `ChallengeBackend`
 - `TaskProviderBackend`
 - `CatalogListBackend`
+- `CraftingBackend`
 - `DialogueBackend`
 - `EntitySheetBackend`
 - `ActiveQuestLogBackend`
@@ -817,6 +833,23 @@ Required:
 Required:
 - `required_stat`
 - `required_value`
+
+Useful optional fields:
+- `target_entity_id`
+- `portrait_entity_id`
+- `screen_title`
+- `screen_description`
+- `confirm_label`
+- `cancel_label`
+- `reward` — dictionary applied on success via `RewardService`
+- `action_payload` — single action dictionary dispatched on success via `ActionDispatcher`
+- `failure_action_payload` — single action dictionary dispatched on failure
+- `success_sound`
+- `failure_sound`
+- `next_screen_id` / `next_screen_params` — screen pushed on success
+- `pop_on_confirm` — pop on success instead of pushing
+- `failure_next_screen_id` / `failure_next_screen_params` — screen pushed on failure
+- `failure_pop_on_confirm` — pop on failure
 
 #### `CatalogListBackend`
 Required in practical use:
@@ -902,6 +935,99 @@ Location screens use:
 
 That mismatch is easy to miss and is one of the biggest practical gotchas in the current data.
 
+#### `ListBackend`
+No required params. Common useful optional fields:
+- `data_source` — `"player:inventory"` (default), `"entity:<entity_id>:inventory"`, or `"game_state.active_quests"`
+- `screen_title`
+- `screen_description`
+- `confirm_label`
+- `cancel_label`
+- `action_payload`
+- `empty_label`
+
+#### `CraftingBackend`
+Required:
+- `station_id`
+
+See Section 11.5 for full crafting details. Useful optional fields:
+- `recipe_tags` — array of tag strings to filter visible recipes
+- `recipe_ids` — array of specific recipe ids to show
+- `crafter_entity_id`
+- `input_source_entity_id`
+- `output_destination_entity_id`
+- `screen_title`
+- `confirm_label`
+- `cancel_label`
+- `empty_label`
+
+#### `ActiveQuestLogBackend`
+No required params. Common useful optional fields:
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+
+#### `FactionReputationBackend`
+No required params. Common useful optional fields:
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+
+#### `AchievementListBackend`
+No required params. Common useful optional fields:
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+
+#### `EventLogBackend`
+No required params. Common useful optional fields:
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+- `limit`
+
+---
+
+## 15.5 Action types (`ActionDispatcher`)
+
+Actions are side-effect operations dispatched from quest stages, task rewards, challenge results, and backend `action_payload` fields. Each action is a dictionary with a `type` key.
+
+### Available action types
+
+| Type | Key fields | Notes |
+|---|---|---|
+| `give_currency` / `add_currency` | `currency_id` (or `key`), `amount`, optional `entity_id` | |
+| `take_currency` / `remove_currency` | `currency_id` (or `key`), `amount`, optional `entity_id` | |
+| `give_part` | `part_id`, optional `entity_id` | Creates a new instance from template |
+| `remove_part` / `consume` | `instance_id` or `part_id` (or `template_id`), optional `entity_id` | Removes one instance |
+| `set_flag` | `flag_id` (or `key`), `value`, optional `entity_id` (default `"global"`) | |
+| `modify_stat` | `stat`, `delta`, optional `entity_id` | |
+| `modify_reputation` / `add_reputation` / `remove_reputation` | `faction_id`, `amount`, optional `entity_id` | |
+| `travel` | `location_id` | Moves the player |
+| `start_task` | `task_template_id` (or `template_id`), optional `entity_id` | |
+| `start_quest` | `quest_id` | |
+| `unlock_location` | `location_id`, optional `entity_id` | Adds to discovered locations |
+| `spawn_entity` | `template_id` (or `entity_template_id`), optional `location_id` | Instantiates a new entity |
+| `learn_recipe` | `recipe_id`, optional `entity_id` | Sets `learned:<recipe_id>` flag |
+| `unlock_achievement` | `achievement_id` | |
+| `reward` | `reward` (or inline reward fields) | Delegates to `RewardService` |
+| `emit_signal` | `signal_name`, optional `args` | Emits on `GameEvents` |
+| `push_screen` | `screen_id`, optional `params` | |
+| `pop_screen` | (none) | |
+| `replace_all_screens` | `screen_id`, optional `params` | |
+
+### Example
+
+```json
+{
+  "type": "give_currency",
+  "currency_id": "credits",
+  "amount": 100,
+  "entity_id": "player"
+}
+```
+
+`entity_id` defaults to `"player"` for most action types. Use `"global"` for `set_flag` when targeting global game state.
+
 ---
 
 ## 16. Dialogue
@@ -967,7 +1093,7 @@ Hook methods currently exposed by the base class include:
 There is also a helper:
 - `generate_ai_async(prompt, context = {})`
 
-`on_tick` is dispatched once per game tick for each carried part instance (inventory or equipped) whose template declares a `script_path`.
+`on_tick` is dispatched once per game tick for every part instance (inventory or equipped) across all entities in `GameState.entity_instances` whose template declares a `script_path`. This includes the player and all NPCs/vendors.
 
 Use script hooks sparingly. Prefer JSON first.
 
@@ -1054,8 +1180,7 @@ The base pack is special in location, but not in validation. Its data still has 
       "add_inventory": [
         {
           "instance_id": "starter_plus_vendor_blade_001",
-          "template_id": "my_name:starter_plus:training_blade",
-          "condition": 1.0
+          "template_id": "my_name:starter_plus:training_blade"
         }
       ]
     }
