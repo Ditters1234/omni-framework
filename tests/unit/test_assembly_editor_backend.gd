@@ -3,13 +3,13 @@ extends GutTest
 const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
 const ASSEMBLY_COMMIT_SERVICE := preload("res://systems/assembly_commit_service.gd")
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 
 
 func before_each() -> void:
 	BACKEND_CONTRACT_REGISTRY.clear()
 	ASSEMBLY_EDITOR_BACKEND.register_contract()
-	ModLoader.load_all_mods()
-	GameState.new_game()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 
 
 func test_build_view_model_returns_rows_and_sidebar_data_for_player_loadout() -> void:
@@ -130,7 +130,7 @@ func test_owned_inventory_install_preserves_instance_values_without_spending_cur
 
 func test_vendor_inventory_install_charges_and_moves_exact_instance() -> void:
 	var player: EntityInstance = GameState.player as EntityInstance
-	var vendor := GameState.get_entity_instance("base:test_vendor")
+	var vendor := TEST_FIXTURE_WORLD.add_runtime_implant_vendor()
 	assert_not_null(player)
 	assert_not_null(vendor)
 	if player == null or vendor == null:
@@ -169,7 +169,8 @@ func test_vendor_inventory_install_charges_and_moves_exact_instance() -> void:
 
 
 func test_commit_entity_plays_template_equip_sound_when_a_new_part_is_equipped() -> void:
-	var test_audio_path := "res://mods/base/assets/audio/sfx_trade.wav"
+	var test_audio_path := "res://tests/fixtures/audio/test_equip_sound.wav"
+	AudioManager._stream_cache[test_audio_path] = AudioStreamWAV.new()
 	DataManager.parts["base:test_audio_part"] = {
 		"id": "base:test_audio_part",
 		"display_name": "Audio Test Part",

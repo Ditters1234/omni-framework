@@ -1,13 +1,13 @@
 extends GutTest
 
 const GAMEPLAY_SHELL_PRESENTER := preload("res://ui/screens/gameplay_shell/gameplay_shell_presenter.gd")
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 
 var _presenter: RefCounted = null
 
 
 func before_each() -> void:
-	ModLoader.load_all_mods()
-	GameState.reset()
+	TEST_FIXTURE_WORLD.bootstrap_data_fixture()
 	_presenter = GAMEPLAY_SHELL_PRESENTER.new()
 
 

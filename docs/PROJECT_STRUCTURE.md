@@ -213,6 +213,8 @@ User/community mods live under `mods/<author_id>/<mod_id>/`.
 
 `tests/` contains GUT-based test coverage, organized into `unit/`, `integration/`, and `content/` subfolders. `.gutconfig.json` at the project root controls headless test runner discovery.
 
+Engine-owned tests should prefer stable fixture data from `tests/helpers/test_fixture_world.gd` instead of asserting against `mods/base/` content directly. Reserve `tests/content/` for checks that intentionally validate the shipped base mod data and assets.
+
 Tests are dev-only and must be excluded from release export presets.
 
 ## Documentation Guidance

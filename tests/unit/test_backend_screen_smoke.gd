@@ -1,6 +1,7 @@
 extends GutTest
 
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 
 const SCREEN_CASES := [
 	{
@@ -66,8 +67,8 @@ const SCREEN_CASES := [
 	{
 		"scene_path": UI_ROUTE_CATALOG.DIALOGUE_SCENE,
 		"params": {
-			"dialogue_resource": "res://mods/base/dialogue/quartermaster_theta.dialogue",
-			"speaker_entity_id": "base:test_vendor",
+			"dialogue_resource": "res://tests/fixtures/dialogue/sample_greeting.dialogue",
+			"speaker_entity_id": "base:screen_smoke_vendor",
 			"screen_title": "Smoke Dialogue",
 		},
 	},
@@ -116,9 +117,8 @@ var _test_viewport: SubViewport = null
 
 
 func before_each() -> void:
-	ModLoader.load_all_mods()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	AIManager.initialize()
-	GameState.new_game()
 	_seed_backend_screen_runtime()
 	_test_viewport = _create_test_viewport()
 

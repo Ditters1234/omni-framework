@@ -1,14 +1,14 @@
 extends GutTest
 
 const TEST_TICK_HOOK_PATH := "res://tests/fixtures/hooks/test_part_tick_hook.gd"
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 
 var _original_config: Dictionary = {}
 
 
 func before_each() -> void:
-	ModLoader.load_all_mods()
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	AIManager.initialize()
-	GameState.new_game()
 	TimeKeeper.stop()
 	GameEvents.clear_event_history()
 	_original_config = DataManager.config.duplicate(true)

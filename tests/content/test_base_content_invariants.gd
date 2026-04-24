@@ -9,9 +9,12 @@ func before_all() -> void:
 
 func test_base_bootstrap_content_exists() -> void:
 	assert_false(DataManager.get_entity("base:player").is_empty())
-	assert_false(DataManager.get_location("base:hub_safehouse").is_empty())
+	var starting_location_id := str(DataManager.get_config_value("game.starting_location", ""))
+	assert_false(starting_location_id.is_empty())
+	assert_false(DataManager.get_location(starting_location_id).is_empty())
 	assert_eq(DataManager.get_config_value("game.starting_player_id", ""), "base:player")
-	assert_eq(DataManager.get_config_value("game.starting_location", ""), "base:hub_safehouse")
+	var player_template := DataManager.get_entity("base:player")
+	assert_eq(str(player_template.get("location_id", "")), starting_location_id)
 
 
 func test_base_player_head_has_custom_color_values_for_ui_testing() -> void:
@@ -23,8 +26,19 @@ func test_base_player_head_has_custom_color_values_for_ui_testing() -> void:
 		var custom_fields: Array = custom_fields_value
 		assert_gt(custom_fields.size(), 1)
 
-	var player := EntityInstance.from_template(DataManager.get_entity("base:player"))
-	var head := player.get_inventory_part("player_head_001")
+	var player_template := DataManager.get_entity("base:player")
+	var assembly_socket_map_value: Variant = player_template.get("assembly_socket_map", {})
+	assert_true(assembly_socket_map_value is Dictionary)
+	if not assembly_socket_map_value is Dictionary:
+		return
+	var assembly_socket_map: Dictionary = assembly_socket_map_value
+	var head_instance_id := str(assembly_socket_map.get("head", ""))
+	assert_false(head_instance_id.is_empty())
+	if head_instance_id.is_empty():
+		return
+
+	var player := EntityInstance.from_template(player_template)
+	var head := player.get_inventory_part(head_instance_id)
 	assert_not_null(head)
 	if head != null:
 		assert_eq(str(head.get_custom_value("eye_color", "")), "green")

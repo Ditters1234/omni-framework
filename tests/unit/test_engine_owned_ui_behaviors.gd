@@ -9,6 +9,7 @@ const ASSEMBLY_EDITOR_SCENE_PATH := "res://ui/screens/backends/assembly_editor_s
 const SAVE_SLOT_LIST_SCENE := preload("res://ui/screens/save_slot_list/save_slot_list_screen.tscn")
 const TEST_SCREEN_SCENE := "res://tests/fixtures/ui_router/test_routed_screen.tscn"
 const TEST_SAVE_DIR := "user://test_saves/test_engine_owned_ui_behaviors/"
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 
 var _spawned_nodes: Array[Node] = []
 var _main_scene: Node = null
@@ -20,6 +21,7 @@ func before_each() -> void:
 	_delete_settings_file()
 	_cleanup_directory(TEST_SAVE_DIR)
 	SaveManager.set_save_directory_for_testing(TEST_SAVE_DIR)
+	TEST_FIXTURE_WORLD.bootstrap_data_fixture()
 	AIManager.initialize(_make_ai_settings(APP_SETTINGS.AI_PROVIDER_DISABLED))
 	_test_viewport = _create_test_viewport()
 	while UIRouter.stack_depth() > 0:
@@ -275,9 +277,27 @@ func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
 	UIRouter.register_screen("gameplay_shell", GAMEPLAY_SHELL_SCENE_PATH)
 	UIRouter.register_screen("assembly_editor", ASSEMBLY_EDITOR_SCENE_PATH)
 	GameState.new_game()
+	var starting_location_id := str(DataManager.get_config_value("game.starting_location", ""))
+	assert_false(starting_location_id.is_empty())
+	var starting_location := DataManager.get_location(starting_location_id)
+	assert_false(starting_location.is_empty())
 	var player := GameState.player as EntityInstance
 	assert_not_null(player)
-	assert_true(player.has_discovered_location("base:test_hub"))
+	if player == null:
+		return
+	var connections_value: Variant = starting_location.get("connections", {})
+	assert_true(connections_value is Dictionary)
+	if not connections_value is Dictionary:
+		return
+	var connections: Dictionary = connections_value
+	assert_gt(connections.size(), 0)
+	var connected_location_id := ""
+	for location_id_value in connections.keys():
+		connected_location_id = str(location_id_value)
+		if not connected_location_id.is_empty():
+			break
+	assert_false(connected_location_id.is_empty())
+	assert_true(player.has_discovered_location(connected_location_id))
 
 	UIRouter.replace_all("gameplay_shell", {
 		"initial_surface_id": "assembly_editor",
@@ -300,7 +320,7 @@ func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
 	await get_tree().process_frame
 
 	assert_false(GameState.current_location_id.is_empty())
-	assert_eq(GameState.current_location_id, "base:hub_safehouse")
+	assert_eq(GameState.current_location_id, starting_location_id)
 	assert_not_null(GameState.player)
 	assert_eq(UIRouter.current_screen_id(), "gameplay_shell")
 	assert_eq(UIRouter.stack_depth(), 1)
@@ -374,8 +394,7 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 	UIRouter.initialize(_screen_container)
 	_register_runtime_screens()
 	GameState.new_game()
-	assert_not_null(GameState.get_entity_instance("base:test_vendor"))
-	GameState.travel_to("base:test_hub")
+	GameState.travel_to(TEST_FIXTURE_WORLD.connected_location_id())
 
 	UIRouter.replace_all("gameplay_shell")
 	await get_tree().process_frame
@@ -393,12 +412,17 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 	assert_true(entities_value is Array)
 	var entities: Array = entities_value
 	assert_gt(entities.size(), 0)
-	var first_entity_value: Variant = entities[0]
-	assert_true(first_entity_value is Dictionary)
-	var first_entity: Dictionary = first_entity_value
-	assert_eq(str(first_entity.get("entity_id", "")), "base:test_vendor")
+	if entities.is_empty():
+		return
+	var vendor_id := TEST_FIXTURE_WORLD.fixture_vendor_id()
+	var vendor_value: Variant = _find_entity_row(entities, vendor_id)
+	assert_true(vendor_value is Dictionary)
+	if not vendor_value is Dictionary:
+		return
+	var vendor: Dictionary = vendor_value
+	assert_eq(str(vendor.get("display_name", "")), "Fixture Vendor")
 
-	var trade_button := _find_button_with_text(location_surface, "Trade")
+	var trade_button := _find_button_with_text(location_surface, "Browse Stock")
 	assert_not_null(trade_button)
 	assert_false(trade_button.disabled)
 	var talk_button := _find_button_with_text(location_surface, "Talk")
@@ -415,8 +439,8 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 	var dialogue_snapshot_value: Variant = dialogue_screen.call("get_debug_snapshot")
 	assert_true(dialogue_snapshot_value is Dictionary)
 	var dialogue_snapshot: Dictionary = dialogue_snapshot_value
-	assert_eq(str(dialogue_snapshot.get("speaker_entity_id", "")), "base:test_vendor")
-	assert_eq(str(dialogue_snapshot.get("dialogue_resource", "")), "res://mods/base/dialogue/quartermaster_theta.dialogue")
+	assert_eq(str(dialogue_snapshot.get("speaker_entity_id", "")), vendor_id)
+	assert_eq(str(dialogue_snapshot.get("dialogue_resource", "")), TEST_FIXTURE_WORLD.sample_dialogue_resource_path())
 	assert_null(_find_label_with_text(dialogue_screen, "The configured dialogue resource could not be loaded."))
 
 
@@ -437,9 +461,25 @@ func test_location_surface_travel_button_advances_time_by_connection_cost() -> v
 	assert_not_null(shell)
 	var location_surface := shell.find_child("GameplayLocationSurface", true, false) as Control
 	assert_not_null(location_surface)
+	var surface_snapshot_value: Variant = location_surface.call("get_debug_snapshot")
+	assert_true(surface_snapshot_value is Dictionary)
+	if not surface_snapshot_value is Dictionary:
+		return
+	var surface_snapshot: Dictionary = surface_snapshot_value
+	var travel_entries: Array[Dictionary] = _read_dictionary_array(surface_snapshot.get("travel", []))
+	assert_gt(travel_entries.size(), 0)
+	if travel_entries.is_empty():
+		return
+	var destination_entry: Dictionary = travel_entries[0]
+	var destination_name := str(destination_entry.get("destination_name", ""))
+	var destination_id := str(destination_entry.get("destination_id", ""))
+	var travel_cost := int(destination_entry.get("travel_cost", 0))
+	assert_false(destination_name.is_empty())
+	assert_false(destination_id.is_empty())
+	assert_gt(travel_cost, 0)
 
 	var tick_before := GameState.current_tick
-	var destination_button := _find_button_with_text(location_surface, "Diagnostics Hub (1)")
+	var destination_button := _find_button_with_text(location_surface, "%s (%d)" % [destination_name, travel_cost])
 	assert_not_null(destination_button)
 	if destination_button == null:
 		return
@@ -447,8 +487,8 @@ func test_location_surface_travel_button_advances_time_by_connection_cost() -> v
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	assert_eq(GameState.current_location_id, "base:test_hub")
-	assert_eq(GameState.current_tick, tick_before + 1)
+	assert_eq(GameState.current_location_id, destination_id)
+	assert_eq(GameState.current_tick, tick_before + travel_cost)
 
 
 func test_location_surface_empty_location_param_falls_back_to_game_state_location() -> void:
@@ -553,16 +593,18 @@ func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_
 	var locations: Array = locations_value
 	assert_gt(locations.size(), 1)
 	assert_true(_map_rows_contain_location(locations, GameState.current_location_id))
+	var destination_id := _first_non_current_map_location(locations, GameState.current_location_id)
+	assert_false(destination_id.is_empty())
+	if destination_id.is_empty():
+		return
+	var expected_travel_cost := LocationGraph.get_route_travel_cost(GameState.current_location_id, destination_id)
+	assert_gt(expected_travel_cost, 0)
 	var edges_value: Variant = map_snapshot.get("edges", [])
 	assert_true(edges_value is Array)
 	if edges_value is Array:
 		var edges: Array = edges_value
 		assert_gt(edges.size(), 0)
 
-	var destination_id := _first_non_current_map_location(locations, GameState.current_location_id)
-	assert_false(destination_id.is_empty())
-	if destination_id.is_empty():
-		return
 	var graph := map_screen.find_child("WorldMapGraph", true, false) as Control
 	assert_not_null(graph)
 	var graph_buttons_value: Variant = graph.get("_buttons_by_id")
@@ -575,8 +617,8 @@ func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_
 		if effective_viewport_size_value is Vector2:
 			effective_viewport_size = effective_viewport_size_value
 		var viewport_bounds := Rect2(Vector2.ZERO, effective_viewport_size)
-		assert_true(graph_buttons.has("base:hub_safehouse"))
-		assert_true(graph_buttons.has("base:test_hub"))
+		assert_true(graph_buttons.has(GameState.current_location_id))
+		assert_true(graph_buttons.has(destination_id))
 		for location_id_value in graph_buttons.keys():
 			var location_button := graph_buttons.get(location_id_value) as Button
 			assert_not_null(location_button)
@@ -634,7 +676,7 @@ func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_
 	await get_tree().process_frame
 
 	assert_eq(GameState.current_location_id, destination_id)
-	assert_eq(GameState.current_tick, 1)
+	assert_eq(GameState.current_tick, expected_travel_cost)
 	var after_travel_snapshot := UIRouter.get_current_screen_debug_snapshot()
 	assert_eq(str(after_travel_snapshot.get("active_surface_screen_id", "")), "world_map")
 	var after_map_snapshot_value: Variant = map_screen.call("get_debug_snapshot")
@@ -701,6 +743,16 @@ func _first_non_current_map_location(rows: Array, current_location_id: String) -
 	return ""
 
 
+func _find_entity_row(rows: Array, entity_id: String) -> Variant:
+	for row_value in rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		if str(row.get("entity_id", "")) == entity_id:
+			return row
+	return null
+
+
 func _drag_graph_for_test(graph: Control, relative: Vector2) -> void:
 	var press := InputEventMouseButton.new()
 	press.button_index = MOUSE_BUTTON_RIGHT
@@ -723,6 +775,18 @@ func _read_dictionary(value: Variant) -> Dictionary:
 		var dictionary_value: Dictionary = value
 		return dictionary_value
 	return {}
+
+
+func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
+	var dictionaries: Array[Dictionary] = []
+	if not value is Array:
+		return dictionaries
+	var values: Array = value
+	for item in values:
+		if item is Dictionary:
+			var dictionary_item: Dictionary = item
+			dictionaries.append(dictionary_item)
+	return dictionaries
 
 
 func _delete_settings_file() -> void:
