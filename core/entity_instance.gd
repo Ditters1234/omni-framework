@@ -21,6 +21,7 @@ var currencies: Dictionary = {}
 
 ## Per-faction standing: { faction_id → float }
 var reputation: Dictionary = {}
+var owned_entity_ids: Array[String] = []
 
 ## Inventory: Array of PartInstance
 var inventory: Array = []   # Array[PartInstance]
@@ -55,6 +56,7 @@ static func from_template(template: Dictionary) -> EntityInstance:
 	inst.location_id = template.get("location_id", "")
 	inst.currencies = template.get("currencies", {}).duplicate(true)
 	inst.reputation = template.get("reputation", {}).duplicate(true)
+	inst.owned_entity_ids = inst._to_string_array(template.get("owned_entity_ids", []))
 	inst.flags = template.get("flags", {}).duplicate(true)
 	inst.discovered_locations = inst._to_string_array(template.get("discovered_locations", []))
 	inst._init_stats(template)
@@ -171,7 +173,10 @@ func get_reputation(faction_id: String) -> float:
 
 
 func add_reputation(faction_id: String, amount: float) -> void:
-	reputation[faction_id] = get_reputation(faction_id) + amount
+	var old_value := get_reputation(faction_id)
+	reputation[faction_id] = old_value + amount
+	if GameEvents:
+		GameEvents.entity_reputation_changed.emit(entity_id, faction_id, old_value, get_reputation(faction_id))
 
 
 func set_flag(flag_key: String, value: Variant) -> void:
@@ -543,6 +548,7 @@ func to_dict() -> Dictionary:
 		"stats": stats.duplicate(),
 		"currencies": currencies.duplicate(),
 		"reputation": reputation.duplicate(),
+		"owned_entity_ids": owned_entity_ids.duplicate(),
 		"inventory": inventory_list,
 		"equipped": equipped_map,
 		"flags": flags.duplicate(),
@@ -557,6 +563,7 @@ func from_dict(data: Dictionary) -> void:
 	stats = data.get("stats", {}).duplicate(true)
 	currencies = data.get("currencies", {}).duplicate(true)
 	reputation = data.get("reputation", {}).duplicate(true)
+	owned_entity_ids = _to_string_array(data.get("owned_entity_ids", []))
 	flags = data.get("flags", {}).duplicate(true)
 	discovered_locations = _to_string_array(data.get("discovered_locations", []))
 	location_id = data.get("location_id", "")

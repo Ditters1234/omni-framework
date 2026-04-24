@@ -73,6 +73,7 @@ Note: `data_validation_failed` is described in earlier planning docs but is not 
 - `location_changed(old_id, new_id)`
 - `player_stat_changed(stat_key, old_value, new_value)` — convenience signal for the player entity specifically
 - `entity_stat_changed(entity_id, stat_key, old_value, new_value)` — preferred general form
+- `entity_reputation_changed(entity_id, faction_id, old_value, new_value)`
 - `flag_changed(entity_id, flag_id, value)`
 
 ### Inventory And Assembly

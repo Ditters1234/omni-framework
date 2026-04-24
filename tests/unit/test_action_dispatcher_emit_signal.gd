@@ -1,6 +1,7 @@
 extends GutTest
 
 const TEST_SCREEN_SCENE := "res://tests/fixtures/ui_router/test_routed_screen.tscn"
+const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 
 var _screen_container: CanvasLayer = null
 var _test_viewport: SubViewport = null
@@ -77,6 +78,58 @@ func test_push_screen_routes_through_ui_router_with_params() -> void:
 		assert_true(nested_value is Dictionary)
 		var nested: Dictionary = nested_value
 		assert_eq(int(nested.get("value", 0)), 7)
+
+
+func test_learn_recipe_sets_the_documented_learned_flag_on_the_player() -> void:
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture(false)
+	DataManager.recipes["base:test_recipe"] = {
+		"recipe_id": "base:test_recipe",
+		"display_name": "Test Recipe",
+		"output_template_id": "base:body_arm_standard",
+		"inputs": [{"template_id": "base:body_arm_standard", "count": 1}],
+	}
+
+	ActionDispatcher.dispatch({
+		"type": "learn_recipe",
+		"recipe_id": "base:test_recipe",
+	})
+
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player != null:
+		assert_true(player.has_flag("learned:base:test_recipe"))
+
+
+func test_modify_reputation_updates_runtime_state_and_emits_the_new_event() -> void:
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture(false)
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+
+	watch_signals(GameEvents)
+	ActionDispatcher.dispatch({
+		"type": "modify_reputation",
+		"entity_id": "player",
+		"faction_id": "base:test_faction",
+		"amount": 5,
+	})
+
+	assert_eq(player.get_reputation("base:test_faction"), 5.0)
+	assert_signal_emitted(GameEvents, "entity_reputation_changed")
+	assert_eq(
+		get_signal_parameters(GameEvents, "entity_reputation_changed"),
+		[player.entity_id, "base:test_faction", 0.0, 5.0]
+	)
+
+	ActionDispatcher.dispatch({
+		"type": "remove_reputation",
+		"entity_id": "player",
+		"faction_id": "base:test_faction",
+		"amount": 2,
+	})
+
+	assert_eq(player.get_reputation("base:test_faction"), 3.0)
 
 
 func _create_test_viewport() -> SubViewport:

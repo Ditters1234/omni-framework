@@ -88,7 +88,7 @@ Implementation note: the repository has completed the current Phase 4 backend sc
 | `ChallengeBackend` | `challenge` | ✅ Implemented | Single stat check → branch to `reward` or `action_payload` |
 | `TaskProviderBackend` | `task_provider` | ✅ Implemented | Faction job board — accept tasks from `faction.quest_pool` |
 | `ActiveQuestLogBackend` | `quest_log` | Implemented (Phase 5 basic) | Read active quests + stages + objectives + rewards from `GameState` |
-| `EntitySheetBackend` | `entity_sheet` | Implemented (Phase 5 pass 1) | Read-only full entity view: stats, modifiers, equipped parts, inventory summary, faction standings |
+| `EntitySheetBackend` | `entity_sheet` | Implemented (Phase 5 pass 1) | Read-only full entity view: stats, currency balances, modifiers, equipped parts, inventory summary, faction standings |
 | `FactionReputationBackend` | `faction_rep` | Implemented (Phase 5 basic) | Grid/list of factions with reputation tier + emblem + territory summary |
 | `AchievementListBackend` | `achievement_list` | Implemented (Phase 5 basic) | Browse achievement progress including locked/unlocked state and thresholds |
 | `EventLogBackend` | `event_log` | Implemented (Phase 5 basic) | Rolling history from `GameEvents._event_history` |

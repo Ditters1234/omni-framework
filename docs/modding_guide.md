@@ -67,6 +67,8 @@ Current required fields:
 }
 ```
 
+`equip_sound` can point at a one-shot audio resource such as a `.wav` or `.ogg`. When a committed assembly change equips that part into a slot, the engine plays that sound through `AudioManager.play_sfx()`.
+
 ### Required fields
 - `id` — string, non-empty, unique
 - `name` — string, non-empty
@@ -410,6 +412,8 @@ Entities are the live actors and containers in the game. Players, NPCs, shops, c
 
 Entity-facing UI such as `EntityPortrait` can render optional portrait/emblem art from `portrait`, `portrait_id`, or `sprite` when those fields are present.
 
+`owned_entity_ids` now round-trips through `EntityInstance` runtime/save serialization even though the base UI does not currently render a dedicated ownership view.
+
 ### Current patch example
 
 ```json
@@ -626,6 +630,8 @@ Recipes are inventory-driven crafting templates loaded by `RecipeRegistry` into 
 
 Supported discovery modes are `always`, `learned_on_flag`, and `auto_on_ingredient_owned`.
 
+`learned_on_flag` checks for the `learned:<recipe_id>` flag on the crafter or global `GameState`. `ActionDispatcher` now supports a dedicated `learn_recipe` action so authored content does not need to hand-roll that flag format with `set_flag`.
+
 `required_stations`, `required_flags`, and `tags` must contain non-empty strings. `required_stats` values must be numeric so stat gates fail validation instead of becoming implicit zero-value requirements.
 
 ---
@@ -834,6 +840,21 @@ No required params. Common useful optional fields:
 
 The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location. The runtime screen also provides route lines, mouse-wheel zoom, drag panning, fit/current centering controls, and radial/horizontal/vertical orientation modes. Traveling from the map consumes the cheapest routed total `travel_cost` in ticks; unreachable destinations are rejected instead of free-teleporting.
 
+#### `EntitySheetBackend`
+No required params. Common useful optional fields:
+- `target_entity_id`
+- `screen_title`
+- `screen_description`
+- `stat_title`
+- `cancel_label`
+- `show_currencies`
+- `show_equipped`
+- `show_inventory`
+- `show_reputation`
+- `inventory_limit`
+
+The current entity sheet is read-only and exposes stats, currency balances, equipped parts, inventory summaries, and faction standing.
+
 #### `AssemblyEditorBackend`
 No required params, but common useful ones are:
 - `target_entity_id`
@@ -945,6 +966,8 @@ Hook methods currently exposed by the base class include:
 
 There is also a helper:
 - `generate_ai_async(prompt, context = {})`
+
+`on_tick` is dispatched once per game tick for each carried part instance (inventory or equipped) whose template declares a `script_path`.
 
 Use script hooks sparingly. Prefer JSON first.
 

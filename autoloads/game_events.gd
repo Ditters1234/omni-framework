@@ -25,6 +25,7 @@ const SIGNAL_CATALOG := {
 		{"name": "location_changed", "args": ["old_id", "new_id"]},
 		{"name": "player_stat_changed", "args": ["stat_key", "old_value", "new_value"]},
 		{"name": "entity_stat_changed", "args": ["entity_id", "stat_key", "old_value", "new_value"]},
+		{"name": "entity_reputation_changed", "args": ["entity_id", "faction_id", "old_value", "new_value"]},
 		{"name": "flag_changed", "args": ["entity_id", "flag_id", "value"]},
 	],
 	"inventory": [
@@ -104,6 +105,7 @@ signal game_over()
 signal location_changed(old_id: String, new_id: String)
 signal player_stat_changed(stat_key: String, old_value: float, new_value: float)
 signal entity_stat_changed(entity_id: String, stat_key: String, old_value: float, new_value: float)
+signal entity_reputation_changed(entity_id: String, faction_id: String, old_value: float, new_value: float)
 signal flag_changed(entity_id: String, flag_id: String, value: Variant)
 
 # ---------------------------------------------------------------------------

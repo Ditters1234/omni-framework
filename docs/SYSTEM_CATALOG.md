@@ -50,7 +50,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
-| `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, etc. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for schema. |
+| `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, `learn_recipe`, `modify_reputation`, etc. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for schema. |
 | `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for syntax. |
 | `StatManager` | `StatManager` | `systems/stat_manager.gd` | DataManager | Calculates stat modifiers, applies stat changes, enforces clamping rules. See [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md). |
 | `BackendContractRegistry` | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | — | Validates `backend_class` IDs and their payload schemas. Locked after `ModLoader`. |
@@ -163,7 +163,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `CraftingBackend` | `ui/screens/backends/crafting_screen.tscn` | Station ID, recipe filters, crafter/input/output entities | Recipe crafting with input status and timed production support. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager .dialogue file ref | NPC branching dialogue (wraps Dialogue Manager). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Read-only entity stats, equipment, inventory, and faction standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Read-only entity stats, currency balances, equipment, inventory, and faction standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `ActiveQuestLogBackend` | `ui/screens/backends/active_quest_log_screen.tscn` | Optional completed quest display | Active quest cards with stages, objectives, and rewards. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `AchievementListBackend` | `ui/screens/backends/achievement_list_screen.tscn` | Optional locked/unlocked filters | Achievement unlock state and stat progress. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |

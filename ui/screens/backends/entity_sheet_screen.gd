@@ -10,6 +10,8 @@ const FACTION_BADGE_SCENE := preload("res://ui/components/faction_badge.tscn")
 @onready var _portrait_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/PortraitHost
 @onready var _summary_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/SummaryLabel
 @onready var _stat_sheet_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/StatSheetHost
+@onready var _currency_section_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/CurrencySectionLabel
+@onready var _currency_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/CurrencyRows
 @onready var _equipped_section_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/EquippedSectionLabel
 @onready var _equipped_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/EquippedRows
 @onready var _inventory_section_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer/InventorySectionLabel
@@ -70,6 +72,7 @@ func _refresh_state() -> void:
 	_back_button.text = "Back" if _opened_from_gameplay_shell else str(view_model.get("cancel_label", "Back"))
 	_render_portrait(_read_dictionary(view_model.get("portrait", {})))
 	_render_stat_sheet(_read_dictionary(view_model.get("stat_sheet", {})))
+	_render_currency_section(view_model)
 	_render_equipped_section(view_model)
 	_render_inventory_section(view_model)
 	_render_reputation_section(view_model)
@@ -91,6 +94,16 @@ func _render_stat_sheet(view_model: Dictionary) -> void:
 			_stat_sheet_host.add_child(_stat_sheet)
 	if _stat_sheet != null:
 		_stat_sheet.call("render", view_model)
+
+
+func _render_currency_section(view_model: Dictionary) -> void:
+	var show_currencies := bool(view_model.get("show_currencies", true))
+	_currency_section_label.visible = show_currencies
+	_currency_rows.visible = show_currencies
+	if not show_currencies:
+		return
+	var rows := _read_dictionary_array(view_model.get("currency_rows", []))
+	_render_text_rows(_currency_rows, rows, str(view_model.get("currency_empty_label", "No currencies are recorded.")), "")
 
 func _render_equipped_section(view_model: Dictionary) -> void:
 	var show_equipped := bool(view_model.get("show_equipped", true))

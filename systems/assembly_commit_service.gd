@@ -13,9 +13,13 @@ static func commit_entity(previous_entity: EntityInstance, committed_entity: Ent
 	var entity_id := committed_entity.entity_id
 	var slot_ids: Array[String] = _collect_slot_ids(previous_entity, committed_entity)
 	for slot_id in slot_ids:
-		var previous_template_id := "" if previous_entity == null else previous_entity.get_equipped_template_id(slot_id)
-		var committed_template_id := committed_entity.get_equipped_template_id(slot_id)
-		if previous_template_id == committed_template_id:
+		var previous_part := null if previous_entity == null else previous_entity.get_equipped(slot_id)
+		var committed_part := committed_entity.get_equipped(slot_id)
+		var previous_template_id := "" if previous_part == null else previous_part.template_id
+		var committed_template_id := "" if committed_part == null else committed_part.template_id
+		var previous_instance_id := "" if previous_part == null else previous_part.instance_id
+		var committed_instance_id := "" if committed_part == null else committed_part.instance_id
+		if previous_template_id == committed_template_id and previous_instance_id == committed_instance_id:
 			continue
 		if not previous_template_id.is_empty():
 			GameEvents.part_unequipped.emit(entity_id, previous_template_id, slot_id)
@@ -23,6 +27,7 @@ static func commit_entity(previous_entity: EntityInstance, committed_entity: Ent
 		if not committed_template_id.is_empty():
 			GameEvents.part_equipped.emit(entity_id, committed_template_id, slot_id)
 			_invoke_part_hook(committed_entity, slot_id, "on_equip")
+			_play_equip_sound(committed_part)
 
 
 static func _collect_slot_ids(previous_entity: EntityInstance, committed_entity: EntityInstance) -> Array[String]:
@@ -54,3 +59,15 @@ static func _invoke_part_hook(entity: EntityInstance, slot_id: String, method_na
 	if part_template.is_empty():
 		return
 	ScriptHookService.invoke_template_hook(part_template, method_name, [entity.to_dict(), part.to_dict()])
+
+
+static func _play_equip_sound(part: PartInstance) -> void:
+	if part == null or AudioManager == null:
+		return
+	var part_template := part.get_template()
+	if part_template.is_empty():
+		return
+	var equip_sound := str(part_template.get("equip_sound", ""))
+	if equip_sound.is_empty():
+		return
+	AudioManager.play_sfx(equip_sound)

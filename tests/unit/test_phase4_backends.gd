@@ -385,6 +385,7 @@ func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() ->
 		return
 
 	player.set_equipped_template("hair", "base:body_hair_short")
+	player.add_currency("gold", 12)
 
 	var backend: RefCounted = ENTITY_SHEET_BACKEND.new()
 	backend.initialize({
@@ -394,10 +395,12 @@ func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() ->
 
 	var view_model: Dictionary = backend.build_view_model()
 	var stat_sheet_value: Variant = view_model.get("stat_sheet", {})
+	var currency_rows_value: Variant = view_model.get("currency_rows", [])
 	var equipped_rows_value: Variant = view_model.get("equipped_rows", [])
 
 	assert_eq(str(view_model.get("title", "")), "Character Sheet")
 	assert_true(stat_sheet_value is Dictionary)
+	assert_true(currency_rows_value is Array)
 	assert_true(equipped_rows_value is Array)
 	if stat_sheet_value is Dictionary:
 		var stat_sheet: Dictionary = stat_sheet_value
@@ -407,6 +410,18 @@ func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() ->
 			var groups: Dictionary = groups_value
 			assert_true(groups.has("combat"))
 			assert_true(groups.has("survival"))
+	if currency_rows_value is Array:
+		var currency_rows: Array = currency_rows_value
+		assert_true(currency_rows.size() >= 2)
+		var found_credits := false
+		for row_value in currency_rows:
+			if not row_value is Dictionary:
+				continue
+			var row: Dictionary = row_value
+			if str(row.get("currency_id", "")) == "credits":
+				found_credits = true
+				break
+		assert_true(found_credits)
 	if equipped_rows_value is Array:
 		var equipped_rows: Array = equipped_rows_value
 		assert_eq(equipped_rows.size(), 1)

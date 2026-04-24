@@ -17,10 +17,12 @@ static func register_contract() -> void:
 			"screen_description",
 			"stat_title",
 			"cancel_label",
+			"show_currencies",
 			"show_equipped",
 			"show_inventory",
 			"show_reputation",
 			"inventory_limit",
+			"currency_empty_label",
 			"equipped_empty_label",
 			"inventory_empty_label",
 			"reputation_empty_label",
@@ -31,10 +33,12 @@ static func register_contract() -> void:
 			"screen_description": TYPE_STRING,
 			"stat_title": TYPE_STRING,
 			"cancel_label": TYPE_STRING,
+			"show_currencies": TYPE_BOOL,
 			"show_equipped": TYPE_BOOL,
 			"show_inventory": TYPE_BOOL,
 			"show_reputation": TYPE_BOOL,
 			"inventory_limit": TYPE_INT,
+			"currency_empty_label": TYPE_STRING,
 			"equipped_empty_label": TYPE_STRING,
 			"inventory_empty_label": TYPE_STRING,
 			"reputation_empty_label": TYPE_STRING,
@@ -54,6 +58,7 @@ func build_view_model() -> Dictionary:
 	var title := _get_string_param(_params, "screen_title", fallback_title)
 	var description := _get_string_param(_params, "screen_description", "Review the selected entity's stats, equipment, inventory, and standing.")
 	var stat_title := _get_string_param(_params, "stat_title", "Stats")
+	var show_currencies := _get_bool_param(_params, "show_currencies", true)
 	var show_equipped := _get_bool_param(_params, "show_equipped", true)
 	var show_inventory := _get_bool_param(_params, "show_inventory", true)
 	var show_reputation := _get_bool_param(_params, "show_reputation", true)
@@ -64,15 +69,18 @@ func build_view_model() -> Dictionary:
 			"description": description,
 			"portrait": BACKEND_HELPERS.build_entity_portrait_view_model(null, "Unknown Entity", "The requested entity could not be resolved."),
 			"stat_sheet": BACKEND_HELPERS.build_stat_sheet_view_model(null, stat_title),
+			"currency_rows": [],
 			"equipped_rows": [],
 			"inventory_rows": [],
 			"reputation_rows": [],
+			"show_currencies": show_currencies,
 			"show_equipped": show_equipped,
 			"show_inventory": show_inventory,
 			"show_reputation": show_reputation,
 			"status_text": "The entity sheet target could not be resolved.",
 			"summary_text": "",
 			"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
+			"currency_empty_label": _get_empty_label("currency_empty_label", "No currencies are recorded."),
 			"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
 			"inventory_empty_label": _get_empty_label("inventory_empty_label", "Inventory is empty."),
 			"reputation_empty_label": _get_empty_label("reputation_empty_label", "No faction standing is recorded."),
@@ -82,24 +90,28 @@ func build_view_model() -> Dictionary:
 			"inventory_shown_stacks": 0,
 		}
 
+	var currency_rows := _build_currency_rows(target_entity)
 	var equipped_rows := _build_equipped_rows(target_entity)
 	var inventory_result := _build_inventory_result(target_entity)
-	var inventory_rows: Array[Dictionary] = inventory_result.get("rows", [])
+	var inventory_rows := _read_dictionary_rows(inventory_result.get("rows", []))
 	var reputation_rows := _build_reputation_rows(target_entity)
 	return {
 		"title": title,
 		"description": description,
 		"portrait": BACKEND_HELPERS.build_entity_portrait_view_model(target_entity, target_entity.entity_id),
 		"stat_sheet": BACKEND_HELPERS.build_stat_sheet_view_model(target_entity, stat_title),
+		"currency_rows": currency_rows,
 		"equipped_rows": equipped_rows,
 		"inventory_rows": inventory_rows,
 		"reputation_rows": reputation_rows,
+		"show_currencies": show_currencies,
 		"show_equipped": show_equipped,
 		"show_inventory": show_inventory,
 		"show_reputation": show_reputation,
 		"status_text": _build_status_text(target_entity, equipped_rows, inventory_result),
 		"summary_text": _build_summary_text(target_entity, equipped_rows, inventory_result),
 		"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
+		"currency_empty_label": _get_empty_label("currency_empty_label", "No currencies are recorded."),
 		"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
 		"inventory_empty_label": _get_empty_label("inventory_empty_label", "Inventory is empty."),
 		"reputation_empty_label": _get_empty_label("reputation_empty_label", "No faction standing is recorded."),
@@ -134,6 +146,25 @@ func _build_equipped_rows(entity: EntityInstance) -> Array[Dictionary]:
 			"display_name": str(template.get("display_name", part.template_id)),
 			"description": str(template.get("description", "")),
 			"stat_summary": _build_part_instance_summary(template, part),
+		})
+	return rows
+
+
+func _build_currency_rows(entity: EntityInstance) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if entity == null:
+		return rows
+	var currency_ids: Array = entity.currencies.keys()
+	currency_ids.sort()
+	var currency_symbol := BACKEND_HELPERS.get_currency_symbol()
+	for currency_id_value in currency_ids:
+		var currency_id := str(currency_id_value)
+		if currency_id.is_empty():
+			continue
+		rows.append({
+			"currency_id": currency_id,
+			"display_name": BACKEND_HELPERS.humanize_id(currency_id),
+			"stat_summary": _format_currency_amount(currency_symbol, entity.get_currency(currency_id)),
 		})
 	return rows
 
@@ -321,7 +352,8 @@ func _build_summary_text(entity: EntityInstance, equipped_rows: Array[Dictionary
 	if not entity.location_id.is_empty():
 		var location := DataManager.get_location(entity.location_id)
 		location_label = str(location.get("display_name", location_label))
-	return "%s equipped, %s inventory stacks shown of %s total, location: %s." % [
+	return "%s currency balances, %s equipped, %s inventory stacks shown of %s total, location: %s." % [
+		str(entity.currencies.size()),
 		str(equipped_rows.size()),
 		str(int(inventory_result.get("shown_stacks", 0))),
 		str(int(inventory_result.get("total_stacks", 0))),
@@ -330,8 +362,9 @@ func _build_summary_text(entity: EntityInstance, equipped_rows: Array[Dictionary
 
 
 func _build_status_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_result: Dictionary) -> String:
-	return "%s has %s equipped parts, %s inventory items, and %s inventory stacks." % [
+	return "%s has %s currency balances, %s equipped parts, %s inventory items, and %s inventory stacks." % [
 		BACKEND_HELPERS.get_entity_display_name(entity, entity.entity_id),
+		str(entity.currencies.size()),
 		str(equipped_rows.size()),
 		str(int(inventory_result.get("total_instances", 0))),
 		str(int(inventory_result.get("total_stacks", 0))),
@@ -350,3 +383,23 @@ func _read_float(value: Variant) -> float:
 	if value is int or value is float:
 		return float(value)
 	return 0.0
+
+
+func _read_dictionary_rows(value: Variant) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if not value is Array:
+		return rows
+	var values: Array = value
+	for entry_value in values:
+		if not entry_value is Dictionary:
+			continue
+		var entry: Dictionary = entry_value
+		rows.append(entry.duplicate(true))
+	return rows
+
+
+func _format_currency_amount(symbol: String, amount: float) -> String:
+	var amount_text := "%d" % int(roundf(amount)) if absf(amount - roundf(amount)) < 0.001 else "%.2f" % amount
+	if symbol.is_empty():
+		return amount_text
+	return "%s%s" % [symbol, amount_text]

@@ -1,6 +1,7 @@
 extends GutTest
 
 const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
+const ASSEMBLY_COMMIT_SERVICE := preload("res://systems/assembly_commit_service.gd")
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 
 
@@ -165,6 +166,39 @@ func test_vendor_inventory_install_charges_and_moves_exact_instance() -> void:
 	if equipped_implant == null:
 		return
 	assert_eq(equipped_implant.instance_id, "theta_implant_001")
+
+
+func test_commit_entity_plays_template_equip_sound_when_a_new_part_is_equipped() -> void:
+	var test_audio_path := "res://mods/base/assets/audio/sfx_trade.wav"
+	DataManager.parts["base:test_audio_part"] = {
+		"id": "base:test_audio_part",
+		"display_name": "Audio Test Part",
+		"tags": ["audio_slot"],
+		"stats": {},
+		"equip_sound": test_audio_path,
+	}
+	var entity_template := {
+		"entity_id": "base:test_audio_entity",
+		"display_name": "Audio Test Entity",
+		"provides_sockets": [
+			{"id": "audio_slot", "accepted_tags": ["audio_slot"], "label": "Audio Slot"}
+		],
+		"inventory": [],
+		"assembly_socket_map": {},
+	}
+	DataManager.entities["base:test_audio_entity"] = entity_template.duplicate(true)
+	var previous_entity := EntityInstance.from_template(entity_template)
+	var committed_entity := previous_entity.duplicate_instance()
+	assert_true(committed_entity.set_equipped_template("audio_slot", "base:test_audio_part"))
+
+	var before_snapshot := AudioManager.get_debug_snapshot()
+	ASSEMBLY_COMMIT_SERVICE.commit_entity(previous_entity, committed_entity, "base:test_audio_entity")
+	var after_snapshot := AudioManager.get_debug_snapshot()
+
+	assert_eq(
+		int(after_snapshot.get("sfx_play_requests", 0)),
+		int(before_snapshot.get("sfx_play_requests", 0)) + 1
+	)
 
 
 func _make_part_instance(template_id: String, instance_id: String) -> PartInstance:

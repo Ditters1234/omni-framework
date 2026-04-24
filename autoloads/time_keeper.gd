@@ -92,6 +92,7 @@ func advance_tick() -> void:
 	_normalize_game_state_time(ticks_per_day)
 	GameState.current_tick += 1
 	_tick_accumulator = posmod(_tick_accumulator + 1, ticks_per_day)
+	ScriptHookService.invoke_part_tick_hooks(GameState.current_tick)
 	_emit_tick(GameState.current_tick)
 
 	if _tick_accumulator == 0:

@@ -26,6 +26,8 @@ static func dispatch(action: Dictionary) -> void:
 	match action_type:
 		"give_currency", "add_currency": _action_give_currency(action)
 		"take_currency", "remove_currency": _action_take_currency(action)
+		"learn_recipe":     _action_learn_recipe(action)
+		"modify_reputation", "add_reputation", "remove_reputation": _action_modify_reputation(action)
 		"give_part":        _action_give_part(action)
 		"remove_part", "consume": _action_remove_part(action)
 		"set_flag":         _action_set_flag(action)
@@ -67,6 +69,33 @@ static func _action_take_currency(action: Dictionary) -> void:
 		str(action.get("currency_id", action.get("key", ""))),
 		float(action.get("amount", 0))
 	)
+
+
+static func _action_learn_recipe(action: Dictionary) -> void:
+	var recipe_id := str(action.get("recipe_id", ""))
+	if recipe_id.is_empty() or not DataManager.has_recipe(recipe_id):
+		return
+	var learned_flag := "learned:%s" % recipe_id
+	var entity_id := str(action.get("entity_id", "player"))
+	if entity_id == "global":
+		GameState.set_flag(learned_flag, true)
+		return
+	var entity := _resolve_entity(entity_id)
+	if entity != null:
+		entity.set_flag(learned_flag, true)
+
+
+static func _action_modify_reputation(action: Dictionary) -> void:
+	var entity := _resolve_entity(str(action.get("entity_id", "player")))
+	if entity == null:
+		return
+	var faction_id := str(action.get("faction_id", ""))
+	if faction_id.is_empty():
+		return
+	var amount := float(action.get("amount", action.get("delta", 0.0)))
+	if str(action.get("type", "")) == "remove_reputation":
+		amount = -absf(amount)
+	entity.add_reputation(faction_id, amount)
 
 
 static func _action_give_part(action: Dictionary) -> void:

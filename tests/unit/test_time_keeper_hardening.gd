@@ -1,5 +1,6 @@
 extends GutTest
 
+const TEST_TICK_HOOK_PATH := "res://tests/fixtures/hooks/test_part_tick_hook.gd"
 
 var _original_config: Dictionary = {}
 
@@ -86,3 +87,28 @@ func test_advance_tick_emits_tick_and_day_events_through_game_events() -> void:
 	assert_eq(time_history.size(), 2)
 	assert_eq(str(time_history[0].get("signal_name", "")), "tick_advanced")
 	assert_eq(str(time_history[1].get("signal_name", "")), "day_advanced")
+
+
+func test_advance_tick_dispatches_on_tick_for_carried_part_hooks() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+
+	DataManager.parts["base:test_tick_hook_part"] = {
+		"id": "base:test_tick_hook_part",
+		"display_name": "Tick Hook Part",
+		"tags": ["test_tick_hook"],
+		"stats": {},
+		"script_path": TEST_TICK_HOOK_PATH,
+	}
+	var part := PartInstance.from_template(DataManager.get_part("base:test_tick_hook_part"))
+	part.instance_id = "base:test_tick_hook_part:001"
+	player.add_part(part)
+	GameState.set_flag("test_tick_hook_call_count", 0)
+	GameState.set_flag("test_tick_hook_last_tick", -1)
+
+	TimeKeeper.advance_tick()
+
+	assert_eq(int(GameState.get_flag("test_tick_hook_call_count", 0)), 1)
+	assert_eq(int(GameState.get_flag("test_tick_hook_last_tick", -1)), GameState.current_tick)
