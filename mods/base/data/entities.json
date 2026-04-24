@@ -4,6 +4,7 @@
       "entity_id": "base:player",
       "display_name": "Operative",
       "description": "Freshly assembled and dropped into the threshold. No history. No allegiance. Just parts and potential.",
+      "portrait": "res://mods/base/assets/entity_player.png",
       "location_id": "base:apartment",
       "currencies": { "credits": 400, "data_shards": 2 },
       "stats": {
@@ -45,6 +46,7 @@
       "entity_id": "base:npc_theta",
       "display_name": "Quartermaster Theta",
       "description": "A heavily augmented ripperdoc who runs the clinic in Market Row. She'll sell you parts, install them, and only judge you a little.",
+      "portrait": "res://mods/base/assets/entity_theta.png",
       "location_id": "base:market_row",
       "currencies": { "credits": 9999, "data_shards": 50 },
       "stats": { "charisma": 4, "power": 2, "health": 150, "health_max": 150 },
@@ -107,6 +109,7 @@
       "entity_id": "base:npc_fixer",
       "display_name": "Kael",
       "description": "A soft-spoken fixer who operates out of the old warehouse. Hands out contracts for the Threshold Syndicate and always pays on time.",
+      "portrait": "res://mods/base/assets/entity_kael.png",
       "location_id": "base:warehouse",
       "currencies": { "credits": 5000 },
       "stats": { "charisma": 5, "luck": 3, "health": 80, "health_max": 80 },

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dlqsbm5rsv8cs"
-path="res://.godot/imported/ach_trip.svg-23ac03b7592f9a617cd2dade44c80297.ctex"
+uid="uid://miceg8rior3p"
+path="res://.godot/imported/charm.png-d3f0d1008d55f383a0175942bb997bb3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/ach_trip.svg"
-dest_files=["res://.godot/imported/ach_trip.svg-23ac03b7592f9a617cd2dade44c80297.ctex"]
+source_file="res://mods/base/assets/charm.png"
+dest_files=["res://.godot/imported/charm.png-d3f0d1008d55f383a0175942bb997bb3.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

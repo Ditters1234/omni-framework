@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dacj1b4kytvpg"
-path="res://.godot/imported/legs.svg-2d18694b0a2d2ff60aefc30a57e9461b.ctex"
+uid="uid://bu80t3fa1ecrw"
+path="res://.godot/imported/optic.png-84f9eabf441f4573b9a5429a527b4543.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/legs.svg"
-dest_files=["res://.godot/imported/legs.svg-2d18694b0a2d2ff60aefc30a57e9461b.ctex"]
+source_file="res://mods/base/assets/optic.png"
+dest_files=["res://.godot/imported/optic.png-84f9eabf441f4573b9a5429a527b4543.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://8uhw3jirrxyx"
-path="res://.godot/imported/optic.svg-74ef6570ecb47210def4941dec15a386.ctex"
+uid="uid://c71hna2p2h6dn"
+path="res://.godot/imported/hands.png-bdd09b58a98a15bedfe05e93087f54e2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/optic.svg"
-dest_files=["res://.godot/imported/optic.svg-74ef6570ecb47210def4941dec15a386.ctex"]
+source_file="res://mods/base/assets/hands.png"
+dest_files=["res://.godot/imported/hands.png-bdd09b58a98a15bedfe05e93087f54e2.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

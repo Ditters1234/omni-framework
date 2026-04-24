@@ -2,7 +2,7 @@
   "parts": [
     {
       "id": "base:human_head",
-      "sprite": "res://mods/base/assets/head.svg",
+      "sprite": "res://mods/base/assets/head.png",
       "display_name": "Organic Skull Assembly",
       "description": "Stock biological cranium. Houses standard neural pathways and one implant socket.",
       "tags": ["head", "organic"],
@@ -19,7 +19,7 @@
     },
     {
       "id": "base:synth_head",
-      "sprite": "res://mods/base/assets/head.svg",
+      "sprite": "res://mods/base/assets/head.png",
       "display_name": "Composite Faceplate",
       "description": "Reinforced polymer shell with embedded threat scanner. Trades personality for durability.",
       "tags": ["head", "synthetic"],
@@ -32,7 +32,7 @@
     },
     {
       "id": "base:human_torso",
-      "sprite": "res://mods/base/assets/torso.svg",
+      "sprite": "res://mods/base/assets/torso.png",
       "display_name": "Organic Chassis",
       "description": "Standard ribcage and organ housing. Accepts subdermal plating.",
       "tags": ["torso", "organic"],
@@ -45,7 +45,7 @@
     },
     {
       "id": "base:synth_torso",
-      "sprite": "res://mods/base/assets/torso.svg",
+      "sprite": "res://mods/base/assets/torso.png",
       "display_name": "Hardshell Frame",
       "description": "Military-surplus exo-torso. Heavy, expensive, and nearly indestructible.",
       "tags": ["torso", "synthetic"],
@@ -58,7 +58,7 @@
     },
     {
       "id": "base:human_arms",
-      "sprite": "res://mods/base/assets/arms.svg",
+      "sprite": "res://mods/base/assets/arms.png",
       "display_name": "Organic Arms",
       "description": "Flesh and bone manipulators. Reliable and cheap to repair.",
       "tags": ["arms", "organic"],
@@ -72,7 +72,7 @@
     },
     {
       "id": "base:synth_arms",
-      "sprite": "res://mods/base/assets/arms.svg",
+      "sprite": "res://mods/base/assets/arms.png",
       "display_name": "Hydraulic Arms",
       "description": "Pneumatic servos replace muscle fiber. Grip strength exceeds human limits.",
       "tags": ["arms", "synthetic"],
@@ -86,7 +86,7 @@
     },
     {
       "id": "base:human_legs",
-      "sprite": "res://mods/base/assets/legs.svg",
+      "sprite": "res://mods/base/assets/legs.png",
       "display_name": "Organic Legs",
       "description": "Standard bipedal locomotion. Good endurance on flat ground.",
       "tags": ["legs", "organic"],
@@ -97,7 +97,7 @@
     },
     {
       "id": "base:synth_legs",
-      "sprite": "res://mods/base/assets/legs.svg",
+      "sprite": "res://mods/base/assets/legs.png",
       "display_name": "Piston Legs",
       "description": "Carbon-fiber struts with shock absorbers. Sprint without fatigue.",
       "tags": ["legs", "synthetic"],
@@ -108,7 +108,7 @@
     },
     {
       "id": "base:human_hands",
-      "sprite": "res://mods/base/assets/hands.svg",
+      "sprite": "res://mods/base/assets/hands.png",
       "display_name": "Organic Hands",
       "description": "Ten fingers. Good for locks, triggers, and handshakes.",
       "tags": ["hands", "organic"],
@@ -119,7 +119,7 @@
     },
     {
       "id": "base:human_feet",
-      "sprite": "res://mods/base/assets/feet.svg",
+      "sprite": "res://mods/base/assets/feet.png",
       "display_name": "Organic Feet",
       "description": "Standard ground contact. Gets the job done.",
       "tags": ["feet", "organic"],
@@ -130,7 +130,7 @@
     },
     {
       "id": "base:optic_implant",
-      "sprite": "res://mods/base/assets/optic.svg",
+      "sprite": "res://mods/base/assets/optic.png",
       "display_name": "Kiroshi Optic Scanner",
       "description": "Entry-level optical augment. Highlights threats and reads barcodes at fifty meters.",
       "tags": ["neural_implant", "device"],
@@ -141,7 +141,7 @@
     },
     {
       "id": "base:reflex_booster",
-      "sprite": "res://mods/base/assets/optic.svg",
+      "sprite": "res://mods/base/assets/optic.png",
       "display_name": "Synaptic Accelerator",
       "description": "Neural co-processor that shaves milliseconds off reaction time. Expensive but worth it in a fight.",
       "tags": ["neural_implant", "device"],
@@ -152,7 +152,7 @@
     },
     {
       "id": "base:kevlar_weave",
-      "sprite": "res://mods/base/assets/armor.svg",
+      "sprite": "res://mods/base/assets/armor.png",
       "display_name": "Kevlar Weave",
       "description": "Subdermal ballistic mesh. Stops small caliber rounds and knife edges.",
       "tags": ["subdermal_armor", "armor"],
@@ -163,7 +163,7 @@
     },
     {
       "id": "base:ceramic_plating",
-      "sprite": "res://mods/base/assets/armor.svg",
+      "sprite": "res://mods/base/assets/armor.png",
       "display_name": "Ceramic Trauma Plates",
       "description": "Military-grade ceramic inserts. Heavy but they take the hit so you don't have to.",
       "tags": ["subdermal_armor", "armor"],
@@ -174,7 +174,7 @@
     },
     {
       "id": "base:stun_baton",
-      "sprite": "res://mods/base/assets/baton.svg",
+      "sprite": "res://mods/base/assets/baton.png",
       "display_name": "Stun Baton",
       "description": "Close-range crowd control. Low lethality, high compliance.",
       "tags": ["weapon", "melee"],
@@ -184,7 +184,7 @@
     },
     {
       "id": "base:mono_blade",
-      "sprite": "res://mods/base/assets/baton.svg",
+      "sprite": "res://mods/base/assets/baton.png",
       "display_name": "Monomolecular Blade",
       "description": "Forearm-mounted cutting edge one atom wide. Cuts through anything, including your budget.",
       "tags": ["weapon", "melee"],
@@ -194,6 +194,7 @@
     },
     {
       "id": "base:salvage_chip",
+      "sprite": "res://mods/base/assets/chip.png",
       "display_name": "Salvage Chip",
       "description": "Recovered circuitry. Used as a crafting component.",
       "tags": ["material", "salvage"],
@@ -203,6 +204,7 @@
     },
     {
       "id": "base:scrap_plate",
+      "sprite": "res://mods/base/assets/plate.png",
       "display_name": "Scrap Plate",
       "description": "Sheet metal off a wrecked drone. Useful for improvised armor.",
       "tags": ["material", "salvage"],
@@ -212,6 +214,7 @@
     },
     {
       "id": "base:diagnostic_grip",
+      "sprite": "res://mods/base/assets/grip.png",
       "display_name": "Diagnostic Grip",
       "description": "Improvised arm-mounted scanner cobbled from salvage chips. Weak but free.",
       "tags": ["arm_mod", "crafted"],
@@ -221,6 +224,7 @@
     },
     {
       "id": "base:field_medkit",
+      "sprite": "res://mods/base/assets/medkit.png",
       "display_name": "Field Medkit",
       "description": "Single-use trauma sealant. Restores health on consumption.",
       "tags": ["consumable", "medical"],
@@ -230,6 +234,7 @@
     },
     {
       "id": "base:lucky_charm",
+      "sprite": "res://mods/base/assets/charm.png",
       "display_name": "Loaded Coin",
       "description": "A coin with both sides showing heads. Supposedly brings luck.",
       "tags": ["accessory", "trinket"],

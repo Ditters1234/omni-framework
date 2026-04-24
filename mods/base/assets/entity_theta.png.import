@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cn4mxagw6olah"
-path="res://.godot/imported/ach_buy.svg-d398a7dedb5580fe7742256fb99e9485.ctex"
+uid="uid://soh6eg6kw708"
+path="res://.godot/imported/entity_theta.png-ded259bd9881e35d098b4c74f5529d20.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/ach_buy.svg"
-dest_files=["res://.godot/imported/ach_buy.svg-d398a7dedb5580fe7742256fb99e9485.ctex"]
+source_file="res://mods/base/assets/entity_theta.png"
+dest_files=["res://.godot/imported/entity_theta.png-ded259bd9881e35d098b4c74f5529d20.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

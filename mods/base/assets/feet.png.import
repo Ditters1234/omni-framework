@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://0yr50tmx2l8p"
-path="res://.godot/imported/hands.svg-5f42bf0ddde267a817d0ab10f516509a.ctex"
+uid="uid://bsswopv6afwa2"
+path="res://.godot/imported/feet.png-520573261985c94f62543a96cc44677b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/hands.svg"
-dest_files=["res://.godot/imported/hands.svg-5f42bf0ddde267a817d0ab10f516509a.ctex"]
+source_file="res://mods/base/assets/feet.png"
+dest_files=["res://.godot/imported/feet.png-520573261985c94f62543a96cc44677b.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

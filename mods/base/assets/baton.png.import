@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bhxea3x2b1gf8"
-path="res://.godot/imported/head.svg-61cf8e4b39177477c4e30d1aedb6a25a.ctex"
+uid="uid://3qe0dijloxou"
+path="res://.godot/imported/baton.png-d894724c9877558ce77424ad8ffeeeb1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/head.svg"
-dest_files=["res://.godot/imported/head.svg-61cf8e4b39177477c4e30d1aedb6a25a.ctex"]
+source_file="res://mods/base/assets/baton.png"
+dest_files=["res://.godot/imported/baton.png-d894724c9877558ce77424ad8ffeeeb1.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

@@ -270,6 +270,8 @@ Parts are the core content building blocks. They can represent equipment, module
 - `equip_sound`
 - `script_path`
 
+`sprite` can point directly at imported image assets such as `.png` files inside your mod's `assets/` folder.
+
 `required_tags` lists tags that must be present on other currently equipped parts for this part to remain equipped. If a required provider is removed, the engine automatically unequips dependent parts and returns them to inventory. For example, arms can require `torso`, hands can require `arms`, and an implant can require `head`.
 
 `custom_fields` declares instance-level values a part can carry. Each field should have an `id`, `label`, `type`, and optional `default_value` / `options`. Runtime instances store actual values in `custom_values`, either from the template defaults or from an entity inventory entry:
@@ -402,6 +404,11 @@ Entities are the live actors and containers in the game. Players, NPCs, shops, c
 - `assembly_instance_ids`
 - `owned_entity_ids`
 - `interactions`
+- `portrait`
+- `portrait_id`
+- `sprite`
+
+Entity-facing UI such as `EntityPortrait` can render optional portrait/emblem art from `portrait`, `portrait_id`, or `sprite` when those fields are present.
 
 ### Current patch example
 
@@ -530,6 +537,14 @@ Factions group entities, territory, tasks, and reputation thresholds.
   ]
 }
 ```
+
+Useful optional faction art fields:
+- `emblem_path`
+- `emblem_id`
+- `icon_id`
+- `portrait_id`
+
+Faction-facing UI such as `FactionBadge` resolves emblem art from those fields when provided.
 
 ---
 

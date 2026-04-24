@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://crqvolc6qu0p5"
-path="res://.godot/imported/torso.svg-4a7fcf82c7f588b4cd23dc4f5fbf416e.ctex"
+uid="uid://e5u6crqbtal1"
+path="res://.godot/imported/ach_contract.png-51a35b6701a513d1e4bec227a8f176ef.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/torso.svg"
-dest_files=["res://.godot/imported/torso.svg-4a7fcf82c7f588b4cd23dc4f5fbf416e.ctex"]
+source_file="res://mods/base/assets/ach_contract.png"
+dest_files=["res://.godot/imported/ach_contract.png-51a35b6701a513d1e4bec227a8f176ef.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

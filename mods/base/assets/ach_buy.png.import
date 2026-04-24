@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://chkjs8f5kqn6b"
-path="res://.godot/imported/baton.svg-e0f86840183892f0c372a488c86275cc.ctex"
+uid="uid://bjsirfcr0h6gm"
+path="res://.godot/imported/ach_buy.png-30d466be9691b4bcffd062bf0f8a5aaf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/baton.svg"
-dest_files=["res://.godot/imported/baton.svg-e0f86840183892f0c372a488c86275cc.ctex"]
+source_file="res://mods/base/assets/ach_buy.png"
+dest_files=["res://.godot/imported/ach_buy.png-30d466be9691b4bcffd062bf0f8a5aaf.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

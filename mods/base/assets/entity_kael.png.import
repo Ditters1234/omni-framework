@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://df2oru8uywdwl"
-path="res://.godot/imported/arms.svg-c58687feb10df11ab24a4fd69c47b07e.ctex"
+uid="uid://ca7a2k1cf1m0r"
+path="res://.godot/imported/entity_kael.png-f18e1c1a05b6764471c1da9da1cc6190.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/arms.svg"
-dest_files=["res://.godot/imported/arms.svg-c58687feb10df11ab24a4fd69c47b07e.ctex"]
+source_file="res://mods/base/assets/entity_kael.png"
+dest_files=["res://.godot/imported/entity_kael.png-f18e1c1a05b6764471c1da9da1cc6190.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

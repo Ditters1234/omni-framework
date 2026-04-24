@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://messvpxpb87y"
-path="res://.godot/imported/feet.svg-4a94a64bb18e2743fa7fffd64533303f.ctex"
+uid="uid://dvf3vcyc7tklj"
+path="res://.godot/imported/torso.png-7e21de26e96e39e1fa5ece68fa340339.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mods/base/assets/feet.svg"
-dest_files=["res://.godot/imported/feet.svg-4a94a64bb18e2743fa7fffd64533303f.ctex"]
+source_file="res://mods/base/assets/torso.png"
+dest_files=["res://.godot/imported/torso.png-7e21de26e96e39e1fa5ece68fa340339.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
