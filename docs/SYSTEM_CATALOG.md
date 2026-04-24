@@ -155,7 +155,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 
 | Backend Class | Scene | Validated By | Purpose | Modder Docs |
 |---|---|---|---|---|
-| `AssemblyEditorBackend` | `ui/screens/backends/assembly_editor_screen.tscn` | Part attachment, slot limits, stat budget | Attach/detach parts, preview stat changes. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `AssemblyEditorBackend` | `ui/screens/backends/assembly_editor_screen.tscn` | Part attachment, slot limits, stat budget | Attach/detach parts, preview stat changes, and edit selected equipped-part `custom_fields` in the draft session before confirm. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `ExchangeBackend` | `ui/screens/backends/exchange_screen.tscn` | Inventory lists, pricing, currency type | Buy/sell items from NPC vendor. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `ListBackend` | `ui/screens/backends/list_screen.tscn` | Array of displayable items | Render a data list (journal, bestiary, etc.). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `ChallengeBackend` | `ui/screens/backends/challenge_screen.tscn` | Stat check rules, pass/fail actions | Stat-check pass/fail outcome. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
@@ -189,7 +189,7 @@ These are **reusable widgets** used inside screens. Located in `ui/components/`.
 | `currency_display` | `currency_display.tscn` | Assembly Editor, Exchange | Currency value + icon. |
 | `currency_summary_panel` | `currency_summary_panel.tscn` | Assembly Editor | Player currency budget overview. |
 | `part_card` | `part_card.tscn` | Exchange, Catalog, Inventory | Part display card with stats and price. |
-| `part_detail_panel` | `part_detail_panel.tscn` | Assembly Editor | Part preview sidebar with stat deltas. |
+| `part_detail_panel` | `part_detail_panel.tscn` | Assembly Editor | Part preview sidebar with stat deltas plus dynamic editors for the selected part's custom fields. |
 | `stat_delta_sheet` | `stat_delta_sheet.tscn` | Assembly Editor | Before/after stat diff. |
 | `assembly_slot_row` | `assembly_slot_row.tscn` | Assembly Editor | Reusable slot selector row. |
 | `entity_portrait` | `entity_portrait.tscn` | Gameplay Shell, Dialogue, Tasks | Entity card (NPC or player). |

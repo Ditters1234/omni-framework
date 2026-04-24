@@ -7,6 +7,10 @@ const SEMANTIC_THEME_TYPE := "OmniSemantic"
 const FALLBACK_POSITIVE_COLOR := Color("#8fd18f")
 const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
 
+## Emitted when the user changes a custom field value.
+## Connect to this from whatever presenter wires the assembly editor.
+signal custom_field_changed(slot_id: String, field_id: String, value: String)
+
 @onready var _slot_label: Label = $MarginContainer/VBoxContainer/SlotLabel
 @onready var _texture_rect: TextureRect = $MarginContainer/VBoxContainer/TextureRect
 @onready var _title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
@@ -14,8 +18,13 @@ const FALLBACK_NEGATIVE_COLOR := Color("#e07a7a")
 @onready var _description_label: Label = $MarginContainer/VBoxContainer/DescriptionLabel
 @onready var _price_label: Label = $MarginContainer/VBoxContainer/PriceLabel
 @onready var _stats_label: RichTextLabel = $MarginContainer/VBoxContainer/StatsLabel
+@onready var _custom_fields_container: VBoxContainer = $MarginContainer/VBoxContainer/CustomFieldsContainer
 
 var _pending_view_model: Dictionary = {}
+var _current_slot_id: String = ""
+## Tracks which field definitions are currently rendered so we can skip
+## rebuilding the controls when the same set of fields is shown again.
+var _rendered_field_ids: Array[String] = []
 
 
 func _ready() -> void:
@@ -44,6 +53,8 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	if default_sprite_paths_data is Dictionary:
 		default_sprite_paths = default_sprite_paths_data
 
+	_current_slot_id = str(view_model.get("slot_id", ""))
+
 	_slot_label.text = slot_label
 	_title_label.text = preview_name
 	_subtitle_label.text = "Current: %s" % current_name
@@ -57,6 +68,137 @@ func _apply_view_model(view_model: Dictionary) -> void:
 		_texture_rect.texture = null
 	_stats_label.text = "\n".join(_normalize_lines(stats_lines_data))
 
+	# --- Custom fields ---
+	var field_defs_data: Variant = view_model.get("custom_field_definitions", [])
+	var custom_values_data: Variant = view_model.get("custom_values", {})
+	var field_defs: Array = field_defs_data if field_defs_data is Array else []
+	var custom_values: Dictionary = custom_values_data if custom_values_data is Dictionary else {}
+	_rebuild_custom_fields(field_defs, custom_values)
+
+
+# ---------------------------------------------------------------------------
+# Custom field UI
+# ---------------------------------------------------------------------------
+
+func _rebuild_custom_fields(field_defs: Array, custom_values: Dictionary) -> void:
+	if _custom_fields_container == null:
+		return
+
+	# Build list of incoming field IDs to compare with what's rendered.
+	var incoming_ids: Array[String] = []
+	for def_value in field_defs:
+		if def_value is Dictionary:
+			var def: Dictionary = def_value
+			incoming_ids.append(str(def.get("id", "")))
+
+	# If the field set hasn't changed, just update values in place.
+	if incoming_ids == _rendered_field_ids:
+		_update_custom_field_values(custom_values)
+		return
+
+	# Full rebuild.
+	for child in _custom_fields_container.get_children():
+		child.queue_free()
+	_rendered_field_ids.clear()
+
+	if field_defs.is_empty():
+		_custom_fields_container.visible = false
+		return
+
+	_custom_fields_container.visible = true
+
+	var header := Label.new()
+	header.text = "Custom Fields"
+	header.add_theme_font_size_override("font_size", 13)
+	_custom_fields_container.add_child(header)
+
+	for def_value in field_defs:
+		if not def_value is Dictionary:
+			continue
+		var def: Dictionary = def_value
+		var field_id := str(def.get("id", ""))
+		if field_id.is_empty():
+			continue
+		var label_text := str(def.get("label", field_id))
+		var current_value := str(custom_values.get(field_id, def.get("default_value", "")))
+		var options_data: Variant = def.get("options", null)
+
+		var row := HBoxContainer.new()
+		row.set_meta("_field_id", field_id)
+
+		var label := Label.new()
+		label.text = "%s:" % label_text
+		label.custom_minimum_size.x = 90
+		row.add_child(label)
+
+		if options_data is Array and not (options_data as Array).is_empty():
+			var options: Array = options_data
+			var option_btn := OptionButton.new()
+			option_btn.set_meta("_field_id", field_id)
+			option_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var selected_index: int = 0
+			for i in range(options.size()):
+				var opt_text := str(options[i])
+				option_btn.add_item(opt_text)
+				if opt_text == current_value:
+					selected_index = i
+			option_btn.selected = selected_index
+			option_btn.item_selected.connect(_on_option_selected.bind(field_id, option_btn))
+			row.add_child(option_btn)
+		else:
+			var line_edit := LineEdit.new()
+			line_edit.set_meta("_field_id", field_id)
+			line_edit.text = current_value
+			line_edit.placeholder_text = label_text
+			line_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			line_edit.text_submitted.connect(_on_line_edit_submitted.bind(field_id))
+			line_edit.focus_exited.connect(_on_line_edit_focus_exited.bind(field_id, line_edit))
+			row.add_child(line_edit)
+
+		_custom_fields_container.add_child(row)
+		_rendered_field_ids.append(field_id)
+
+
+func _update_custom_field_values(custom_values: Dictionary) -> void:
+	if _custom_fields_container == null:
+		return
+	for child in _custom_fields_container.get_children():
+		if not child is HBoxContainer:
+			continue
+		var field_id := str(child.get_meta("_field_id", ""))
+		if field_id.is_empty():
+			continue
+		var value := str(custom_values.get(field_id, ""))
+		for sub in child.get_children():
+			if sub is OptionButton:
+				var option_btn: OptionButton = sub
+				for i in range(option_btn.item_count):
+					if option_btn.get_item_text(i) == value:
+						if option_btn.selected != i:
+							option_btn.selected = i
+						break
+			elif sub is LineEdit:
+				var line_edit: LineEdit = sub
+				if not line_edit.has_focus() and line_edit.text != value:
+					line_edit.text = value
+
+
+func _on_option_selected(_index: int, field_id: String, option_btn: OptionButton) -> void:
+	var value := option_btn.get_item_text(option_btn.selected)
+	custom_field_changed.emit(_current_slot_id, field_id, value)
+
+
+func _on_line_edit_submitted(new_text: String, field_id: String) -> void:
+	custom_field_changed.emit(_current_slot_id, field_id, new_text)
+
+
+func _on_line_edit_focus_exited(field_id: String, line_edit: LineEdit) -> void:
+	custom_field_changed.emit(_current_slot_id, field_id, line_edit.text)
+
+
+# ---------------------------------------------------------------------------
+# Helpers (unchanged)
+# ---------------------------------------------------------------------------
 
 func _normalize_lines(lines: Variant) -> PackedStringArray:
 	var result := PackedStringArray()

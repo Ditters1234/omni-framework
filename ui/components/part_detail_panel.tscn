@@ -46,3 +46,7 @@ bbcode_enabled = false
 fit_content = false
 scroll_active = true
 text = "No stat changes."
+
+[node name="CustomFieldsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+visible = false

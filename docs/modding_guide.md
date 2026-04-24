@@ -855,6 +855,8 @@ No required params, but common useful ones are:
 
 `option_source_entity_id` changes the option list from a template catalog to exact inventory part instances. When the source entity resolves to the same runtime entity as `target_entity_id` (for example `player` building from their own inventory), applying a part moves that owned instance into the slot and does not spend currency. When the source is a different entity, pair it with `payment_recipient_id` for a vendor-style install; the source instance is removed, the exact instance is equipped on the target, and currency is transferred during the same staged commit.
 
+When the selected equipped part template declares `custom_fields`, the assembly editor sidebar renders them as editable controls inside the draft session. Fields with an `options` array render as dropdowns, and fields without options render as free-text inputs. Those edits stay draft-only until the player confirms the build, which means `EntitySheetBackend` remains read-only while `AssemblyEditorBackend` is the place to author per-instance values such as eye color, hair color, callsigns, or serial numbers.
+
 ### Two important authored-data distinctions
 
 #### Entity interaction shape

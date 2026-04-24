@@ -122,6 +122,10 @@ func _get_currency_summary_panel() -> CurrencySummaryPanel:
 func _get_part_detail_panel() -> PartDetailPanel:
 	if _part_detail_panel == null:
 		_part_detail_panel = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar/PartDetailPanel") as PartDetailPanel
+		if _part_detail_panel != null:
+			var callback := Callable(self, "_on_part_detail_custom_field_changed")
+			if not _part_detail_panel.custom_field_changed.is_connected(callback):
+				_part_detail_panel.custom_field_changed.connect(callback)
 	return _part_detail_panel
 
 func _get_stat_delta_sheet() -> StatDeltaSheet:
@@ -161,6 +165,12 @@ func _on_clear_pressed(slot_id: String) -> void:
 
 func _on_row_selected(slot_id: String) -> void:
 	_backend.select_slot(slot_id)
+	_refresh_editor_state()
+
+func _on_part_detail_custom_field_changed(slot_id: String, field_id: String, value: String) -> void:
+	if not _backend_initialized:
+		return
+	_backend.set_custom_field_value(slot_id, field_id, value)
 	_refresh_editor_state()
 
 func _on_back_button_pressed() -> void:

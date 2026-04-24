@@ -323,6 +323,49 @@ func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
 	assert_null(_find_label_with_text(location_surface, "No active location."))
 
 
+func test_assembly_editor_custom_field_signal_updates_draft_part_detail_view_model() -> void:
+	GameState.new_game()
+	var packed_scene := load(ASSEMBLY_EDITOR_SCENE_PATH) as PackedScene
+	assert_not_null(packed_scene)
+	if packed_scene == null:
+		return
+	var instance_value: Variant = packed_scene.instantiate()
+	assert_true(instance_value is Control)
+	if not instance_value is Control:
+		return
+	var screen: Control = instance_value
+	_spawned_nodes.append(screen)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(screen)
+	screen.call("initialize", {
+		"target_entity_id": "player",
+		"budget_entity_id": "player",
+		"budget_currency_id": "credits",
+	})
+	await get_tree().process_frame
+	screen.call("_on_row_selected", "head")
+	await get_tree().process_frame
+
+	var panel := screen.find_child("PartDetailPanel", true, false) as PartDetailPanel
+	assert_not_null(panel)
+	if panel == null:
+		return
+	panel.custom_field_changed.emit("head", "eye_color", "amber")
+	await get_tree().process_frame
+
+	var snapshot_value: Variant = screen.call("get_debug_snapshot")
+	assert_true(snapshot_value is Dictionary)
+	if not snapshot_value is Dictionary:
+		return
+	var snapshot: Dictionary = snapshot_value
+	var last_view_model := _read_dictionary(snapshot.get("last_view_model", {}))
+	var part_detail := _read_dictionary(last_view_model.get("part_detail", {}))
+	var custom_values := _read_dictionary(part_detail.get("custom_values", {}))
+
+	assert_eq(str(part_detail.get("slot_id", "")), "head")
+	assert_eq(str(custom_values.get("eye_color", "")), "amber")
+
+
 func test_location_surface_lists_present_entities_and_entity_interactions() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)

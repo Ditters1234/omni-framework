@@ -187,6 +187,37 @@ func clear_slot(slot_id: String) -> void:
 	_status_override = "Cleared %s." % label
 
 
+func set_custom_field_value(slot_id: String, field_id: String, value: Variant) -> void:
+	if _session == null or _session.draft_entity == null:
+		return
+	if slot_id.is_empty() or field_id.is_empty():
+		return
+	var part: PartInstance = _session.draft_entity.get_equipped(slot_id)
+	if part == null:
+		return
+	part.set_custom_value(field_id, value)
+	_status_override = ""
+
+
+func get_custom_field_definitions_for_slot(slot_id: String) -> Array[Dictionary]:
+	if _session == null:
+		return []
+	var template_id: String = _session.get_equipped_template_id(slot_id)
+	if template_id.is_empty():
+		return []
+	var template := _get_part_template(template_id)
+	return _extract_custom_field_definitions(template)
+
+
+func get_custom_values_for_slot(slot_id: String) -> Dictionary:
+	if _session == null or _session.draft_entity == null:
+		return {}
+	var part: PartInstance = _session.draft_entity.get_equipped(slot_id)
+	if part == null:
+		return {}
+	return part.custom_values.duplicate(true)
+
+
 func build_cancel_action() -> Dictionary:
 	if _config.reset_game_state_on_cancel:
 		GameState.reset()
@@ -376,7 +407,14 @@ func _build_part_detail_view_model() -> Dictionary:
 		var custom_summary := _build_option_custom_summary(preview_option)
 		if not custom_summary.is_empty():
 			stats_lines.append(custom_summary)
+	var custom_field_defs: Array[Dictionary] = _extract_custom_field_definitions(template)
+	var custom_vals: Dictionary = {}
+	if not current_template_id.is_empty() and _session.draft_entity != null:
+		var equipped_part: PartInstance = _session.draft_entity.get_equipped(slot_id)
+		if equipped_part != null:
+			custom_vals = equipped_part.custom_values.duplicate(true)
 	return {
+		"slot_id": slot_id,
 		"slot_label": _get_socket_display_label(socket_def, slot_id),
 		"current_name": current_name,
 		"preview_name": preview_name,
@@ -386,11 +424,14 @@ func _build_part_detail_view_model() -> Dictionary:
 		"affordable": affordable,
 		"part_template": template,
 		"default_sprite_paths": _get_part_default_sprite_paths(),
+		"custom_field_definitions": custom_field_defs,
+		"custom_values": custom_vals,
 	}
 
 
 func _build_empty_part_detail_view_model() -> Dictionary:
 	return {
+		"slot_id": "",
 		"slot_label": "Selection",
 		"current_name": EMPTY_LABEL,
 		"preview_name": "Nothing Selected",
@@ -400,6 +441,8 @@ func _build_empty_part_detail_view_model() -> Dictionary:
 		"affordable": true,
 		"part_template": {},
 		"default_sprite_paths": _get_part_default_sprite_paths(),
+		"custom_field_definitions": [],
+		"custom_values": {},
 	}
 
 
@@ -653,6 +696,49 @@ func _build_option_custom_summary(option: Dictionary) -> String:
 	if parts.is_empty():
 		return ""
 	return "Custom values: %s" % ", ".join(parts)
+
+
+func _extract_custom_field_definitions(template: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if template.is_empty():
+		return result
+	var fields_value: Variant = template.get("custom_fields", null)
+	if fields_value is Array:
+		var fields: Array = fields_value
+		for field_value in fields:
+			if not field_value is Dictionary:
+				continue
+			var field: Dictionary = field_value
+			var field_id := str(field.get("id", ""))
+			if field_id.is_empty():
+				continue
+			var def: Dictionary = {
+				"id": field_id,
+				"label": str(field.get("label", BACKEND_HELPERS.humanize_id(field_id))),
+				"type": str(field.get("type", "text")),
+				"default_value": field.get("default_value", ""),
+			}
+			var options_value: Variant = field.get("options", null)
+			if options_value is Array:
+				def["options"] = options_value
+			result.append(def)
+		return result
+	# Fallback: custom_field_labels (simple string list, free-text only).
+	var labels_value: Variant = template.get("custom_field_labels", null)
+	if labels_value is Array:
+		var labels: Array = labels_value
+		for label_value in labels:
+			var label := str(label_value)
+			var field_id := label.strip_edges().to_lower().replace(" ", "_").replace("-", "_")
+			if field_id.is_empty():
+				continue
+			result.append({
+				"id": field_id,
+				"label": label,
+				"type": "text",
+				"default_value": "",
+			})
+	return result
 
 
 func _get_option_template_id(option: Dictionary) -> String:
