@@ -817,6 +817,12 @@ Required in practical use:
 - `data_source`
 - `action_payload`
 
+Useful optional fields:
+- `currency_id`
+- `price_modifier`
+- `transaction_sound`
+- `buyer_entity_id`
+
 #### `WorldMapBackend`
 No required params. Common useful optional fields:
 - `screen_title`

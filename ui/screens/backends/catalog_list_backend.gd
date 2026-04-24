@@ -23,6 +23,7 @@ static func register_contract() -> void:
 			"confirm_label",
 			"cancel_label",
 			"price_modifier",
+			"transaction_sound",
 			"option_tags",
 			"template_ids",
 			"empty_label",
@@ -41,6 +42,7 @@ static func register_contract() -> void:
 			"confirm_label": TYPE_STRING,
 			"cancel_label": TYPE_STRING,
 			"price_modifier": TYPE_FLOAT,
+			"transaction_sound": TYPE_STRING,
 			"option_tags": TYPE_ARRAY,
 			"template_ids": TYPE_ARRAY,
 			"empty_label": TYPE_STRING,
@@ -129,6 +131,9 @@ func confirm() -> Dictionary:
 	if GameEvents != null:
 		GameEvents.part_acquired.emit(buyer_clone.entity_id, new_part.template_id)
 	_dispatch_catalog_action(template, buyer_clone)
+	var transaction_sound := str(_params.get("transaction_sound", ""))
+	if not transaction_sound.is_empty():
+		AudioManager.play_sfx(transaction_sound)
 	_status_text = "Purchased %s for %s." % [
 		str(template.get("display_name", new_part.template_id)),
 		BACKEND_HELPERS.build_price_text(template, currency_id, price_modifier).trim_prefix("Price: "),

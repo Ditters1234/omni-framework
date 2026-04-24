@@ -48,6 +48,7 @@
           "backend_class": "CatalogListBackend",
           "data_source": "catalog",
           "currency_id": "credits",
+          "transaction_sound": "res://mods/base/assets/audio/sfx_trade.wav",
           "action_payload": { "type": "buy_item" }
         },
         {
@@ -102,7 +103,8 @@
           "display_name": "Contract Board",
           "description": "Pick up work from the Threshold Syndicate.",
           "backend_class": "TaskProviderBackend",
-          "faction_id": "base:threshold_syndicate"
+          "faction_id": "base:threshold_syndicate",
+          "accept_sound": "res://mods/base/assets/audio/sfx_task_accept.wav"
         },
         {
           "tab_id": "warehouse_factions",
@@ -144,6 +146,8 @@
           "backend_class": "ChallengeBackend",
           "required_stat": "stamina_max",
           "required_value": 60,
+          "success_sound": "res://mods/base/assets/audio/sfx_challenge_success.wav",
+          "failure_sound": "res://mods/base/assets/audio/sfx_challenge_failure.wav",
           "action_payload": {
             "type": "reward",
             "reward": {

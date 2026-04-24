@@ -47,6 +47,7 @@
       "display_name": "Quartermaster Theta",
       "description": "A heavily augmented ripperdoc who runs the clinic in Market Row. She'll sell you parts, install them, and only judge you a little.",
       "portrait": "res://mods/base/assets/entity_theta.png",
+      "dialogue_blip": "res://mods/base/assets/audio/sfx_dialogue_theta.wav",
       "location_id": "base:market_row",
       "currencies": { "credits": 9999, "data_shards": 50 },
       "stats": { "charisma": 4, "power": 2, "health": 150, "health_max": 150 },
@@ -71,7 +72,8 @@
           "backend_class": "ExchangeBackend",
           "source_inventory": "entity:base:npc_theta",
           "destination_inventory": "player",
-          "currency_id": "credits"
+          "currency_id": "credits",
+          "transaction_sound": "res://mods/base/assets/audio/sfx_trade.wav"
         },
         {
           "tab_id": "theta_talk",
@@ -96,6 +98,8 @@
           "backend_class": "ChallengeBackend",
           "required_stat": "power",
           "required_value": 3,
+          "success_sound": "res://mods/base/assets/audio/sfx_challenge_success.wav",
+          "failure_sound": "res://mods/base/assets/audio/sfx_challenge_failure.wav",
           "action_payload": {
             "type": "set_flag",
             "entity_id": "base:npc_theta",
@@ -110,6 +114,7 @@
       "display_name": "Kael",
       "description": "A soft-spoken fixer who operates out of the old warehouse. Hands out contracts for the Threshold Syndicate and always pays on time.",
       "portrait": "res://mods/base/assets/entity_kael.png",
+      "dialogue_blip": "res://mods/base/assets/audio/sfx_dialogue_kael.wav",
       "location_id": "base:warehouse",
       "currencies": { "credits": 5000 },
       "stats": { "charisma": 5, "luck": 3, "health": 80, "health_max": 80 },
@@ -127,7 +132,8 @@
           "backend_class": "ExchangeBackend",
           "source_inventory": "entity:base:npc_fixer",
           "destination_inventory": "player",
-          "currency_id": "credits"
+          "currency_id": "credits",
+          "transaction_sound": "res://mods/base/assets/audio/sfx_trade.wav"
         },
         {
           "tab_id": "kael_talk",

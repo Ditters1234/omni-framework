@@ -3,6 +3,7 @@
     {
       "achievement_id": "base:first_purchase",
       "icon": "res://mods/base/assets/ach_buy.png",
+      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
       "display_name": "Consumer Grade",
       "description": "Buy your first item from a vendor.",
       "stat_name": "items_bought",
@@ -11,6 +12,7 @@
     {
       "achievement_id": "base:big_spender",
       "icon": "res://mods/base/assets/ach_buy.png",
+      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
       "display_name": "Big Spender",
       "description": "Buy 10 items total.",
       "stat_name": "items_bought",
@@ -19,6 +21,7 @@
     {
       "achievement_id": "base:explorer",
       "icon": "res://mods/base/assets/ach_trip.png",
+      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
       "display_name": "Explorer",
       "description": "Discover a new location.",
       "stat_name": "locations_discovered",
@@ -27,6 +30,7 @@
     {
       "achievement_id": "base:cartographer",
       "icon": "res://mods/base/assets/ach_trip.png",
+      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
       "display_name": "Cartographer",
       "description": "Discover all four districts.",
       "stat_name": "locations_discovered",
@@ -35,6 +39,7 @@
     {
       "achievement_id": "base:first_contract",
       "icon": "res://mods/base/assets/ach_contract.png",
+      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
       "display_name": "On The Payroll",
       "description": "Complete your first repeatable contract.",
       "stat_name": "tasks_completed",
@@ -43,6 +48,7 @@
     {
       "achievement_id": "base:grinder",
       "icon": "res://mods/base/assets/ach_grinder.png",
+      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
       "display_name": "Grinder",
       "description": "Complete 10 contracts.",
       "stat_name": "tasks_completed",

@@ -31,6 +31,7 @@
         "reputation": { "base:threshold_syndicate": 20 },
         "flags": { "intro_complete": true }
       },
+      "complete_sound": "res://mods/base/assets/audio/sfx_quest_complete.wav",
       "repeatable": false
     },
     {
@@ -56,6 +57,7 @@
         "data_shards": 2,
         "reputation": { "base:threshold_syndicate": 30 }
       },
+      "complete_sound": "res://mods/base/assets/audio/sfx_quest_complete.wav",
       "repeatable": false
     }
   ]

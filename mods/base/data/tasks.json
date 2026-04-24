@@ -9,6 +9,7 @@
         "credits": 75,
         "reputation": { "base:threshold_syndicate": 10 }
       },
+      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
       "description": "Deliver a sealed package to a dead drop near your apartment. Don't open it.",
       "difficulty": 1,
       "repeatable": true
@@ -23,6 +24,7 @@
         "reputation": { "base:threshold_syndicate": 15 },
         "items": [{ "template_id": "base:salvage_chip", "count": 1 }]
       },
+      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
       "description": "Pick up a crate from the Undercity salvage crews and haul it back to the Warehouse.",
       "difficulty": 2,
       "repeatable": true
@@ -34,6 +36,7 @@
       "reward": {
         "credits": 20
       },
+      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
       "description": "Lay low for a while. Sometimes the best move is no move.",
       "difficulty": 0,
       "repeatable": true
