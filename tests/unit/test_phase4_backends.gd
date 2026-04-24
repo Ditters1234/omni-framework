@@ -424,7 +424,16 @@ func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() ->
 		assert_true(found_credits)
 	if equipped_rows_value is Array:
 		var equipped_rows: Array = equipped_rows_value
-		assert_eq(equipped_rows.size(), 1)
+		assert_true(equipped_rows.size() >= 2)
+		var found_hair := false
+		for row_value in equipped_rows:
+			if not row_value is Dictionary:
+				continue
+			var row: Dictionary = row_value
+			if str(row.get("slot_id", "")) == "hair":
+				found_hair = true
+				break
+		assert_true(found_hair)
 
 
 func _inventory_has_instance(entity: EntityInstance, instance_id: String) -> bool:

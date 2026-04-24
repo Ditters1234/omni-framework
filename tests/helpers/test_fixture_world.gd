@@ -198,7 +198,7 @@ static func _seed_config() -> void:
 			],
 			"ticks_per_day": 24,
 			"ticks_per_hour": 1,
-			"starting_money": {"credits": 100},
+			"starting_money": {"credits": 400},
 			"new_game_flow": {
 				"screen_id": "gameplay_shell",
 				"params": {
@@ -309,7 +309,7 @@ static func _seed_entities() -> void:
 			"display_name": "Player",
 			"description": "Fixture player entity.",
 			"location_id": START_LOCATION_ID,
-			"currencies": {"credits": 100},
+			"currencies": {"credits": 400},
 			"stats": {"strength": 2, "power": 1, "health": 50, "health_max": 50},
 			"provides_sockets": [
 				{"id": "head", "accepted_tags": ["head"], "label": "Head"},
