@@ -198,7 +198,6 @@ static func _seed_config() -> void:
 			],
 			"ticks_per_day": 24,
 			"ticks_per_hour": 1,
-			"starting_money": {"credits": 400},
 			"new_game_flow": {
 				"screen_id": "gameplay_shell",
 				"params": {

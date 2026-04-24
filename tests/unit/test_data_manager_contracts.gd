@@ -158,11 +158,7 @@ func test_validate_loaded_content_reports_unknown_stats_and_currencies() -> void
 		"stats": {"mystery": 2},
 		"currencies": {"ghost_money": 9},
 	}
-	DataManager.config = {
-		"game": {
-			"starting_money": {"ghost_money": 1}
-		}
-	}
+	DataManager.config = {}
 
 	var issues := DataManager.validate_loaded_content()
 	var issue_messages := _issue_messages(issues)
@@ -171,7 +167,6 @@ func test_validate_loaded_content_reports_unknown_stats_and_currencies() -> void
 	assert_true(_messages_contain(issue_messages, "base:bad_part.price references unknown currency 'ghost_money'"))
 	assert_true(_messages_contain(issue_messages, "base:bad_entity.stats references unknown stat 'mystery'"))
 	assert_true(_messages_contain(issue_messages, "base:bad_entity.currencies references unknown currency 'ghost_money'"))
-	assert_true(_messages_contain(issue_messages, "config.game.starting_money references unknown currency 'ghost_money'"))
 
 
 func test_validate_loaded_content_reports_recipe_reference_failures() -> void:
