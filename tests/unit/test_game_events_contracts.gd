@@ -59,6 +59,37 @@ func test_emit_dynamic_rejects_unknown_signal_or_wrong_arity() -> void:
 	assert_eq(GameEvents.get_event_history().size(), 0)
 
 
+func test_unlock_achievement_emits_unlock_vfx_metadata() -> void:
+	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
+	DataManager.achievements["base:test_unlock_vfx_achievement"] = {
+		"achievement_id": "base:test_unlock_vfx_achievement",
+		"display_name": "VFX Unlock",
+		"description": "Used to verify unlock metadata emission.",
+		"stat_name": "test_unlock_vfx_stat",
+		"requirement": 1,
+		"unlock_vfx": "res://tests/fixtures/vfx/test_unlock_vfx.tres",
+	}
+	watch_signals(GameEvents)
+
+	GameState.track_achievement_stat("test_unlock_vfx_stat", 1.0)
+
+	assert_signal_emitted(GameEvents, "achievement_unlocked")
+	assert_eq(
+		get_signal_parameters(GameEvents, "achievement_unlocked"),
+		["base:test_unlock_vfx_achievement", "res://tests/fixtures/vfx/test_unlock_vfx.tres"]
+	)
+
+	var achievement_history := GameEvents.get_event_history(10, "achievements", "achievement_unlocked")
+	assert_eq(achievement_history.size(), 1)
+	if not achievement_history.is_empty() and achievement_history[0] is Dictionary:
+		var entry: Dictionary = achievement_history[0]
+		var args_value: Variant = entry.get("args", [])
+		assert_true(args_value is Array)
+		if args_value is Array:
+			var args: Array = args_value
+			assert_eq(args, ["base:test_unlock_vfx_achievement", "res://tests/fixtures/vfx/test_unlock_vfx.tres"])
+
+
 func test_save_and_load_emit_documented_success_and_failure_signals() -> void:
 	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	AIManager.initialize()

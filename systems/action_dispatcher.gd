@@ -207,10 +207,7 @@ static func _action_reward(action: Dictionary) -> void:
 
 static func _action_unlock_achievement(action: Dictionary) -> void:
 	var ach_id := str(action.get("achievement_id", ""))
-	if ach_id in GameState.unlocked_achievements:
-		return
-	GameState.unlocked_achievements.append(ach_id)
-	GameEvents.achievement_unlocked.emit(ach_id)
+	GameState.unlock_achievement(ach_id)
 
 
 static func _action_emit_signal(action: Dictionary) -> void:

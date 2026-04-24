@@ -67,6 +67,43 @@ func test_achievement_list_backend_reports_progress_and_unlock_state() -> void:
 			assert_eq(str(row.get("progress_text", "")), "Phase5 Steps: 1 / 3")
 
 
+func test_achievement_list_backend_hides_hidden_rows_until_unlocked() -> void:
+	DataManager.achievements["base:phase5_hidden_achievement"] = {
+		"achievement_id": "base:phase5_hidden_achievement",
+		"display_name": "Hidden Goal",
+		"description": "Should stay hidden until unlocked.",
+		"stat_name": "phase5_steps",
+		"requirement": 99,
+		"hidden": true,
+		"unlock_vfx": "res://tests/fixtures/vfx/test_unlock_vfx.tres",
+	}
+	var backend: RefCounted = ACHIEVEMENT_LIST_BACKEND.new()
+	backend.initialize({})
+
+	var locked_view_model: Dictionary = backend.build_view_model()
+	var locked_rows_value: Variant = locked_view_model.get("rows", [])
+
+	assert_true(locked_rows_value is Array)
+	if locked_rows_value is Array:
+		var locked_rows: Array = locked_rows_value
+		assert_eq(locked_rows.size(), 1)
+
+	assert_true(GameState.unlock_achievement("base:phase5_hidden_achievement"))
+
+	var unlocked_view_model: Dictionary = backend.build_view_model()
+	var unlocked_rows_value: Variant = unlocked_view_model.get("rows", [])
+
+	assert_true(unlocked_rows_value is Array)
+	if unlocked_rows_value is Array:
+		var unlocked_rows: Array = unlocked_rows_value
+		assert_eq(unlocked_rows.size(), 2)
+		if not unlocked_rows.is_empty() and unlocked_rows[0] is Dictionary:
+			var row: Dictionary = unlocked_rows[0]
+			assert_eq(str(row.get("achievement_id", "")), "base:phase5_hidden_achievement")
+			assert_true(bool(row.get("hidden", false)))
+			assert_eq(str(row.get("unlock_vfx", "")), "res://tests/fixtures/vfx/test_unlock_vfx.tres")
+
+
 func test_event_log_backend_reads_recent_game_events() -> void:
 	GameEvents.ui_notification_requested.emit("Phase 5 notification", "info")
 	var backend: RefCounted = EVENT_LOG_BACKEND.new()

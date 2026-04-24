@@ -220,6 +220,23 @@ func track_achievement_stat(stat_name: String, delta: float) -> void:
 	_check_achievement_unlocks(stat_name)
 
 
+func unlock_achievement(achievement_id: String) -> bool:
+	if achievement_id.is_empty() or achievement_id in unlocked_achievements:
+		return false
+	unlocked_achievements.append(achievement_id)
+	var achievement := AchievementRegistry.get_achievement(achievement_id)
+	var unlock_vfx := ""
+	var unlock_sound := ""
+	if not achievement.is_empty():
+		unlock_vfx = str(achievement.get("unlock_vfx", ""))
+		unlock_sound = str(achievement.get("unlock_sound", ""))
+	GameEvents.achievement_unlocked.emit(achievement_id, unlock_vfx)
+	_trigger_achievement_unlock_vfx(unlock_vfx)
+	if not unlock_sound.is_empty():
+		AudioManager.play_sfx(unlock_sound)
+	return true
+
+
 # ---------------------------------------------------------------------------
 # Quests
 # ---------------------------------------------------------------------------
@@ -380,13 +397,14 @@ func _check_achievement_unlocks(stat_name: String) -> void:
 		if current_value < requirement:
 			continue
 		var achievement_id := str(achievement.get("achievement_id", ""))
-		if achievement_id.is_empty() or achievement_id in unlocked_achievements:
+		if achievement_id.is_empty():
 			continue
-		unlocked_achievements.append(achievement_id)
-		GameEvents.achievement_unlocked.emit(achievement_id)
-		var unlock_sound := str(achievement.get("unlock_sound", ""))
-		if not unlock_sound.is_empty():
-			AudioManager.play_sfx(unlock_sound)
+		unlock_achievement(achievement_id)
+
+
+func _trigger_achievement_unlock_vfx(_unlock_vfx: String) -> void:
+	# Reserved for future achievement VFX infrastructure.
+	return
 
 
 func _to_string_array(values: Variant) -> Array[String]:

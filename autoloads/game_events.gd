@@ -50,7 +50,7 @@ const SIGNAL_CATALOG := {
 		{"name": "dialogue_ended", "args": ["entity_id", "dialogue_resource"]},
 	],
 	"achievements": [
-		{"name": "achievement_unlocked", "args": ["achievement_id"]},
+		{"name": "achievement_unlocked", "args": ["achievement_id", "unlock_vfx"]},
 	],
 	"ui": [
 		{"name": "screen_pushed", "args": ["screen_id"], "deprecated": true},
@@ -138,7 +138,7 @@ signal dialogue_ended(entity_id: String, dialogue_resource: String)
 # ---------------------------------------------------------------------------
 # Achievements
 # ---------------------------------------------------------------------------
-signal achievement_unlocked(achievement_id: String)
+signal achievement_unlocked(achievement_id: String, unlock_vfx: String)
 
 # ---------------------------------------------------------------------------
 # UI

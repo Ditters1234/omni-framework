@@ -102,7 +102,7 @@ Note: `data_validation_failed` is described in earlier planning docs but is not 
 
 ### Achievements
 
-- `achievement_unlocked(achievement_id)`
+- `achievement_unlocked(achievement_id, unlock_vfx)`
 
 ### UI
 

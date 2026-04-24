@@ -65,6 +65,9 @@ func _build_rows() -> Array[Dictionary]:
 		if achievement_id.is_empty():
 			continue
 		var unlocked := achievement_id in GameState.unlocked_achievements
+		var hidden := bool(achievement.get("hidden", false))
+		if hidden and not unlocked:
+			continue
 		if unlocked and not show_unlocked:
 			continue
 		if not unlocked and not show_locked:
@@ -92,12 +95,14 @@ func _build_row(achievement: Dictionary, achievement_id: String, unlocked: bool)
 		"achievement_id": achievement_id,
 		"display_name": str(achievement.get("display_name", achievement.get("title", BACKEND_HELPERS.humanize_id(achievement_id)))),
 		"description": str(achievement.get("description", "")),
+		"hidden": bool(achievement.get("hidden", false)),
 		"unlocked": unlocked,
 		"status": "Unlocked" if unlocked else "Locked",
 		"source_type": source_type,
 		"stat_name": stat_name,
 		"progress": progress,
 		"requirement": requirement,
+		"unlock_vfx": str(achievement.get("unlock_vfx", "")),
 		"progress_text": _build_progress_text(stat_name, progress, requirement, unlocked),
 	}
 

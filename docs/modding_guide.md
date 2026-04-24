@@ -728,8 +728,14 @@ Common fields:
 - `description`
 - `stat_name`
 - `requirement`
+- `hidden`
 - `icon`
 - `unlock_sound`
+- `unlock_vfx`
+
+`hidden: true` keeps an achievement out of `AchievementListBackend` rows until that achievement is unlocked. Once unlocked, the row becomes visible and still carries its `hidden` metadata in the backend view model.
+
+`unlock_vfx` is forwarded through the `achievement_unlocked` event payload and the runtime unlock stub so authored content can already declare which future VFX resource should play when the visual layer is added.
 
 ---
 
@@ -977,6 +983,8 @@ No required params. Common useful optional fields:
 - `screen_title`
 - `screen_description`
 - `cancel_label`
+
+Hidden achievements (`hidden: true`) are filtered out of this backend until they are unlocked. Unlocked rows expose both `hidden` and `unlock_vfx` metadata in their view-model payload so custom UI can differentiate secret achievements from normal ones.
 
 #### `EventLogBackend`
 No required params. Common useful optional fields:
