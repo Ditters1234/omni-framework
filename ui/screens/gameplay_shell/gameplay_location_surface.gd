@@ -170,25 +170,23 @@ func _render_entity_presence() -> Array[Dictionary]:
 		_add_empty_label(_entities_container, "No other entities are visible here right now.")
 	return rendered_entities
 
-
 func _get_present_entity_ids() -> Array[String]:
 	var entity_ids: Array[String] = []
+
+	# static list
 	var listed_entities_value: Variant = _location_template.get("entities_present", [])
 	if listed_entities_value is Array:
-		var listed_entities: Array = listed_entities_value
-		for entity_id_value in listed_entities:
-			_append_present_entity_id(entity_ids, str(entity_id_value))
+		for entity_id_value in listed_entities_value:
+			var id := str(entity_id_value)
+			if not entity_ids.has(id) and id != "player":
+				entity_ids.append(id)
 
-	var located_entities := DataManager.query_entities({"location_id": _location_id})
-	for entity_template in located_entities:
-		_append_present_entity_id(entity_ids, str(entity_template.get("entity_id", "")))
+	# runtime instances (NEW SOURCE OF TRUTH)
+	var runtime_entities: Array[EntityInstance] = GameState.get_entity_instances_at_location(_location_id)
+	for entity in runtime_entities:
+		if not entity_ids.has(entity.entity_id):
+			entity_ids.append(entity.entity_id)
 
-	for instance_id_value in GameState.entity_instances.keys():
-		var instance_id := str(instance_id_value)
-		var entity := GameState.get_entity_instance(instance_id)
-		if entity == null or entity.location_id != _location_id:
-			continue
-		_append_present_entity_id(entity_ids, entity.entity_id)
 	return entity_ids
 
 

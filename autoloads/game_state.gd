@@ -141,6 +141,16 @@ func _instantiate_world_entities(player_template_id: String) -> void:
 # Location
 # ---------------------------------------------------------------------------
 
+
+func get_entity_instances_at_location(location_id: String) -> Array[EntityInstance]:
+	var results: Array[EntityInstance] = []
+	for entity_data in entity_instances.values():
+		var entity := entity_data as EntityInstance
+		if entity != null and entity.location_id == location_id and entity.entity_id != "player":
+			results.append(entity)
+	return results
+
+
 ## Moves the player to a new location and emits location_changed.
 ## travel_ticks is optional so callers can charge time for routed travel
 ## without forcing teleports or scripted relocations to consume time.
