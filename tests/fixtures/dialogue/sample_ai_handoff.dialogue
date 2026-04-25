@@ -1,0 +1,7 @@
+~ start
+Test NPC: Need something beyond the usual topics?
+- Talk freely. [if can_open_ai_chat()]
+	do ai_chat_open()
+	=> END
+- Maybe later.
+	=> END

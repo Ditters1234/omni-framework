@@ -142,7 +142,8 @@
           "description": "Speak with Kael.",
           "backend_class": "DialogueBackend",
           "dialogue_resource": "res://mods/base/dialogue/kael.dialogue",
-          "dialogue_start": "start"
+          "dialogue_start": "start",
+          "ai_mode": "hybrid"
         },
         {
           "tab_id": "kael_sheet",

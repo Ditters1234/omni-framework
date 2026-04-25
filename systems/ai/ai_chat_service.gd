@@ -158,6 +158,26 @@ func build_system_prompt() -> String:
 func send_message_async(
 		player_message: String,
 		request_context_overrides: Dictionary = {}) -> Dictionary:
+	var turn := begin_player_turn(player_message, request_context_overrides)
+	if not bool(turn.get("should_generate", false)):
+		var immediate_result_value: Variant = turn.get("result", {})
+		if immediate_result_value is Dictionary:
+			return (immediate_result_value as Dictionary).duplicate(true)
+		return {}
+
+	var prompt := str(turn.get("prompt", ""))
+	var request_context_value: Variant = turn.get("context", {})
+	var request_context: Dictionary = {}
+	if request_context_value is Dictionary:
+		request_context = (request_context_value as Dictionary).duplicate(true)
+
+	var raw_response := await AIManager.generate_async(prompt, request_context)
+	return finalize_generated_response(raw_response, request_context)
+
+
+func begin_player_turn(
+		player_message: String,
+		request_context_overrides: Dictionary = {}) -> Dictionary:
 	var normalized_message := player_message.strip_edges()
 	_last_player_message = normalized_message
 	_last_raw_response = ""
@@ -166,29 +186,50 @@ func send_message_async(
 	var request_context := _merge_context(base_context, request_context_overrides)
 
 	if normalized_message.is_empty():
-		var empty_prompt_validation := _build_fallback_validation("empty_prompt")
-		return _build_result(request_context, empty_prompt_validation)
+		return {
+			"should_generate": false,
+			"prompt": "",
+			"context": request_context.duplicate(true),
+			"result": _build_result(request_context, _build_fallback_validation("empty_prompt")),
+		}
 
 	add_message(ROLE_USER, normalized_message)
 
 	if not is_configured():
-		var unconfigured_validation := _build_fallback_validation("service_unconfigured")
-		var unconfigured_response := str(unconfigured_validation.get("response", ""))
-		add_message(ROLE_ASSISTANT, unconfigured_response)
-		return _build_result(request_context, unconfigured_validation)
+		return {
+			"should_generate": false,
+			"prompt": normalized_message,
+			"context": request_context.duplicate(true),
+			"result": _build_fallback_result(request_context, "service_unconfigured"),
+		}
 
 	if not AIManager.is_available():
-		var unavailable_validation := _build_fallback_validation("ai_unavailable")
-		var unavailable_response := str(unavailable_validation.get("response", ""))
-		add_message(ROLE_ASSISTANT, unavailable_response)
-		return _build_result(request_context, unavailable_validation)
+		return {
+			"should_generate": false,
+			"prompt": normalized_message,
+			"context": request_context.duplicate(true),
+			"result": _build_fallback_result(request_context, "ai_unavailable"),
+		}
 
-	var raw_response := await AIManager.generate_async(normalized_message, request_context)
+	return {
+		"should_generate": true,
+		"prompt": normalized_message,
+		"context": request_context.duplicate(true),
+	}
+
+
+func finalize_generated_response(raw_response: String, request_context: Dictionary = {}) -> Dictionary:
 	_last_raw_response = raw_response
 	var validation := validate_response(raw_response)
 	var final_response := str(validation.get("response", ""))
 	add_message(ROLE_ASSISTANT, final_response)
-	return _build_result(request_context, validation)
+	var resolved_context := request_context.duplicate(true) if not request_context.is_empty() else build_context()
+	return _build_result(resolved_context, validation)
+
+
+func finalize_failed_response(reason: String, request_context: Dictionary = {}) -> Dictionary:
+	var resolved_context := request_context.duplicate(true) if not request_context.is_empty() else build_context()
+	return _build_fallback_result(resolved_context, reason)
 
 
 func validate_response(response: String) -> Dictionary:
@@ -244,6 +285,13 @@ func _build_result(request_context: Dictionary, validation: Dictionary) -> Dicti
 		"context": request_context.duplicate(true),
 		"history": _duplicate_history(_history),
 	}
+
+
+func _build_fallback_result(request_context: Dictionary, reason: String) -> Dictionary:
+	var validation := _build_fallback_validation(reason)
+	var fallback_response := str(validation.get("response", ""))
+	add_message(ROLE_ASSISTANT, fallback_response)
+	return _build_result(request_context, validation)
 
 
 func _store_validation_result(validation: Dictionary) -> Dictionary:

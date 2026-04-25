@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://cti3066g6lbtf"
+path="res://.godot/imported/sample_ai_handoff.dialogue-78d2ef9ad3d83ac2205357d051b50c86.tres"
+
+[deps]
+
+source_file="res://tests/fixtures/dialogue/sample_ai_handoff.dialogue"
+dest_files=["res://.godot/imported/sample_ai_handoff.dialogue-78d2ef9ad3d83ac2205357d051b50c86.tres"]
+
+[params]
+
+defaults=true

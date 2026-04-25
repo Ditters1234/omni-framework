@@ -896,8 +896,16 @@ Required:
 - `faction_id`
 
 #### `DialogueBackend`
-Required:
-- `dialogue_resource`
+Required in practical use:
+- `dialogue_resource` or `dialogue_id`
+
+Useful optional fields:
+- `dialogue_start`
+- `speaker_entity_id`
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+- `ai_mode` — `"hybrid"` keeps authored `.dialogue` branches as the primary flow and lets the script hand off to AI chat with `do ai_chat_open()`. `"freeform"` opens directly into AI chat when the speaker entity has `ai_persona_id` and `AIManager` is available.
 
 #### `ChallengeBackend`
 Required:
@@ -1115,7 +1123,8 @@ Example:
   "label": "Talk",
   "backend_class": "DialogueBackend",
   "dialogue_resource": "res://mods/my_name/my_mod/dialogue/my_npc.dialogue",
-  "dialogue_start": "start"
+  "dialogue_start": "start",
+  "ai_mode": "hybrid"
 }
 ```
 
@@ -1124,6 +1133,20 @@ Recommended folder:
 ```text
 mods/<author>/<mod>/dialogue/
 ```
+
+For hybrid authored handoff, pass the routed screen itself into Dialogue Manager with a branch like:
+
+```text
+~ start
+NPC: We can stay on script, or not.
+- Talk freely. [if can_open_ai_chat()]
+	do ai_chat_open()
+	=> END
+- Maybe later.
+	=> END
+```
+
+`ai_chat_open()` switches the routed dialogue screen into AI mode. `can_open_ai_chat()` keeps the option hidden when AI is unavailable, so the scripted tree remains the zero-error fallback.
 
 ---
 

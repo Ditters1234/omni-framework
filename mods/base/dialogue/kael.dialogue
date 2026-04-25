@@ -4,6 +4,9 @@ Kael: You look new. That's fine — everyone starts somewhere. I'm Kael. I run c
 	=> about_syndicate
 - Got any work?
 	=> about_work
+- Talk freely. [if can_open_ai_chat()]
+	do ai_chat_open()
+	=> END
 - Just passing through.
 	=> END
 
@@ -12,11 +15,17 @@ Kael: We're the people who keep this district functional while the corps pretend
 Kael: Do good work, build trust, and better contracts open up. It's straightforward.
 - Got any work?
 	=> about_work
+- Talk freely. [if can_open_ai_chat()]
+	do ai_chat_open()
+	=> END
 - I'll keep that in mind.
 	=> END
 
 ~ about_work
 Kael: Check the contract board. I post new jobs regularly. Start with deliveries — they're simple and they pay.
 Kael: Once you've proven you can handle yourself, I'll have something more interesting for you.
+- Talk freely. [if can_open_ai_chat()]
+	do ai_chat_open()
+	=> END
 - Sounds good.
 	=> END

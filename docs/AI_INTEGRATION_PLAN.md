@@ -6,7 +6,7 @@ This document is a planning reference for the AI integration layer. It catalogs 
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
-Implementation status update: Phase 2 is now in place. `systems/ai/ai_chat_service.gd` provides persona lookup, placeholder resolution, bounded history, context assembly, response validation, fallback selection, and a debug snapshot surface, with coverage in `tests/unit/test_ai_chat_service.gd`.
+Implementation status update: Phases 2 and 3 are now in place. `systems/ai/ai_chat_service.gd` provides persona lookup, placeholder resolution, bounded history, context assembly, response validation, fallback selection, and a debug snapshot surface. `DialogueBackend` and `dialogue_screen.gd` now support `ai_mode` handoff (`hybrid`, `freeform`), Dialogue Manager callable hooks (`ai_chat_open`, `ai_chat_close`, `can_open_ai_chat`), routed streaming via `GameEvents.ai_token_received`, and the base Kael interaction as the reference implementation.
 
 Decisions this document assumes:
 
@@ -74,8 +74,8 @@ Target end state once this plan is fully executed. Three consumer layers plus su
 | System | Status | Purpose |
 |---|---|---|
 | `AIChatService` | ✅ Implemented (Phase 2) | Prompt assembly, history management, response parsing for NPC conversations |
-| `DialogueBackend` AI mode | Planned (Phase 3) | Hybrid dialogue: scripted `.dialogue` trees hand off to freeform AI chat and back |
-| `dialogue_screen.gd` streaming | Planned (Phase 3) | Typewriter-style token streaming in the dialogue UI |
+| `DialogueBackend` AI mode | ✅ Implemented (Phase 3) | Hybrid dialogue: scripted `.dialogue` trees hand off to freeform AI chat and back |
+| `dialogue_screen.gd` streaming | ✅ Implemented (Phase 3) | Routed streaming display in the dialogue UI driven by `GameEvents.ai_token_received` |
 
 The dialogue layer is the primary integration. It connects `AIManager` to the existing `DialogueBackend` and Dialogue Manager addon, enabling NPCs to hold freeform conversations informed by game state while retaining scripted branching for plot-critical moments.
 
@@ -469,17 +469,17 @@ Deliverable: `AIChatService` can assemble a complete prompt from a persona + gam
 
 ### Phase 3 — Dialogue Backend AI Mode (~4–5 days)
 
-The primary integration point — connecting `AIChatService` to `DialogueBackend` and the dialogue screen.
+Current status: complete. `DialogueBackend` accepts optional `ai_mode`, configures `AIChatService` from the speaker entity persona, and exposes AI availability to the routed screen. `dialogue_screen.gd` now passes itself into Dialogue Manager as an extra game state, supports `ai_chat_open()` / `ai_chat_close()` handoff, streams provider output through `GameEvents.ai_token_received`, and can return from AI chat to scripted topics. The base Kael interaction now ships with `ai_mode: "hybrid"` and authored `ai_chat_open()` branch options, with coverage in `tests/unit/test_dialogue_ai_mode.gd`.
 
-1. Add `ai_mode` to `DialogueBackend`'s contract registration (optional field, values: `"hybrid"`, `"freeform"`).
-2. Wire `DialogueBackend` to instantiate `AIChatService` when `ai_mode` is set and `AIManager.is_available()`.
-3. Register `ai_chat_open()` and `ai_chat_close()` as Dialogue Manager callable functions.
-4. Extend `dialogue_screen.gd` with the AI chat panel: streaming text display, text input, "Back to topics" button.
-5. Wire streaming display to `GameEvents.ai_token_received` filtered by request ID.
-6. Add `ai_mode: "hybrid"` to Kael's talk interaction in `entities.json` as the reference implementation.
-7. Update the base mod's `kael.dialogue` with the `ai_chat_open()` branch option.
-8. Integration test: open Kael's dialogue, enter AI chat, send a message, receive a streaming response, return to scripted dialogue.
-9. Smoke test: open Kael's dialogue with AI disabled — hybrid branch is hidden, scripted dialogue works normally.
+1. Add `ai_mode` to `DialogueBackend`'s contract registration (optional field, values: `"hybrid"`, `"freeform"`). Done.
+2. Wire `DialogueBackend` to instantiate `AIChatService` when `ai_mode` is set. Done.
+3. Register `ai_chat_open()` and `ai_chat_close()` as Dialogue Manager callable functions on the routed dialogue screen, with `can_open_ai_chat()` for authored branch gating. Done.
+4. Extend `dialogue_screen.gd` with the AI chat panel: streaming text display, text input, "Back to topics" button. Done.
+5. Wire streaming display to `GameEvents.ai_token_received` filtered by request ID. Done.
+6. Add `ai_mode: "hybrid"` to Kael's talk interaction in `entities.json` as the reference implementation. Done.
+7. Update the base mod's `kael.dialogue` with the `ai_chat_open()` branch option. Done.
+8. Integration test: open dialogue, enter AI chat, send a message, receive a streaming response, return to scripted dialogue. Done (`tests/unit/test_dialogue_ai_mode.gd`).
+9. Smoke test: open dialogue with AI disabled — hybrid branch is hidden, scripted dialogue works normally. Done (`tests/unit/test_dialogue_ai_mode.gd`).
 
 Deliverable: a player can talk to Kael using both scripted branches and freeform AI conversation in the same interaction.
 
