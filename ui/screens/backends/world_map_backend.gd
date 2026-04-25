@@ -4,6 +4,7 @@ class_name OmniWorldMapBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
+const LOCATION_ACCESS_SERVICE := preload("res://systems/location_access_service.gd")
 const DEFAULT_FACTION_COLOR := "#7d8fa3"
 const CURRENT_LOCATION_COLOR := "#ffd166"
 
@@ -60,6 +61,12 @@ func travel_to(location_id: String) -> Dictionary:
 		return {"status": "error", "message": "Location '%s' does not exist." % location_id}
 	if location_id == GameState.current_location_id:
 		return {"status": "ok", "message": "Already at %s." % _get_location_display_name(location_id)}
+	var access_status := LOCATION_ACCESS_SERVICE.get_entry_status(location_id)
+	if not bool(access_status.get("can_enter", false)):
+		return {
+			"status": "error",
+			"message": str(access_status.get("message", "You cannot enter this location right now.")),
+		}
 	var travel_cost := _get_travel_cost_to(location_id)
 	if travel_cost < 0:
 		return {
@@ -98,6 +105,7 @@ func _build_location_rows() -> Array[Dictionary]:
 		var faction_id := _resolve_location_faction_id(location_id, location)
 		var faction := DataManager.get_faction(faction_id) if not faction_id.is_empty() else {}
 		var faction_color := _resolve_faction_color(faction, location_id)
+		var access_status := LOCATION_ACCESS_SERVICE.get_entry_status(location_id)
 		rows.append({
 			"location_id": location_id,
 			"display_name": str(location.get("display_name", BACKEND_HELPERS.humanize_id(location_id))),
@@ -107,6 +115,8 @@ func _build_location_rows() -> Array[Dictionary]:
 			"faction_color": faction_color,
 			"is_current": location_id == GameState.current_location_id,
 			"is_discovered": _is_location_discovered(location_id),
+			"can_enter": bool(access_status.get("can_enter", true)),
+			"locked_message": str(access_status.get("message", "")),
 			"connection_count": LocationGraph.get_connections(location_id).size(),
 			"position": _resolve_location_position(location, index, total),
 		})

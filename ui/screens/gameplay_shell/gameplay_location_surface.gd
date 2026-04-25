@@ -4,6 +4,7 @@ extends Control
 class_name GameplayLocationSurface
 
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
+const LOCATION_ACCESS_SERVICE := preload("res://systems/location_access_service.gd")
 const GLOBAL_SHELL_SURFACE_IDS := {
 	"entity_sheet": true,
 	"quest_log": true,
@@ -146,19 +147,29 @@ func _render_travel_actions() -> Array[Dictionary]:
 		var travel_cost: int = int(connections[dest_id_value])
 		var dest_template: Dictionary = LocationGraph.get_location(dest_id)
 		var dest_name: String = str(dest_template.get("display_name", dest_id))
+		var access_status := LOCATION_ACCESS_SERVICE.get_entry_status(dest_id)
+		var can_enter := bool(access_status.get("can_enter", false))
+		var locked_message := str(access_status.get("message", ""))
 
 		rendered_connections.append({
 			"destination_id": dest_id,
 			"destination_name": dest_name,
 			"travel_cost": travel_cost,
+			"can_enter": can_enter,
+			"locked_message": locked_message,
 		})
 
 		var button := Button.new()
 		button.text = "%s (%d)" % [dest_name, travel_cost]
+		if not can_enter:
+			button.text = "%s [Locked]" % button.text
+			button.disabled = true
+			button.tooltip_text = locked_message
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size = Vector2(0, 44)
-		button.pressed.connect(_on_travel_button_pressed.bind(dest_id, travel_cost))
+		if can_enter:
+			button.pressed.connect(_on_travel_button_pressed.bind(dest_id, travel_cost))
 		_travel_container.add_child(button)
 	return rendered_connections
 
@@ -338,6 +349,10 @@ func _on_screen_button_pressed(screen_id: String, params: Dictionary) -> void:
 
 
 func _on_travel_button_pressed(dest_location_id: String, travel_cost: int) -> void:
+	var access_status := LOCATION_ACCESS_SERVICE.get_entry_status(dest_location_id)
+	if not bool(access_status.get("can_enter", false)):
+		_status_label.text = str(access_status.get("message", "You cannot enter this location right now."))
+		return
 	GameState.travel_to(dest_location_id, maxi(travel_cost, 0))
 	_location_id = dest_location_id
 	_load_location()
