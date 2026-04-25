@@ -138,12 +138,11 @@ func _render_stat_sheet(view_model: Dictionary) -> void:
 
 
 func _render_overview_section(view_model: Dictionary) -> void:
-	var visible_inventory_rows := _build_visible_inventory_rows(view_model)
 	var rows: Array[Dictionary] = []
 	rows.append({"display_name": "Currency Balances", "stat_summary": str(view_model.get("currency_rows", []).size())})
 	rows.append({"display_name": "Equipped Parts", "stat_summary": str(view_model.get("equipped_rows", []).size())})
-	rows.append({"display_name": "Loose Inventory Items", "stat_summary": str(_count_inventory_row_instances(visible_inventory_rows))})
-	rows.append({"display_name": "Loose Inventory Stacks", "stat_summary": str(visible_inventory_rows.size())})
+	rows.append({"display_name": "Inventory Items", "stat_summary": str(view_model.get("inventory_total_instances", 0))})
+	rows.append({"display_name": "Inventory Stacks", "stat_summary": "%s shown / %s total" % [str(view_model.get("inventory_shown_stacks", 0)), str(view_model.get("inventory_total_stacks", 0))]})
 	rows.append({"display_name": "Active Quests", "stat_summary": str(GameState.active_quests.size())})
 	rows.append({"display_name": "Completed Quests", "stat_summary": str(GameState.completed_quests.size())})
 	rows.append({"display_name": "Unlocked Achievements", "stat_summary": str(GameState.unlocked_achievements.size())})
@@ -177,16 +176,16 @@ func _render_inventory_section(view_model: Dictionary) -> void:
 	_inventory_rows.visible = show_inventory
 	if not show_inventory:
 		return
-	var rows := _build_visible_inventory_rows(view_model)
-	_inventory_summary_label.text = "%s unequipped inventory items across %s stacks." % [
-		str(_count_inventory_row_instances(rows)),
-		str(rows.size()),
+	_inventory_summary_label.text = "%s inventory items across %s stacks." % [
+		str(view_model.get("inventory_total_instances", 0)),
+		str(view_model.get("inventory_total_stacks", 0)),
 	]
+	var rows := _read_dictionary_array(view_model.get("inventory_rows", []))
 	var empty_label := str(view_model.get("inventory_empty_label", "Inventory is empty."))
 	var overflow_count := int(view_model.get("inventory_overflow_count", 0))
 	_render_text_rows(_inventory_rows, rows, empty_label, "")
 	if overflow_count > 0:
-		_add_wrapped_label(_inventory_rows, "+ %s more inventory stacks may be hidden by the inventory display limit." % str(overflow_count))
+		_add_wrapped_label(_inventory_rows, "+ %s more inventory stacks." % str(overflow_count))
 
 
 func _render_quest_section() -> void:
@@ -252,52 +251,6 @@ func _render_activity_section() -> void:
 		if not payload_text.is_empty():
 			text = "%s\n%s" % [text, payload_text]
 		_add_wrapped_label(_activity_rows, text)
-
-
-func _build_visible_inventory_rows(view_model: Dictionary) -> Array[Dictionary]:
-	# EntitySheetBackend reports inventory and equipped rows independently.
-	# Some runtime flows can leave equipped PartInstances mirrored in inventory;
-	# the character menu should present those only in Equipment, not Inventory.
-	var rows := _read_dictionary_array(view_model.get("inventory_rows", []))
-	var equipped_counts := _build_equipped_template_counts(view_model)
-	if equipped_counts.is_empty():
-		return rows
-
-	var visible_rows: Array[Dictionary] = []
-	for row in rows:
-		var template_id := str(row.get("template_id", ""))
-		var row_count := maxi(int(row.get("count", 1)), 1)
-		var equipped_count := int(equipped_counts.get(template_id, 0))
-		if template_id.is_empty() or equipped_count <= 0:
-			visible_rows.append(row.duplicate(true))
-			continue
-
-		var remaining_count := row_count - equipped_count
-		equipped_counts[template_id] = maxi(equipped_count - row_count, 0)
-		if remaining_count <= 0:
-			continue
-
-		var adjusted_row := row.duplicate(true)
-		adjusted_row["count"] = remaining_count
-		visible_rows.append(adjusted_row)
-	return visible_rows
-
-
-func _build_equipped_template_counts(view_model: Dictionary) -> Dictionary:
-	var counts: Dictionary = {}
-	for row in _read_dictionary_array(view_model.get("equipped_rows", [])):
-		var template_id := str(row.get("template_id", ""))
-		if template_id.is_empty():
-			continue
-		counts[template_id] = int(counts.get(template_id, 0)) + 1
-	return counts
-
-
-func _count_inventory_row_instances(rows: Array[Dictionary]) -> int:
-	var total := 0
-	for row in rows:
-		total += maxi(int(row.get("count", 1)), 1)
-	return total
 
 
 func _render_text_rows(host: VBoxContainer, rows: Array[Dictionary], empty_label: String, prefix_field: String) -> void:

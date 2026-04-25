@@ -1,0 +1,196 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/screens/backends/entity_sheet_screen.gd" id="1_screen"]
+
+[node name="EntitySheetScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Character Menu"
+
+[node name="DescriptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Review character, inventory, quests, reputation, progress, and recent activity."
+
+[node name="TabContainer" type="TabContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+focus_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+tab_alignment = 0
+
+[node name="Overview" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="OverviewBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Overview"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PortraitHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Overview/OverviewBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SummaryLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Overview/OverviewBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="OverviewRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Overview/OverviewBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Stats" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="StatsBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Stats"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatSheetHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Stats/StatsBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Equipment" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="EquipmentBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CurrencySectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox"]
+layout_mode = 2
+text = "Currencies"
+
+[node name="CurrencyRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EquippedSectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox"]
+layout_mode = 2
+text = "Equipped"
+
+[node name="EquippedRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Inventory" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="InventoryBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="InventorySummaryLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="InventoryRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Quests" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="QuestRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Quests"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Reputation" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="ReputationRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Reputation"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Progress" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="ProgressRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Progress"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Activity" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="ActivityRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Activity"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="RefreshButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+focus_mode = 2
+text = "Refresh"
+
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+focus_mode = 2
+text = "Back"
+
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/RefreshButton" to="." method="_on_refresh_button_pressed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]
