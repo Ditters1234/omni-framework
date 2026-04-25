@@ -11,7 +11,7 @@ const TEST_SAVE_DIR_PREFIX := "user://test_saves/"
 const TEST_RUN_MARKERS := ["gut_cmdln.gd", "-gexit", "-gdir=", "--test", "res://tests"]
 const AUTOSAVE_SLOT := 0
 const MAX_SAVE_SLOTS := 5
-const SCHEMA_VERSION := 3
+const SCHEMA_VERSION := 1
 const REQUIRED_SAVE_FIELDS := ["game_state"]
 const OPTIONAL_SAVE_FIELDS := ["save_schema_version", "created_at", "updated_at", "slot_metadata"]
 const REQUIRED_RUNTIME_CLASSES := ["EntityInstance", "PartInstance"]
@@ -296,13 +296,19 @@ func load_game(slot: int) -> bool:
 		return false
 
 	var raw_payload: Dictionary = raw_data
-	var payload_error := _validate_raw_payload(raw_payload)
+	var payload_error := _validate_raw_payload_for_load(raw_payload)
 	if not payload_error.is_empty():
 		last_operation_summary = {"kind": "load", "slot": slot, "status": "failed", "reason": payload_error}
 		GameEvents.load_failed.emit(slot, payload_error)
 		return false
 
 	var migrated := _migrate_if_needed(raw_payload.duplicate(true))
+	var migrated_payload_error := _validate_raw_payload(migrated)
+	if not migrated_payload_error.is_empty():
+		last_operation_summary = {"kind": "load", "slot": slot, "status": "failed", "reason": migrated_payload_error}
+		GameEvents.load_failed.emit(slot, migrated_payload_error)
+		return false
+
 	var state_data: Variant = migrated.get("game_state", {})
 	state_data = A2J.from_json(state_data)
 	if not state_data is Dictionary:
@@ -467,9 +473,26 @@ func _enforce_test_save_isolation() -> void:
 
 
 ## Checks schema version and runs any needed migrations before loading.
+## Current public baseline is v1. Future schema bumps should add one-step
+## migrations here, e.g.:
+##
+##     if version == 1:
+##         data = _migrate_v1_to_v2(data)
+##         version = 2
+##
+## Load flow intentionally validates in two phases:
+## 1. _validate_raw_payload_for_load() confirms the file is readable and not newer.
+## 2. _validate_raw_payload() confirms the migrated payload matches the current schema.
 func _migrate_if_needed(data: Dictionary) -> Dictionary:
-	# No backward compatibility: this project has not reached production yet.
-	# Older save files are intentionally rejected by _validate_raw_payload().
+	var version := int(data.get("save_schema_version", 0))
+	while version < SCHEMA_VERSION:
+		match version:
+			_:
+				# No older production versions exist yet. This branch is deliberately
+				# kept as a hard failure until a real migration is added.
+				data["save_schema_version"] = version
+				return data
+	data["save_schema_version"] = version
 	return data
 
 
@@ -557,18 +580,31 @@ func _read_raw_payload(path: String) -> Dictionary:
 	return {}
 
 
-func _validate_raw_payload(data: Dictionary) -> String:
+func _validate_raw_payload_for_load(data: Dictionary) -> String:
 	for field_name in REQUIRED_SAVE_FIELDS:
 		if not data.has(field_name):
 			return "Save file is missing required field '%s'." % field_name
 	if not data.has("save_schema_version"):
 		return "Save file is missing required field 'save_schema_version'."
 	var schema_version := int(data.get("save_schema_version", -1))
-	if schema_version != SCHEMA_VERSION:
-		return "Save file schema version %d is not supported by this build; expected %d. Delete old saves and start fresh." % [schema_version, SCHEMA_VERSION]
+	if schema_version <= 0:
+		return "Save file schema version %d is invalid." % schema_version
+	if schema_version > SCHEMA_VERSION:
+		return "Save file schema version %d is newer than supported version %d." % [schema_version, SCHEMA_VERSION]
 	var state_data: Variant = data.get("game_state", null)
 	if not state_data is Dictionary:
 		return "Save file field 'game_state' must be a dictionary."
+	return ""
+
+
+func _validate_raw_payload(data: Dictionary) -> String:
+	var load_error := _validate_raw_payload_for_load(data)
+	if not load_error.is_empty():
+		return load_error
+	var schema_version := int(data.get("save_schema_version", -1))
+	if schema_version != SCHEMA_VERSION:
+		return "Save file schema version %d must be migrated to current schema version %d." % [schema_version, SCHEMA_VERSION]
+	var state_data: Variant = data.get("game_state", null)
 	for state_field in REQUIRED_GAME_STATE_FIELDS:
 		if not (state_data as Dictionary).has(state_field):
 			return "Save file field 'game_state' is missing required field '%s'." % state_field
@@ -650,7 +686,7 @@ func _purge_incompatible_saves() -> int:
 		if not FileAccess.file_exists(path):
 			continue
 		var payload := _read_raw_payload(path)
-		if payload.is_empty() or not _validate_raw_payload(payload).is_empty():
+		if payload.is_empty() or not _validate_raw_payload_for_load(payload).is_empty():
 			var err := DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 			if err == OK:
 				deleted_count += 1

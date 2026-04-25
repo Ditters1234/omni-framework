@@ -60,10 +60,10 @@ func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
 	assert_eq(after.get("current_location_id", ""), before.get("current_location_id", ""))
 
 
-func test_old_or_incomplete_saves_are_rejected_without_migration() -> void:
+func test_incomplete_current_schema_saves_are_rejected() -> void:
 	var path := SaveManager.get_slot_path(SLOT)
-	var legacy_payload := {
-		"save_schema_version": 1,
+	var incomplete_payload := {
+		"save_schema_version": SaveManager.SCHEMA_VERSION,
 		"game_state": {
 			"player_id": "test:player",
 			"entity_instances": {},
@@ -74,12 +74,26 @@ func test_old_or_incomplete_saves_are_rejected_without_migration() -> void:
 	}
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	assert_not_null(file)
-	file.store_string(JSON.stringify(legacy_payload, "\t"))
+	file.store_string(JSON.stringify(incomplete_payload, "\t"))
 	file.close()
 
-	assert_false(SaveManager.slot_exists(SLOT), "Old schema save should not be considered loadable.")
-	assert_false(SaveManager.load_game(SLOT), "Old schema save should not load.")
-	assert_true(str(SaveManager.last_operation_summary.get("reason", "")).contains("not supported"))
+	assert_false(SaveManager.slot_exists(SLOT), "Incomplete current-schema save should not be considered loadable.")
+	assert_false(SaveManager.load_game(SLOT), "Incomplete current-schema save should not load.")
+	assert_true(str(SaveManager.last_operation_summary.get("reason", "")).contains("missing required field"))
+
+
+func test_future_schema_saves_are_rejected() -> void:
+	var path := SaveManager.get_slot_path(SLOT)
+	var payload := SaveManager._build_save_payload({}, SLOT)
+	payload["save_schema_version"] = SaveManager.SCHEMA_VERSION + 1
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	assert_not_null(file)
+	file.store_string(JSON.stringify(payload, "\t"))
+	file.close()
+
+	assert_false(SaveManager.slot_exists(SLOT), "Future-schema save should not be considered loadable.")
+	assert_false(SaveManager.load_game(SLOT), "Future-schema save should not load.")
+	assert_true(str(SaveManager.last_operation_summary.get("reason", "")).contains("newer than supported"))
 
 
 func test_purge_all_saves_removes_old_slots() -> void:
