@@ -71,14 +71,23 @@ func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	return _parse_response(response)
 
 
-## Streaming is not yet implemented — falls back to blocking call.
+## Streaming generation — sends stream:true and calls chunk_callback per token.
+## Falls back to the non-streaming path if chunk_callback is invalid.
 func generate_streaming_async(
 		prompt: String,
 		chunk_callback: Callable,
 		context: Dictionary = {}) -> void:
-	var result := await generate_async(prompt, context)
-	if not result.is_empty() and chunk_callback.is_valid():
-		chunk_callback.call(result)
+	if not chunk_callback.is_valid():
+		await generate_async(prompt, context)
+		return
+	if not _is_ready:
+		if _last_error.is_empty():
+			_last_error = "AnthropicProvider: provider is not ready."
+		return
+	_last_error = ""
+	var body := _build_streaming_request_body(prompt, context)
+	var headers := _build_headers()
+	await _send_streaming_request(body, headers, chunk_callback)
 
 
 func _build_request_body(prompt: String, context: Dictionary) -> String:
@@ -93,6 +102,27 @@ func _build_request_body(prompt: String, context: Dictionary) -> String:
 		"model": _model,
 		"max_tokens": _max_tokens,
 		"messages": messages,
+	}
+	var system: String = str(context.get("system_prompt", _system_prompt))
+	if not system.is_empty():
+		payload["system"] = system
+
+	return JSON.stringify(payload)
+
+
+func _build_streaming_request_body(prompt: String, context: Dictionary) -> String:
+	var messages: Array = []
+	var history_value: Variant = context.get("history", [])
+	if history_value is Array:
+		var history: Array = history_value
+		messages.append_array(history)
+	messages.append({"role": "user", "content": prompt})
+
+	var payload: Dictionary = {
+		"model": _model,
+		"max_tokens": _max_tokens,
+		"messages": messages,
+		"stream": true,
 	}
 	var system: String = str(context.get("system_prompt", _system_prompt))
 	if not system.is_empty():
@@ -165,6 +195,104 @@ func _parse_response(response: Array) -> String:
 		_last_error = "AnthropicProvider: response text was empty."
 		return ""
 	return "\n".join(text_parts)
+
+
+## Sends an SSE streaming request and calls chunk_callback for each text delta.
+## Uses HTTPClient directly so we can read the response body incrementally.
+## Anthropic SSE format: each chunk is an "event:" line followed by "data:" JSON.
+## We extract text from "content_block_delta" events with type "text_delta".
+func _send_streaming_request(
+		body: String,
+		headers: PackedStringArray,
+		chunk_callback: Callable) -> void:
+	const HOST := "api.anthropic.com"
+	const PORT := 443
+	const PATH := "/v1/messages"
+
+	var http := HTTPClient.new()
+	var connect_err := http.connect_to_host(HOST, PORT, TLSOptions.client())
+	if connect_err != OK:
+		_last_error = "AnthropicProvider: streaming connect failed (%d)." % connect_err
+		return
+
+	# Wait for connection.
+	while http.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
+		http.poll()
+		await get_tree().process_frame
+	if http.get_status() != HTTPClient.STATUS_CONNECTED:
+		_last_error = "AnthropicProvider: streaming connection failed (status=%d)." % http.get_status()
+		return
+
+	var header_list: PackedStringArray = headers.duplicate()
+	header_list.append("Content-Length: %d" % body.to_utf8_buffer().size())
+	var request_err := http.request(HTTPClient.METHOD_POST, PATH, header_list, body)
+	if request_err != OK:
+		_last_error = "AnthropicProvider: streaming request failed (%d)." % request_err
+		return
+
+	# Wait for response headers.
+	while http.get_status() == HTTPClient.STATUS_REQUESTING:
+		http.poll()
+		await get_tree().process_frame
+	if http.get_status() != HTTPClient.STATUS_BODY:
+		_last_error = "AnthropicProvider: streaming response error (status=%d, http=%d)." % [
+			http.get_status(), http.get_response_code()]
+		return
+	if http.get_response_code() != 200:
+		_last_error = "AnthropicProvider: streaming HTTP error (%d)." % http.get_response_code()
+		return
+
+	# Read body chunks as they arrive.
+	# Anthropic SSE is a sequence of paired lines:
+	#   event: <event_type>
+	#   data: <json>
+	# We only care about data lines from "content_block_delta" events.
+	var buffer := ""
+	var current_event_type := ""
+	while http.get_status() == HTTPClient.STATUS_BODY:
+		http.poll()
+		var chunk := http.read_response_body_chunk()
+		if chunk.size() > 0:
+			buffer += chunk.get_string_from_utf8()
+			while true:
+				var newline_pos := buffer.find("\n")
+				if newline_pos == -1:
+					break
+				var line := buffer.left(newline_pos).strip_edges()
+				buffer = buffer.substr(newline_pos + 1)
+				if line.begins_with("event: "):
+					current_event_type = line.substr(7).strip_edges()
+				elif line.begins_with("data: "):
+					var data_str := line.substr(6).strip_edges()
+					if data_str == "[DONE]":
+						return
+					if current_event_type == "content_block_delta":
+						var delta := _parse_sse_chunk(data_str)
+						if not delta.is_empty() and chunk_callback.is_valid():
+							chunk_callback.call(delta)
+				elif line.is_empty():
+					current_event_type = ""
+		else:
+			await get_tree().process_frame
+
+
+## Extracts text from an Anthropic content_block_delta SSE data payload.
+## Expected shape: {"type":"content_block_delta","delta":{"type":"text_delta","text":"..."}}
+func _parse_sse_chunk(data_str: String) -> String:
+	var json := JSON.new()
+	if json.parse(data_str) != OK:
+		return ""
+	var parsed_value: Variant = json.data
+	if not parsed_value is Dictionary:
+		return ""
+	var parsed: Dictionary = parsed_value
+	var delta_value: Variant = parsed.get("delta", {})
+	if not delta_value is Dictionary:
+		return ""
+	var delta: Dictionary = delta_value
+	if str(delta.get("type", "")) != "text_delta":
+		return ""
+	return str(delta.get("text", ""))
 
 
 func _refresh_readiness() -> void:
