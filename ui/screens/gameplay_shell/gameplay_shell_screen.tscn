@@ -24,94 +24,86 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="TopRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1294559921]
+[node name="TopRow" type="PanelContainer" parent="MarginContainer/VBoxContainer" unique_id=1294559921]
 layout_mode = 2
 
-[node name="LocationPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/TopRow" unique_id=1537703056]
+[node name="TopRowMargin" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopRow"]
+layout_mode = 2
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+
+[node name="TopRowHBox" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin"]
+layout_mode = 2
+
+[node name="LocationPanel" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox" unique_id=1537703056]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopRow/LocationPanel" unique_id=23854205]
-layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer" unique_id=1986379559]
-layout_mode = 2
-alignment = 1
-
-[node name="LocationTitleLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer" unique_id=137839008]
+[node name="LocationTitleLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/LocationPanel" unique_id=137839008]
 layout_mode = 2
 text = "Location"
 
-[node name="LocationDescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer" unique_id=1528074378]
+[node name="LocationDescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/LocationPanel" unique_id=1528074378]
+visible = false
 layout_mode = 2
-text = "Location description."
-autowrap_mode = 3
+text = ""
 
-[node name="LocationMetaLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer" unique_id=1875059780]
+[node name="LocationMetaLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/LocationPanel" unique_id=1875059780]
+visible = false
 layout_mode = 2
-text = "Location metadata."
-autowrap_mode = 3
+text = ""
 
-[node name="SessionPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/TopRow" unique_id=1429889894]
+[node name="SessionSpacer" type="Control" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopRow/SessionPanel" unique_id=1077129450]
+[node name="SessionPanel" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox" unique_id=1429889894]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer" unique_id=819332565]
-layout_mode = 2
-alignment = 1
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer" unique_id=31190256]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel" unique_id=31190256]
 layout_mode = 2
 
-[node name="SessionTimeLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=151707141]
+[node name="SessionTimeLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/HBoxContainer" unique_id=151707141]
 layout_mode = 2
 text = "Time"
 
-[node name="SessionDayLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=852748150]
+[node name="SessionDayLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/HBoxContainer" unique_id=852748150]
 layout_mode = 2
 text = "Day"
 
-[node name="TimeButtonsHBox" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer" unique_id=520960990]
+[node name="TimeButtonsHBox" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel" unique_id=520960990]
 layout_mode = 2
 
-[node name="AdvanceTickButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/TimeButtonsHBox" unique_id=604012928]
+[node name="AdvanceTickButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/TimeButtonsHBox" unique_id=604012928]
 layout_mode = 2
-text = "Advance Tick"
+text = "+1"
 
-[node name="TimeAdvanceButtons" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/TimeButtonsHBox" unique_id=1670874517]
-layout_mode = 2
-
-[node name="SystemPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/TopRow" unique_id=2063052473]
+[node name="TimeAdvanceButtons" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/TimeButtonsHBox" unique_id=1670874517]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopRow/SystemPanel" unique_id=750999163]
+[node name="SystemSpacer" type="Control" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SystemPanel" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox" unique_id=2063052473]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer" unique_id=680185949]
+[node name="CharacterMenuButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel" unique_id=764165290]
 layout_mode = 2
-alignment = 1
+text = "Character"
 
-[node name="CharacterMenuButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer" unique_id=764165290]
+[node name="WorldMapButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel"]
 layout_mode = 2
-size_flags_vertical = 4
-text = "Character Menu"
+text = "Map"
 
-[node name="WorldMapButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer"]
+[node name="QuickAutosaveButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel" unique_id=1461825073]
 layout_mode = 2
-size_flags_vertical = 4
-text = "World Map"
+text = "Save"
 
-[node name="QuickAutosaveButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer" unique_id=1461825073]
+[node name="PauseMenuButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel" unique_id=2049120836]
 layout_mode = 2
-size_flags_vertical = 4
-text = "Autosave"
-
-[node name="PauseMenuButton" type="Button" parent="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer" unique_id=2049120836]
-layout_mode = 2
-size_flags_vertical = 4
 text = "Pause"
 
 [node name="SurfacePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer" unique_id=91845682]
@@ -150,9 +142,9 @@ layout_mode = 2
 text = "Ready."
 autowrap_mode = 3
 
-[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/TimeButtonsHBox/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/CharacterMenuButton" to="." method="_on_character_menu_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/WorldMapButton" to="." method="_on_world_map_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/QuickAutosaveButton" to="." method="_on_quick_autosave_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/PauseMenuButton" to="." method="_on_pause_menu_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/TimeButtonsHBox/AdvanceTickButton" to="." method="_on_advance_tick_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel/CharacterMenuButton" to="." method="_on_character_menu_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel/WorldMapButton" to="." method="_on_world_map_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel/QuickAutosaveButton" to="." method="_on_quick_autosave_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel/PauseMenuButton" to="." method="_on_pause_menu_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton" to="." method="_on_surface_close_button_pressed"]

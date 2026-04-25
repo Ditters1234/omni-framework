@@ -15,8 +15,8 @@ const GLOBAL_SHELL_SURFACE_IDS := {
 }
 
 @onready var _interactions_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/InteractionsPanel/MarginContainer/VBoxContainer/InteractionsScroll/InteractionsContainer
-@onready var _entities_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/EntitiesPanel/MarginContainer/VBoxContainer/EntitiesScroll/EntitiesContainer
 @onready var _travel_container: VBoxContainer = $MarginContainer/VBoxContainer/MainColumns/TravelPanel/MarginContainer/VBoxContainer/TravelScroll/TravelContainer
+@onready var _location_description_label: Label = $MarginContainer/VBoxContainer/LocationHeader/LocationDescriptionLabel
 @onready var _status_label: Label = $MarginContainer/VBoxContainer/StatusLabel
 
 var _location_id: String = ""
@@ -71,10 +71,15 @@ func _load_location() -> void:
 
 func _render_location_actions() -> void:
 	_clear_container(_interactions_container)
-	_clear_container(_entities_container)
 	_clear_container(_travel_container)
 
-	var interaction_entries: Array[Dictionary] = []
+	var location_description := str(_location_template.get("description", ""))
+	_location_description_label.text = location_description
+	_location_description_label.visible = not location_description.is_empty()
+
+	var has_any_action := false
+
+	# Location-owned screens (non-global)
 	var screens: Variant = _location_template.get("screens", [])
 	if screens is Array and not screens.is_empty():
 		for screen_entry in screens:
@@ -83,18 +88,44 @@ func _render_location_actions() -> void:
 			var entry: Dictionary = (screen_entry as Dictionary).duplicate(true)
 			if _is_global_shell_surface(entry):
 				continue
-			interaction_entries.append(entry)
 			_add_interaction_button(entry)
-	if interaction_entries.is_empty():
-		_add_empty_label(_interactions_container, "No local interactions are available here right now.")
+			has_any_action = true
 
-	var entity_entries := _render_entity_presence()
+	# Present entities — their interactions merge into the actions column
+	var entity_entries := _collect_entity_presence()
+	for entity_entry in entity_entries:
+		var entity_id := str(entity_entry.get("entity_id", ""))
+		var display_name := str(entity_entry.get("display_name", entity_id))
+		var description := str(entity_entry.get("description", ""))
+		var interactions: Array[Dictionary] = []
+		var interactions_value: Variant = entity_entry.get("interactions", [])
+		if interactions_value is Array:
+			for item in (interactions_value as Array):
+				if item is Dictionary:
+					interactions.append(item as Dictionary)
+
+		if interactions.is_empty():
+			continue
+
+		# Add a label separator for the entity
+		var separator := Label.new()
+		separator.text = display_name
+		separator.tooltip_text = description
+		separator.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_interactions_container.add_child(separator)
+
+		for interaction in interactions:
+			_add_entity_interaction_button(entity_id, interaction)
+			has_any_action = true
+
+	if not has_any_action:
+		_add_empty_label(_interactions_container, "No actions available here right now.")
+
 	var travel_entries := _render_travel_actions()
 	_status_label.text = ""
 	_last_view_model = {
 		"surface_id": "location_surface",
 		"location_id": _location_id,
-		"interactions": interaction_entries,
 		"entities": entity_entries,
 		"travel": travel_entries,
 		"status_text": "",
@@ -174,8 +205,8 @@ func _render_travel_actions() -> Array[Dictionary]:
 	return rendered_connections
 
 
-func _render_entity_presence() -> Array[Dictionary]:
-	var rendered_entities: Array[Dictionary] = []
+func _collect_entity_presence() -> Array[Dictionary]:
+	var collected_entities: Array[Dictionary] = []
 	var entity_ids := _get_present_entity_ids()
 	for entity_id in entity_ids:
 		var entity_template := _get_entity_template_for_presence(entity_id)
@@ -184,16 +215,13 @@ func _render_entity_presence() -> Array[Dictionary]:
 		var display_name := str(entity_template.get("display_name", entity_id))
 		var description := str(entity_template.get("description", ""))
 		var interactions := _read_entity_interactions(entity_template)
-		rendered_entities.append({
+		collected_entities.append({
 			"entity_id": entity_id,
 			"display_name": display_name,
 			"description": description,
 			"interactions": interactions,
 		})
-		_add_entity_presence(entity_id, display_name, description, interactions)
-	if rendered_entities.is_empty():
-		_add_empty_label(_entities_container, "No other entities are visible here right now.")
-	return rendered_entities
+	return collected_entities
 
 
 func _get_present_entity_ids() -> Array[String]:
@@ -254,27 +282,6 @@ func _read_entity_interactions(entity_template: Dictionary) -> Array[Dictionary]
 	return interactions
 
 
-func _add_entity_presence(entity_id: String, display_name: String, description: String, interactions: Array[Dictionary]) -> void:
-	var name_label := Label.new()
-	name_label.text = display_name
-	name_label.tooltip_text = description
-	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_entities_container.add_child(name_label)
-
-	if not description.is_empty():
-		var description_label := Label.new()
-		description_label.text = description
-		description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_entities_container.add_child(description_label)
-
-	if interactions.is_empty():
-		_add_empty_label(_entities_container, "No interactions are available for %s." % display_name)
-		return
-
-	for interaction in interactions:
-		_add_entity_interaction_button(entity_id, interaction)
-
-
 func _add_entity_interaction_button(entity_id: String, interaction: Dictionary) -> void:
 	var label := str(interaction.get("label", interaction.get("display_name", "Interact")))
 	var description := str(interaction.get("description", ""))
@@ -304,7 +311,7 @@ func _add_entity_interaction_button(entity_id: String, interaction: Dictionary) 
 		push_params["opened_from_gameplay_shell"] = true
 		button.pressed.connect(_on_screen_button_pressed.bind(screen_id, push_params))
 
-	_entities_container.add_child(button)
+	_interactions_container.add_child(button)
 
 
 func _add_empty_label(container: VBoxContainer, text: String) -> void:
@@ -322,7 +329,6 @@ func _clear_container(container: Node) -> void:
 
 func _show_error(message: String) -> void:
 	_clear_container(_interactions_container)
-	_clear_container(_entities_container)
 	_clear_container(_travel_container)
 	_add_empty_label(_interactions_container, message)
 	_status_label.text = message

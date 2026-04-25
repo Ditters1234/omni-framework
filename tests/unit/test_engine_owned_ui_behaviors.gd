@@ -613,7 +613,7 @@ func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_
 
 	var shell := _get_top_screen()
 	assert_not_null(shell)
-	var world_map_button := _find_button_with_text(shell, "World Map")
+	var world_map_button := _find_button_with_text(shell, "Map")
 	assert_not_null(world_map_button)
 	assert_false(world_map_button.disabled)
 	world_map_button.pressed.emit()

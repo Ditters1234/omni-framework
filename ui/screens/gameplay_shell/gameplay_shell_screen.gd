@@ -9,17 +9,17 @@ const DEFAULT_SURFACE_ID := "location_surface"
 
 var _title_label: Label = null
 var _subtitle_label: Label = null
-@onready var _character_menu_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/CharacterMenuButton
-@onready var _world_map_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/WorldMapButton
-@onready var _quick_autosave_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/QuickAutosaveButton
-@onready var _pause_menu_button: Button = $MarginContainer/VBoxContainer/TopRow/SystemPanel/MarginContainer/VBoxContainer/PauseMenuButton
-@onready var _location_title_label: Label = $MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer/LocationTitleLabel
-@onready var _location_description_label: Label = $MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer/LocationDescriptionLabel
-@onready var _location_meta_label: Label = $MarginContainer/VBoxContainer/TopRow/LocationPanel/MarginContainer/VBoxContainer/LocationMetaLabel
-@onready var _session_time_label: Label = $MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/HBoxContainer/SessionTimeLabel
-@onready var _session_day_label: Label = $MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/HBoxContainer/SessionDayLabel
-@onready var _advance_tick_button: Button = $MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/TimeButtonsHBox/AdvanceTickButton
-@onready var _time_buttons_container: Control = $MarginContainer/VBoxContainer/TopRow/SessionPanel/MarginContainer/VBoxContainer/TimeButtonsHBox/TimeAdvanceButtons
+@onready var _character_menu_button: Button = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel/CharacterMenuButton
+@onready var _world_map_button: Button = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel/WorldMapButton
+@onready var _quick_autosave_button: Button = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel/QuickAutosaveButton
+@onready var _pause_menu_button: Button = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SystemPanel/PauseMenuButton
+@onready var _location_title_label: Label = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/LocationPanel/LocationTitleLabel
+@onready var _location_description_label: Label = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/LocationPanel/LocationDescriptionLabel
+@onready var _location_meta_label: Label = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/LocationPanel/LocationMetaLabel
+@onready var _session_time_label: Label = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/HBoxContainer/SessionTimeLabel
+@onready var _session_day_label: Label = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/HBoxContainer/SessionDayLabel
+@onready var _advance_tick_button: Button = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/TimeButtonsHBox/AdvanceTickButton
+@onready var _time_buttons_container: Control = $MarginContainer/VBoxContainer/TopRow/TopRowMargin/TopRowHBox/SessionPanel/TimeButtonsHBox/TimeAdvanceButtons
 @onready var _surface_panel: PanelContainer = $MarginContainer/VBoxContainer/SurfacePanel
 @onready var _surface_title_label: Label = $MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceTitleLabel
 @onready var _surface_close_button: Button = $MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceCloseButton
@@ -36,7 +36,7 @@ var _initial_surface_id: String = ""
 var _initial_surface_params: Dictionary = {}
 var _disable_shell_chrome: bool = false
 
-@onready var _top_row: HBoxContainer = $MarginContainer/VBoxContainer/TopRow
+@onready var _top_row: PanelContainer = $MarginContainer/VBoxContainer/TopRow
 
 
 func initialize(_params: Dictionary = {}) -> void:
@@ -48,6 +48,8 @@ func initialize(_params: Dictionary = {}) -> void:
 	else:
 		_initial_surface_params = {}
 	_disable_shell_chrome = bool(_params.get("disable_shell_chrome", false))
+	if not is_node_ready():
+		return
 	_rebuild_time_buttons()
 	_refresh()
 	_show_default_surface_if_needed()
@@ -55,7 +57,8 @@ func initialize(_params: Dictionary = {}) -> void:
 
 func _ready() -> void:
 	_connect_runtime_signals()
-	_surface_host.clip_contents = true
+	if _surface_host != null:
+		_surface_host.clip_contents = true
 	_rebuild_time_buttons()
 	_refresh()
 	_show_default_surface_if_needed()
@@ -268,29 +271,42 @@ func _apply_view_model(view_model: Dictionary) -> void:
 		_subtitle_label.text = str(view_model.get("subtitle", ""))
 	var location_value: Variant = view_model.get("location", {})
 	var location_view_model := _read_dictionary(location_value)
-	_location_title_label.text = str(location_view_model.get("title_text", ""))
-	_location_description_label.text = str(location_view_model.get("description_text", ""))
-	_location_meta_label.text = str(location_view_model.get("meta_text", ""))
+	if _location_title_label != null:
+		_location_title_label.text = str(location_view_model.get("title_text", ""))
+		_location_title_label.tooltip_text = str(location_view_model.get("description_text", ""))
+	if _location_description_label != null:
+		_location_description_label.text = str(location_view_model.get("description_text", ""))
+	if _location_meta_label != null:
+		_location_meta_label.text = str(location_view_model.get("meta_text", ""))
 	var session_value: Variant = view_model.get("session", {})
 	var session_view_model := _read_dictionary(session_value)
-	_session_time_label.text = str(session_view_model.get("time_text", ""))
-	_session_day_label.text = str(session_view_model.get("day_text", ""))
-	_status_label.text = str(view_model.get("status_text", ""))
+	if _session_time_label != null:
+		_session_time_label.text = str(session_view_model.get("time_text", ""))
+	if _session_day_label != null:
+		_session_day_label.text = str(session_view_model.get("day_text", ""))
+	if _status_label != null:
+		_status_label.text = str(view_model.get("status_text", ""))
 	_set_buttons_enabled(bool(view_model.get("buttons_enabled", false)))
 
 
 func _set_buttons_enabled(enabled: bool) -> void:
-	_character_menu_button.disabled = not enabled
-	_world_map_button.disabled = not enabled
-	_quick_autosave_button.disabled = not enabled
-	_advance_tick_button.disabled = not enabled
-	_pause_menu_button.disabled = not enabled
-	if _surface_close_button.visible:
+	if _character_menu_button != null:
+		_character_menu_button.disabled = not enabled
+	if _world_map_button != null:
+		_world_map_button.disabled = not enabled
+	if _quick_autosave_button != null:
+		_quick_autosave_button.disabled = not enabled
+	if _advance_tick_button != null:
+		_advance_tick_button.disabled = not enabled
+	if _pause_menu_button != null:
+		_pause_menu_button.disabled = not enabled
+	if _surface_close_button != null and _surface_close_button.visible:
 		_surface_close_button.disabled = not enabled
-	for child in _time_buttons_container.get_children():
-		var button := child as Button
-		if button != null:
-			button.disabled = not enabled
+	if _time_buttons_container != null:
+		for child in _time_buttons_container.get_children():
+			var button := child as Button
+			if button != null:
+				button.disabled = not enabled
 
 
 func _rebuild_time_buttons(specs: Array[Dictionary] = []) -> void:
@@ -379,10 +395,10 @@ func _on_location_changed(_old_id: String, _new_id: String) -> void:
 func _grab_default_focus() -> void:
 	if not is_node_ready():
 		return
-	if not _character_menu_button.disabled:
+	if _character_menu_button != null and not _character_menu_button.disabled:
 		_character_menu_button.grab_focus()
 		return
-	if not _advance_tick_button.disabled:
+	if _advance_tick_button != null and not _advance_tick_button.disabled:
 		_advance_tick_button.grab_focus()
 
 
