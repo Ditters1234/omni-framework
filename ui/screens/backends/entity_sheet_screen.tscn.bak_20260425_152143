@@ -1,0 +1,124 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/screens/backends/entity_sheet_screen.gd" id="1_screen"]
+
+[node name="EntitySheetScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Entity Sheet"
+
+[node name="DescriptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="MainContent" type="HSplitContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SidebarScroll" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="Sidebar" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PortraitHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar"]
+layout_mode = 2
+
+[node name="SummaryLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/SidebarScroll/Sidebar"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="DetailsScroll" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="DetailsContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatSheetHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CurrencySectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+text = "Currencies"
+
+[node name="CurrencyRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EquippedSectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+text = "Equipped"
+
+[node name="EquippedRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="InventorySectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+text = "Inventory"
+
+[node name="InventoryRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ReputationSectionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+text = "Faction Standing"
+
+[node name="ReputationRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailsScroll/DetailsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+focus_mode = 2
+text = "Back"
+
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]

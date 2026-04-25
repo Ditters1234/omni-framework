@@ -53,9 +53,23 @@ func _ready() -> void:
 	_connect_runtime_signals()
 	_initialize_backend()
 	_refresh_state()
+	_ensure_focusable()
 	call_deferred("_normalize_for_shell_host")
 	call_deferred("_grab_default_focus")
 
+
+func _ensure_focusable() -> void:
+	# Prefer back button
+	if _back_button != null:
+		_back_button.focus_mode = Control.FOCUS_ALL
+		_back_button.grab_focus()
+		return
+
+	# Fallback: make first tab focusable
+	var tabs := get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/TabContainer")
+	if tabs != null:
+		tabs.focus_mode = Control.FOCUS_ALL
+		tabs.grab_focus()
 
 func _normalize_for_shell_host() -> void:
 	if not _opened_from_gameplay_shell:
@@ -387,14 +401,8 @@ func _summarize_payload(payload: Dictionary) -> String:
 
 
 func _grab_default_focus() -> void:
-	# GUT treats Godot focus warnings as test failures. Only grab focus on
-	# controls that are explicitly focusable and inside the active tree.
-	if _refresh_button != null and is_instance_valid(_refresh_button):
-		_refresh_button.focus_mode = Control.FOCUS_ALL
-		if _refresh_button.is_inside_tree() and _refresh_button.is_visible_in_tree() and not _refresh_button.disabled:
-			_refresh_button.grab_focus()
-			return
-	if _back_button != null and is_instance_valid(_back_button):
-		_back_button.focus_mode = Control.FOCUS_ALL
-		if _back_button.is_inside_tree() and _back_button.is_visible_in_tree() and not _back_button.disabled:
-			_back_button.grab_focus()
+	if _tab_container != null:
+		_tab_container.grab_focus()
+		return
+	if _refresh_button != null:
+		_refresh_button.grab_focus()

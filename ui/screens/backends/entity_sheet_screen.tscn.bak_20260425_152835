@@ -38,7 +38,6 @@ text = "Review character, inventory, quests, reputation, progress, and recent ac
 
 [node name="TabContainer" type="TabContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
-focus_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 tab_alignment = 0
