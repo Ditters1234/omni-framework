@@ -71,7 +71,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
-| `AppSettings` | `AppSettings` | `core/app_settings.gd` | — | Persistent app-level preferences (audio vol, graphics, accessibility). |
+| `AppSettings` | `AppSettings` | `core/app_settings.gd` | — | Persistent app-level preferences (audio, graphics, and engine-owned AI connection/dialogue UX settings such as `chat_history_window` and `streaming_speed`). |
 | `BackendHelpers` | `OmniBackendHelpers` | `ui/screens/backends/backend_helpers.gd` | GameState, DataManager | Phase-neutral utilities shared by backend screens. |
 
 ---

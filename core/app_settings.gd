@@ -24,6 +24,8 @@ const AI_MAX_TOKENS := "max_tokens"
 const AI_TEMPERATURE := "temperature"
 const AI_MODEL_PATH := "model_path"
 const AI_CONTEXT_WINDOW := "n_ctx"
+const AI_CHAT_HISTORY_WINDOW := "chat_history_window"
+const AI_STREAMING_SPEED := "streaming_speed"
 const AI_PROVIDER_DISABLED := "disabled"
 const AI_PROVIDER_OPENAI_COMPATIBLE := "openai_compatible"
 const AI_PROVIDER_ANTHROPIC := "anthropic"
@@ -38,6 +40,8 @@ const DEFAULT_AI_MODEL := "llama3"
 const DEFAULT_AI_MAX_TOKENS := 256
 const DEFAULT_AI_TEMPERATURE := 0.7
 const DEFAULT_AI_CONTEXT_WINDOW := 2048
+const DEFAULT_AI_CHAT_HISTORY_WINDOW := 20
+const DEFAULT_AI_STREAMING_SPEED := 0.03
 
 static var _settings_path: String = SETTINGS_PATH
 static var _is_test_environment: bool = false
@@ -67,6 +71,8 @@ static func get_default_settings() -> Dictionary:
 			AI_TEMPERATURE: DEFAULT_AI_TEMPERATURE,
 			AI_MODEL_PATH: "",
 			AI_CONTEXT_WINDOW: DEFAULT_AI_CONTEXT_WINDOW,
+			AI_CHAT_HISTORY_WINDOW: DEFAULT_AI_CHAT_HISTORY_WINDOW,
+			AI_STREAMING_SPEED: DEFAULT_AI_STREAMING_SPEED,
 		},
 	}
 
@@ -126,6 +132,8 @@ static func load_settings() -> Dictionary:
 			AI_TEMPERATURE: config.get_value(SECTION_AI, AI_TEMPERATURE, DEFAULT_AI_TEMPERATURE),
 			AI_MODEL_PATH: config.get_value(SECTION_AI, AI_MODEL_PATH, ""),
 			AI_CONTEXT_WINDOW: config.get_value(SECTION_AI, AI_CONTEXT_WINDOW, DEFAULT_AI_CONTEXT_WINDOW),
+			AI_CHAT_HISTORY_WINDOW: config.get_value(SECTION_AI, AI_CHAT_HISTORY_WINDOW, DEFAULT_AI_CHAT_HISTORY_WINDOW),
+			AI_STREAMING_SPEED: config.get_value(SECTION_AI, AI_STREAMING_SPEED, DEFAULT_AI_STREAMING_SPEED),
 		},
 	})
 
@@ -155,6 +163,8 @@ static func save_settings(settings: Dictionary) -> int:
 	config.set_value(SECTION_AI, AI_TEMPERATURE, float(ai.get(AI_TEMPERATURE, DEFAULT_AI_TEMPERATURE)))
 	config.set_value(SECTION_AI, AI_MODEL_PATH, str(ai.get(AI_MODEL_PATH, "")))
 	config.set_value(SECTION_AI, AI_CONTEXT_WINDOW, int(ai.get(AI_CONTEXT_WINDOW, DEFAULT_AI_CONTEXT_WINDOW)))
+	config.set_value(SECTION_AI, AI_CHAT_HISTORY_WINDOW, int(ai.get(AI_CHAT_HISTORY_WINDOW, DEFAULT_AI_CHAT_HISTORY_WINDOW)))
+	config.set_value(SECTION_AI, AI_STREAMING_SPEED, float(ai.get(AI_STREAMING_SPEED, DEFAULT_AI_STREAMING_SPEED)))
 	return config.save(_settings_path)
 
 
@@ -223,6 +233,14 @@ static func normalize_settings(settings: Dictionary) -> Dictionary:
 			AI_CONTEXT_WINDOW: _normalize_positive_int(
 				ai_input.get(AI_CONTEXT_WINDOW, ai_defaults.get(AI_CONTEXT_WINDOW, DEFAULT_AI_CONTEXT_WINDOW)),
 				int(ai_defaults.get(AI_CONTEXT_WINDOW, DEFAULT_AI_CONTEXT_WINDOW))
+			),
+			AI_CHAT_HISTORY_WINDOW: _normalize_positive_int(
+				ai_input.get(AI_CHAT_HISTORY_WINDOW, ai_defaults.get(AI_CHAT_HISTORY_WINDOW, DEFAULT_AI_CHAT_HISTORY_WINDOW)),
+				int(ai_defaults.get(AI_CHAT_HISTORY_WINDOW, DEFAULT_AI_CHAT_HISTORY_WINDOW))
+			),
+			AI_STREAMING_SPEED: _normalize_nonnegative_float(
+				ai_input.get(AI_STREAMING_SPEED, ai_defaults.get(AI_STREAMING_SPEED, DEFAULT_AI_STREAMING_SPEED)),
+				float(ai_defaults.get(AI_STREAMING_SPEED, DEFAULT_AI_STREAMING_SPEED))
 			),
 		},
 	}
@@ -312,6 +330,12 @@ static func _normalize_text(value: Variant, fallback: String) -> String:
 	if normalized.is_empty():
 		return fallback
 	return normalized
+
+
+static func _normalize_nonnegative_float(value: Variant, fallback: float) -> float:
+	if value is float or value is int:
+		return maxf(float(value), 0.0)
+	return maxf(fallback, 0.0)
 
 
 static func _normalize_settings_path(path: String) -> String:

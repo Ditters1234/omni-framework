@@ -46,6 +46,7 @@
       "entity_id": "base:npc_theta",
       "display_name": "Quartermaster Theta",
       "description": "A heavily augmented ripperdoc who runs the clinic in Market Row. She'll sell you parts, install them, and only judge you a little.",
+      "ai_persona_id": "base:theta_persona",
       "portrait": "res://mods/base/assets/entity_theta.png",
       "dialogue_blip": "res://mods/base/assets/audio/sfx_dialogue_theta.wav",
       "location_id": "base:market_row",
@@ -81,7 +82,8 @@
           "description": "Have a conversation.",
           "backend_class": "DialogueBackend",
           "dialogue_resource": "res://mods/base/dialogue/quartermaster_theta.dialogue",
-          "dialogue_start": "start"
+          "dialogue_start": "start",
+          "ai_mode": "freeform"
         },
         {
           "tab_id": "theta_sheet",

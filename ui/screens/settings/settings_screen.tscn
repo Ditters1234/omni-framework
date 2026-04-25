@@ -222,6 +222,30 @@ max_value = 32768.0
 step = 1.0
 value = 2048.0
 
+[node name="AiChatHistoryWindowLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Chat History Window"
+
+[node name="AiChatHistoryWindowSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 100.0
+step = 1.0
+value = 20.0
+
+[node name="AiStreamingSpeedLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+text = "Streaming Speed"
+
+[node name="AiStreamingSpeedSpinBox" type="SpinBox" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 0.03
+
 [node name="AiHintLabel" type="Label" parent="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
@@ -275,6 +299,8 @@ text = "Settings loaded."
 [connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiMaxTokensSpinBox" to="." method="_on_ai_max_tokens_spinbox_value_changed"]
 [connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiTemperatureSpinBox" to="." method="_on_ai_temperature_spinbox_value_changed"]
 [connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiContextWindowSpinBox" to="." method="_on_ai_context_window_spinbox_value_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiChatHistoryWindowSpinBox" to="." method="_on_ai_chat_history_window_spinbox_value_changed"]
+[connection signal="value_changed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiStreamingSpeedSpinBox" to="." method="_on_ai_streaming_speed_spinbox_value_changed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiButtonRow/ConnectAiButton" to="." method="_on_connect_ai_button_pressed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/ButtonRow/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]

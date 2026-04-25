@@ -1,10 +1,12 @@
 extends Control
 
+const APP_SETTINGS := preload("res://core/app_settings.gd")
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
 const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn")
 const AI_MODE_DISABLED := "disabled"
 const AI_MODE_HYBRID := "hybrid"
 const AI_MODE_FREEFORM := "freeform"
+const AI_INPUT_MAX_LENGTH := 500
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -42,6 +44,9 @@ var _ai_request_id: String = ""
 var _ai_request_in_flight: bool = false
 var _ai_request_context: Dictionary = {}
 var _ai_response_text: String = ""
+var _ai_stream_queue: String = ""
+var _ai_streaming_speed: float = APP_SETTINGS.DEFAULT_AI_STREAMING_SPEED
+var _ai_stream_timer: Timer = null
 
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
@@ -52,6 +57,8 @@ func initialize(params: Dictionary = {}) -> void:
 		_start_dialogue_if_needed()
 
 func _ready() -> void:
+	_create_ai_stream_timer()
+	_load_ai_runtime_settings()
 	_connect_ai_signals()
 	_initialize_backend()
 	_refresh_context()
@@ -62,6 +69,7 @@ func _exit_tree() -> void:
 	_ai_request_id = ""
 	_ai_request_in_flight = false
 	_ai_request_context.clear()
+	_clear_ai_stream_state()
 	_current_line = null
 	_dialogue_resource = null
 	if is_instance_valid(_responses_container):
@@ -94,6 +102,7 @@ func _refresh_context() -> void:
 		return
 	var view_model: Dictionary = _backend.build_view_model()
 	_last_view_model = view_model.duplicate(true)
+	_load_ai_runtime_settings()
 	_ai_mode = str(view_model.get("ai_mode", AI_MODE_DISABLED))
 	_ai_chat_service = _backend.get_ai_chat_service()
 	_title_label.text = str(view_model.get("title", "Dialogue"))
@@ -198,6 +207,7 @@ func _finish_dialogue(message: String) -> void:
 	_ai_request_in_flight = false
 	_ai_request_id = ""
 	_ai_request_context.clear()
+	_clear_ai_stream_state()
 	_current_line = null
 	_speaker_label.text = _backend.get_speaker_display_name()
 	_body_label.text = message
@@ -370,6 +380,7 @@ func _open_ai_chat_interface() -> void:
 	_conversation_finished = false
 	_current_line = null
 	_pending_ai_chat_open = false
+	_clear_ai_stream_state()
 	_ai_speaker_label.text = _backend.get_speaker_display_name()
 	_set_ai_response_text("Ask %s anything." % _backend.get_speaker_display_name())
 	_status_label.text = ""
@@ -385,6 +396,7 @@ func _close_ai_chat_to_topics(restart_dialogue: bool = true) -> void:
 	_ai_chat_active = false
 	_pending_ai_chat_open = false
 	_pending_ai_chat_close = false
+	_clear_ai_stream_state()
 	_set_ai_response_text("")
 	_status_label.text = ""
 	_refresh_ai_widgets()
@@ -418,6 +430,7 @@ func _refresh_ai_widgets() -> void:
 	_ai_back_to_topics_button.visible = can_return_to_topics
 	_ai_back_to_topics_button.disabled = _ai_request_in_flight
 	var can_send := _ai_chat_active and _backend.can_use_ai_chat() and not _ai_request_in_flight
+	_ai_input.max_length = AI_INPUT_MAX_LENGTH
 	_ai_input.editable = can_send
 	_ai_send_button.disabled = not can_send
 
@@ -430,6 +443,7 @@ func _set_ai_response_text(text: String) -> void:
 func _submit_ai_message(raw_message: String) -> void:
 	if not _ai_chat_active or _ai_chat_service == null:
 		return
+	_clear_ai_stream_state()
 	var turn := _ai_chat_service.begin_player_turn(raw_message)
 	var should_generate := bool(turn.get("should_generate", false))
 	var immediate_result_value: Variant = turn.get("result", {})
@@ -464,6 +478,7 @@ func _cancel_ai_request() -> void:
 	_ai_request_in_flight = false
 	_ai_request_id = ""
 	_ai_request_context.clear()
+	_clear_ai_stream_state()
 
 
 func _connect_ai_signals() -> void:
@@ -497,7 +512,12 @@ func _disconnect_ai_signals() -> void:
 func _on_ai_token_received(context_id: String, token: String) -> void:
 	if context_id != _ai_request_id or not _ai_request_in_flight:
 		return
-	_set_ai_response_text(_ai_response_text + token)
+	if _ai_streaming_speed <= 0.0:
+		_set_ai_response_text(_ai_response_text + token)
+		return
+	_ai_stream_queue += token
+	if _ai_stream_timer != null and _ai_stream_timer.is_stopped():
+		_ai_stream_timer.start()
 
 
 func _on_ai_response_received(context_id: String, response: String) -> void:
@@ -531,3 +551,40 @@ func _on_ai_input_text_submitted(new_text: String) -> void:
 
 func _on_ai_back_to_topics_button_pressed() -> void:
 	_close_ai_chat_to_topics()
+
+
+func _create_ai_stream_timer() -> void:
+	if _ai_stream_timer != null:
+		return
+	_ai_stream_timer = Timer.new()
+	_ai_stream_timer.one_shot = false
+	_ai_stream_timer.process_mode = Node.PROCESS_MODE_ALWAYS
+	_ai_stream_timer.timeout.connect(_on_ai_stream_timer_timeout)
+	add_child(_ai_stream_timer)
+
+
+func _load_ai_runtime_settings() -> void:
+	var ai_settings := APP_SETTINGS.get_ai_settings()
+	_ai_streaming_speed = float(ai_settings.get(
+		APP_SETTINGS.AI_STREAMING_SPEED,
+		APP_SETTINGS.DEFAULT_AI_STREAMING_SPEED
+	))
+	if _ai_stream_timer != null:
+		_ai_stream_timer.wait_time = maxf(_ai_streaming_speed, 0.01)
+
+
+func _clear_ai_stream_state() -> void:
+	_ai_stream_queue = ""
+	if _ai_stream_timer != null:
+		_ai_stream_timer.stop()
+
+
+func _on_ai_stream_timer_timeout() -> void:
+	if _ai_stream_queue.is_empty():
+		if _ai_stream_timer != null:
+			_ai_stream_timer.stop()
+		return
+	_set_ai_response_text(_ai_response_text + _ai_stream_queue.left(1))
+	_ai_stream_queue = _ai_stream_queue.substr(1)
+	if _ai_stream_queue.is_empty() and _ai_stream_timer != null:
+		_ai_stream_timer.stop()

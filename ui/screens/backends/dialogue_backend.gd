@@ -5,6 +5,7 @@ class_name OmniDialogueBackend
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const AI_CHAT_SERVICE := preload("res://systems/ai/ai_chat_service.gd")
+const APP_SETTINGS := preload("res://core/app_settings.gd")
 
 const AI_MODE_DISABLED := "disabled"
 const AI_MODE_HYBRID := "hybrid"
@@ -155,7 +156,12 @@ func _initialize_ai_chat_service() -> void:
 	var speaker_entity_id := get_speaker_entity_id()
 	if speaker_entity_id.is_empty():
 		return
+	var ai_settings := APP_SETTINGS.get_ai_settings()
+	var history_window_turns := int(ai_settings.get(
+		APP_SETTINGS.AI_CHAT_HISTORY_WINDOW,
+		APP_SETTINGS.DEFAULT_AI_CHAT_HISTORY_WINDOW
+	))
 	var service: AIChatService = AI_CHAT_SERVICE.new()
-	if not service.configure_for_entity(speaker_entity_id):
+	if not service.configure_for_entity(speaker_entity_id, history_window_turns):
 		return
 	_ai_chat_service = service

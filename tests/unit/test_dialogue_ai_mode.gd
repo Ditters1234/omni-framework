@@ -16,6 +16,14 @@ var _test_viewport: SubViewport = null
 func before_each() -> void:
 	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture(false)
 	_seed_ai_fixture_vendor()
+	APP_SETTINGS.save_settings(_make_settings({
+		APP_SETTINGS.AI_ENABLED: true,
+		APP_SETTINGS.AI_PROVIDER: APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE,
+		APP_SETTINGS.AI_MODEL: "fake-model",
+		APP_SETTINGS.AI_CHAT_HISTORY_WINDOW: APP_SETTINGS.DEFAULT_AI_CHAT_HISTORY_WINDOW,
+		APP_SETTINGS.AI_STREAMING_SPEED: 0.0,
+		"ready": true,
+	}))
 	AIManager.clear_provider_script_overrides()
 	AIManager.set_provider_script_override(AIManager.PROVIDER_OPENAI_COMPATIBLE, FAKE_PROVIDER_SCRIPT_PATH)
 	AIManager.initialize(_make_settings({
@@ -41,6 +49,8 @@ func after_each() -> void:
 		APP_SETTINGS.AI_ENABLED: false,
 		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
 	}))
+	_delete_settings_file()
+	APP_SETTINGS.reset_settings_path_for_testing()
 	await get_tree().process_frame
 
 
@@ -119,6 +129,77 @@ func test_hybrid_branch_is_hidden_when_ai_is_disabled() -> void:
 	assert_not_null(_find_button_with_text(screen, "Maybe later."))
 
 
+func test_freeform_mode_opens_directly_into_ai_chat() -> void:
+	var screen := _instantiate_dialogue_screen({
+		"speaker_entity_id": TEST_FIXTURE_WORLD.fixture_vendor_id(),
+		"dialogue_resource": AI_HANDOFF_DIALOGUE,
+		"dialogue_start": "start",
+		"ai_mode": "freeform",
+	})
+
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var snapshot := _read_dictionary(screen.call("get_debug_snapshot"))
+	assert_true(bool(snapshot.get("ai_chat_active", false)))
+	var back_to_topics_button := screen.get_node(
+		"MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel/AIChatContainer/AIBackToTopicsButton"
+	) as Button
+	assert_not_null(back_to_topics_button)
+	if back_to_topics_button != null:
+		assert_false(back_to_topics_button.visible)
+
+
+func test_history_window_setting_limits_dialogue_ai_history() -> void:
+	APP_SETTINGS.save_settings(_make_settings({
+		APP_SETTINGS.AI_ENABLED: true,
+		APP_SETTINGS.AI_PROVIDER: APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE,
+		APP_SETTINGS.AI_MODEL: "fake-model",
+		APP_SETTINGS.AI_CHAT_HISTORY_WINDOW: 1,
+		APP_SETTINGS.AI_STREAMING_SPEED: 0.0,
+		"ready": true,
+	}))
+	var screen := _instantiate_dialogue_screen({
+		"speaker_entity_id": TEST_FIXTURE_WORLD.fixture_vendor_id(),
+		"dialogue_resource": AI_HANDOFF_DIALOGUE,
+		"dialogue_start": "start",
+		"ai_mode": "freeform",
+	})
+
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var ai_input := screen.get_node(
+		"MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel/AIChatContainer/AIInputRow/AIInput"
+	) as LineEdit
+	assert_not_null(ai_input)
+	if ai_input == null:
+		return
+	ai_input.text = "First question"
+	screen.call("_on_ai_send_button_pressed")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	ai_input.text = "Second question"
+	screen.call("_on_ai_send_button_pressed")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var snapshot := _read_dictionary(screen.call("get_debug_snapshot"))
+	var ai_service_value: Variant = snapshot.get("ai_service", {})
+	assert_true(ai_service_value is Dictionary)
+	if not ai_service_value is Dictionary:
+		return
+	var ai_service_snapshot: Dictionary = ai_service_value
+	assert_eq(int(ai_service_snapshot.get("history_window_turns", 0)), 1)
+	var history_value: Variant = ai_service_snapshot.get("history", [])
+	assert_true(history_value is Array)
+	if history_value is Array:
+		var history: Array = history_value
+		assert_eq(history.size(), 2)
+		assert_eq(str(history[0].get("content", "")), "Second question")
+		assert_eq(str(history[1].get("content", "")), "fake response")
+
+
 func _instantiate_dialogue_screen(params: Dictionary) -> Control:
 	var instance_value: Variant = DIALOGUE_SCREEN_SCENE.instantiate()
 	assert_true(instance_value is Control)
@@ -194,3 +275,10 @@ func _make_settings(ai_overrides: Dictionary) -> Dictionary:
 		ai_settings[str(key_value)] = ai_overrides.get(key_value, null)
 	settings[APP_SETTINGS.SECTION_AI] = ai_settings
 	return settings
+
+
+func _delete_settings_file() -> void:
+	var settings_path := APP_SETTINGS.get_settings_path()
+	if not FileAccess.file_exists(settings_path):
+		return
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(settings_path))

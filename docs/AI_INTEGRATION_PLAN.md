@@ -485,14 +485,14 @@ Deliverable: a player can talk to Kael using both scripted branches and freeform
 
 ### Phase 4 — Polish and Modder Surface (~2–3 days)
 
-Stabilize the dialogue integration and make it modder-friendly.
+Current status: complete. The base mod now ships `base:theta_persona` bound to Quartermaster Theta, and Theta's talk interaction demonstrates `ai_mode: "freeform"` while still keeping authored dialogue as the disabled-AI fallback. `MODDING_GUIDE.md` now documents persona tokens and authoring guidance, the settings screen exposes `ai.chat_history_window` and `ai.streaming_speed`, and the debug overlay surfaces the active `AIChatService` snapshot. Runtime hardening also landed for hidden failed responses, unique request IDs across AI boot cycles, bounded player input length, and stream-state cleanup on close/re-entry.
 
-1. Add a second NPC AI persona (`base:theta_persona`) wired to Quartermaster Theta, demonstrating a different personality and speech style.
-2. Add `ai_mode: "freeform"` to Theta's talk interaction to demonstrate the freeform-only mode.
-3. Update `MODDING_GUIDE.md` with a full AI persona authoring guide: schema reference, prompt template tokens, personality tuning tips, fallback line guidelines.
-4. Add debug overlay panel for `AIChatService`: current persona, conversation history, last prompt sent, last response received, validation results.
-5. Add `AppSettings` UI controls for `ai.chat_history_window` and `ai.streaming_speed` in the settings screen.
-6. Edge case hardening: rapid re-entry to AI chat, switching NPCs mid-conversation, provider errors during streaming, very long player inputs.
+1. Add a second NPC AI persona (`base:theta_persona`) wired to Quartermaster Theta, demonstrating a different personality and speech style. Done.
+2. Add `ai_mode: "freeform"` to Theta's talk interaction to demonstrate the freeform-only mode. Done.
+3. Update `MODDING_GUIDE.md` with a full AI persona authoring guide: schema reference, prompt template tokens, personality tuning tips, fallback line guidelines. Done.
+4. Add debug overlay panel for `AIChatService`: current persona, conversation history, last prompt sent, last response received, validation results. Done.
+5. Add `AppSettings` UI controls for `ai.chat_history_window` and `ai.streaming_speed` in the settings screen. Done.
+6. Edge case hardening: rapid re-entry to AI chat, switching NPCs mid-conversation, provider errors during streaming, very long player inputs. Done for the current dialogue scope.
 
 Deliverable: two NPCs with distinct AI personalities, modder documentation, debug tooling, and hardened edge cases.
 

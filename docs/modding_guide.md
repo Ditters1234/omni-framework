@@ -491,6 +491,45 @@ AI personas are authored prompt-shaping templates loaded by `AIPersonaRegistry` 
 - `response_constraints.always_in_character` must be a bool when present
 - Entities bind to personas through `entities.json` via `ai_persona_id`
 
+### Prompt template tokens
+
+`system_prompt_template` can currently reference these runtime tokens:
+- `{display_name}`
+- `{description}`
+- `{location_name}`
+- `{faction_name}`
+- `{reputation_tier}`
+- `{player_name}`
+- `{player_stats}`
+- `{time_of_day}`
+- `{active_quests}`
+- `{knowledge_block}`
+
+Unknown tokens are left in place and logged as warnings, so it is worth keeping templates small and explicit while iterating.
+
+### Authoring tips
+
+- Use `system_prompt_template` for the NPC's job, role, and baseline framing, not for long prose.
+- Use `personality_traits` for stable identity words like `guarded`, `clinical`, or `reckless`.
+- Use `speech_style` for sentence rhythm and voice. This is the best place to say things like "short sarcastic answers" or "measured formal speech."
+- Keep `knowledge_scope` narrow. It is there to anchor what the NPC should know about, not to dump the whole setting into the prompt.
+- Set `response_constraints.max_sentences` aggressively. Shorter answers are cheaper, more stable, and easier to fit beside authored dialogue.
+- Use `forbidden_topics` for things the character should deflect, not for broad safety policy.
+
+### Fallback line guidelines
+
+- Write fallback lines in the same voice as the NPC, because players will see them when AI is unavailable or validation rejects a reply.
+- Include at least one neutral "I don't want to answer that" line and one redirect line that points back to the NPC's domain.
+- Avoid generic assistant phrasing. A good fallback should still feel like authored character dialogue.
+
+### Engine-owned tuning
+
+Persona JSON does not control provider selection or connection details. The engine-owned settings screen now exposes:
+- `ai.chat_history_window` — how many recent turns each NPC keeps in memory
+- `ai.streaming_speed` — the dialogue-side token reveal cadence
+
+Those settings live in `user://settings.cfg`, not in mod data.
+
 ### Current patch format
 
 ```json

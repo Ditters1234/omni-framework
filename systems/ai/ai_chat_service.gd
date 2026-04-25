@@ -9,6 +9,7 @@ const ROLE_ASSISTANT := "assistant"
 const ROLE_SYSTEM := "system"
 const DEFAULT_HISTORY_WINDOW_TURNS := 20
 const DEFAULT_FALLBACK_LINE := "I don't have anything useful to add to that."
+const MAX_PLAYER_MESSAGE_CHARS := 500
 const CHARACTER_BREAKER_PHRASES := [
 	"as an ai",
 	"language model",
@@ -179,6 +180,8 @@ func begin_player_turn(
 		player_message: String,
 		request_context_overrides: Dictionary = {}) -> Dictionary:
 	var normalized_message := player_message.strip_edges()
+	if normalized_message.length() > MAX_PLAYER_MESSAGE_CHARS:
+		normalized_message = normalized_message.left(MAX_PLAYER_MESSAGE_CHARS).strip_edges()
 	_last_player_message = normalized_message
 	_last_raw_response = ""
 	_last_response = ""

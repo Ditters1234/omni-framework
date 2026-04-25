@@ -214,6 +214,42 @@ func test_settings_ai_button_toggles_to_disconnect_after_connection() -> void:
 	assert_true(status_label.text.contains("disconnected"))
 
 
+func test_settings_ai_chat_controls_persist_history_window_and_streaming_speed() -> void:
+	var settings_scene := load(SETTINGS_SCENE_PATH) as PackedScene
+	assert_not_null(settings_scene)
+	var instance_value: Variant = settings_scene.instantiate()
+	assert_true(instance_value is Control)
+	var settings_screen: Control = instance_value
+	_spawned_nodes.append(settings_screen)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(settings_screen)
+	await get_tree().process_frame
+
+	var history_spinbox := settings_screen.get_node(
+		"MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiChatHistoryWindowSpinBox"
+	) as SpinBox
+	var streaming_spinbox := settings_screen.get_node(
+		"MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiStreamingSpeedSpinBox"
+	) as SpinBox
+	assert_not_null(history_spinbox)
+	assert_not_null(streaming_spinbox)
+	if history_spinbox == null or streaming_spinbox == null:
+		return
+
+	history_spinbox.value = 7
+	settings_screen.call("_on_ai_chat_history_window_spinbox_value_changed", 7.0)
+	streaming_spinbox.value = 0.12
+	settings_screen.call("_on_ai_streaming_speed_spinbox_value_changed", 0.12)
+	await get_tree().process_frame
+
+	settings_screen.call("_on_save_button_pressed")
+	await get_tree().process_frame
+
+	var ai_settings := APP_SETTINGS.get_ai_settings(APP_SETTINGS.load_settings())
+	assert_eq(int(ai_settings.get(APP_SETTINGS.AI_CHAT_HISTORY_WINDOW, 0)), 7)
+	assert_almost_eq(float(ai_settings.get(APP_SETTINGS.AI_STREAMING_SPEED, 0.0)), 0.12, 0.001)
+
+
 func test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)

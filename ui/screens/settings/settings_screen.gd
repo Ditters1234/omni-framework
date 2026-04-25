@@ -60,6 +60,10 @@ const RESOLUTION_PRESETS := [
 @onready var _ai_temperature_spinbox: SpinBox = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiTemperatureSpinBox
 @onready var _ai_context_window_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiContextWindowLabel
 @onready var _ai_context_window_spinbox: SpinBox = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiContextWindowSpinBox
+@onready var _ai_chat_history_window_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiChatHistoryWindowLabel
+@onready var _ai_chat_history_window_spinbox: SpinBox = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiChatHistoryWindowSpinBox
+@onready var _ai_streaming_speed_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiStreamingSpeedLabel
+@onready var _ai_streaming_speed_spinbox: SpinBox = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiStreamingSpeedSpinBox
 @onready var _ai_hint_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiHintLabel
 @onready var _ai_info_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiInfoLabel
 @onready var _connect_ai_button: Button = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiButtonRow/ConnectAiButton
@@ -152,6 +156,8 @@ func _apply_settings_to_controls() -> void:
 	_ai_max_tokens_spinbox.value = float(int(ai.get(APP_SETTINGS.AI_MAX_TOKENS, APP_SETTINGS.DEFAULT_AI_MAX_TOKENS)))
 	_ai_temperature_spinbox.value = float(ai.get(APP_SETTINGS.AI_TEMPERATURE, APP_SETTINGS.DEFAULT_AI_TEMPERATURE))
 	_ai_context_window_spinbox.value = float(int(ai.get(APP_SETTINGS.AI_CONTEXT_WINDOW, APP_SETTINGS.DEFAULT_AI_CONTEXT_WINDOW)))
+	_ai_chat_history_window_spinbox.value = float(int(ai.get(APP_SETTINGS.AI_CHAT_HISTORY_WINDOW, APP_SETTINGS.DEFAULT_AI_CHAT_HISTORY_WINDOW)))
+	_ai_streaming_speed_spinbox.value = float(ai.get(APP_SETTINGS.AI_STREAMING_SPEED, APP_SETTINGS.DEFAULT_AI_STREAMING_SPEED))
 	_title_label.text = "Settings"
 	_subtitle_label.text = "Engine-owned application settings stored outside the mod data pipeline."
 	_update_ai_controls_state()
@@ -199,6 +205,8 @@ func _collect_settings_from_controls() -> Dictionary:
 			APP_SETTINGS.AI_MAX_TOKENS: int(_ai_max_tokens_spinbox.value),
 			APP_SETTINGS.AI_TEMPERATURE: _ai_temperature_spinbox.value,
 			APP_SETTINGS.AI_CONTEXT_WINDOW: int(_ai_context_window_spinbox.value),
+			APP_SETTINGS.AI_CHAT_HISTORY_WINDOW: int(_ai_chat_history_window_spinbox.value),
+			APP_SETTINGS.AI_STREAMING_SPEED: _ai_streaming_speed_spinbox.value,
 		},
 	})
 
@@ -293,6 +301,10 @@ func _update_ai_controls_state() -> void:
 	_ai_system_prompt_edit.visible = uses_any_model
 	_ai_max_tokens_label.visible = uses_any_model
 	_ai_max_tokens_spinbox.visible = uses_any_model
+	_ai_chat_history_window_label.visible = uses_any_model
+	_ai_chat_history_window_spinbox.visible = uses_any_model
+	_ai_streaming_speed_label.visible = uses_any_model
+	_ai_streaming_speed_spinbox.visible = uses_any_model
 	_ai_temperature_label.visible = uses_server_fields or uses_disk_fields
 	_ai_temperature_spinbox.visible = uses_server_fields or uses_disk_fields
 	_ai_context_window_label.visible = uses_disk_fields
@@ -397,11 +409,11 @@ func _update_connected_ai_settings_from_manager() -> void:
 func _build_ai_hint_text(provider: String) -> String:
 	match provider:
 		APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE:
-			return "Server connection for Ollama, LM Studio, OpenAI, or any compatible endpoint."
+			return "Server connection for Ollama, LM Studio, OpenAI, or any compatible endpoint. Chat history and streaming speed tune dialogue-side UX."
 		APP_SETTINGS.AI_PROVIDER_ANTHROPIC:
-			return "Hosted server connection using Anthropic's Messages API."
+			return "Hosted server connection using Anthropic's Messages API. Chat history and streaming speed tune dialogue-side UX."
 		APP_SETTINGS.AI_PROVIDER_NOBODYWHO:
-			return "On-disk model connection. Provide a local .gguf path and connect from engine settings."
+			return "On-disk model connection. Provide a local .gguf path and connect from engine settings. Chat history and streaming speed tune dialogue-side UX."
 		_:
 			return "Choose a server or on-disk provider here. Mods can use AIManager, but they do not configure the engine connection."
 
@@ -491,6 +503,18 @@ func _on_ai_temperature_spinbox_value_changed(_value: float) -> void:
 
 
 func _on_ai_context_window_spinbox_value_changed(_value: float) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_chat_history_window_spinbox_value_changed(_value: float) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_streaming_speed_spinbox_value_changed(_value: float) -> void:
 	if _is_initializing:
 		return
 	_preview_current_settings()

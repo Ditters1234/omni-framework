@@ -24,6 +24,12 @@ func test_base_kael_ai_persona_exists_and_is_bound() -> void:
 	assert_false(kael_persona.is_empty())
 	assert_eq(str(kael_persona.get("display_name", "")), "Kael")
 
+	var theta_template := DataManager.get_entity("base:npc_theta")
+	assert_eq(str(theta_template.get("ai_persona_id", "")), "base:theta_persona")
+	var theta_persona := DataManager.get_ai_persona("base:theta_persona")
+	assert_false(theta_persona.is_empty())
+	assert_eq(str(theta_persona.get("display_name", "")), "Quartermaster Theta")
+
 
 func test_base_player_head_has_custom_color_values_for_ui_testing() -> void:
 	var head_template := DataManager.get_part("base:human_head")

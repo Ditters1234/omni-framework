@@ -198,6 +198,32 @@ func _refresh_text() -> void:
 		lines.append("  current screen snapshot:")
 		for snapshot_line in _format_multiline_variant(current_screen_snapshot):
 			lines.append("    %s" % snapshot_line)
+		var ai_service_value: Variant = current_screen_snapshot.get("ai_service", {})
+		if ai_service_value is Dictionary:
+			var ai_service_snapshot: Dictionary = ai_service_value
+			if not ai_service_snapshot.is_empty():
+				lines.append("  AI chat:")
+				lines.append("    persona=%s configured=%s" % [
+					str(ai_service_snapshot.get("persona_id", "")),
+					str(ai_service_snapshot.get("configured", false))
+				])
+				lines.append("    response=%s validation=%s" % [
+					str(ai_service_snapshot.get("last_response", "")),
+					_format_variant(ai_service_snapshot.get("last_validation", {}))
+				])
+				var history_value: Variant = ai_service_snapshot.get("history", [])
+				if history_value is Array:
+					var history: Array = history_value
+					lines.append("    history entries=%d" % history.size())
+					for history_index in range(maxi(history.size() - 3, 0), history.size()):
+						var history_entry_value: Variant = history[history_index]
+						if not history_entry_value is Dictionary:
+							continue
+						var history_entry: Dictionary = history_entry_value
+						lines.append("      - %s: %s" % [
+							str(history_entry.get("role", "")),
+							str(history_entry.get("content", ""))
+						])
 	var backend_classes := BACKEND_CONTRACT_REGISTRY.get_registered_backend_classes()
 	if backend_classes.is_empty():
 		lines.append("  backend contracts=<none>")
