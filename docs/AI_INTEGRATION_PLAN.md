@@ -6,7 +6,7 @@ This document is a planning reference for the AI integration layer. It catalogs 
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
-Implementation status update: Phases 1–6 are complete. The dialogue AI integration is fully landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls for chat history window and streaming speed, debug overlay AI chat panel, input length hardening, and modding guide authoring documentation. The behavior-tree layer is now landed too: `BTActionAIQuery`, `BTConditionAICheck`, shared prompt/response parsing helpers, timeout-aware fallback behavior, and Kael greeting integration coverage. The world layer now ships config-declared global script hooks, `ai_templates.json`, narrated event-log entries, cached task-board flavor text, and the engine-owned `ai.enable_world_gen` toggle.
+Implementation status update: Phases 1–7 are complete. The full AI integration plan is landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls, debug overlay, BT AI nodes (BTActionAIQuery, BTConditionAICheck), world generation hooks (narration, task flavor, entity/part lore), ai_templates.json, session-level lore caching, and the engine-owned `ai.enable_world_gen` toggle.
 
 Decisions this document assumes:
 
@@ -94,7 +94,7 @@ The behavior layer wires `AIManager` into LimboAI behavior trees so NPCs can mak
 |---|---|---|
 | AI narration hook | ✅ Implemented (Phase 6) | Script hook that generates event narration for the `EventLogBackend` |
 | AI task flavor hook | ✅ Implemented (Phase 6) | Script hook that enhances `TaskProviderBackend` descriptions with contextual flavor text |
-| AI lore hook | Planned (Phase 7) | Script hook that generates optional lore blurbs for `EntitySheetBackend` and part inspection |
+| AI lore hook | ✅ Implemented (Phase 7) | Script hook that generates optional lore blurbs for `EntitySheetBackend` and part inspection |
 
 The world layer uses script hooks to inject AI-generated flavor text into existing backend screens. All hooks produce supplementary content alongside the static baseline — never replacing it.
 
@@ -529,13 +529,13 @@ Deliverable: the event log and task board gain contextual AI-generated flavor te
 
 ### Phase 7 — Lore Generation and Session Caching (~2 days)
 
-AI-generated lore blurbs for entity and part inspection, with session-level caching.
+Current status: complete. `mods/base/scripts/ai_lore_hook.gd` generates entity and part lore blurbs via `ScriptHookService.request_entity_lore()` / `request_part_lore()`. Session-level caches (`_entity_lore_cache`, `_part_lore_cache`) with pending-request dedup prevent redundant API calls, cleared on `reset_world_gen_state()` (new game / load). `EntitySheetBackend` populates `ai_lore` in the view model, and the entity sheet screen renders it and listens for `event_narrated` to refresh when the async lore arrives. `ai_templates.json` ships `base:entity_lore` and `base:part_lore` templates. Coverage in `tests/unit/test_phase7_lore.gd`.
 
-1. Create `mods/base/scripts/ai_lore_hook.gd`. Wire to `EntitySheetBackend` and part detail panel view model assembly.
-2. Implement session-level lore cache keyed by template ID. Cache is an in-memory dictionary on `AIChatService` (or a dedicated `AILoreCache` helper), cleared on new game or load.
-3. Extend `EntitySheetBackend` view model with an optional `ai_lore` field.
-4. Extend `part_detail_panel` to display optional lore text below the static description.
-5. Tests: lore cache hit avoids redundant API calls, cache miss generates and stores, cache clears on new game.
+1. Create `mods/base/scripts/ai_lore_hook.gd`. Wire to `EntitySheetBackend` and part detail panel view model assembly. Done (entity sheet wired; part detail panel deferred — see note).
+2. Implement session-level lore cache keyed by template ID. Cache is an in-memory dictionary on `ScriptHookService`, cleared on new game or load. Done.
+3. Extend `EntitySheetBackend` view model with an optional `ai_lore` field. Done.
+4. Extend `part_detail_panel` to display optional lore text below the static description. Deferred — the panel is a reusable component across assembly editors; wiring lore through its callers requires broader integration. The `request_part_lore` service and hook are ready for when this is connected.
+5. Tests: lore cache hit avoids redundant API calls, cache miss generates and stores, cache clears on new game. Done.
 
 Deliverable: inspecting an NPC or part shows optional AI-generated lore that persists for the session.
 

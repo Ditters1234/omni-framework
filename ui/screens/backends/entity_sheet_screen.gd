@@ -28,6 +28,7 @@ var _portrait: Control = null
 var _stat_sheet: Control = null
 var _last_view_model: Dictionary = {}
 var _opened_from_gameplay_shell: bool = false
+var _ai_lore_template_id: String = ""
 
 func initialize(params: Dictionary = {}) -> void:
 	_pending_params = params.duplicate(true)
@@ -38,6 +39,7 @@ func initialize(params: Dictionary = {}) -> void:
 	call_deferred("_normalize_for_shell_host")
 
 func _ready() -> void:
+	_connect_world_gen_signal()
 	_initialize_backend()
 	_refresh_state()
 	call_deferred("_normalize_for_shell_host")
@@ -76,6 +78,11 @@ func _refresh_state() -> void:
 	_render_equipped_section(view_model)
 	_render_inventory_section(view_model)
 	_render_reputation_section(view_model)
+	var ai_lore := str(view_model.get("ai_lore", "")).strip_edges()
+	_ai_lore_template_id = str(view_model.get("ai_lore_template_id", ""))
+	if not ai_lore.is_empty():
+		var lore_suffix := "\nLore: %s" % ai_lore
+		_description_label.text = str(view_model.get("description", "")) + lore_suffix
 
 func _render_portrait(view_model: Dictionary) -> void:
 	if _portrait == null:
@@ -213,3 +220,27 @@ func _read_dictionary(value: Variant) -> Dictionary:
 		var dictionary_value: Dictionary = value
 		return dictionary_value.duplicate(true)
 	return {}
+
+
+func _connect_world_gen_signal() -> void:
+	if GameEvents == null:
+		return
+	var callback := Callable(self, "_on_event_narrated")
+	if GameEvents.has_signal("event_narrated") and not GameEvents.is_connected("event_narrated", callback):
+		GameEvents.event_narrated.connect(_on_event_narrated)
+
+
+func _disconnect_world_gen_signal() -> void:
+	if GameEvents == null:
+		return
+	var callback := Callable(self, "_on_event_narrated")
+	if GameEvents.has_signal("event_narrated") and GameEvents.is_connected("event_narrated", callback):
+		GameEvents.event_narrated.disconnect(_on_event_narrated)
+
+
+func _on_event_narrated(source_signal: String, source_key: String, _narration: String) -> void:
+	if source_signal != "entity_lore":
+		return
+	if _ai_lore_template_id.is_empty() or source_key != _ai_lore_template_id:
+		return
+	_refresh_state()
