@@ -110,7 +110,16 @@ static func parse_json_response(response: String) -> Dictionary:
 			"reason": "empty_response",
 		}
 
-	var parsed_value: Variant = JSON.parse_string(json_source)
+	var json := JSON.new()
+	var parse_error := json.parse(json_source)
+	if parse_error != OK:
+		return {
+			"success": false,
+			"value": {},
+			"reason": "json_parse_failed",
+		}
+
+	var parsed_value: Variant = json.data
 	if not parsed_value is Dictionary:
 		return {
 			"success": false,
