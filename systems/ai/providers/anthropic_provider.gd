@@ -1,16 +1,5 @@
 ## AnthropicProvider — Anthropic Messages API provider.
 ## Calls api.anthropic.com/v1/messages directly via HTTPRequest.
-##
-## Config block (config.json):
-## "ai": {
-##   "provider": "anthropic",
-##   "anthropic": {
-##     "api_key": "sk-ant-...",
-##     "model": "claude-haiku-4-5-20251001",
-##     "max_tokens": 256,
-##     "system_prompt": "You are a helpful game character."
-##   }
-## }
 extends Node
 
 class_name AnthropicProvider
@@ -29,16 +18,11 @@ var _last_error: String = ""
 
 var _http: HTTPRequest = null
 
-# ---------------------------------------------------------------------------
-# Boot
-# ---------------------------------------------------------------------------
-
 func _ready() -> void:
 	_http = HTTPRequest.new()
 	add_child(_http)
 
 
-## Configures the provider from the config.json ai.anthropic block.
 func initialize(provider_config: Dictionary) -> void:
 	_api_key       = str(provider_config.get("api_key", ""))
 	_model         = str(provider_config.get("model", DEFAULT_MODEL))
@@ -75,11 +59,6 @@ func get_debug_snapshot() -> Dictionary:
 	}
 
 
-# ---------------------------------------------------------------------------
-# Generation
-# ---------------------------------------------------------------------------
-
-## Sends a Messages API request and returns the response text.
 func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	if not _is_ready:
 		if _last_error.is_empty():
@@ -92,7 +71,6 @@ func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	return _parse_response(response)
 
 
-## Streaming is not yet implemented — falls back to blocking call.
 func generate_streaming_async(
 		prompt: String,
 		chunk_callback: Callable,
@@ -101,10 +79,6 @@ func generate_streaming_async(
 	if not result.is_empty():
 		chunk_callback.call(result)
 
-
-# ---------------------------------------------------------------------------
-# Internal
-# ---------------------------------------------------------------------------
 
 func _build_request_body(prompt: String, context: Dictionary) -> String:
 	var messages: Array = []
@@ -136,14 +110,19 @@ func _build_headers() -> PackedStringArray:
 
 
 func _send_request(body: String, headers: PackedStringArray) -> Array:
-	if _http == null:
-		_last_error = "AnthropicProvider: HTTPRequest is not ready."
-		return []
-	var request_error := _http.request(API_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
+	# Use a per-request HTTPRequest node. A single HTTPRequest cannot service
+	# overlapping calls; reusing one node makes concurrent AI requests fail with
+	# ERR_BUSY. AIManager tracks multiple active requests, so provider transport
+	# needs to be concurrency-safe.
+	var request_node := HTTPRequest.new()
+	add_child(request_node)
+	var request_error := request_node.request(API_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
 	if request_error != OK:
 		_last_error = "AnthropicProvider: request start failed (%d)." % request_error
+		request_node.queue_free()
 		return []
-	var response: Array = await _http.request_completed
+	var response: Array = await request_node.request_completed
+	request_node.queue_free()
 	return response
 
 

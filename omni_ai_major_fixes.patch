@@ -1,0 +1,75 @@
+diff --git a/systems/ai/providers/openai_provider.gd b/systems/ai/providers/openai_provider.gd
+index b015d7f..0000000 100644
+--- a/systems/ai/providers/openai_provider.gd
++++ b/systems/ai/providers/openai_provider.gd
+@@ -137,17 +137,20 @@ func _build_headers() -> PackedStringArray:
+ 	return headers
+ 
+ 
+ func _send_request(body: String, headers: PackedStringArray) -> Array:
+-	if _http == null:
+-		_last_error = "OpenAIProvider: HTTPRequest is not ready."
+-		return []
+-	var request_error := _http.request(_endpoint, headers, HTTPClient.METHOD_POST, body)
++	# Use a per-request HTTPRequest node. A single HTTPRequest cannot service
++	# overlapping calls; reusing one node makes concurrent AI requests fail with
++	# ERR_BUSY. AIManager tracks multiple active requests, so provider transport
++	# needs to be concurrency-safe.
++	var request_node := HTTPRequest.new()
++	add_child(request_node)
++	var request_error := request_node.request(_endpoint, headers, HTTPClient.METHOD_POST, body)
+ 	if request_error != OK:
+ 		_last_error = "OpenAIProvider: request start failed (%d)." % request_error
++		request_node.queue_free()
+ 		return []
+-	var response: Array = await _http.request_completed
++	var response: Array = await request_node.request_completed
++	request_node.queue_free()
+ 	return response
+ 
+ 
+ func _parse_response(response: Array) -> String:
+diff --git a/systems/ai/providers/anthropic_provider.gd b/systems/ai/providers/anthropic_provider.gd
+index 706fd39..0000000 100644
+--- a/systems/ai/providers/anthropic_provider.gd
++++ b/systems/ai/providers/anthropic_provider.gd
+@@ -121,17 +121,20 @@ func _build_headers() -> PackedStringArray:
+ 	])
+ 
+ 
+ func _send_request(body: String, headers: PackedStringArray) -> Array:
+-	if _http == null:
+-		_last_error = "AnthropicProvider: HTTPRequest is not ready."
+-		return []
+-	var request_error := _http.request(API_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
++	# Use a per-request HTTPRequest node. A single HTTPRequest cannot service
++	# overlapping calls; reusing one node makes concurrent AI requests fail with
++	# ERR_BUSY. AIManager tracks multiple active requests, so provider transport
++	# needs to be concurrency-safe.
++	var request_node := HTTPRequest.new()
++	add_child(request_node)
++	var request_error := request_node.request(API_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
+ 	if request_error != OK:
+ 		_last_error = "AnthropicProvider: request start failed (%d)." % request_error
++		request_node.queue_free()
+ 		return []
+-	var response: Array = await _http.request_completed
++	var response: Array = await request_node.request_completed
++	request_node.queue_free()
+ 	return response
+ 
+ 
+ func _parse_response(response: Array) -> String:
+diff --git a/systems/ai/ai_chat_service.gd b/systems/ai/ai_chat_service.gd
+index a4ddcc2..0000000 100644
+--- a/systems/ai/ai_chat_service.gd
++++ b/systems/ai/ai_chat_service.gd
+@@ -225,7 +225,7 @@ func validate_response(response: String) -> Dictionary:
+ 	var max_sentences := int(constraints.get("max_sentences", 0))
+ 	var truncated := false
+ 	if max_sentences > 0:
+-		var truncated_response := _truncate_to_sentence_limit(cleaned_response, max_sentences * 2)
++		var truncated_response := _truncate_to_sentence_limit(cleaned_response, max_sentences)
+ 		if truncated_response != cleaned_response:
+ 			cleaned_response = truncated_response
+ 			truncated = true
