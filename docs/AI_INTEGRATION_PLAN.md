@@ -61,7 +61,7 @@ Implications this document respects:
 - ~~No mod data schema for AI persona definitions.~~ Implemented in Phase 1.
 - ~~No prompt builder or response parser infrastructure.~~ Implemented in Phase 2.
 - ~~No LimboAI behavior tree nodes for AI-driven NPC decisions.~~ Implemented in Phase 5.
-- No script hook patterns for AI-generated content.
+- ~~No script hook patterns for AI-generated content.~~ Implemented in Phase 6.
 
 ---
 

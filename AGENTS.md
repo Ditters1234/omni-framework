@@ -147,6 +147,7 @@ Each system has a JSON file in `mods/base/data/` and a registry in `systems/load
 | Tasks | `tasks.json` | `TaskRegistry` | `template_id` |
 | Achievements | `achievements.json` | `AchievementRegistry` | `achievement_id` |
 | AI Personas | `ai_personas.json` | `AIPersonaRegistry` | `persona_id` |
+| AI Templates | `ai_templates.json` | `AITemplateRegistry` | `template_id` |
 | Config | `config.json` | `ConfigLoader` | — (deep-merged) |
 
 All data IDs use `author:mod:name` namespacing. Base game uses `base:`.
@@ -204,7 +205,9 @@ Each backend class is validated against a **contract** — a schema that defines
 
 Modders call `AIManager.generate_async(prompt, context)` from script hooks. Always guard with `AIManager.is_available()`.
 
-AI persona data lives in `ai_personas.json` and loads through `AIPersonaRegistry` into `DataManager.ai_personas`. Entities bind to personas via the optional `ai_persona_id` field. `AIChatService` (`systems/ai/ai_chat_service.gd`) assembles persona-aware prompts and manages conversation history; `DialogueBackend` instantiates it when `ai_mode` is `"hybrid"` or `"freeform"`. For behavior trees, `BTActionAIQuery` and `BTConditionAICheck` (`systems/ai/bt_action_ai_query.gd`, `systems/ai/bt_condition_ai_check.gd`) extend LimboAI's `BTAction`/`BTCondition` to send AI requests with timeout-aware `RUNNING` behavior, parse responses (`text`, `enum`, `json`, `yes/no`), and write results or fallback values to the blackboard. Shared prompt resolution and response parsing live in `BTAIUtils` (`systems/ai/bt_ai_utils.gd`). See `docs/AI_INTEGRATION_PLAN.md` for the phased consumer integration plan.
+AI persona data lives in `ai_personas.json` and loads through `AIPersonaRegistry` into `DataManager.ai_personas`. Entities bind to personas via the optional `ai_persona_id` field. `AIChatService` (`systems/ai/ai_chat_service.gd`) assembles persona-aware prompts and manages conversation history; `DialogueBackend` instantiates it when `ai_mode` is `"hybrid"` or `"freeform"`. For behavior trees, `BTActionAIQuery` and `BTConditionAICheck` (`systems/ai/bt_action_ai_query.gd`, `systems/ai/bt_condition_ai_check.gd`) extend LimboAI's `BTAction`/`BTCondition` to send AI requests with timeout-aware `RUNNING` behavior, parse responses (`text`, `enum`, `json`, `yes/no`), and write results or fallback values to the blackboard. Shared prompt resolution and response parsing live in `BTAIUtils` (`systems/ai/bt_ai_utils.gd`).
+
+AI prompt templates live in `ai_templates.json` and load through `AITemplateRegistry` into `DataManager.ai_templates`. World generation hooks (`mods/base/scripts/ai_narration_hook.gd`, `ai_task_flavor_hook.gd`) are registered via `config.json`'s `ai.world_gen_hooks` block and dispatched by `ScriptHookService`. They fire on `location_changed`, `day_advanced`, and `quest_completed` signals; generated text lands on event history entries as `narration` and on task board rows as `ai_flavor_text`. The master toggle is `ai.enable_world_gen` in `AppSettings`. See `docs/AI_INTEGRATION_PLAN.md` for the phased consumer integration plan.
 
 ---
 
