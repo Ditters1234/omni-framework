@@ -16,13 +16,12 @@ var _system_prompt: String = ""
 var _is_ready: bool = false
 var _last_error: String = ""
 
-var _http: HTTPRequest = null
 
 func _ready() -> void:
-	_http = HTTPRequest.new()
-	add_child(_http)
+	return
 
 
+## Configures the provider from engine-owned AI settings.
 func initialize(provider_config: Dictionary) -> void:
 	_api_key       = str(provider_config.get("api_key", ""))
 	_model         = str(provider_config.get("model", DEFAULT_MODEL))
@@ -59,6 +58,7 @@ func get_debug_snapshot() -> Dictionary:
 	}
 
 
+## Sends a Messages API request and returns the response text.
 func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	if not _is_ready:
 		if _last_error.is_empty():
@@ -71,22 +71,22 @@ func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	return _parse_response(response)
 
 
+## Streaming is not yet implemented — falls back to blocking call.
 func generate_streaming_async(
 		prompt: String,
 		chunk_callback: Callable,
 		context: Dictionary = {}) -> void:
 	var result := await generate_async(prompt, context)
-	if not result.is_empty():
+	if not result.is_empty() and chunk_callback.is_valid():
 		chunk_callback.call(result)
 
 
 func _build_request_body(prompt: String, context: Dictionary) -> String:
 	var messages: Array = []
 	var history_value: Variant = context.get("history", [])
-	var history: Array = []
 	if history_value is Array:
-		history = history_value
-	messages.append_array(history)
+		var history: Array = history_value
+		messages.append_array(history)
 	messages.append({"role": "user", "content": prompt})
 
 	var payload: Dictionary = {
@@ -110,19 +110,15 @@ func _build_headers() -> PackedStringArray:
 
 
 func _send_request(body: String, headers: PackedStringArray) -> Array:
-	# Use a per-request HTTPRequest node. A single HTTPRequest cannot service
-	# overlapping calls; reusing one node makes concurrent AI requests fail with
-	# ERR_BUSY. AIManager tracks multiple active requests, so provider transport
-	# needs to be concurrency-safe.
-	var request_node := HTTPRequest.new()
-	add_child(request_node)
-	var request_error := request_node.request(API_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
+	var http := HTTPRequest.new()
+	add_child(http)
+	var request_error := http.request(API_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
 	if request_error != OK:
 		_last_error = "AnthropicProvider: request start failed (%d)." % request_error
-		request_node.queue_free()
+		http.queue_free()
 		return []
-	var response: Array = await request_node.request_completed
-	request_node.queue_free()
+	var response: Array = await http.request_completed
+	http.queue_free()
 	return response
 
 
@@ -155,15 +151,20 @@ func _parse_response(response: Array) -> String:
 	if content.is_empty():
 		_last_error = "AnthropicProvider: content array was empty."
 		return ""
-	var first_content: Variant = content[0]
-	if not first_content is Dictionary:
-		_last_error = "AnthropicProvider: first content entry must be an object."
-		return ""
-	var text := str(first_content.get("text", ""))
-	if text.is_empty():
+	var text_parts: Array[String] = []
+	for content_item_value in content:
+		if not content_item_value is Dictionary:
+			continue
+		var content_item: Dictionary = content_item_value
+		if str(content_item.get("type", "text")) != "text":
+			continue
+		var text := str(content_item.get("text", ""))
+		if not text.is_empty():
+			text_parts.append(text)
+	if text_parts.is_empty():
 		_last_error = "AnthropicProvider: response text was empty."
 		return ""
-	return text
+	return "\n".join(text_parts)
 
 
 func _refresh_readiness() -> void:

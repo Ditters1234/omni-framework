@@ -19,13 +19,12 @@ var _system_prompt: String = ""
 var _is_ready: bool = false
 var _last_error: String = ""
 
-var _http: HTTPRequest = null
 
 func _ready() -> void:
-	_http = HTTPRequest.new()
-	add_child(_http)
+	return
 
 
+## Configures the provider from engine-owned AI settings.
 func initialize(provider_config: Dictionary) -> void:
 	_endpoint      = str(provider_config.get("endpoint", DEFAULT_ENDPOINT))
 	_api_key       = str(provider_config.get("api_key", ""))
@@ -64,6 +63,7 @@ func get_debug_snapshot() -> Dictionary:
 	}
 
 
+## Sends a chat completion request and returns the response string.
 func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	if not _is_ready:
 		if _last_error.is_empty():
@@ -77,13 +77,13 @@ func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	return _parse_response(response)
 
 
+## Streaming generation — currently falls back to non-streaming.
 func generate_streaming_async(
 		prompt: String,
 		chunk_callback: Callable,
 		context: Dictionary = {}) -> void:
-	# SSE streaming requires manual HTTPClient — implement in full version.
 	var result := await generate_async(prompt, context)
-	if not result.is_empty():
+	if not result.is_empty() and chunk_callback.is_valid():
 		chunk_callback.call(result)
 
 
@@ -93,10 +93,9 @@ func _build_messages(prompt: String, context: Dictionary) -> Array:
 	if not system.is_empty():
 		messages.append({"role": "system", "content": system})
 	var history_value: Variant = context.get("history", [])
-	var history: Array = []
 	if history_value is Array:
-		history = history_value
-	messages.append_array(history)
+		var history: Array = history_value
+		messages.append_array(history)
 	messages.append({"role": "user", "content": prompt})
 	return messages
 
@@ -122,19 +121,15 @@ func _build_headers() -> PackedStringArray:
 
 
 func _send_request(body: String, headers: PackedStringArray) -> Array:
-	# Use a per-request HTTPRequest node. A single HTTPRequest cannot service
-	# overlapping calls; reusing one node makes concurrent AI requests fail with
-	# ERR_BUSY. AIManager tracks multiple active requests, so provider transport
-	# needs to be concurrency-safe.
-	var request_node := HTTPRequest.new()
-	add_child(request_node)
-	var request_error := request_node.request(_endpoint, headers, HTTPClient.METHOD_POST, body)
+	var http := HTTPRequest.new()
+	add_child(http)
+	var request_error := http.request(_endpoint, headers, HTTPClient.METHOD_POST, body)
 	if request_error != OK:
 		_last_error = "OpenAIProvider: request start failed (%d)." % request_error
-		request_node.queue_free()
+		http.queue_free()
 		return []
-	var response: Array = await request_node.request_completed
-	request_node.queue_free()
+	var response: Array = await http.request_completed
+	http.queue_free()
 	return response
 
 
