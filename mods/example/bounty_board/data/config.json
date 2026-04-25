@@ -1,6 +1,6 @@
 {
-  "task_routines": [
-    {
+  "task_routines": {
+    "example:bounty_board:voss_patrol": {
       "routine_id": "example:bounty_board:voss_patrol",
       "entity_id": "example:bounty_board:enforcer_voss",
       "loop": "daily",
@@ -15,5 +15,5 @@
         }
       ]
     }
-  ]
+  }
 }

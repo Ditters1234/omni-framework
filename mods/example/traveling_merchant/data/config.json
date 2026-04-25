@@ -1,6 +1,6 @@
 {
-  "task_routines": [
-    {
+  "task_routines": {
+    "example:sable_daily_route": {
       "routine_id": "example:sable_daily_route",
       "entity_id": "example:traveling_merchant",
       "loop": "daily",
@@ -19,5 +19,5 @@
         }
       ]
     }
-  ]
+  }
 }

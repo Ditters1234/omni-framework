@@ -95,6 +95,9 @@ func get_configured_routines() -> Array:
 	if routines_value is Array:
 		var routines: Array = routines_value
 		return routines
+	if routines_value is Dictionary:
+		var routines_dict: Dictionary = routines_value
+		return routines_dict.values()
 	return []
 
 
