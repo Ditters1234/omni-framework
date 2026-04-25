@@ -6,6 +6,8 @@ This document is a planning reference for the AI integration layer. It catalogs 
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
+Implementation status update: Phase 2 is now in place. `systems/ai/ai_chat_service.gd` provides persona lookup, placeholder resolution, bounded history, context assembly, response validation, fallback selection, and a debug snapshot surface, with coverage in `tests/unit/test_ai_chat_service.gd`.
+
 Decisions this document assumes:
 
 - **AI is opt-in and gracefully degraded.** Every consumer guards with `AIManager.is_available()`. When AI is disabled or unavailable, the game falls back to static content with zero runtime errors or missing UI.

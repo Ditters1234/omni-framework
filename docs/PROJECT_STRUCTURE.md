@@ -93,6 +93,7 @@ systems/
 ```
 
 `systems/loaders/` also includes `ai_persona_registry.gd`, which loads `ai_personas.json` persona templates into `DataManager`.
+`systems/ai/` now also includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies ahead of the dialogue-layer UI work.
 
 All of the following service scripts are fully implemented and should not be omitted from any architecture reference:
 

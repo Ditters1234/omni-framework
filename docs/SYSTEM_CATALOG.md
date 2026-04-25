@@ -120,6 +120,8 @@ The `AIManager` autoload routes all AI calls to one of four backends based on th
 
 **Usage:** Mod scripts call `AIManager.generate_async(prompt, context)` and listen to AI events. Always guard with `AIManager.is_available()`.
 
+`systems/ai/ai_chat_service.gd` now provides the first engine-owned AI consumer helper. It is a `RefCounted` prompt builder that resolves persona placeholders from `GameState` and `DataManager`, keeps a bounded role-tagged conversation history, assembles the `context` dictionary expected by `AIManager`, and validates or deflects responses before a UI screen consumes them.
+
 See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for script hook examples.
 
 ### AI Events
