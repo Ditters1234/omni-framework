@@ -178,6 +178,19 @@ func _seed_ai_chat_fixture() -> void:
 		"quest_id": FIXTURE_QUEST_ID,
 		"display_name": "Fix the Relay",
 		"description": "Repair contracts are stacking up.",
+		"stages": [
+			{
+				"title": "Awaiting Parts",
+				"description": "Hold until the repair job is explicitly advanced.",
+				"objectives": [
+					{
+						"type": "has_flag",
+						"flag_id": "fixture_job_complete",
+						"value": true,
+					}
+				]
+			}
+		],
 	}
 	GameState.active_quests[FIXTURE_QUEST_ID] = {
 		"quest_id": FIXTURE_QUEST_ID,
