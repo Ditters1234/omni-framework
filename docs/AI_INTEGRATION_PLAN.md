@@ -6,7 +6,7 @@ This document is a planning reference for the AI integration layer. It catalogs 
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
-Implementation status update: Phases 2 and 3 are now in place. `systems/ai/ai_chat_service.gd` provides persona lookup, placeholder resolution, bounded history, context assembly, response validation, fallback selection, and a debug snapshot surface. `DialogueBackend` and `dialogue_screen.gd` now support `ai_mode` handoff (`hybrid`, `freeform`), Dialogue Manager callable hooks (`ai_chat_open`, `ai_chat_close`, `can_open_ai_chat`), routed streaming via `GameEvents.ai_token_received`, and the base Kael interaction as the reference implementation.
+Implementation status update: Phases 1–4 are complete. The dialogue AI integration is fully landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls for chat history window and streaming speed, debug overlay AI chat panel, input length hardening, and modding guide authoring documentation.
 
 Decisions this document assumes:
 
