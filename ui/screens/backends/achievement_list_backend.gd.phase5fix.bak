@@ -114,11 +114,13 @@ func _build_progress_text(stat_name: String, progress: float, requirement: float
 	if unlocked:
 		return "Unlocked"
 	if stat_name.is_empty() or requirement <= 0.0:
-		return "Locked"
-	return "%s: %s / %s" % [
+		return "Locked — hidden trigger or manual unlock"
+	var pct := clampf(progress / requirement, 0.0, 1.0) * 100.0
+	return "%s: %s / %s (%s%%)" % [
 		BACKEND_HELPERS.humanize_id(stat_name),
 		_format_number(progress),
 		_format_number(requirement),
+		_format_number(pct),
 	]
 
 func _read_float(value: Variant) -> float:

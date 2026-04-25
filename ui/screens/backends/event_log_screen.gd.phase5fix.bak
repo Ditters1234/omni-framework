@@ -68,14 +68,10 @@ func _build_row_text(row: Dictionary) -> String:
 	var title := str(row.get("title", ""))
 	if title.is_empty():
 		title = "%s/%s" % [str(row.get("domain", "")), str(row.get("signal_name", ""))]
-	var timestamp := str(row.get("timestamp", ""))
 	var lines: Array[String] = [
 		"#%s %s" % [str(row.get("sequence", 0)), title],
+		"%s • %s/%s" % [str(row.get("timestamp", "")), str(row.get("domain", "")), str(row.get("signal_name", ""))],
 	]
-	if not timestamp.is_empty():
-		lines.append("%s • %s/%s" % [timestamp, str(row.get("domain", "")), str(row.get("signal_name", ""))])
-	else:
-		lines.append("%s/%s" % [str(row.get("domain", "")), str(row.get("signal_name", ""))])
 	if not args_text.is_empty() and args_text != "{}":
 		lines.append(args_text)
 	var narration_text := str(row.get("narration_text", "")).strip_edges()

@@ -67,12 +67,13 @@ func _build_rows() -> Array[Dictionary]:
 			"sequence": int(event.get("sequence", 0)),
 			"signal_name": signal_name,
 			"domain": str(event.get("domain", "")),
-			"timestamp": _format_timestamp(str(event.get("timestamp", ""))) if has_method("_format_timestamp") else str(event.get("timestamp", "")),
-			"title": _build_event_title(signal_name, event.get("args", [])) if has_method("_build_event_title") else signal_name.capitalize().replace("_", " "),
+			"timestamp": _format_timestamp(str(event.get("timestamp", ""))),
+			"title": _build_event_title(signal_name, event.get("args", [])),
 			"args_text": _format_args(event.get("args", [])),
 			"narration_text": str(event.get("narration", "")),
 			"deprecated": bool(event.get("deprecated", false)),
 		})
+	rows.append_array(_build_game_state_event_rows())
 	if _get_bool_param(_params, "newest_first", true):
 		rows.reverse()
 	return rows
