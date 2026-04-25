@@ -262,7 +262,9 @@ func _apply_context(context: Dictionary) -> void:
 	var history_value: Variant = context.get("history", [])
 	if history_value is Array and _chat_node.has_method("set_chat_history"):
 		var history: Array = history_value
-		_chat_node.call("set_chat_history", history.duplicate(true))
+		var untyped_history: Array = []
+		untyped_history.append_array(history)
+		_chat_node.call("set_chat_history", untyped_history.duplicate(true))
 
 
 func _on_response_updated(new_token: String) -> void:
