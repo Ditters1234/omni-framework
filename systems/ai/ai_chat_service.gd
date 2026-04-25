@@ -147,7 +147,8 @@ func build_system_prompt() -> String:
 		prompt_lines.append("Avoid these topics: %s. Deflect briefly and stay in character." % ", ".join(forbidden_topics))
 
 	var knowledge_block := _build_knowledge_block()
-	if not knowledge_block.is_empty():
+	var template_already_has_knowledge := template_text.contains("{knowledge_block}")
+	if not knowledge_block.is_empty() and not template_already_has_knowledge:
 		prompt_lines.append("Relevant world knowledge:\n%s" % knowledge_block)
 
 	_last_system_prompt = "\n\n".join(prompt_lines).strip_edges()

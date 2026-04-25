@@ -59,7 +59,7 @@ Implications this document respects:
 
 - No game system consumes `AIManager` for gameplay yet. The providers are wired but idle.
 - ~~No mod data schema for AI persona definitions.~~ Implemented in Phase 1.
-- No prompt builder or response parser infrastructure.
+- ~~No prompt builder or response parser infrastructure.~~ Implemented in Phase 2.
 - No LimboAI behavior tree nodes for AI-driven NPC decisions.
 - No script hook patterns for AI-generated content.
 
@@ -73,7 +73,7 @@ Target end state once this plan is fully executed. Three consumer layers plus su
 
 | System | Status | Purpose |
 |---|---|---|
-| `AIChatService` | Planned (Phase 2) | Prompt assembly, history management, response parsing for NPC conversations |
+| `AIChatService` | ✅ Implemented (Phase 2) | Prompt assembly, history management, response parsing for NPC conversations |
 | `DialogueBackend` AI mode | Planned (Phase 3) | Hybrid dialogue: scripted `.dialogue` trees hand off to freeform AI chat and back |
 | `dialogue_screen.gd` streaming | Planned (Phase 3) | Typewriter-style token streaming in the dialogue UI |
 
@@ -457,13 +457,13 @@ Deliverable: persona data loads through the standard mod pipeline, is queryable 
 
 ### Phase 2 — AIChatService (~3 days)
 
-The prompt builder and conversation manager that bridges persona data and `AIManager`.
+Current status: complete. `systems/ai/ai_chat_service.gd` provides persona-aware prompt assembly with `{placeholder}` token resolution, bounded role-tagged conversation history, response validation (length, character consistency, forbidden topic deflection, fallback selection), context assembly for `AIManager`, and a debug snapshot surface. Covered by `tests/unit/test_ai_chat_service.gd` with a fake provider test double.
 
-1. Create `systems/ai/ai_chat_service.gd` as a `RefCounted` helper (not an autoload).
-2. Implement `{placeholder}` token resolution from `GameState` and `DataManager`.
-3. Implement conversation history management (bounded window, role-tagged entries).
-4. Implement response validation (length, character consistency, fallback selection).
-5. Unit tests: token resolution with known fixtures, history windowing, validation edge cases (empty response, overlong response, out-of-character detection).
+1. Create `systems/ai/ai_chat_service.gd` as a `RefCounted` helper (not an autoload). Done.
+2. Implement `{placeholder}` token resolution from `GameState` and `DataManager`. Done.
+3. Implement conversation history management (bounded window, role-tagged entries). Done.
+4. Implement response validation (length, character consistency, fallback selection). Done.
+5. Unit tests: token resolution with known fixtures, history windowing, validation edge cases (empty response, overlong response, out-of-character detection). Done.
 
 Deliverable: `AIChatService` can assemble a complete prompt from a persona + game state and validate the response, independent of any UI.
 
