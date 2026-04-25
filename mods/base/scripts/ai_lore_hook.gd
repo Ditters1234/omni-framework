@@ -28,7 +28,7 @@ func _generate_entity_lore_async(entity_template: Dictionary, context: Dictionar
 		ScriptHookService.store_entity_lore(template_id, "")
 		return
 	var tokens := _build_entity_tokens(entity_template, context)
-	var prompt := _resolve_tokens(str(ai_template.get("prompt_template", "")), tokens)
+	var prompt := resolve_template_tokens(str(ai_template.get("prompt_template", "")), tokens)
 	if prompt.is_empty():
 		ScriptHookService.store_entity_lore(template_id, "")
 		return
@@ -37,7 +37,7 @@ func _generate_entity_lore_async(entity_template: Dictionary, context: Dictionar
 	})
 	var final_lore_text := lore_text.strip_edges()
 	if final_lore_text.is_empty():
-		final_lore_text = _resolve_tokens(str(ai_template.get("fallback", "")), tokens).strip_edges()
+		final_lore_text = resolve_template_tokens(str(ai_template.get("fallback", "")), tokens).strip_edges()
 	ScriptHookService.store_entity_lore(template_id, final_lore_text)
 
 
@@ -50,7 +50,7 @@ func _generate_part_lore_async(part_template: Dictionary, context: Dictionary) -
 		ScriptHookService.store_part_lore(template_id, "")
 		return
 	var tokens := _build_part_tokens(part_template, context)
-	var prompt := _resolve_tokens(str(ai_template.get("prompt_template", "")), tokens)
+	var prompt := resolve_template_tokens(str(ai_template.get("prompt_template", "")), tokens)
 	if prompt.is_empty():
 		ScriptHookService.store_part_lore(template_id, "")
 		return
@@ -59,7 +59,7 @@ func _generate_part_lore_async(part_template: Dictionary, context: Dictionary) -
 	})
 	var final_lore_text := lore_text.strip_edges()
 	if final_lore_text.is_empty():
-		final_lore_text = _resolve_tokens(str(ai_template.get("fallback", "")), tokens).strip_edges()
+		final_lore_text = resolve_template_tokens(str(ai_template.get("fallback", "")), tokens).strip_edges()
 	ScriptHookService.store_part_lore(template_id, final_lore_text)
 
 
@@ -97,11 +97,3 @@ func _build_part_tokens(part_template: Dictionary, _context: Dictionary) -> Dict
 		"description": str(part_template.get("description", "")),
 		"tag_summary": ", ".join(tags),
 	}
-
-
-func _resolve_tokens(template_text: String, tokens: Dictionary) -> String:
-	var resolved_text := template_text
-	for token_key_value in tokens.keys():
-		var token_key := str(token_key_value)
-		resolved_text = resolved_text.replace("{%s}" % token_key, str(tokens.get(token_key_value, "")))
-	return resolved_text.strip_edges()

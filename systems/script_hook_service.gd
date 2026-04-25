@@ -15,6 +15,8 @@ static var _entity_lore_cache: Dictionary = {}
 static var _pending_entity_lore: Dictionary = {}
 static var _part_lore_cache: Dictionary = {}
 static var _pending_part_lore: Dictionary = {}
+static var _cached_world_gen_settings: Dictionary = {}
+static var _cached_world_gen_settings_valid: bool = false
 
 
 static func invoke_template_hook(template: Dictionary, method_name: String, args: Array = []) -> void:
@@ -169,6 +171,8 @@ static func reset_world_gen_state() -> void:
 	_pending_entity_lore.clear()
 	_part_lore_cache.clear()
 	_pending_part_lore.clear()
+	_cached_world_gen_settings_valid = false
+	_cached_world_gen_settings.clear()
 
 
 static func _extract_script_path(template: Dictionary) -> String:
@@ -189,10 +193,17 @@ static func _get_global_hook_path(hook_id: String) -> String:
 static func _can_run_world_gen(config_flag: String) -> bool:
 	if not AIManager.is_available():
 		return false
-	var ai_settings := APP_SETTINGS.get_ai_settings(APP_SETTINGS.load_settings())
-	if not bool(ai_settings.get(APP_SETTINGS.AI_ENABLE_WORLD_GEN, false)):
+	if not _cached_world_gen_settings_valid:
+		_cached_world_gen_settings = APP_SETTINGS.get_ai_settings(APP_SETTINGS.load_settings())
+		_cached_world_gen_settings_valid = true
+	if not bool(_cached_world_gen_settings.get(APP_SETTINGS.AI_ENABLE_WORLD_GEN, false)):
 		return false
 	return bool(DataManager.get_config_value("ai.%s" % config_flag, true))
+
+
+static func invalidate_world_gen_settings_cache() -> void:
+	_cached_world_gen_settings_valid = false
+	_cached_world_gen_settings.clear()
 
 
 static func _collect_carried_parts(entity: EntityInstance) -> Array[PartInstance]:

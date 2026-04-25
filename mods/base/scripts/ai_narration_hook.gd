@@ -24,7 +24,7 @@ func _generate_event_narration_async(signal_name: String, args: Array) -> void:
 	var source_key := _resolve_source_key(signal_name, args)
 	if source_key.is_empty():
 		return
-	var prompt := _resolve_tokens(str(ai_template.get("prompt_template", "")), _build_tokens(signal_name, args))
+	var prompt := resolve_template_tokens(str(ai_template.get("prompt_template", "")), _build_tokens(signal_name, args))
 	if prompt.is_empty():
 		return
 	var narration := await generate_ai_async(prompt, {
@@ -32,7 +32,7 @@ func _generate_event_narration_async(signal_name: String, args: Array) -> void:
 	})
 	var final_narration := narration.strip_edges()
 	if final_narration.is_empty():
-		final_narration = _resolve_tokens(str(ai_template.get("fallback", "")), _build_tokens(signal_name, args)).strip_edges()
+		final_narration = resolve_template_tokens(str(ai_template.get("fallback", "")), _build_tokens(signal_name, args)).strip_edges()
 	if final_narration.is_empty():
 		return
 	GameEvents.add_event_narration(signal_name, source_key, final_narration)
@@ -86,11 +86,3 @@ func _read_arg(args: Array, index: int) -> String:
 	if index < 0 or index >= args.size():
 		return ""
 	return str(args[index]).strip_edges()
-
-
-func _resolve_tokens(template_text: String, tokens: Dictionary) -> String:
-	var resolved_text := template_text
-	for token_key_value in tokens.keys():
-		var token_key := str(token_key_value)
-		resolved_text = resolved_text.replace("{%s}" % token_key, str(tokens.get(token_key_value, "")))
-	return resolved_text.strip_edges()

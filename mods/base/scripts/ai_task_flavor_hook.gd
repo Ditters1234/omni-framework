@@ -20,7 +20,7 @@ func _generate_task_flavor_async(task_template: Dictionary, context: Dictionary)
 		ScriptHookService.store_task_flavor(template_id, "")
 		return
 	var tokens := _build_tokens(task_template, context)
-	var prompt := _resolve_tokens(str(ai_template.get("prompt_template", "")), tokens)
+	var prompt := resolve_template_tokens(str(ai_template.get("prompt_template", "")), tokens)
 	if prompt.is_empty():
 		ScriptHookService.store_task_flavor(template_id, "")
 		return
@@ -29,7 +29,7 @@ func _generate_task_flavor_async(task_template: Dictionary, context: Dictionary)
 	})
 	var final_flavor_text := flavor_text.strip_edges()
 	if final_flavor_text.is_empty():
-		final_flavor_text = _resolve_tokens(str(ai_template.get("fallback", "")), tokens).strip_edges()
+		final_flavor_text = resolve_template_tokens(str(ai_template.get("fallback", "")), tokens).strip_edges()
 	ScriptHookService.store_task_flavor(template_id, final_flavor_text)
 
 
@@ -73,11 +73,3 @@ func _build_reward_summary(reward_value: Variant) -> String:
 	for key_value in keys:
 		parts.append("%s %s" % [str(reward.get(key_value, "")), str(key_value)])
 	return ", ".join(parts)
-
-
-func _resolve_tokens(template_text: String, tokens: Dictionary) -> String:
-	var resolved_text := template_text
-	for token_key_value in tokens.keys():
-		var token_key := str(token_key_value)
-		resolved_text = resolved_text.replace("{%s}" % token_key, str(tokens.get(token_key_value, "")))
-	return resolved_text.strip_edges()

@@ -236,6 +236,7 @@ func _persist_settings() -> bool:
 		return false
 	APP_SETTINGS.apply_settings(get_window(), _settings)
 	AIManager.initialize(_settings)
+	ScriptHookService.invalidate_world_gen_settings_cache()
 	_update_connected_ai_settings_from_manager()
 	_persisted_settings = _settings.duplicate(true)
 	_is_dirty = false
@@ -253,6 +254,7 @@ func _revert_unsaved_changes() -> void:
 	_is_initializing = false
 	APP_SETTINGS.apply_settings(get_window(), _persisted_settings)
 	AIManager.initialize(_persisted_settings)
+	ScriptHookService.invalidate_world_gen_settings_cache()
 	_update_connected_ai_settings_from_manager()
 	_is_dirty = false
 	_update_dirty_state()

@@ -74,3 +74,13 @@ func generate_ai_async(prompt: String, context: Dictionary = {}) -> String:
 	if not AIManager.is_available():
 		return ""
 	return await AIManager.generate_async(prompt, context)
+
+
+## Resolves {placeholder} tokens in a template string from a dictionary.
+## Unrecognized tokens are left in place.
+func resolve_template_tokens(template_text: String, tokens: Dictionary) -> String:
+	var resolved_text := template_text
+	for token_key_value in tokens.keys():
+		var token_key := str(token_key_value)
+		resolved_text = resolved_text.replace("{%s}" % token_key, str(tokens.get(token_key_value, "")))
+	return resolved_text.strip_edges()
