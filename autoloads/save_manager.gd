@@ -11,7 +11,7 @@ const TEST_SAVE_DIR_PREFIX := "user://test_saves/"
 const TEST_RUN_MARKERS := ["gut_cmdln.gd", "-gexit", "-gdir=", "--test", "res://tests"]
 const AUTOSAVE_SLOT := 0
 const MAX_SAVE_SLOTS := 5
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 const REQUIRED_SAVE_FIELDS := ["game_state"]
 const OPTIONAL_SAVE_FIELDS := ["save_schema_version", "created_at", "updated_at", "slot_metadata"]
 const REQUIRED_RUNTIME_CLASSES := ["EntityInstance", "PartInstance"]
@@ -36,6 +36,7 @@ const REQUIRED_GAME_STATE_FIELDS := [
 ]
 const SLOT_KIND_AUTOSAVE := "autosave"
 const SLOT_KIND_MANUAL := "manual"
+const PURGE_INCOMPATIBLE_SAVES_ON_BOOT := false
 
 var last_operation_summary: Dictionary = {}
 var _registered_runtime_classes: Array[String] = []
@@ -55,6 +56,8 @@ func _ready() -> void:
 		_save_dir = _get_or_create_test_session_save_dir()
 	_save_dir_ready = _ensure_save_dir()
 	_register_runtime_classes()
+	if PURGE_INCOMPATIBLE_SAVES_ON_BOOT:
+		_purge_incompatible_saves()
 	last_operation_summary = {
 		"kind": "boot",
 		"status": "ok" if _save_dir_ready else "failed",
@@ -465,38 +468,10 @@ func _enforce_test_save_isolation() -> void:
 
 ## Checks schema version and runs any needed migrations before loading.
 func _migrate_if_needed(data: Dictionary) -> Dictionary:
-	var version := int(data.get("save_schema_version", 0))
-	if data.has("game_state") and data["game_state"] is Dictionary:
-		_migrate_game_state_defaults(data["game_state"])
-	# Run any future migration steps here, keyed on version, e.g.:
-	# if version < 2:
-	#     _migrate_v1_to_v2(data)
-	# Stamp the schema version AFTER migrations so future bumps can still detect
-	# which path a save came from.
-	if version != SCHEMA_VERSION:
-		data["save_schema_version"] = SCHEMA_VERSION
-	for field_name in OPTIONAL_SAVE_FIELDS:
-		if data.has(field_name):
-			continue
-		match field_name:
-			"created_at", "updated_at":
-				data[field_name] = Time.get_datetime_string_from_system(true, true)
-			"slot_metadata":
-				data[field_name] = {}
+	# No backward compatibility: this project has not reached production yet.
+	# Older save files are intentionally rejected by _validate_raw_payload().
 	return data
 
-
-func _migrate_game_state_defaults(game_state_data: Dictionary) -> void:
-	if not game_state_data.has("faction_reputations"):
-		game_state_data["faction_reputations"] = {}
-	if not game_state_data.has("discovered_recipes"):
-		game_state_data["discovered_recipes"] = []
-	if not game_state_data.has("ai_lore_cache"):
-		game_state_data["ai_lore_cache"] = {}
-	if not game_state_data.has("event_history"):
-		game_state_data["event_history"] = []
-	if not game_state_data.has("runtime_state_buckets"):
-		game_state_data["runtime_state_buckets"] = {}
 
 
 func _is_valid_slot(slot: int) -> bool:
@@ -586,9 +561,11 @@ func _validate_raw_payload(data: Dictionary) -> String:
 	for field_name in REQUIRED_SAVE_FIELDS:
 		if not data.has(field_name):
 			return "Save file is missing required field '%s'." % field_name
-	var schema_version := int(data.get("save_schema_version", 0))
-	if schema_version > SCHEMA_VERSION:
-		return "Save file schema version %d is newer than supported version %d." % [schema_version, SCHEMA_VERSION]
+	if not data.has("save_schema_version"):
+		return "Save file is missing required field 'save_schema_version'."
+	var schema_version := int(data.get("save_schema_version", -1))
+	if schema_version != SCHEMA_VERSION:
+		return "Save file schema version %d is not supported by this build; expected %d. Delete old saves and start fresh." % [schema_version, SCHEMA_VERSION]
 	var state_data: Variant = data.get("game_state", null)
 	if not state_data is Dictionary:
 		return "Save file field 'game_state' must be a dictionary."
@@ -648,6 +625,38 @@ func _get_missing_runtime_classes() -> Array[String]:
 	return missing
 
 
+func purge_all_saves() -> int:
+	_enforce_test_save_isolation()
+	var deleted_count := 0
+	for slot in get_visible_slots():
+		var path := _slot_path(slot)
+		if FileAccess.file_exists(path):
+			var err := DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+			if err == OK:
+				deleted_count += 1
+	last_operation_summary = {
+		"kind": "purge",
+		"status": "ok",
+		"deleted_count": deleted_count,
+		"save_dir": get_save_directory(),
+	}
+	return deleted_count
+
+
+func _purge_incompatible_saves() -> int:
+	var deleted_count := 0
+	for slot in get_visible_slots():
+		var path := _slot_path(slot)
+		if not FileAccess.file_exists(path):
+			continue
+		var payload := _read_raw_payload(path)
+		if payload.is_empty() or not _validate_raw_payload(payload).is_empty():
+			var err := DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+			if err == OK:
+				deleted_count += 1
+	return deleted_count
+
+
 func get_debug_snapshot() -> Dictionary:
 	var snapshot := last_operation_summary.duplicate(true)
 	snapshot["save_dir"] = get_save_directory()
@@ -657,4 +666,5 @@ func get_debug_snapshot() -> Dictionary:
 	snapshot["test_session_save_dir"] = _test_session_save_dir
 	snapshot["registered_runtime_classes"] = _registered_runtime_classes.duplicate()
 	snapshot["missing_runtime_classes"] = _get_missing_runtime_classes()
+	snapshot["runtime_round_trip_audit"] = get_runtime_round_trip_audit()
 	return snapshot

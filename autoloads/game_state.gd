@@ -501,11 +501,44 @@ func validate_runtime_state() -> Array[String]:
 		var template_id := str(task_instance.get("template_id", ""))
 		if not template_id.is_empty() and TaskRegistry.get_task(template_id).is_empty():
 			issues.append("Active task '%s' references missing template '%s'." % [runtime_id, template_id])
+	_validate_persistent_runtime_buckets(issues)
+	return issues
+
+
+func _validate_persistent_runtime_buckets(issues: Array[String]) -> void:
+	for quest_id_value in active_quests.keys():
+		var quest_id := str(quest_id_value)
+		if not quest_id.is_empty() and QuestRegistry.get_quest(quest_id).is_empty():
+			issues.append("Active quest '%s' references missing quest template." % quest_id)
+
+	for quest_id_value in completed_quests:
+		var quest_id := str(quest_id_value)
+		if not quest_id.is_empty() and QuestRegistry.get_quest(quest_id).is_empty():
+			issues.append("Completed quest '%s' references missing quest template." % quest_id)
+
+	for achievement_id_value in unlocked_achievements:
+		var achievement_id := str(achievement_id_value)
+		if not achievement_id.is_empty() and AchievementRegistry.get_achievement(achievement_id).is_empty():
+			issues.append("Unlocked achievement '%s' references missing achievement template." % achievement_id)
+
+	for faction_id_value in faction_reputations.keys():
+		var faction_id := str(faction_id_value)
+		if not faction_id.is_empty() and DataManager.get_faction(faction_id).is_empty():
+			issues.append("Faction reputation references missing faction '%s'." % faction_id)
+
+	for recipe_id_value in discovered_recipes:
+		var recipe_id := str(recipe_id_value)
+		if not recipe_id.is_empty() and RecipeRegistry.get_recipe(recipe_id).is_empty():
+			issues.append("Discovered recipe '%s' references missing recipe template." % recipe_id)
+
 	for event_value in event_history:
 		if not event_value is Dictionary:
 			issues.append("Event history contains a non-dictionary entry.")
 			break
-	return issues
+		var event_entry: Dictionary = event_value
+		if str(event_entry.get("event_type", "")).is_empty():
+			issues.append("Event history contains an entry without event_type.")
+			break
 
 
 func _check_achievement_unlocks(stat_name: String) -> void:
