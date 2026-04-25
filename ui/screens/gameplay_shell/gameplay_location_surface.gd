@@ -105,6 +105,12 @@ func _render_location_actions() -> void:
 					interactions.append(item as Dictionary)
 
 		if interactions.is_empty():
+			# Entity is present but has no interactions — show as a label only
+			var presence_label := Label.new()
+			presence_label.text = display_name
+			presence_label.tooltip_text = description
+			presence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			_interactions_container.add_child(presence_label)
 			continue
 
 		# Add a label separator for the entity
