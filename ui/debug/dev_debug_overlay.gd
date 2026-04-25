@@ -13,6 +13,7 @@ const TAB_BOOT := 0
 const TAB_REGISTRIES := 1
 const TAB_RUNTIME := 2
 const TAB_EVENTS := 3
+const TAB_ENTITIES := 4
 
 var _overlay_visible: bool = false
 
@@ -77,7 +78,7 @@ func _build_ui() -> void:
 	_tab_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(_tab_container)
 
-	var tab_names := ["Boot", "Registries", "Runtime", "Events"]
+	var tab_names := ["Boot", "Registries", "Runtime", "Events", "Entities"]
 	for tab_name in tab_names:
 		var scroll := ScrollContainer.new()
 		scroll.name = tab_name
@@ -129,6 +130,8 @@ func _refresh_tab(tab_index: int) -> void:
 			lbl.text = _build_runtime_text()
 		TAB_EVENTS:
 			lbl.text = _build_events_text()
+		TAB_ENTITIES:
+			lbl.text = _build_entities_text()
 
 
 # ---------------------------------------------------------------------------
@@ -378,6 +381,138 @@ func _build_events_text() -> String:
 		for i in range(event_history.size() - 1, -1, -1):
 			var event_entry: Dictionary = event_history[i]
 			b.append("  %s" % _format_event_entry_bb(event_entry))
+	return "\n".join(b)
+
+
+func _build_entities_text() -> String:
+	var b := PackedStringArray()
+
+	var player_entity := GameState.player as EntityInstance
+	var all_instances: Array[EntityInstance] = []
+	for entity_data in GameState.entity_instances.values():
+		var entity := entity_data as EntityInstance
+		if entity != null:
+			all_instances.append(entity)
+
+	# Sort: player first, then alphabetically by entity_id
+	all_instances.sort_custom(func(a: EntityInstance, b_ent: EntityInstance) -> bool:
+		var a_is_player := player_entity != null and a.entity_id == player_entity.entity_id
+		var b_is_player := player_entity != null and b_ent.entity_id == player_entity.entity_id
+		if a_is_player:
+			return true
+		if b_is_player:
+			return false
+		return a.entity_id < b_ent.entity_id
+	)
+
+	# --- Roster summary ---
+	_bb_section(b, "Roster  (%d entities)" % all_instances.size())
+	if all_instances.is_empty():
+		b.append("  [color=gray]<none — game not started>[/color]")
+	else:
+		for entity in all_instances:
+			var is_player := player_entity != null and entity.entity_id == player_entity.entity_id
+			var tag := " [color=yellow][PLAYER][/color]" if is_player else ""
+			var loc := entity.location_id if not entity.location_id.is_empty() else "?"
+			var eq_count := entity.equipped.size()
+			var inv_count := entity.inventory.size()
+			b.append("  [color=aqua]%s[/color]%s  [color=gray]@ %s  eq=%d  inv=%d[/color]" % [
+				entity.entity_id, tag, loc, eq_count, inv_count
+			])
+
+	# --- Per-entity detail blocks ---
+	for entity in all_instances:
+		var is_player := player_entity != null and entity.entity_id == player_entity.entity_id
+		b.append("")
+		var header_color := "yellow" if is_player else "aqua"
+		var player_label := "  [color=yellow][PLAYER][/color]" if is_player else ""
+		b.append("[b][color=%s]%s[/color][/b]%s" % [header_color, entity.entity_id, player_label])
+		_bb_kv(b, "template", entity.template_id)
+		_bb_kv(b, "location", entity.location_id if not entity.location_id.is_empty() else "<none>")
+
+		# Stats — group resource pairs (health / health_max) on one line
+		if not entity.stats.is_empty():
+			b.append("  [color=gray]stats:[/color]")
+			var stat_keys: Array = entity.stats.keys()
+			stat_keys.sort()
+			var shown: Dictionary = {}
+			for stat_key_value in stat_keys:
+				var stat_key := str(stat_key_value)
+				if shown.has(stat_key):
+					continue
+				var cap_key := stat_key + "_max"
+				if entity.stats.has(cap_key):
+					var cur := entity.stats[stat_key]
+					var cap := entity.stats[cap_key]
+					var ratio := float(cur) / maxf(float(cap), 1.0)
+					var bar_color := "green" if ratio > 0.5 else ("orange" if ratio > 0.2 else "red")
+					b.append("    [color=gray]%s[/color] [color=%s]%.0f[/color][color=gray]/%.0f[/color]" % [
+						stat_key, bar_color, float(cur), float(cap)
+					])
+					shown[stat_key] = true
+					shown[cap_key] = true
+				elif not stat_key.ends_with("_max"):
+					b.append("    [color=gray]%s[/color] = [color=white]%s[/color]" % [
+						stat_key, str(entity.stats[stat_key])
+					])
+					shown[stat_key] = true
+
+		# Currencies
+		if not entity.currencies.is_empty():
+			b.append("  [color=gray]currencies:[/color]")
+			var cur_keys: Array = entity.currencies.keys()
+			cur_keys.sort()
+			for cur_key_value in cur_keys:
+				var cur_key := str(cur_key_value)
+				b.append("    [color=gray]%s[/color] = [color=white]%s[/color]" % [
+					cur_key, str(entity.currencies[cur_key_value])
+				])
+
+		# Equipped parts
+		if not entity.equipped.is_empty():
+			b.append("  [color=gray]equipped:[/color]")
+			var slot_keys: Array = entity.equipped.keys()
+			slot_keys.sort()
+			for slot_value in slot_keys:
+				var slot := str(slot_value)
+				var part := entity.equipped.get(slot_value, null) as PartInstance
+				if part != null:
+					b.append("    [color=gray]%s[/color] → [color=white]%s[/color]" % [slot, part.template_id])
+
+		# Inventory (compact — just template ids)
+		if not entity.inventory.is_empty():
+			var inv_parts: Array[String] = []
+			for part_data in entity.inventory:
+				var part := part_data as PartInstance
+				if part != null:
+					inv_parts.append(part.template_id)
+			inv_parts.sort()
+			b.append("  [color=gray]inventory (%d):[/color]" % inv_parts.size())
+			for tmpl_id in inv_parts:
+				b.append("    [color=gray]- [/color][color=white]%s[/color]" % tmpl_id)
+
+		# Reputation
+		if not entity.reputation.is_empty():
+			b.append("  [color=gray]reputation:[/color]")
+			var rep_keys: Array = entity.reputation.keys()
+			rep_keys.sort()
+			for rep_key_value in rep_keys:
+				var rep_val := float(entity.reputation[rep_key_value])
+				var rep_color := "green" if rep_val >= 0.0 else "red"
+				b.append("    [color=gray]%s[/color] = [color=%s]%.0f[/color]" % [
+					str(rep_key_value), rep_color, rep_val
+				])
+
+		# Flags (non-empty only)
+		if not entity.flags.is_empty():
+			b.append("  [color=gray]flags (%d):[/color]" % entity.flags.size())
+			var flag_keys: Array = entity.flags.keys()
+			flag_keys.sort()
+			for flag_key_value in flag_keys:
+				b.append("    [color=gray]%s[/color] = [color=white]%s[/color]" % [
+					str(flag_key_value), str(entity.flags[flag_key_value])
+				])
+
 	return "\n".join(b)
 
 
