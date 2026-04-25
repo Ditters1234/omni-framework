@@ -442,10 +442,10 @@ func _build_entities_text() -> String:
 					continue
 				var cap_key := stat_key + "_max"
 				if entity.stats.has(cap_key):
-					var cur := entity.stats[stat_key]
-					var cap := entity.stats[cap_key]
-					var ratio := float(cur) / maxf(float(cap), 1.0)
-					var bar_color := "green" if ratio > 0.5 else ("orange" if ratio > 0.2 else "red")
+					var cur: float = float(entity.stats[stat_key])
+					var cap: float = float(entity.stats[cap_key])
+					var ratio: float = cur / maxf(cap, 1.0)
+					var bar_color: String = "green" if ratio > 0.5 else ("orange" if ratio > 0.2 else "red")
 					b.append("    [color=gray]%s[/color] [color=%s]%.0f[/color][color=gray]/%.0f[/color]" % [
 						stat_key, bar_color, float(cur), float(cap)
 					])

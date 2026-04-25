@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://bmh5rode0qr0n"]
+
+[ext_resource type="Script" uid="uid://kg7ce183mxcl" path="res://ui/main.gd" id="1_h2l7e"]
+[ext_resource type="PackedScene" path="res://ui/components/notification_popup.tscn" id="2_np7jw"]
+
+[node name="Main" type="Node" unique_id=1705452400]
+script = ExtResource("1_h2l7e")
+
+[node name="ScreenLayer" type="CanvasLayer" parent="." unique_id=2126839497]
+
+[node name="StatusLabel" type="Label" parent="ScreenLayer" unique_id=721826532]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 40.0
+text = "Booting Omni-Framework..."
+autowrap_mode = 3
+
+[node name="NotificationPopup" parent="ScreenLayer" unique_id=1264503610 instance=ExtResource("2_np7jw")]
