@@ -18,6 +18,15 @@ const LAYOUT_MARGIN := 120.0
 const LAYER_GAP := 300.0
 const LANE_GAP := 150.0
 
+## Force-directed layout tuning.
+const FORCE_ITERATIONS := 180
+const FORCE_REPULSION := 120000.0
+const FORCE_SPRING_K := 0.012
+const FORCE_REST_LENGTH_PER_COST := 140.0
+const FORCE_DAMPING := 0.88
+const FORCE_MIN_SEPARATION := 180.0
+const FORCE_MAX_DISPLACEMENT := 40.0
+
 const ORIENTATION_RADIAL := "radial"
 const ORIENTATION_HORIZONTAL := "horizontal"
 const ORIENTATION_VERTICAL := "vertical"
@@ -126,15 +135,177 @@ func _rebuild_world_positions() -> void:
 
 func _rebuild_radial_world_positions() -> void:
 	_content_size = RADIAL_CONTENT_SIZE
-	for location in _locations:
-		var location_id := str(location.get("location_id", ""))
-		if location_id.is_empty():
+	var location_ids := _get_location_ids()
+	if location_ids.is_empty():
+		return
+
+	# --- Seed positions: authored map_position or circular fallback ---
+	var positions: Dictionary = {}
+	var pinned: Dictionary = {}
+	var total := location_ids.size()
+	for index in range(total):
+		var location_id := location_ids[index]
+		var authored := _get_authored_position(location_id)
+		if authored.x >= 0.0:
+			positions[location_id] = Vector2(
+				authored.x * _content_size.x,
+				authored.y * _content_size.y
+			)
+			pinned[location_id] = true
+		else:
+			var angle := (TAU * float(index) / float(total)) - (PI * 0.5)
+			positions[location_id] = Vector2(
+				_content_size.x * (0.5 + cos(angle) * 0.38),
+				_content_size.y * (0.5 + sin(angle) * 0.38)
+			)
+			pinned[location_id] = false
+
+	# --- Build edge data with travel costs ---
+	var edge_data: Array[Dictionary] = []
+	var adjacency := _build_adjacency(location_ids)
+	var seen_pairs: Dictionary = {}
+	for edge in _edges:
+		var from_id := str(edge.get("from_id", ""))
+		var to_id := str(edge.get("to_id", ""))
+		if from_id.is_empty() or to_id.is_empty():
 			continue
-		var normalized_position := _read_normalized_position(location.get("position", {}))
-		_world_positions_by_id[location_id] = Vector2(
-			normalized_position.x * _content_size.x,
-			normalized_position.y * _content_size.y
-		)
+		if not positions.has(from_id) or not positions.has(to_id):
+			continue
+		var pair_key := from_id + "|" + to_id if from_id < to_id else to_id + "|" + from_id
+		if seen_pairs.has(pair_key):
+			continue
+		seen_pairs[pair_key] = true
+		var cost := maxi(int(edge.get("travel_cost", 1)), 1)
+		edge_data.append({
+			"from": from_id,
+			"to": to_id,
+			"rest_length": float(cost) * FORCE_REST_LENGTH_PER_COST,
+		})
+
+	# --- Force-directed simulation ---
+	var velocities: Dictionary = {}
+	for location_id in location_ids:
+		velocities[location_id] = Vector2.ZERO
+
+	for _iteration in range(FORCE_ITERATIONS):
+		var forces: Dictionary = {}
+		for location_id in location_ids:
+			forces[location_id] = Vector2.ZERO
+
+		# Repulsion: all pairs push apart (Coulomb-like)
+		for i in range(total):
+			var id_a := location_ids[i]
+			var pos_a: Vector2 = positions[id_a]
+			for j in range(i + 1, total):
+				var id_b := location_ids[j]
+				var pos_b: Vector2 = positions[id_b]
+				var delta := pos_a - pos_b
+				var dist_sq := maxf(delta.length_squared(), 100.0)
+				var repulsion_force := delta.normalized() * (FORCE_REPULSION / dist_sq)
+				forces[id_a] += repulsion_force
+				forces[id_b] -= repulsion_force
+
+		# Spring attraction: connected nodes pull toward ideal distance
+		for ed in edge_data:
+			var from_id: String = ed["from"]
+			var to_id: String = ed["to"]
+			var rest_length: float = ed["rest_length"]
+			var pos_from: Vector2 = positions[from_id]
+			var pos_to: Vector2 = positions[to_id]
+			var delta := pos_to - pos_from
+			var dist := maxf(delta.length(), 1.0)
+			var displacement := dist - rest_length
+			var spring_force := delta.normalized() * (FORCE_SPRING_K * displacement)
+			forces[from_id] += spring_force
+			forces[to_id] -= spring_force
+
+		# Overlap repulsion: hard push when nodes are closer than minimum
+		for i in range(total):
+			var id_a := location_ids[i]
+			var pos_a: Vector2 = positions[id_a]
+			for j in range(i + 1, total):
+				var id_b := location_ids[j]
+				var pos_b: Vector2 = positions[id_b]
+				var delta := pos_a - pos_b
+				var dist := delta.length()
+				if dist < FORCE_MIN_SEPARATION and dist > 0.01:
+					var push := delta.normalized() * (FORCE_MIN_SEPARATION - dist) * 0.5
+					forces[id_a] += push
+					forces[id_b] -= push
+
+		# Apply forces with damping and displacement cap
+		for location_id in location_ids:
+			if pinned[location_id]:
+				continue
+			var vel: Vector2 = velocities[location_id]
+			vel = (vel + forces[location_id]) * FORCE_DAMPING
+			if vel.length() > FORCE_MAX_DISPLACEMENT:
+				vel = vel.normalized() * FORCE_MAX_DISPLACEMENT
+			velocities[location_id] = vel
+			var pos: Vector2 = positions[location_id]
+			pos += vel
+			pos.x = clampf(pos.x, LAYOUT_MARGIN, _content_size.x - LAYOUT_MARGIN)
+			pos.y = clampf(pos.y, LAYOUT_MARGIN, _content_size.y - LAYOUT_MARGIN)
+			positions[location_id] = pos
+
+	# --- Normalize to content bounds with padding ---
+	_normalize_positions_to_content(positions, pinned)
+
+	for location_id in location_ids:
+		_world_positions_by_id[location_id] = positions[location_id]
+
+
+## Re-center and scale computed positions to fill the content area with margin.
+func _normalize_positions_to_content(positions: Dictionary, pinned: Dictionary) -> void:
+	if positions.size() <= 1:
+		return
+	var min_pos := Vector2(INF, INF)
+	var max_pos := Vector2(-INF, -INF)
+	for pos_value in positions.values():
+		if not pos_value is Vector2:
+			continue
+		var pos: Vector2 = pos_value
+		min_pos.x = minf(min_pos.x, pos.x)
+		min_pos.y = minf(min_pos.y, pos.y)
+		max_pos.x = maxf(max_pos.x, pos.x)
+		max_pos.y = maxf(max_pos.y, pos.y)
+	var span := max_pos - min_pos
+	if span.x < 1.0:
+		span.x = 1.0
+	if span.y < 1.0:
+		span.y = 1.0
+	var usable := _content_size - Vector2(LAYOUT_MARGIN * 2.0, LAYOUT_MARGIN * 2.0)
+	var scale_factor := minf(usable.x / span.x, usable.y / span.y)
+	scale_factor = minf(scale_factor, 1.0)
+	var center := (min_pos + max_pos) * 0.5
+	var target_center := _content_size * 0.5
+	for location_id in positions.keys():
+		if pinned.get(location_id, false):
+			continue
+		var pos: Vector2 = positions[location_id]
+		pos = (pos - center) * scale_factor + target_center
+		pos.x = clampf(pos.x, LAYOUT_MARGIN, _content_size.x - LAYOUT_MARGIN)
+		pos.y = clampf(pos.y, LAYOUT_MARGIN, _content_size.y - LAYOUT_MARGIN)
+		positions[location_id] = pos
+
+
+## Returns the authored map_position for a location, or Vector2(-1, -1) if none.
+func _get_authored_position(location_id: String) -> Vector2:
+	for location in _locations:
+		if str(location.get("location_id", "")) != location_id:
+			continue
+		var pos_value: Variant = location.get("position", {})
+		if not pos_value is Dictionary:
+			return Vector2(-1.0, -1.0)
+		var pos_dict: Dictionary = pos_value
+		if not bool(pos_dict.get("authored", false)):
+			return Vector2(-1.0, -1.0)
+		var x_val: Variant = pos_dict.get("x", -1.0)
+		var y_val: Variant = pos_dict.get("y", -1.0)
+		if (x_val is int or x_val is float) and (y_val is int or y_val is float):
+			return Vector2(clampf(float(x_val), 0.05, 0.95), clampf(float(y_val), 0.05, 0.95))
+		return Vector2(-1.0, -1.0)
+	return Vector2(-1.0, -1.0)
 
 
 func _rebuild_layered_world_positions(horizontal: bool) -> void:

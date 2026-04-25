@@ -175,6 +175,7 @@ func _resolve_location_position(location: Dictionary, index: int, total: int) ->
 				return {
 					"x": clampf(float(x_value), 0.05, 0.95),
 					"y": clampf(float(y_value), 0.05, 0.95),
+					"authored": true,
 				}
 	if map_position_value is Array:
 		var map_position_array: Array = map_position_value
@@ -185,12 +186,14 @@ func _resolve_location_position(location: Dictionary, index: int, total: int) ->
 				return {
 					"x": clampf(float(x_array_value), 0.05, 0.95),
 					"y": clampf(float(y_array_value), 0.05, 0.95),
+					"authored": true,
 				}
 
 	var angle := (TAU * float(index) / float(total)) - (PI * 0.5)
 	return {
 		"x": 0.5 + cos(angle) * 0.38,
 		"y": 0.5 + sin(angle) * 0.38,
+		"authored": false,
 	}
 
 
