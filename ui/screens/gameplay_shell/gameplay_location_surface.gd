@@ -31,7 +31,7 @@ func initialize(params: Dictionary = {}) -> void:
 
 
 func _ready() -> void:
-	GameEvents.location_changed.connect(_on_location_changed)
+	_connect_runtime_signals()
 	if _location_id.is_empty():
 		_location_id = GameState.current_location_id
 	_load_location()
@@ -39,6 +39,20 @@ func _ready() -> void:
 
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
+
+
+func _connect_runtime_signals() -> void:
+	var on_location_changed := Callable(self, "_on_location_changed")
+	if GameEvents.has_signal("location_changed") and not GameEvents.is_connected("location_changed", on_location_changed):
+		GameEvents.location_changed.connect(on_location_changed)
+
+	var on_task_completed := Callable(self, "_on_task_completed")
+	if GameEvents.has_signal("task_completed") and not GameEvents.is_connected("task_completed", on_task_completed):
+		GameEvents.task_completed.connect(on_task_completed)
+
+	var on_tick_advanced := Callable(self, "_on_tick_advanced")
+	if GameEvents.has_signal("tick_advanced") and not GameEvents.is_connected("tick_advanced", on_tick_advanced):
+		GameEvents.tick_advanced.connect(on_tick_advanced)
 
 
 func _load_location() -> void:
@@ -170,30 +184,41 @@ func _render_entity_presence() -> Array[Dictionary]:
 		_add_empty_label(_entities_container, "No other entities are visible here right now.")
 	return rendered_entities
 
+
 func _get_present_entity_ids() -> Array[String]:
 	var entity_ids: Array[String] = []
-
-	# static list
 	var listed_entities_value: Variant = _location_template.get("entities_present", [])
 	if listed_entities_value is Array:
-		for entity_id_value in listed_entities_value:
-			var id := str(entity_id_value)
-			if not entity_ids.has(id) and id != "player":
-				entity_ids.append(id)
+		var listed_entities: Array = listed_entities_value
+		for entity_id_value in listed_entities:
+			_append_present_entity_id(entity_ids, str(entity_id_value))
 
-	# runtime instances (NEW SOURCE OF TRUTH)
-	var runtime_entities: Array[EntityInstance] = GameState.get_entity_instances_at_location(_location_id)
-	for entity in runtime_entities:
-		if not entity_ids.has(entity.entity_id):
-			entity_ids.append(entity.entity_id)
+	var located_entities := DataManager.query_entities({"location_id": _location_id})
+	for entity_template in located_entities:
+		_append_present_entity_id(entity_ids, str(entity_template.get("entity_id", "")))
 
+	for instance_id_value in GameState.entity_instances.keys():
+		var instance_id := str(instance_id_value)
+		var entity := GameState.get_entity_instance(instance_id)
+		if entity == null or entity.location_id != _location_id:
+			continue
+		_append_present_entity_id(entity_ids, entity.entity_id)
 	return entity_ids
 
 
 func _append_present_entity_id(entity_ids: Array[String], entity_id: String) -> void:
-	if entity_id.is_empty() or entity_id == "player" or entity_ids.has(entity_id):
+	if entity_id.is_empty() or _is_player_entity_id(entity_id) or entity_ids.has(entity_id):
 		return
 	entity_ids.append(entity_id)
+
+
+func _is_player_entity_id(entity_id: String) -> bool:
+	if entity_id == "player":
+		return true
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return false
+	return entity_id == player.entity_id
 
 
 func _get_entity_template_for_presence(entity_id: String) -> Dictionary:
@@ -300,6 +325,14 @@ func _show_error(message: String) -> void:
 	}
 
 
+func _refresh_current_location_if_visible() -> void:
+	if _location_id.is_empty():
+		return
+	if _location_id != GameState.current_location_id:
+		return
+	_load_location()
+
+
 func _on_screen_button_pressed(screen_id: String, params: Dictionary) -> void:
 	UIRouter.open_in_gameplay_shell(screen_id, params)
 
@@ -314,3 +347,11 @@ func _on_location_changed(_old_id: String, new_id: String) -> void:
 	if new_id != _location_id:
 		_location_id = new_id
 		_load_location()
+
+
+func _on_task_completed(_task_id: String, _entity_id: String) -> void:
+	_refresh_current_location_if_visible()
+
+
+func _on_tick_advanced(_tick: int) -> void:
+	_refresh_current_location_if_visible()
