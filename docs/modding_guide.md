@@ -1181,7 +1181,7 @@ No required params. Common useful optional fields:
 - `show_travel_costs`
 - `discovered_only`
 
-The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location. The runtime screen also provides route lines, mouse-wheel zoom, drag panning, fit/current centering controls, and radial/horizontal/vertical orientation modes. Traveling from the map consumes the cheapest routed total `travel_cost` in ticks; unreachable destinations are rejected instead of free-teleporting.
+The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location. The runtime screen also provides route lines, mouse-wheel zoom, drag panning, fit/current centering controls, and radial/horizontal/vertical orientation modes. The graph now declutters while zoomed out by shrinking nodes into compact pills or markers and hiding travel-cost badges until there is enough space to read them. Traveling from the map consumes the cheapest routed total `travel_cost` in ticks; unreachable destinations are rejected instead of free-teleporting.
 
 #### `EntitySheetBackend`
 No required params. Common useful optional fields:

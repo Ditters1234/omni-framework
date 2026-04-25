@@ -10,22 +10,33 @@ const DEFAULT_EDGE_COLOR := Color(0.48, 0.56, 0.64, 0.7)
 const CURRENT_EDGE_COLOR := Color(1.0, 0.82, 0.38, 0.95)
 const BACKGROUND_COLOR := Color(0.045, 0.055, 0.065, 1.0)
 const GRID_COLOR := Color(0.20, 0.25, 0.30, 0.28)
-const MIN_ZOOM := 0.55
-const MAX_ZOOM := 2.6
+const MIN_ZOOM := 0.25
+const MAX_ZOOM := 2.9
 const ZOOM_STEP := 1.18
+const FULL_NODE_ZOOM := 0.88
+const COMPACT_NODE_ZOOM := 0.56
+const COST_LABEL_MIN_ZOOM := 0.7
+const COMPACT_NODE_SIZE := Vector2(112, 40)
+const MINIMAL_NODE_SIZE := Vector2(28, 28)
+const MINIMAL_CURRENT_NODE_SIZE := Vector2(44, 28)
+const FULL_NODE_FONT_SIZE := 14
+const COMPACT_NODE_FONT_SIZE := 12
 const RADIAL_CONTENT_SIZE := Vector2(1200, 780)
 const LAYOUT_MARGIN := 120.0
 const LAYER_GAP := 300.0
 const LANE_GAP := 150.0
 
 ## Force-directed layout tuning.
-const FORCE_ITERATIONS := 180
-const FORCE_REPULSION := 120000.0
-const FORCE_SPRING_K := 0.012
-const FORCE_REST_LENGTH_PER_COST := 140.0
-const FORCE_DAMPING := 0.88
-const FORCE_MIN_SEPARATION := 180.0
-const FORCE_MAX_DISPLACEMENT := 40.0
+const FORCE_ITERATIONS := 300
+const FORCE_REPULSION := 200000.0
+const FORCE_SPRING_K := 0.02
+const FORCE_REST_LENGTH_PER_COST := 200.0
+const FORCE_DAMPING := 0.85
+const FORCE_MIN_SEPARATION_X := 200.0
+const FORCE_MIN_SEPARATION_Y := 80.0
+const FORCE_MAX_DISPLACEMENT := 30.0
+const FORCE_COOLING_START := 0.9
+const FORCE_COOLING_END := 0.1
 
 const ORIENTATION_RADIAL := "radial"
 const ORIENTATION_HORIZONTAL := "horizontal"
@@ -81,7 +92,7 @@ func _draw() -> void:
 		draw_line(from_center, to_center, edge_color, edge_width, true)
 		draw_circle(from_center, 4.0, edge_color)
 		draw_circle(to_center, 4.0, edge_color)
-		if _show_travel_costs:
+		if _show_travel_costs and _should_draw_travel_costs():
 			_draw_travel_cost(edge, from_center.lerp(to_center, 0.5), edge_color)
 
 
@@ -96,14 +107,11 @@ func _rebuild_location_buttons() -> void:
 		if location_id.is_empty():
 			continue
 		var button := Button.new()
-		button.text = _build_button_text(location)
 		button.tooltip_text = _build_tooltip_text(location)
 		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.custom_minimum_size = NODE_SIZE
-		button.size = NODE_SIZE
 		button.focus_mode = Control.FOCUS_ALL
-		_apply_button_style(button, str(location.get("faction_color", "#7d8fa3")), bool(location.get("is_current", false)))
+		_apply_location_button_state(button, location)
 		button.pressed.connect(_on_location_button_pressed.bind(location_id))
 		add_child(button)
 		_buttons_by_id[location_id] = button
@@ -117,6 +125,7 @@ func _layout_location_buttons() -> void:
 		var button := _buttons_by_id.get(location_id) as Button
 		if button == null:
 			continue
+		_apply_location_button_state(button, location)
 		var center := _world_to_screen(_read_world_position(location_id))
 		button.position = center - button.size * 0.5
 		button.visible = true
@@ -134,15 +143,22 @@ func _rebuild_world_positions() -> void:
 
 
 func _rebuild_radial_world_positions() -> void:
-	_content_size = RADIAL_CONTENT_SIZE
 	var location_ids := _get_location_ids()
 	if location_ids.is_empty():
+		_content_size = RADIAL_CONTENT_SIZE
 		return
+
+	var total := location_ids.size()
+	# Scale content area with node count so nodes have room to breathe
+	var area_scale := maxf(float(total) / 5.0, 1.0)
+	_content_size = Vector2(
+		maxf(RADIAL_CONTENT_SIZE.x * area_scale, RADIAL_CONTENT_SIZE.x),
+		maxf(RADIAL_CONTENT_SIZE.y * area_scale, RADIAL_CONTENT_SIZE.y)
+	)
 
 	# --- Seed positions: authored map_position or circular fallback ---
 	var positions: Dictionary = {}
 	var pinned: Dictionary = {}
-	var total := location_ids.size()
 	for index in range(total):
 		var location_id := location_ids[index]
 		var authored := _get_authored_position(location_id)
@@ -153,16 +169,16 @@ func _rebuild_radial_world_positions() -> void:
 			)
 			pinned[location_id] = true
 		else:
+			# Spread initial seeds on a wider ellipse to reduce early collisions
 			var angle := (TAU * float(index) / float(total)) - (PI * 0.5)
 			positions[location_id] = Vector2(
-				_content_size.x * (0.5 + cos(angle) * 0.38),
-				_content_size.y * (0.5 + sin(angle) * 0.38)
+				_content_size.x * (0.5 + cos(angle) * 0.4),
+				_content_size.y * (0.5 + sin(angle) * 0.4)
 			)
 			pinned[location_id] = false
 
 	# --- Build edge data with travel costs ---
 	var edge_data: Array[Dictionary] = []
-	var adjacency := _build_adjacency(location_ids)
 	var seen_pairs: Dictionary = {}
 	for edge in _edges:
 		var from_id := str(edge.get("from_id", ""))
@@ -182,17 +198,21 @@ func _rebuild_radial_world_positions() -> void:
 			"rest_length": float(cost) * FORCE_REST_LENGTH_PER_COST,
 		})
 
-	# --- Force-directed simulation ---
+	# --- Force-directed simulation with cooling ---
 	var velocities: Dictionary = {}
 	for location_id in location_ids:
 		velocities[location_id] = Vector2.ZERO
 
-	for _iteration in range(FORCE_ITERATIONS):
+	for iteration in range(FORCE_ITERATIONS):
+		# Temperature decreases linearly from COOLING_START to COOLING_END
+		var t := float(iteration) / float(FORCE_ITERATIONS)
+		var temperature := lerpf(FORCE_COOLING_START, FORCE_COOLING_END, t)
+
 		var forces: Dictionary = {}
 		for location_id in location_ids:
 			forces[location_id] = Vector2.ZERO
 
-		# Repulsion: all pairs push apart (Coulomb-like)
+		# --- Repulsion: all pairs push apart (Coulomb-like) ---
 		for i in range(total):
 			var id_a := location_ids[i]
 			var pos_a: Vector2 = positions[id_a]
@@ -200,12 +220,12 @@ func _rebuild_radial_world_positions() -> void:
 				var id_b := location_ids[j]
 				var pos_b: Vector2 = positions[id_b]
 				var delta := pos_a - pos_b
-				var dist_sq := maxf(delta.length_squared(), 100.0)
+				var dist_sq := maxf(delta.length_squared(), 400.0)
 				var repulsion_force := delta.normalized() * (FORCE_REPULSION / dist_sq)
 				forces[id_a] += repulsion_force
 				forces[id_b] -= repulsion_force
 
-		# Spring attraction: connected nodes pull toward ideal distance
+		# --- Spring attraction: connected nodes pull toward ideal distance ---
 		for ed in edge_data:
 			var from_id: String = ed["from"]
 			var to_id: String = ed["to"]
@@ -219,28 +239,47 @@ func _rebuild_radial_world_positions() -> void:
 			forces[from_id] += spring_force
 			forces[to_id] -= spring_force
 
-		# Overlap repulsion: hard push when nodes are closer than minimum
+		# --- Rectangular overlap repulsion (accounts for actual node size) ---
 		for i in range(total):
 			var id_a := location_ids[i]
 			var pos_a: Vector2 = positions[id_a]
 			for j in range(i + 1, total):
 				var id_b := location_ids[j]
 				var pos_b: Vector2 = positions[id_b]
-				var delta := pos_a - pos_b
-				var dist := delta.length()
-				if dist < FORCE_MIN_SEPARATION and dist > 0.01:
-					var push := delta.normalized() * (FORCE_MIN_SEPARATION - dist) * 0.5
+				var dx := absf(pos_a.x - pos_b.x)
+				var dy := absf(pos_a.y - pos_b.y)
+				var overlap_x := FORCE_MIN_SEPARATION_X - dx
+				var overlap_y := FORCE_MIN_SEPARATION_Y - dy
+				if overlap_x > 0.0 and overlap_y > 0.0:
+					# Push apart along the axis with less overlap (cheaper escape)
+					var push: Vector2
+					if overlap_x < overlap_y:
+						var dir_x := 1.0 if pos_a.x >= pos_b.x else -1.0
+						push = Vector2(dir_x * overlap_x * 0.6, 0.0)
+					else:
+						var dir_y := 1.0 if pos_a.y >= pos_b.y else -1.0
+						push = Vector2(0.0, dir_y * overlap_y * 0.6)
 					forces[id_a] += push
 					forces[id_b] -= push
 
-		# Apply forces with damping and displacement cap
+		# --- Gentle centering pull to prevent drift ---
+		var center_target := _content_size * 0.5
+		for location_id in location_ids:
+			if pinned[location_id]:
+				continue
+			var pos: Vector2 = positions[location_id]
+			var to_center := center_target - pos
+			forces[location_id] += to_center * 0.0005
+
+		# --- Apply forces with damping, temperature, and displacement cap ---
 		for location_id in location_ids:
 			if pinned[location_id]:
 				continue
 			var vel: Vector2 = velocities[location_id]
-			vel = (vel + forces[location_id]) * FORCE_DAMPING
-			if vel.length() > FORCE_MAX_DISPLACEMENT:
-				vel = vel.normalized() * FORCE_MAX_DISPLACEMENT
+			vel = (vel + forces[location_id]) * FORCE_DAMPING * temperature
+			var max_disp := FORCE_MAX_DISPLACEMENT * temperature
+			if vel.length() > max_disp:
+				vel = vel.normalized() * max_disp
 			velocities[location_id] = vel
 			var pos: Vector2 = positions[location_id]
 			pos += vel
@@ -248,45 +287,63 @@ func _rebuild_radial_world_positions() -> void:
 			pos.y = clampf(pos.y, LAYOUT_MARGIN, _content_size.y - LAYOUT_MARGIN)
 			positions[location_id] = pos
 
-	# --- Normalize to content bounds with padding ---
-	_normalize_positions_to_content(positions, pinned)
+	# --- Final overlap resolution pass (deterministic, no physics) ---
+	_resolve_remaining_overlaps(positions, pinned, location_ids)
 
 	for location_id in location_ids:
 		_world_positions_by_id[location_id] = positions[location_id]
 
 
-## Re-center and scale computed positions to fill the content area with margin.
-func _normalize_positions_to_content(positions: Dictionary, pinned: Dictionary) -> void:
-	if positions.size() <= 1:
-		return
-	var min_pos := Vector2(INF, INF)
-	var max_pos := Vector2(-INF, -INF)
-	for pos_value in positions.values():
-		if not pos_value is Vector2:
-			continue
-		var pos: Vector2 = pos_value
-		min_pos.x = minf(min_pos.x, pos.x)
-		min_pos.y = minf(min_pos.y, pos.y)
-		max_pos.x = maxf(max_pos.x, pos.x)
-		max_pos.y = maxf(max_pos.y, pos.y)
-	var span := max_pos - min_pos
-	if span.x < 1.0:
-		span.x = 1.0
-	if span.y < 1.0:
-		span.y = 1.0
-	var usable := _content_size - Vector2(LAYOUT_MARGIN * 2.0, LAYOUT_MARGIN * 2.0)
-	var scale_factor := minf(usable.x / span.x, usable.y / span.y)
-	scale_factor = minf(scale_factor, 1.0)
-	var center := (min_pos + max_pos) * 0.5
-	var target_center := _content_size * 0.5
-	for location_id in positions.keys():
-		if pinned.get(location_id, false):
-			continue
-		var pos: Vector2 = positions[location_id]
-		pos = (pos - center) * scale_factor + target_center
-		pos.x = clampf(pos.x, LAYOUT_MARGIN, _content_size.x - LAYOUT_MARGIN)
-		pos.y = clampf(pos.y, LAYOUT_MARGIN, _content_size.y - LAYOUT_MARGIN)
-		positions[location_id] = pos
+## Iterative sweep to fix any overlaps the simulation didn't fully resolve.
+func _resolve_remaining_overlaps(positions: Dictionary, pinned: Dictionary, location_ids: Array[String]) -> void:
+	var total := location_ids.size()
+	for _pass in range(20):
+		var had_overlap := false
+		for i in range(total):
+			var id_a := location_ids[i]
+			var pos_a: Vector2 = positions[id_a]
+			for j in range(i + 1, total):
+				var id_b := location_ids[j]
+				var pos_b: Vector2 = positions[id_b]
+				var dx := absf(pos_a.x - pos_b.x)
+				var dy := absf(pos_a.y - pos_b.y)
+				var overlap_x := FORCE_MIN_SEPARATION_X - dx
+				var overlap_y := FORCE_MIN_SEPARATION_Y - dy
+				if overlap_x > 0.0 and overlap_y > 0.0:
+					had_overlap = true
+					var a_pinned := bool(pinned.get(id_a, false))
+					var b_pinned := bool(pinned.get(id_b, false))
+					if a_pinned and b_pinned:
+						continue
+					# Resolve along the cheaper axis
+					if overlap_x < overlap_y:
+						var dir_x := 1.0 if pos_a.x >= pos_b.x else -1.0
+						var shift := overlap_x * 0.55
+						if a_pinned:
+							pos_b.x -= dir_x * shift * 2.0
+						elif b_pinned:
+							pos_a.x += dir_x * shift * 2.0
+						else:
+							pos_a.x += dir_x * shift
+							pos_b.x -= dir_x * shift
+					else:
+						var dir_y := 1.0 if pos_a.y >= pos_b.y else -1.0
+						var shift := overlap_y * 0.55
+						if a_pinned:
+							pos_b.y -= dir_y * shift * 2.0
+						elif b_pinned:
+							pos_a.y += dir_y * shift * 2.0
+						else:
+							pos_a.y += dir_y * shift
+							pos_b.y -= dir_y * shift
+					pos_a.x = clampf(pos_a.x, LAYOUT_MARGIN, _content_size.x - LAYOUT_MARGIN)
+					pos_a.y = clampf(pos_a.y, LAYOUT_MARGIN, _content_size.y - LAYOUT_MARGIN)
+					pos_b.x = clampf(pos_b.x, LAYOUT_MARGIN, _content_size.x - LAYOUT_MARGIN)
+					pos_b.y = clampf(pos_b.y, LAYOUT_MARGIN, _content_size.y - LAYOUT_MARGIN)
+					positions[id_a] = pos_a
+					positions[id_b] = pos_b
+		if not had_overlap:
+			break
 
 
 ## Returns the authored map_position for a location, or Vector2(-1, -1) if none.
@@ -368,7 +425,8 @@ func _draw_travel_cost(edge: Dictionary, midpoint: Vector2, color: Color) -> voi
 	var font: Font = get_theme_default_font()
 	if font == null:
 		return
-	var font_size := 13
+	var font_scale := _node_zoom_blend(COMPACT_NODE_ZOOM, FULL_NODE_ZOOM)
+	var font_size := int(round(lerpf(11.0, 13.0, font_scale)))
 	var text := str(travel_cost)
 	var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
 	var rect := Rect2(midpoint - text_size * 0.5 - Vector2(5, 3), text_size + Vector2(10, 6))
@@ -395,33 +453,60 @@ func _draw_grid() -> void:
 		y += spacing
 
 
+func _apply_location_button_state(button: Button, location: Dictionary) -> void:
+	var is_current := bool(location.get("is_current", false))
+	var compact_mode := _zoom < FULL_NODE_ZOOM
+	var minimal_mode := _zoom < COMPACT_NODE_ZOOM
+	var node_size := _get_button_size(location)
+	button.text = _build_button_text(location)
+	button.custom_minimum_size = node_size
+	button.size = node_size
+	button.autowrap_mode = TextServer.AUTOWRAP_OFF if minimal_mode else TextServer.AUTOWRAP_WORD_SMART
+	button.add_theme_font_size_override(
+		"font_size",
+		COMPACT_NODE_FONT_SIZE if compact_mode else FULL_NODE_FONT_SIZE
+	)
+	_apply_button_style(button, str(location.get("faction_color", "#7d8fa3")), is_current, compact_mode)
+
+
 func _build_button_text(location: Dictionary) -> String:
 	var label := str(location.get("display_name", location.get("location_id", "Location")))
-	if bool(location.get("is_current", false)):
+	var is_current := bool(location.get("is_current", false))
+	if _zoom < COMPACT_NODE_ZOOM:
+		return "Here" if is_current else ""
+	if _zoom < FULL_NODE_ZOOM:
+		return label
+	if is_current:
 		return "%s\nCurrent" % label
 	return label
 
 
 func _build_tooltip_text(location: Dictionary) -> String:
-	var parts: Array[String] = []
+	var parts: Array[String] = [str(location.get("display_name", location.get("location_id", "Location")))]
 	var description := str(location.get("description", ""))
 	if not description.is_empty():
 		parts.append(description)
+	if bool(location.get("is_current", false)):
+		parts.append("Current location")
 	var faction_name := str(location.get("faction_name", ""))
 	if not faction_name.is_empty():
 		parts.append("Faction: %s" % faction_name)
 	parts.append("Connections: %s" % str(int(location.get("connection_count", 0))))
+	if not bool(location.get("can_enter", true)):
+		var locked_message := str(location.get("locked_message", "You cannot enter this location right now."))
+		if not locked_message.is_empty():
+			parts.append(locked_message)
 	if bool(location.get("is_discovered", false)):
 		parts.append("Discovered")
 	return "\n".join(parts)
 
 
-func _apply_button_style(button: Button, color_text: String, is_current: bool) -> void:
+func _apply_button_style(button: Button, color_text: String, is_current: bool, compact_mode: bool) -> void:
 	var base_color := Color.from_string(color_text, Color(0.49, 0.56, 0.64, 1.0))
-	var normal := _build_node_style(base_color, is_current, 1.0)
-	var hover := _build_node_style(base_color.lightened(0.14), is_current, 1.0)
-	var pressed := _build_node_style(base_color.darkened(0.12), is_current, 1.0)
-	var focus := _build_node_style(base_color.lightened(0.22), true, 1.0)
+	var normal := _build_node_style(base_color, is_current, 1.0, compact_mode)
+	var hover := _build_node_style(base_color.lightened(0.14), is_current, 1.0, compact_mode)
+	var pressed := _build_node_style(base_color.darkened(0.12), is_current, 1.0, compact_mode)
+	var focus := _build_node_style(base_color.lightened(0.22), true, 1.0, compact_mode)
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", pressed)
@@ -431,7 +516,7 @@ func _apply_button_style(button: Button, color_text: String, is_current: bool) -
 	button.add_theme_color_override("font_pressed_color", _readable_text_color(base_color.darkened(0.12)))
 
 
-func _build_node_style(color: Color, is_current: bool, alpha: float) -> StyleBoxFlat:
+func _build_node_style(color: Color, is_current: bool, alpha: float, compact_mode: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(color.r, color.g, color.b, alpha)
 	style.border_width_left = 3 if is_current else 1
@@ -439,15 +524,38 @@ func _build_node_style(color: Color, is_current: bool, alpha: float) -> StyleBox
 	style.border_width_right = 3 if is_current else 1
 	style.border_width_bottom = 3 if is_current else 1
 	style.border_color = Color(1.0, 0.91, 0.55, 1.0) if is_current else color.lightened(0.28)
-	style.corner_radius_top_left = 6
-	style.corner_radius_top_right = 6
-	style.corner_radius_bottom_left = 6
-	style.corner_radius_bottom_right = 6
-	style.content_margin_left = 8
-	style.content_margin_top = 6
-	style.content_margin_right = 8
-	style.content_margin_bottom = 6
+	var corner_radius := 14 if compact_mode else 6
+	style.corner_radius_top_left = corner_radius
+	style.corner_radius_top_right = corner_radius
+	style.corner_radius_bottom_left = corner_radius
+	style.corner_radius_bottom_right = corner_radius
+	if compact_mode:
+		style.content_margin_left = 6
+		style.content_margin_top = 4
+		style.content_margin_right = 6
+		style.content_margin_bottom = 4
+	else:
+		style.content_margin_left = 8
+		style.content_margin_top = 6
+		style.content_margin_right = 8
+		style.content_margin_bottom = 6
 	return style
+
+
+func _get_button_size(location: Dictionary) -> Vector2:
+	if _zoom < COMPACT_NODE_ZOOM:
+		return MINIMAL_CURRENT_NODE_SIZE if bool(location.get("is_current", false)) else MINIMAL_NODE_SIZE
+	var zoom_blend := _node_zoom_blend(COMPACT_NODE_ZOOM, FULL_NODE_ZOOM)
+	return COMPACT_NODE_SIZE.lerp(NODE_SIZE, zoom_blend)
+
+
+func _node_zoom_blend(min_zoom: float, max_zoom: float) -> float:
+	var zoom_range := maxf(max_zoom - min_zoom, 0.001)
+	return clampf((_zoom - min_zoom) / zoom_range, 0.0, 1.0)
+
+
+func _should_draw_travel_costs() -> bool:
+	return _zoom >= COST_LABEL_MIN_ZOOM
 
 
 func _readable_text_color(color: Color) -> Color:
