@@ -55,8 +55,8 @@ Implications this document respects:
 
 ### Not yet implemented
 
-- No game system consumes `AIManager`. The providers are wired but idle.
-- No mod data schema for AI persona definitions.
+- No game system consumes `AIManager` for gameplay yet. The providers are wired but idle.
+- ~~No mod data schema for AI persona definitions.~~ Implemented in Phase 1.
 - No prompt builder or response parser infrastructure.
 - No LimboAI behavior tree nodes for AI-driven NPC decisions.
 - No script hook patterns for AI-generated content.
@@ -443,13 +443,13 @@ These are content toggles, not provider settings. They let a mod author indicate
 
 ### Phase 1 — AI Persona Data Pipeline (~2 days)
 
-New data schema and loader for AI persona definitions.
+Current status: complete. `AIPersonaRegistry`, `DataManager` integration (`get_ai_persona`, `has_ai_persona`, `query_ai_personas`), entity-to-persona binding via `ai_persona_id`, persona shape validation, cross-registry reference validation, base mod persona (`base:kael_persona` → `base:npc_fixer`), modding guide documentation, and unit/content tests are all in place.
 
-1. Create `systems/loaders/ai_persona_registry.gd` following the existing loader pattern (`PartsRegistry`, `EntityRegistry`).
-2. Register `get_ai_persona(id)` and `query_ai_personas(...)` on `DataManager`.
-3. Add `ai_persona_id` as an optional validated field on entity templates in `EntityRegistry`. Validation: if present, must reference a valid persona ID after all mods are loaded.
-4. Ship a base mod persona (`base:kael_persona`) wired to `base:npc_fixer`.
-5. Add `ai_personas.json` to the mod data spec in `MODDING_GUIDE.md`.
+1. Create `systems/loaders/ai_persona_registry.gd` following the existing loader pattern (`PartsRegistry`, `EntityRegistry`). Done.
+2. Register `get_ai_persona(id)` and `query_ai_personas(...)` on `DataManager`. Done.
+3. Add `ai_persona_id` as an optional validated field on entity templates in `EntityRegistry`. Validation: if present, must reference a valid persona ID after all mods are loaded. Done.
+4. Ship a base mod persona (`base:kael_persona`) wired to `base:npc_fixer`. Done.
+5. Add `ai_personas.json` to the mod data spec in `MODDING_GUIDE.md`. Done.
 
 Deliverable: persona data loads through the standard mod pipeline, is queryable via `DataManager`, and validates at boot time.
 

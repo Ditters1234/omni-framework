@@ -29,3 +29,18 @@ static func apply_patch(patch: Array) -> void:
 		DataManager._append_array_field(entry, "tags", patch_entry.get("add_tags", []))
 		DataManager._remove_array_values(entry, "tags", patch_entry.get("remove_tags", []))
 		DataManager.ai_personas[target] = entry
+
+
+## Returns a persona template by id, or empty dict.
+static func get_persona(persona_id: String) -> Dictionary:
+	return DataManager.ai_personas.get(persona_id, {})
+
+
+## Returns all persona templates as an Array.
+static func get_all() -> Array:
+	return DataManager.ai_personas.values()
+
+
+## Returns true if a persona template with the given id exists.
+static func has_persona(persona_id: String) -> bool:
+	return DataManager.ai_personas.has(persona_id)

@@ -144,6 +144,7 @@ Each system has a JSON file in `mods/base/data/` and a registry in `systems/load
 | Quests | `quests.json` | `QuestRegistry` | `quest_id` |
 | Tasks | `tasks.json` | `TaskRegistry` | `template_id` |
 | Achievements | `achievements.json` | `AchievementRegistry` | `achievement_id` |
+| AI Personas | `ai_personas.json` | `AIPersonaRegistry` | `persona_id` |
 | Config | `config.json` | `ConfigLoader` | — (deep-merged) |
 
 All data IDs use `author:mod:name` namespacing. Base game uses `base:`.
@@ -198,6 +199,8 @@ Each backend class is validated against a **contract** — a schema that defines
 - `"disabled"` → all calls silently no-op
 
 Modders call `AIManager.generate_async(prompt, context)` from script hooks. Always guard with `AIManager.is_available()`.
+
+AI persona data lives in `ai_personas.json` and loads through `AIPersonaRegistry` into `DataManager.ai_personas`. Entities bind to personas via the optional `ai_persona_id` field. See `docs/AI_INTEGRATION_PLAN.md` for the phased consumer integration plan.
 
 ---
 
