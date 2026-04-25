@@ -18,7 +18,7 @@ res://
 └── ui/
 ```
 
-Additional root-level project files currently include `project.godot`, `.gutconfig.json`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `icon.svg`, and `default_bus_layout.tres`. Ad hoc debug or probe scripts should not live at `res://`; convert useful checks into GUT tests under `tests/`, or keep throwaway local scripts outside the project tree.
+Additional root-level project files currently include `project.godot`, `.gutconfig.json`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `icon.svg`, and `default_bus_layout.tres`. The tracked `.tmp_empty_project/` folder is a dev-only scratch Godot project, not part of the runtime architecture. Editor/runtime cache folders such as `.godot/` may also appear locally but are not source structure. Ad hoc debug or probe scripts should not live at `res://`; convert useful checks into GUT tests under `tests/`, or keep throwaway local scripts outside the project tree.
 
 ## Autoloads
 
@@ -36,6 +36,8 @@ autoloads/
 ├── time_keeper.gd
 └── ui_router.gd
 ```
+
+`project.godot` also declares addon-provided autoloads (`DialogueManager` and `ImGuiRoot`). The list above is the engine-owned `autoloads/` script folder specifically, not the full autoload table from the project settings.
 
 ### Autoload Contracts
 
@@ -60,6 +62,10 @@ The project is organized around a classic Godot singleton model with dedicated a
 ## Systems
 
 The `systems/` folder currently contains both direct service scripts and subfolders:
+
+Notable current contents:
+- `systems/ai/ai_chat_service.gd` plus the provider scripts under `systems/ai/providers/`
+- `systems/loaders/ai_persona_registry.gd` alongside the rest of the JSON registries
 
 ```text
 systems/
@@ -180,9 +186,10 @@ ui/
 
 The UI layer includes:
 
-- A root entry scene (`main.tscn`) and accompanying controller (`main.gd`)
+- A root entry scene at `ui/main.tscn` and accompanying controller (`main.gd`)
 - A route catalog (`ui_route_catalog.gd`) — the shared catalog for `backend_class → screen_id` mapping and the runtime `screen_id → scene_path` registry
 - **14 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting complete, Phase 7 world map initial pass): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`, `WorldMapBackend`
+- `ui/screens/backends/` also includes the world map implementation trio: `world_map_backend.gd`, `world_map_graph.gd`, and `world_map_screen.gd`
 - A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts
 - Debug overlay at `ui/debug/dev_debug_overlay.gd`
 - Theme system: `omni_theme.tres` + `theme_applier.gd`

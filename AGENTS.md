@@ -45,9 +45,9 @@ Core pillars:
 ```
 res://
 ├── autoloads/       # Global singletons
-├── systems/         # Core runtime systems + loaders + AI providers
+├── systems/         # Core runtime systems + loaders + AI helpers/providers
 │   ├── loaders/     # One file per data type (parts_registry.gd, etc.)
-│   └── ai/          # LimboAI states/behaviors + AI provider scripts
+│   └── ai/          # AIChatService + provider scripts
 ├── ui/              # All scenes — main.tscn, theme/, screens/, components/
 ├── core/            # Base classes: ScriptHook, EntityInstance, PartInstance, AssemblySession, constants
 ├── mods/            # ALL content — base game and user mods
@@ -66,7 +66,9 @@ res://
 
 ---
 
-## Autoloads (all global singletons)
+## Autoloads
+
+Engine-owned autoloads live under `autoloads/`. Addon-provided autoloads such as `DialogueManager` and `ImGuiRoot` are declared in `project.godot` separately.
 
 | Name | File | Purpose |
 |---|---|---|
@@ -113,7 +115,7 @@ res://
 | ziva_agent | `addons/ziva_agent/` | AI dev assistant | ❌ DEV ONLY — remove before release |
 
 GDExtensions (LimboAI, NobodyWho) load automatically — no plugin.cfg needed.
-Plugins requiring enable: A2J, dialogue_manager, gut — already set in project.godot `[editor_plugins]`.
+Plugins requiring enable: A2J, dialogue_manager, gut, and imgui-godot — already set in project.godot `[editor_plugins]`.
 
 ---
 
@@ -169,6 +171,8 @@ Each `backend_class` value in JSON maps to a scene in `ui/screens/backends/`:
 | `FactionReputationBackend` | `faction_reputation_screen.tscn` | Faction badges and standing |
 | `AchievementListBackend` | `achievement_list_screen.tscn` | Achievement unlock state and progress |
 | `EventLogBackend` | `event_log_screen.tscn` | Recent GameEvents history |
+| `CraftingBackend` | `crafting_screen.tscn` | Recipe crafting with timed production support |
+| `WorldMapBackend` | `world_map_screen.tscn` | Routed world graph navigation and travel |
 
 ### Backend Contract System
 
@@ -192,7 +196,7 @@ Each backend class is validated against a **contract** — a schema that defines
 
 ## AI Architecture
 
-`AIManager` reads `config.json ai.provider` and routes to one of three providers:
+`AIManager` reads engine-owned AI settings from `AppSettings` (`user://settings.cfg`) and routes to one of four providers:
 - `"openai_compatible"` → `systems/ai/providers/openai_provider.gd` (covers Ollama, LM Studio, OpenAI)
 - `"anthropic"` → `systems/ai/providers/anthropic_provider.gd`
 - `"nobodywho"` → `systems/ai/providers/nobodywho_provider.gd` (embedded, no server)
@@ -291,5 +295,5 @@ Two-phase load: Phase 1 adds new content, Phase 2 applies patches. Patches run l
 - [ ] Exclude `tests/` from export presets
 - [ ] Ensure no API keys are in any committed config files
 - [ ] Verify `*.gguf` model files are not in repo (they're gitignored)
-- [ ] Set `config/main_scene` in project.godot
+- [ ] Verify `config/main_scene` in project.godot still points at `res://ui/main.tscn`
 - [ ] Register all runtime classes with `A2J.object_registry` in SaveManager
