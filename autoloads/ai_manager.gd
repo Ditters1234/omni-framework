@@ -29,6 +29,7 @@ var _provider_type: String = PROVIDER_DISABLED
 var _ai_enabled: bool = false
 var _provider_script_overrides: Dictionary = {}
 var _request_counter: int = 0
+var _request_serial: int = 0
 var _active_requests: Dictionary = {}
 var _recent_requests: Array[Dictionary] = []
 var _last_error: String = ""
@@ -334,7 +335,8 @@ func _get_noop_reason(prompt: String) -> String:
 
 func _begin_request(mode: String, prompt: String, context: Dictionary) -> String:
 	_request_counter += 1
-	var request_id := "ai_%06d" % _request_counter
+	_request_serial += 1
+	var request_id := "ai_%06d" % _request_serial
 	_active_requests[request_id] = {
 		"request_id": request_id,
 		"mode": mode,

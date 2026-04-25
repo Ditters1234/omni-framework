@@ -212,6 +212,8 @@ func _finish_dialogue(message: String) -> void:
 func _render_responses(responses: Array[RefCounted]) -> void:
 	_clear_responses()
 	for response in responses:
+		if not _read_response_is_allowed(response):
+			continue
 		var response_text := _read_response_text(response)
 		if response_text.is_empty():
 			continue
@@ -333,6 +335,13 @@ func _read_response_text(response: RefCounted) -> String:
 func _read_response_next_id(response: RefCounted) -> String:
 	var next_id_value: Variant = response.get("next_id")
 	return str(next_id_value)
+
+
+func _read_response_is_allowed(response: RefCounted) -> bool:
+	var is_allowed_value: Variant = response.get("is_allowed")
+	if is_allowed_value is bool:
+		return bool(is_allowed_value)
+	return true
 
 func _read_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
