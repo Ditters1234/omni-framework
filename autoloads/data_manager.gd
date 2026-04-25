@@ -8,6 +8,7 @@ class_name OmniDataManager
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const AI_PERSONA_REGISTRY := preload("res://systems/loaders/ai_persona_registry.gd")
+const AI_TEMPLATE_REGISTRY := preload("res://systems/loaders/ai_template_registry.gd")
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const LOAD_PHASE_IDLE := "idle"
 const LOAD_PHASE_ADDITIONS := "additions"
@@ -33,6 +34,7 @@ var tasks: Dictionary = {}             # template_id → task template
 var recipes: Dictionary = {}           # recipe_id → recipe template
 var achievements: Dictionary = {}      # achievement_id → achievement template
 var ai_personas: Dictionary = {}       # persona_id â†’ AI persona template
+var ai_templates: Dictionary = {}      # template_id -> AI prompt template
 var config: Dictionary = {}            # deep-merged runtime config
 var is_loaded: bool = false
 var load_phase: String = LOAD_PHASE_IDLE
@@ -140,6 +142,14 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 		var ai_persona_entries: Array = _get_array_field(ai_personas_data, "ai_personas", mod_id, ai_personas_path, LOAD_PHASE_ADDITIONS)
 		ai_persona_entries = _filter_valid_additions(ai_persona_entries, ai_personas, "ai_personas", "persona_id", ["persona_id", "display_name", "system_prompt_template"], mod_id, ai_personas_path, LOAD_PHASE_ADDITIONS)
 		AI_PERSONA_REGISTRY.load_additions(ai_persona_entries)
+
+	var ai_templates_path := mod_data_path.path_join(OmniConstants.DATA_AI_TEMPLATES)
+	var ai_templates_data_value: Variant = _load_json_document(mod_id, ai_templates_path, LOAD_PHASE_ADDITIONS)
+	if ai_templates_data_value is Dictionary:
+		var ai_templates_data: Dictionary = ai_templates_data_value
+		var ai_template_entries: Array = _get_array_field(ai_templates_data, "ai_templates", mod_id, ai_templates_path, LOAD_PHASE_ADDITIONS)
+		ai_template_entries = _filter_valid_additions(ai_template_entries, ai_templates, "ai_templates", "template_id", ["template_id", "purpose", "prompt_template"], mod_id, ai_templates_path, LOAD_PHASE_ADDITIONS)
+		AI_TEMPLATE_REGISTRY.load_additions(ai_template_entries)
 
 	var config_path := mod_data_path.path_join(OmniConstants.DATA_CONFIG)
 	var config_data_value: Variant = _load_json_document(mod_id, config_path, LOAD_PHASE_ADDITIONS)
@@ -254,6 +264,15 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		_validate_patch_operations(ai_persona_patches, ["target", "set", "add_tags", "remove_tags"], "ai_personas", mod_id, ai_personas_path, LOAD_PHASE_PATCHES)
 		AI_PERSONA_REGISTRY.apply_patch(ai_persona_patches)
 
+	var ai_templates_path := mod_data_path.path_join(OmniConstants.DATA_AI_TEMPLATES)
+	var ai_templates_data_value: Variant = _load_json_document(mod_id, ai_templates_path, LOAD_PHASE_PATCHES)
+	if ai_templates_data_value is Dictionary:
+		var ai_templates_data: Dictionary = ai_templates_data_value
+		var ai_template_patches: Array = _get_array_field(ai_templates_data, "patches", mod_id, ai_templates_path, LOAD_PHASE_PATCHES)
+		_validate_patch_targets(ai_template_patches, ai_templates, "ai_templates", mod_id, ai_templates_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(ai_template_patches, ["target", "set", "add_tags", "remove_tags"], "ai_templates", mod_id, ai_templates_path, LOAD_PHASE_PATCHES)
+		AI_TEMPLATE_REGISTRY.apply_patch(ai_template_patches)
+
 	var config_path := mod_data_path.path_join(OmniConstants.DATA_CONFIG)
 	var config_data_value: Variant = _load_json_document(mod_id, config_path, LOAD_PHASE_PATCHES)
 	if config_data_value is Dictionary:
@@ -304,6 +323,10 @@ func get_ai_persona(persona_id: String) -> Dictionary:
 	return _duplicate_dictionary(ai_personas.get(persona_id, {}))
 
 
+func get_ai_template(template_id: String) -> Dictionary:
+	return _duplicate_dictionary(ai_templates.get(template_id, {}))
+
+
 func get_definitions(category: String) -> Array:
 	return _duplicate_array(definitions.get(category, []))
 
@@ -342,6 +365,10 @@ func has_achievement(achievement_id: String) -> bool:
 
 func has_ai_persona(persona_id: String) -> bool:
 	return ai_personas.has(persona_id)
+
+
+func has_ai_template(template_id: String) -> bool:
+	return ai_templates.has(template_id)
 
 
 func query_parts(filters: Dictionary = {}) -> Array[Dictionary]:
@@ -456,6 +483,28 @@ func query_ai_personas(filters: Dictionary = {}) -> Array[Dictionary]:
 	return results
 
 
+func query_ai_templates(filters: Dictionary = {}) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var template_ids := _variant_to_string_array(filters.get("template_ids", []))
+	var purpose_filter := str(filters.get("purpose", ""))
+	var tag_filters := _variant_to_string_array(filters.get("tags", []))
+	for template_id_value in ai_templates.keys():
+		var template_id := str(template_id_value)
+		if not template_ids.is_empty() and not template_ids.has(template_id):
+			continue
+		var template_value: Variant = ai_templates.get(template_id_value, {})
+		if not template_value is Dictionary:
+			continue
+		var ai_template: Dictionary = template_value
+		if not purpose_filter.is_empty() and str(ai_template.get("purpose", "")) != purpose_filter:
+			continue
+		var template_tags := _variant_to_string_array(ai_template.get("tags", []))
+		if not _contains_all_strings(template_tags, tag_filters):
+			continue
+		results.append(ai_template.duplicate(true))
+	return results
+
+
 func get_registry_counts() -> Dictionary:
 	return {
 		"stats": get_definitions("stats").size(),
@@ -469,6 +518,7 @@ func get_registry_counts() -> Dictionary:
 		"recipes": recipes.size(),
 		"achievements": achievements.size(),
 		"ai_personas": ai_personas.size(),
+		"ai_templates": ai_templates.size(),
 	}
 
 
@@ -814,6 +864,7 @@ func _validate_template_schemas() -> void:
 	_validate_registry_required_fields(recipes, OmniConstants.DATA_RECIPES, "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"])
 	_validate_registry_required_fields(achievements, OmniConstants.DATA_ACHIEVEMENTS, "achievement_id", ["achievement_id", "display_name", "stat_name", "requirement"])
 	_validate_registry_required_fields(ai_personas, OmniConstants.DATA_AI_PERSONAS, "persona_id", ["persona_id", "display_name", "system_prompt_template"])
+	_validate_registry_required_fields(ai_templates, OmniConstants.DATA_AI_TEMPLATES, "template_id", ["template_id", "purpose", "prompt_template"])
 
 	for part_value in parts.values():
 		if not part_value is Dictionary:
@@ -855,6 +906,12 @@ func _validate_template_schemas() -> void:
 			continue
 		var persona: Dictionary = persona_value
 		_validate_ai_persona_shape(persona)
+
+	for ai_template_value in ai_templates.values():
+		if not ai_template_value is Dictionary:
+			continue
+		var ai_template: Dictionary = ai_template_value
+		_validate_ai_template_shape(ai_template)
 
 
 func _validate_registry_required_fields(registry: Dictionary, file_path: String, id_field: String, required_fields: Array[String]) -> void:
@@ -996,6 +1053,25 @@ func _validate_ai_persona_shape(persona: Dictionary) -> void:
 		_record_issue(persona_id, OmniConstants.DATA_AI_PERSONAS, LOAD_PHASE_VALIDATION, "AI persona '%s' response_constraints.always_in_character must be a bool." % persona_id)
 
 
+func _validate_ai_template_shape(ai_template: Dictionary) -> void:
+	var template_id := str(ai_template.get("template_id", ""))
+	_validate_array_field(template_id, OmniConstants.DATA_AI_TEMPLATES, "tags", ai_template)
+	_validate_string_array_elements(template_id, OmniConstants.DATA_AI_TEMPLATES, "tags", ai_template.get("tags", []))
+
+	var purpose_value: Variant = ai_template.get("purpose", "")
+	if not (purpose_value is String) or str(purpose_value).strip_edges().is_empty():
+		_record_issue(template_id, OmniConstants.DATA_AI_TEMPLATES, LOAD_PHASE_VALIDATION, "AI template '%s' field 'purpose' must be a non-empty string." % template_id)
+
+	var prompt_template_value: Variant = ai_template.get("prompt_template", "")
+	if not (prompt_template_value is String) or str(prompt_template_value).strip_edges().is_empty():
+		_record_issue(template_id, OmniConstants.DATA_AI_TEMPLATES, LOAD_PHASE_VALIDATION, "AI template '%s' field 'prompt_template' must be a non-empty string." % template_id)
+
+	if ai_template.has("fallback"):
+		var fallback_value: Variant = ai_template.get("fallback", "")
+		if not fallback_value is String:
+			_record_issue(template_id, OmniConstants.DATA_AI_TEMPLATES, LOAD_PHASE_VALIDATION, "AI template '%s' field 'fallback' must be a string." % template_id)
+
+
 func _validate_unique_object_ids(entry_id: String, file_path: String, field_name: String, value: Variant) -> void:
 	if not value is Array:
 		return
@@ -1063,6 +1139,11 @@ func _validate_config_references() -> void:
 		var ui_config: Dictionary = ui_config_value
 		_validate_time_advance_buttons(ui_config)
 
+	var ai_config_value: Variant = config.get("ai", {})
+	if ai_config_value is Dictionary:
+		var ai_config: Dictionary = ai_config_value
+		_validate_ai_config(ai_config)
+
 
 func _validate_starting_discovered_locations(game_config: Dictionary) -> void:
 	if not game_config.has("starting_discovered_locations"):
@@ -1105,6 +1186,35 @@ func _validate_time_advance_buttons(ui_config: Dictionary) -> void:
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must be a non-empty string." % index)
 		elif not _is_time_advance_label(label):
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must end with tick(s), hour(s), or day(s)." % index)
+
+
+func _validate_ai_config(ai_config: Dictionary) -> void:
+	if ai_config.has("default_persona_id"):
+		var default_persona_id_value: Variant = ai_config.get("default_persona_id", "")
+		if not (default_persona_id_value is String) or str(default_persona_id_value).strip_edges().is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.default_persona_id' must be a non-empty string.")
+		elif not has_ai_persona(str(default_persona_id_value)):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.default_persona_id' references unknown AI persona '%s'." % str(default_persona_id_value))
+
+	for flag_key in ["narration_enabled", "task_flavor_enabled", "lore_enabled"]:
+		if ai_config.has(flag_key) and not (ai_config.get(flag_key, false) is bool):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.%s' must be a bool." % flag_key)
+
+	if not ai_config.has("world_gen_hooks"):
+		return
+	var world_gen_hooks_value: Variant = ai_config.get("world_gen_hooks", {})
+	if not world_gen_hooks_value is Dictionary:
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.world_gen_hooks' must be an object.")
+		return
+	var world_gen_hooks: Dictionary = world_gen_hooks_value
+	for hook_key in world_gen_hooks.keys():
+		var hook_name := str(hook_key)
+		if not ["narration", "task_flavor", "lore"].has(hook_name):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.world_gen_hooks.%s' is not a supported hook id." % hook_name)
+			continue
+		var path_value: Variant = world_gen_hooks.get(hook_key, "")
+		if not (path_value is String) or str(path_value).strip_edges().is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.world_gen_hooks.%s' must be a non-empty script path." % hook_name)
 
 
 func _is_time_advance_label(label: String) -> bool:
@@ -1447,6 +1557,7 @@ func clear_all() -> void:
 	recipes.clear()
 	achievements.clear()
 	ai_personas.clear()
+	ai_templates.clear()
 	config.clear()
 
 

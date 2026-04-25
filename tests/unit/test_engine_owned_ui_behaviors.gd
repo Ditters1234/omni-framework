@@ -231,15 +231,21 @@ func test_settings_ai_chat_controls_persist_history_window_and_streaming_speed()
 	var streaming_spinbox := settings_screen.get_node(
 		"MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiStreamingSpeedSpinBox"
 	) as SpinBox
+	var world_gen_toggle := settings_screen.get_node(
+		"MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiWorldGenToggle"
+	) as CheckButton
 	assert_not_null(history_spinbox)
 	assert_not_null(streaming_spinbox)
-	if history_spinbox == null or streaming_spinbox == null:
+	assert_not_null(world_gen_toggle)
+	if history_spinbox == null or streaming_spinbox == null or world_gen_toggle == null:
 		return
 
 	history_spinbox.value = 7
 	settings_screen.call("_on_ai_chat_history_window_spinbox_value_changed", 7.0)
 	streaming_spinbox.value = 0.12
 	settings_screen.call("_on_ai_streaming_speed_spinbox_value_changed", 0.12)
+	world_gen_toggle.button_pressed = true
+	settings_screen.call("_on_ai_world_gen_toggle_toggled", true)
 	await get_tree().process_frame
 
 	settings_screen.call("_on_save_button_pressed")
@@ -248,6 +254,7 @@ func test_settings_ai_chat_controls_persist_history_window_and_streaming_speed()
 	var ai_settings := APP_SETTINGS.get_ai_settings(APP_SETTINGS.load_settings())
 	assert_eq(int(ai_settings.get(APP_SETTINGS.AI_CHAT_HISTORY_WINDOW, 0)), 7)
 	assert_almost_eq(float(ai_settings.get(APP_SETTINGS.AI_STREAMING_SPEED, 0.0)), 0.12, 0.001)
+	assert_true(bool(ai_settings.get(APP_SETTINGS.AI_ENABLE_WORLD_GEN, false)))
 
 
 func test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen() -> void:

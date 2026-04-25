@@ -4,6 +4,13 @@ extends RefCounted
 
 class_name ScriptHookService
 
+const APP_SETTINGS := preload("res://core/app_settings.gd")
+const WORLD_GEN_HOOK_NARRATION := "narration"
+const WORLD_GEN_HOOK_TASK_FLAVOR := "task_flavor"
+
+static var _task_flavor_cache: Dictionary = {}
+static var _pending_task_flavors: Dictionary = {}
+
 
 static func invoke_template_hook(template: Dictionary, method_name: String, args: Array = []) -> void:
 	if template.is_empty() or method_name.is_empty():
@@ -42,8 +49,75 @@ static func invoke_part_tick_hooks(tick: int) -> void:
 			invoke_template_hook(template, "on_tick", [entity_payload.duplicate(true), part.to_dict(), tick])
 
 
+static func invoke_world_event_narration(signal_name: String, args: Array = []) -> void:
+	if signal_name.is_empty() or not _can_run_world_gen("narration_enabled"):
+		return
+	var hook := _get_global_hook(WORLD_GEN_HOOK_NARRATION)
+	if hook == null or not hook.has_method("queue_event_narration_generation"):
+		return
+	hook.callv("queue_event_narration_generation", [signal_name, args.duplicate(true)])
+
+
+static func request_task_flavor(task_template: Dictionary, context: Dictionary = {}) -> String:
+	var template_id := str(task_template.get("template_id", "")).strip_edges()
+	if template_id.is_empty():
+		return ""
+	if _task_flavor_cache.has(template_id):
+		return str(_task_flavor_cache.get(template_id, ""))
+	if _pending_task_flavors.has(template_id) or not _can_run_world_gen("task_flavor_enabled"):
+		return ""
+	var hook := _get_global_hook(WORLD_GEN_HOOK_TASK_FLAVOR)
+	if hook == null or not hook.has_method("queue_task_flavor_generation"):
+		return ""
+	_pending_task_flavors[template_id] = true
+	hook.callv("queue_task_flavor_generation", [task_template.duplicate(true), context.duplicate(true)])
+	return ""
+
+
+static func store_task_flavor(template_id: String, flavor_text: String) -> void:
+	var normalized_template_id := template_id.strip_edges()
+	var normalized_flavor_text := flavor_text.strip_edges()
+	if normalized_template_id.is_empty():
+		return
+	_pending_task_flavors.erase(normalized_template_id)
+	if normalized_flavor_text.is_empty():
+		return
+	_task_flavor_cache[normalized_template_id] = normalized_flavor_text
+	if GameEvents == null:
+		return
+	if GameEvents.has_method("emit_dynamic"):
+		GameEvents.emit_dynamic("event_narrated", ["task_flavor", normalized_template_id, normalized_flavor_text])
+		return
+	GameEvents.event_narrated.emit("task_flavor", normalized_template_id, normalized_flavor_text)
+
+
+static func reset_world_gen_state() -> void:
+	_task_flavor_cache.clear()
+	_pending_task_flavors.clear()
+
+
 static func _extract_script_path(template: Dictionary) -> String:
 	return str(template.get("script_path", template.get("script_hook", "")))
+
+
+static func _get_global_hook(hook_id: String) -> ScriptHook:
+	var hook_path := _get_global_hook_path(hook_id)
+	if hook_path.is_empty():
+		return null
+	return ModLoader.get_script_hook(hook_path)
+
+
+static func _get_global_hook_path(hook_id: String) -> String:
+	return str(DataManager.get_config_value("ai.world_gen_hooks.%s" % hook_id, "")).strip_edges()
+
+
+static func _can_run_world_gen(config_flag: String) -> bool:
+	if not AIManager.is_available():
+		return false
+	var ai_settings := APP_SETTINGS.get_ai_settings(APP_SETTINGS.load_settings())
+	if not bool(ai_settings.get(APP_SETTINGS.AI_ENABLE_WORLD_GEN, false)):
+		return false
+	return bool(DataManager.get_config_value("ai.%s" % config_flag, true))
 
 
 static func _collect_carried_parts(entity: EntityInstance) -> Array[PartInstance]:

@@ -99,6 +99,7 @@ func _build_task_rows(faction_id: String) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	if faction_id.is_empty():
 		return rows
+	var provider_entity_id := str(_params.get("provider_entity_id", ""))
 	var task_templates_value: Variant = TaskRegistry.get_for_faction(faction_id)
 	if task_templates_value is Array:
 		var task_templates: Array = task_templates_value
@@ -109,12 +110,20 @@ func _build_task_rows(faction_id: String) -> Array[Dictionary]:
 			var template_id := str(task_template.get("template_id", ""))
 			if template_id.is_empty() or not TimeKeeper.can_accept_task(template_id):
 				continue
+			var task_card_view_model := BACKEND_HELPERS.build_task_card_view_model(task_template)
+			var ai_flavor_text := ScriptHookService.request_task_flavor(task_template, {
+				"faction_id": faction_id,
+				"provider_entity_id": provider_entity_id,
+			})
+			if not ai_flavor_text.is_empty():
+				task_card_view_model["flavor_text"] = ai_flavor_text
 			rows.append({
 				"template_id": template_id,
 				"display_name": str(task_template.get("display_name", task_template.get("title", template_id))),
 				"detail_text": str(task_template.get("description", "")),
+				"ai_flavor_text": ai_flavor_text,
 				"selected": template_id == _selected_template_id,
-				"quest_card_view_model": BACKEND_HELPERS.build_task_card_view_model(task_template),
+				"quest_card_view_model": task_card_view_model,
 			})
 	var sort_callable := func(a: Dictionary, b: Dictionary) -> bool:
 		return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0

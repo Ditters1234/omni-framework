@@ -62,6 +62,7 @@ const SIGNAL_CATALOG := {
 		{"name": "ui_notification_requested", "args": ["message", "level"]},
 	],
 	"ai": [
+		{"name": "event_narrated", "args": ["source_signal", "source_key", "narration"]},
 		{"name": "ai_response_received", "args": ["context_id", "response"]},
 		{"name": "ai_token_received", "args": ["context_id", "token"]},
 		{"name": "ai_error", "args": ["context_id", "error"]},
@@ -155,6 +156,7 @@ signal ui_notification_requested(message: String, level: String)
 # ---------------------------------------------------------------------------
 # AI
 # ---------------------------------------------------------------------------
+signal event_narrated(source_signal: String, source_key: String, narration: String)
 signal ai_response_received(context_id: String, response: String)
 signal ai_token_received(context_id: String, token: String)
 signal ai_error(context_id: String, error: String)
@@ -257,6 +259,33 @@ func get_event_history(limit: int = 50, domain: String = "", signal_name: String
 func clear_event_history() -> void:
 	_event_history.clear()
 	_event_sequence = 0
+
+
+func add_event_narration(signal_name: String, source_key: String, narration: String) -> bool:
+	var normalized_signal_name := signal_name.strip_edges()
+	var normalized_source_key := source_key.strip_edges()
+	var normalized_narration := narration.strip_edges()
+	if normalized_signal_name.is_empty() or normalized_source_key.is_empty() or normalized_narration.is_empty():
+		return false
+	for index in range(_event_history.size() - 1, -1, -1):
+		var entry: Dictionary = _event_history[index]
+		if str(entry.get("signal_name", "")) != normalized_signal_name:
+			continue
+		var args_value: Variant = entry.get("args", [])
+		if not args_value is Array:
+			continue
+		var args: Array = args_value
+		var matched_source_key := false
+		for arg in args:
+			if str(arg).strip_edges() == normalized_source_key:
+				matched_source_key = true
+				break
+		if not matched_source_key:
+			continue
+		entry["narration"] = normalized_narration
+		_event_history[index] = entry
+		return true
+	return false
 
 
 func get_debug_snapshot() -> Dictionary:

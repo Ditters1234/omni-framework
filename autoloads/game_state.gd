@@ -105,6 +105,7 @@ func reset() -> void:
 	unlocked_achievements.clear()
 	flags.clear()
 	achievement_stats.clear()
+	ScriptHookService.reset_world_gen_state()
 	_sync_timekeeper()
 
 
@@ -176,6 +177,7 @@ func travel_to(location_id: String, travel_ticks: int = 0) -> void:
 	if not new_template.is_empty():
 		ScriptHookService.invoke_template_hook(new_template, "on_location_enter", [new_template.duplicate(true)])
 	GameEvents.location_changed.emit(old_id, current_location_id)
+	ScriptHookService.invoke_world_event_narration("location_changed", [old_id, current_location_id])
 	if not was_discovered:
 		track_achievement_stat("locations_discovered", 1.0)
 

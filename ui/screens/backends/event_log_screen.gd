@@ -66,13 +66,19 @@ func _render_rows(rows: Array[Dictionary], empty_label: String) -> void:
 func _build_row_text(row: Dictionary) -> String:
 	var args_text := str(row.get("args_text", ""))
 	var suffix := "" if args_text.is_empty() else " | %s" % args_text
-	return "#%s %s/%s%s\n%s" % [
-		str(row.get("sequence", 0)),
-		str(row.get("domain", "")),
-		str(row.get("signal_name", "")),
-		suffix,
+	var lines: Array[String] = [
+		"#%s %s/%s%s" % [
+			str(row.get("sequence", 0)),
+			str(row.get("domain", "")),
+			str(row.get("signal_name", "")),
+			suffix,
+		],
 		str(row.get("timestamp", "")),
 	]
+	var narration_text := str(row.get("narration_text", "")).strip_edges()
+	if not narration_text.is_empty():
+		lines.append("Narration: %s" % narration_text)
+	return "\n".join(lines)
 
 func _on_back_button_pressed() -> void:
 	if _opened_from_gameplay_shell:

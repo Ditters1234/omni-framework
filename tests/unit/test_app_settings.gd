@@ -111,6 +111,7 @@ func test_ai_settings_round_trip_normalizes_engine_owned_connection_fields() -> 
 			APP_SETTINGS.AI_CONTEXT_WINDOW: -5,
 			APP_SETTINGS.AI_CHAT_HISTORY_WINDOW: 0,
 			APP_SETTINGS.AI_STREAMING_SPEED: -1.0,
+			APP_SETTINGS.AI_ENABLE_WORLD_GEN: true,
 		},
 	})
 
@@ -129,6 +130,7 @@ func test_ai_settings_round_trip_normalizes_engine_owned_connection_fields() -> 
 	assert_eq(int(ai_settings.get(APP_SETTINGS.AI_CONTEXT_WINDOW, 0)), APP_SETTINGS.DEFAULT_AI_CONTEXT_WINDOW)
 	assert_eq(int(ai_settings.get(APP_SETTINGS.AI_CHAT_HISTORY_WINDOW, 0)), APP_SETTINGS.DEFAULT_AI_CHAT_HISTORY_WINDOW)
 	assert_almost_eq(float(ai_settings.get(APP_SETTINGS.AI_STREAMING_SPEED, -1.0)), 0.0, 0.001)
+	assert_true(bool(ai_settings.get(APP_SETTINGS.AI_ENABLE_WORLD_GEN, false)))
 
 
 func _delete_settings_file() -> void:

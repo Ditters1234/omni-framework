@@ -1,0 +1,33 @@
+{
+  "ai_templates": [
+    {
+      "template_id": "base:event_narration_quest_completed",
+      "purpose": "event_narration",
+      "prompt_template": "Write one short in-world event log line for completing the quest '{quest_name}'. Keep it under 16 words.",
+      "fallback": "{quest_name} is complete.",
+      "tags": ["world_gen", "event_log", "quest"]
+    },
+    {
+      "template_id": "base:event_narration_location_changed",
+      "purpose": "event_narration",
+      "prompt_template": "Write one short in-world travel narration line for arriving at {new_location_name} from {old_location_name}. Keep it under 16 words.",
+      "fallback": "You arrive at {new_location_name}.",
+      "tags": ["world_gen", "event_log", "travel"]
+    },
+    {
+      "template_id": "base:event_narration_day_advanced",
+      "purpose": "event_narration",
+      "prompt_template": "Write one short in-world line for the start of day {day} in {location_name}. Keep it under 16 words.",
+      "fallback": "Day {day} begins in {location_name}.",
+      "tags": ["world_gen", "event_log", "time"]
+    },
+    {
+      "template_id": "base:task_flavor",
+      "purpose": "task_description",
+      "prompt_template": "Write one concise mission-briefing sentence for the task '{display_name}' at {location_name}. Employer: {faction_name}. Reward: {reward_summary}. Keep it under 20 words.",
+      "fallback": "{display_name} awaits at {location_name}.",
+      "tags": ["world_gen", "task_board"]
+    }
+  ],
+  "patches": []
+}

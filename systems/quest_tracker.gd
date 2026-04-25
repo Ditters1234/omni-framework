@@ -286,3 +286,4 @@ func _complete_active_quest(quest_id: String, template: Dictionary) -> void:
 	if not complete_sound.is_empty():
 		AudioManager.play_sfx(complete_sound)
 	GameEvents.quest_completed.emit(quest_id)
+	ScriptHookService.invoke_world_event_narration("quest_completed", [quest_id])

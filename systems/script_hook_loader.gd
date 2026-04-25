@@ -62,6 +62,7 @@ func _collect_hook_paths() -> Array[String]:
 	_append_hook_paths(paths, DataManager.locations.values())
 	_append_hook_paths(paths, DataManager.quests.values())
 	_append_hook_paths(paths, DataManager.tasks.values())
+	_append_global_hook_paths(paths)
 	return paths
 
 
@@ -71,6 +72,18 @@ func _append_hook_paths(paths: Array[String], templates: Array) -> void:
 			continue
 		var template: Dictionary = template_data
 		var hook_path := str(template.get("script_path", template.get("script_hook", "")))
+		if hook_path.is_empty() or hook_path in paths:
+			continue
+		paths.append(hook_path)
+
+
+func _append_global_hook_paths(paths: Array[String]) -> void:
+	var hooks_value: Variant = DataManager.get_config_value("ai.world_gen_hooks", {})
+	if not hooks_value is Dictionary:
+		return
+	var hooks: Dictionary = hooks_value
+	for hook_path_value in hooks.values():
+		var hook_path := str(hook_path_value).strip_edges()
 		if hook_path.is_empty() or hook_path in paths:
 			continue
 		paths.append(hook_path)

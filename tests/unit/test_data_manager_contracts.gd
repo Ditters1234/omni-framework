@@ -120,6 +120,36 @@ func test_register_additions_loads_ai_personas_and_apply_patches_updates_tags() 
 		assert_false(tags.has("merchant"))
 
 
+func test_register_additions_loads_ai_templates_and_apply_patches_updates_tags() -> void:
+	var data_path := _write_data_file(
+		"ai_templates",
+		OmniConstants.DATA_AI_TEMPLATES,
+		"{\"ai_templates\": [{\"template_id\": \"base:test_task_flavor\", \"purpose\": \"task_description\", \"prompt_template\": \"Describe {display_name}.\", \"tags\": [\"briefing\"]}]}"
+	)
+
+	var issues := DataManager.register_additions("test:ai_templates", data_path)
+
+	assert_eq(issues.size(), 0)
+	assert_eq(str(DataManager.get_ai_template("base:test_task_flavor").get("purpose", "")), "task_description")
+
+	var patch_data_path := _write_data_file(
+		"ai_template_patch",
+		OmniConstants.DATA_AI_TEMPLATES,
+		"{\"patches\": [{\"target\": \"base:test_task_flavor\", \"add_tags\": [\"world_gen\"], \"remove_tags\": [\"briefing\"]}]}"
+	)
+
+	var patch_issues := DataManager.apply_patches("test:ai_template_patch", patch_data_path)
+	var ai_template := DataManager.get_ai_template("base:test_task_flavor")
+	var tags_value: Variant = ai_template.get("tags", [])
+
+	assert_eq(patch_issues.size(), 0)
+	assert_true(tags_value is Array)
+	if tags_value is Array:
+		var tags: Array = tags_value
+		assert_true(tags.has("world_gen"))
+		assert_false(tags.has("briefing"))
+
+
 func test_validate_loaded_content_reports_cross_registry_reference_failures() -> void:
 	DataManager.definitions["currencies"] = ["credits"]
 	DataManager.definitions["stats"] = [

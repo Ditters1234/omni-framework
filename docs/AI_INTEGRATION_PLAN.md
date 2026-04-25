@@ -6,7 +6,7 @@ This document is a planning reference for the AI integration layer. It catalogs 
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
-Implementation status update: Phases 1–5 are complete. The dialogue AI integration is fully landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls for chat history window and streaming speed, debug overlay AI chat panel, input length hardening, and modding guide authoring documentation. The behavior-tree layer is now landed too: `BTActionAIQuery`, `BTConditionAICheck`, shared prompt/response parsing helpers, timeout-aware fallback behavior, and Kael greeting integration coverage.
+Implementation status update: Phases 1–6 are complete. The dialogue AI integration is fully landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls for chat history window and streaming speed, debug overlay AI chat panel, input length hardening, and modding guide authoring documentation. The behavior-tree layer is now landed too: `BTActionAIQuery`, `BTConditionAICheck`, shared prompt/response parsing helpers, timeout-aware fallback behavior, and Kael greeting integration coverage. The world layer now ships config-declared global script hooks, `ai_templates.json`, narrated event-log entries, cached task-board flavor text, and the engine-owned `ai.enable_world_gen` toggle.
 
 Decisions this document assumes:
 
@@ -60,7 +60,7 @@ Implications this document respects:
 - ~~No game system consumes `AIManager` for gameplay yet.~~ `DialogueBackend` AI mode implemented in Phase 3.
 - ~~No mod data schema for AI persona definitions.~~ Implemented in Phase 1.
 - ~~No prompt builder or response parser infrastructure.~~ Implemented in Phase 2.
-- No LimboAI behavior tree nodes for AI-driven NPC decisions.
+- ~~No LimboAI behavior tree nodes for AI-driven NPC decisions.~~ Implemented in Phase 5.
 - No script hook patterns for AI-generated content.
 
 ---
@@ -92,8 +92,8 @@ The behavior layer wires `AIManager` into LimboAI behavior trees so NPCs can mak
 
 | System | Status | Purpose |
 |---|---|---|
-| AI narration hook | Planned (Phase 6) | Script hook that generates event narration for the `EventLogBackend` |
-| AI task flavor hook | Planned (Phase 6) | Script hook that enhances `TaskProviderBackend` descriptions with contextual flavor text |
+| AI narration hook | ✅ Implemented (Phase 6) | Script hook that generates event narration for the `EventLogBackend` |
+| AI task flavor hook | ✅ Implemented (Phase 6) | Script hook that enhances `TaskProviderBackend` descriptions with contextual flavor text |
 | AI lore hook | Planned (Phase 7) | Script hook that generates optional lore blurbs for `EntitySheetBackend` and part inspection |
 
 The world layer uses script hooks to inject AI-generated flavor text into existing backend screens. All hooks produce supplementary content alongside the static baseline — never replacing it.
@@ -514,7 +514,7 @@ Deliverable: modders can add AI decision points to behavior trees with graceful 
 
 ### Phase 6 — World Generation Hooks (~3 days)
 
-AI-generated content injected into existing backend screens via script hooks.
+Current status: complete. `systems/loaders/ai_template_registry.gd` now loads `ai_templates.json` into `DataManager.ai_templates`, the base mod ships `mods/base/scripts/ai_narration_hook.gd` and `ai_task_flavor_hook.gd`, and `config.json` can declare `ai.world_gen_hooks` so `ScriptHookService` can preload and invoke those global hook scripts. `GameEvents` now records `event_narrated`, `EventLogBackend` exposes optional `narration_text`, `TaskProviderBackend` caches and surfaces `ai_flavor_text` / selected-task `flavor_text`, and the settings screen persists `ai.enable_world_gen`. Coverage lives in `tests/unit/test_phase6_world_gen.gd` plus updated settings/data-manager tests, with disabled-AI no-op coverage and narrated event-log/task-board assertions.
 
 1. Create `mods/base/scripts/ai_narration_hook.gd` extending `ScriptHook`. Wire to `quest_completed`, `location_changed`, and `day_advanced` signals.
 2. Create `mods/base/scripts/ai_task_flavor_hook.gd`. Wire to `TaskProviderBackend`'s view model assembly.

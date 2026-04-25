@@ -30,8 +30,13 @@ func initialize(params: Dictionary = {}) -> void:
 		_refresh_state()
 
 func _ready() -> void:
+	_connect_world_gen_signal()
 	_initialize_backend()
 	_refresh_state()
+
+
+func _exit_tree() -> void:
+	_disconnect_world_gen_signal()
 
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
@@ -76,10 +81,7 @@ func _render_rows(rows: Array[Dictionary]) -> void:
 		button.button_pressed = bool(row.get("selected", false))
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.text = "%s\n%s" % [
-			str(row.get("display_name", "Unnamed Task")),
-			str(row.get("detail_text", "")),
-		]
+		button.text = _build_row_text(row)
 		button.pressed.connect(_on_row_pressed.bind(str(row.get("template_id", ""))))
 		_rows_container.add_child(button)
 
@@ -165,3 +167,36 @@ func _read_dictionary(value: Variant) -> Dictionary:
 		var dictionary_value: Dictionary = value
 		return dictionary_value.duplicate(true)
 	return {}
+
+
+func _build_row_text(row: Dictionary) -> String:
+	var lines: Array[String] = [
+		str(row.get("display_name", "Unnamed Task")),
+		str(row.get("detail_text", "")),
+	]
+	var ai_flavor_text := str(row.get("ai_flavor_text", "")).strip_edges()
+	if not ai_flavor_text.is_empty():
+		lines.append("Flavor: %s" % ai_flavor_text)
+	return "\n".join(lines).strip_edges()
+
+
+func _connect_world_gen_signal() -> void:
+	if GameEvents == null:
+		return
+	var callback := Callable(self, "_on_event_narrated")
+	if GameEvents.has_signal("event_narrated") and not GameEvents.is_connected("event_narrated", callback):
+		GameEvents.event_narrated.connect(_on_event_narrated)
+
+
+func _disconnect_world_gen_signal() -> void:
+	if GameEvents == null:
+		return
+	var callback := Callable(self, "_on_event_narrated")
+	if GameEvents.has_signal("event_narrated") and GameEvents.is_connected("event_narrated", callback):
+		GameEvents.event_narrated.disconnect(_on_event_narrated)
+
+
+func _on_event_narrated(source_signal: String, _source_key: String, _narration: String) -> void:
+	if source_signal != "task_flavor":
+		return
+	_refresh_state()

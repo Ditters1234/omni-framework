@@ -205,8 +205,9 @@ func _emit_day(day: int) -> void:
 		return
 	if GameEvents.has_method("emit_dynamic"):
 		GameEvents.emit_dynamic("day_advanced", [day])
-		return
-	GameEvents.day_advanced.emit(day)
+	else:
+		GameEvents.day_advanced.emit(day)
+	ScriptHookService.invoke_world_event_narration("day_advanced", [day])
 
 
 func _connect_runtime_signals() -> void:

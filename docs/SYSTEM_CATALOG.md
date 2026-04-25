@@ -56,7 +56,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 | `BackendContractRegistry` | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | — | Validates `backend_class` IDs and their payload schemas. Locked after `ModLoader`. |
 | `RewardService` | `RewardService` | `systems/reward_service.gd` | GameState, SaveManager | Distributes currency, items, unlocks when quests/tasks complete. |
 | `TransactionService` | `TransactionService` | `systems/transaction_service.gd` | GameState, SaveManager | Handles buy/sell/exchange validation and currency movement. |
-| `ScriptHookService` | `ScriptHookService` | `systems/script_hook_service.gd` | DataManager | Lifecycle manager for mod script hooks and their execution callbacks. |
+| `ScriptHookService` | `ScriptHookService` | `systems/script_hook_service.gd` | DataManager | Lifecycle manager for mod script hooks, including Phase 6 global world-generation hooks and cached task flavor text. |
 | `AssemblyCommitService` | `AssemblyCommitService` | `systems/assembly_commit_service.gd` | GameState | Transactional part attachment/detachment for assembly editor. |
 
 ### AI & Quest Orchestration
@@ -73,7 +73,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
-| `AppSettings` | `AppSettings` | `core/app_settings.gd` | — | Persistent app-level preferences (audio, graphics, and engine-owned AI connection/dialogue UX settings such as `chat_history_window` and `streaming_speed`). |
+| `AppSettings` | `AppSettings` | `core/app_settings.gd` | — | Persistent app-level preferences (audio, graphics, and engine-owned AI connection/dialogue/world-generation settings such as `chat_history_window`, `streaming_speed`, and `enable_world_gen`). |
 | `BackendHelpers` | `OmniBackendHelpers` | `ui/screens/backends/backend_helpers.gd` | GameState, DataManager | Phase-neutral utilities shared by backend screens. |
 
 ---
@@ -95,6 +95,7 @@ These systems parse JSON templates and populate in-memory registries. All are in
 | `AchievementRegistry` | `AchievementRegistry` | `systems/loaders/achievement_registry.gd` | `achievements.json` | `achievement_id` | Achievements with unlock conditions and rewards. |
 | `ConfigLoader` | — | `systems/loaders/config_loader.gd` | `config.json` | — (deep-merged) | Engine-owned gameplay/UI defaults from mod data. AI provider ownership is intentionally excluded and lives in `AppSettings`. |
 | `AIPersonaRegistry` | `AIPersonaRegistry` | `systems/loaders/ai_persona_registry.gd` | `ai_personas.json` | `persona_id` | Mod-authored AI personas used by dialogue and future AI consumers. |
+| `AITemplateRegistry` | `AITemplateRegistry` | `systems/loaders/ai_template_registry.gd` | `ai_templates.json` | `template_id` | Mod-authored reusable AI prompt templates for world-generation hooks. |
 All loaders support **two-phase patching**:
 1. **Phase 1:** Additions — new entries added to the registry
 2. **Phase 2:** Patches — existing entries are updated non-destructively
@@ -131,6 +132,7 @@ See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`MODDING_GUIDE
 ### AI Events
 
 Defined in `GameEvents` (see [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md)):
+- `event_narrated(source_signal, source_key, narration)` — World-generation update emitted when narration or task flavor text is stored
 - `ai_response_received(context_id, response)` — Full response ready
 - `ai_token_received(context_id, token)` — Streaming token (where supported)
 - `ai_error(context_id, error)` — Generation failed
@@ -165,7 +167,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `ExchangeBackend` | `ui/screens/backends/exchange_screen.tscn` | Inventory lists, pricing, currency type | Buy/sell items from NPC vendor. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `ListBackend` | `ui/screens/backends/list_screen.tscn` | Array of displayable items | Render a data list (journal, bestiary, etc.). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `ChallengeBackend` | `ui/screens/backends/challenge_screen.tscn` | Stat check rules, pass/fail actions | Stat-check pass/fail outcome. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `TaskProviderBackend` | `ui/screens/backends/task_provider_screen.tscn` | Faction ID, difficulty filter, task list | Faction job board with repeatable tasks. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `TaskProviderBackend` | `ui/screens/backends/task_provider_screen.tscn` | Faction ID, difficulty filter, task list | Faction job board with repeatable tasks and optional cached AI flavor text. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `CraftingBackend` | `ui/screens/backends/crafting_screen.tscn` | Station ID, recipe filters, crafter/input/output entities | Recipe crafting with input status and timed production support. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager `.dialogue` ref plus optional `ai_mode` | NPC branching dialogue with optional hybrid/freeform AI chat handoff driven by `AIChatService`. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
@@ -173,7 +175,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `ActiveQuestLogBackend` | `ui/screens/backends/active_quest_log_screen.tscn` | Optional completed quest display | Active quest cards with stages, objectives, and rewards. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `AchievementListBackend` | `ui/screens/backends/achievement_list_screen.tscn` | Optional locked/unlocked filters | Achievement unlock state and stat progress, with hidden achievements suppressed until unlocked. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `EventLogBackend` | `ui/screens/backends/event_log_screen.tscn` | Optional event limit/domain/signal filters | Recent `GameEvents` history. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `EventLogBackend` | `ui/screens/backends/event_log_screen.tscn` | Optional event limit/domain/signal filters | Recent `GameEvents` history with optional narrated flavor lines. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 | `WorldMapBackend` | `ui/screens/backends/world_map_screen.tscn` | Optional title/description and display filters | Location graph with faction-tinted nodes, adaptive zoom decluttering, route lines, zoom/pan/orientation controls, and travel-on-click that consumes the cheapest routed total `travel_cost` in ticks. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
 
 **How it works:**

@@ -67,6 +67,7 @@ func _build_rows() -> Array[Dictionary]:
 			"domain": str(event.get("domain", "")),
 			"timestamp": str(event.get("timestamp", "")),
 			"args_text": _format_args(event.get("args", [])),
+			"narration_text": str(event.get("narration", "")),
 			"deprecated": bool(event.get("deprecated", false)),
 		})
 	if _get_bool_param(_params, "newest_first", true):

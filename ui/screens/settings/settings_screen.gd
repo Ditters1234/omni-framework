@@ -64,6 +64,8 @@ const RESOLUTION_PRESETS := [
 @onready var _ai_chat_history_window_spinbox: SpinBox = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiChatHistoryWindowSpinBox
 @onready var _ai_streaming_speed_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiStreamingSpeedLabel
 @onready var _ai_streaming_speed_spinbox: SpinBox = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiStreamingSpeedSpinBox
+@onready var _ai_world_gen_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiWorldGenLabel
+@onready var _ai_world_gen_toggle: CheckButton = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiWorldGenToggle
 @onready var _ai_hint_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiHintLabel
 @onready var _ai_info_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiInfoLabel
 @onready var _connect_ai_button: Button = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiButtonRow/ConnectAiButton
@@ -158,6 +160,7 @@ func _apply_settings_to_controls() -> void:
 	_ai_context_window_spinbox.value = float(int(ai.get(APP_SETTINGS.AI_CONTEXT_WINDOW, APP_SETTINGS.DEFAULT_AI_CONTEXT_WINDOW)))
 	_ai_chat_history_window_spinbox.value = float(int(ai.get(APP_SETTINGS.AI_CHAT_HISTORY_WINDOW, APP_SETTINGS.DEFAULT_AI_CHAT_HISTORY_WINDOW)))
 	_ai_streaming_speed_spinbox.value = float(ai.get(APP_SETTINGS.AI_STREAMING_SPEED, APP_SETTINGS.DEFAULT_AI_STREAMING_SPEED))
+	_ai_world_gen_toggle.button_pressed = bool(ai.get(APP_SETTINGS.AI_ENABLE_WORLD_GEN, false))
 	_title_label.text = "Settings"
 	_subtitle_label.text = "Engine-owned application settings stored outside the mod data pipeline."
 	_update_ai_controls_state()
@@ -207,6 +210,7 @@ func _collect_settings_from_controls() -> Dictionary:
 			APP_SETTINGS.AI_CONTEXT_WINDOW: int(_ai_context_window_spinbox.value),
 			APP_SETTINGS.AI_CHAT_HISTORY_WINDOW: int(_ai_chat_history_window_spinbox.value),
 			APP_SETTINGS.AI_STREAMING_SPEED: _ai_streaming_speed_spinbox.value,
+			APP_SETTINGS.AI_ENABLE_WORLD_GEN: _ai_world_gen_toggle.button_pressed,
 		},
 	})
 
@@ -305,6 +309,8 @@ func _update_ai_controls_state() -> void:
 	_ai_chat_history_window_spinbox.visible = uses_any_model
 	_ai_streaming_speed_label.visible = uses_any_model
 	_ai_streaming_speed_spinbox.visible = uses_any_model
+	_ai_world_gen_label.visible = uses_any_model
+	_ai_world_gen_toggle.visible = uses_any_model
 	_ai_temperature_label.visible = uses_server_fields or uses_disk_fields
 	_ai_temperature_spinbox.visible = uses_server_fields or uses_disk_fields
 	_ai_context_window_label.visible = uses_disk_fields
@@ -413,7 +419,7 @@ func _build_ai_hint_text(provider: String) -> String:
 		APP_SETTINGS.AI_PROVIDER_ANTHROPIC:
 			return "Hosted server connection using Anthropic's Messages API. Chat history and streaming speed tune dialogue-side UX."
 		APP_SETTINGS.AI_PROVIDER_NOBODYWHO:
-			return "On-disk model connection. Provide a local .gguf path and connect from engine settings. Chat history and streaming speed tune dialogue-side UX."
+			return "On-disk model connection. Provide a local .gguf path and connect from engine settings. Chat history, streaming speed, and world generation tune dialogue-side UX."
 		_:
 			return "Choose a server or on-disk provider here. Mods can use AIManager, but they do not configure the engine connection."
 
@@ -515,6 +521,12 @@ func _on_ai_chat_history_window_spinbox_value_changed(_value: float) -> void:
 
 
 func _on_ai_streaming_speed_spinbox_value_changed(_value: float) -> void:
+	if _is_initializing:
+		return
+	_preview_current_settings()
+
+
+func _on_ai_world_gen_toggle_toggled(_toggled_on: bool) -> void:
 	if _is_initializing:
 		return
 	_preview_current_settings()

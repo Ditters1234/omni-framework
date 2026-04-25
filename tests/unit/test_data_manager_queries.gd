@@ -45,6 +45,18 @@ func before_each() -> void:
 		"system_prompt_template": "You are a guard.",
 		"tags": ["security"]
 	}
+	DataManager.ai_templates["base:task_flavor"] = {
+		"template_id": "base:task_flavor",
+		"purpose": "task_description",
+		"prompt_template": "Describe {display_name}.",
+		"tags": ["task_board", "briefing"]
+	}
+	DataManager.ai_templates["base:event_narration"] = {
+		"template_id": "base:event_narration",
+		"purpose": "event_narration",
+		"prompt_template": "Narrate {event_name}.",
+		"tags": ["event_log"]
+	}
 
 
 func test_query_parts_filters_by_tags_and_returns_copies() -> void:
@@ -91,3 +103,16 @@ func test_query_ai_personas_filters_by_tags_and_returns_copies() -> void:
 
 	results[0]["display_name"] = "Mutated"
 	assert_eq(str(DataManager.ai_personas["base:vendor_persona"].get("display_name", "")), "Vendor")
+
+
+func test_query_ai_templates_filters_by_purpose_and_returns_copies() -> void:
+	var results := DataManager.query_ai_templates({
+		"purpose": "task_description",
+		"tags": ["task_board"]
+	})
+
+	assert_eq(results.size(), 1)
+	assert_eq(str(results[0].get("template_id", "")), "base:task_flavor")
+
+	results[0]["prompt_template"] = "Mutated"
+	assert_eq(str(DataManager.ai_templates["base:task_flavor"].get("prompt_template", "")), "Describe {display_name}.")

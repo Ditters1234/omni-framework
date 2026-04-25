@@ -43,7 +43,7 @@ mods/<author_id>/<mod_id>/
 └── assets/
 ```
 
-AI-aware mods can also add `data/ai_personas.json` to the same folder.
+AI-aware mods can also add `data/ai_personas.json` and `data/ai_templates.json` to the same folder.
 
 The built-in base pack is the only exception. It lives directly at:
 
@@ -153,6 +153,7 @@ The current base pack uses these files:
 - `recipes.json`
 - `achievements.json`
 - `ai_personas.json`
+- `ai_templates.json`
 - `config.json`
 
 If a file is omitted in your mod, that system is simply untouched.
@@ -527,6 +528,7 @@ Unknown tokens are left in place and logged as warnings, so it is worth keeping 
 Persona JSON does not control provider selection or connection details. The engine-owned settings screen now exposes:
 - `ai.chat_history_window` — how many recent turns each NPC keeps in memory
 - `ai.streaming_speed` — the dialogue-side token reveal cadence
+- `ai.enable_world_gen` — whether world-generation hooks may surface narrated event log text and task-board flavor
 
 Those settings live in `user://settings.cfg`, not in mod data.
 
@@ -549,7 +551,57 @@ Those settings live in `user://settings.cfg`, not in mod data.
 
 ---
 
-## 8.2 Behavior tree AI tasks
+## 8.2 `ai_templates.json`
+
+World-generation hooks can also read reusable prompt templates from `data/ai_templates.json`. These load through `AITemplateRegistry` into `DataManager.ai_templates`.
+
+Current addition format:
+
+```json
+{
+  "ai_templates": [
+    {
+      "template_id": "my_name:my_mod:task_flavor",
+      "purpose": "task_description",
+      "prompt_template": "Write one mission-briefing sentence for {display_name} in {location_name}.",
+      "fallback": "{display_name} awaits at {location_name}.",
+      "tags": ["task_board"]
+    }
+  ],
+  "patches": []
+}
+```
+
+Current required fields:
+- `template_id`
+- `purpose`
+- `prompt_template`
+
+Current optional fields:
+- `fallback`
+- `tags`
+
+Current patch format matches personas:
+
+```json
+{
+  "patches": [
+    {
+      "target": "my_name:my_mod:task_flavor",
+      "set": {
+        "fallback": "The work is waiting."
+      },
+      "add_tags": ["world_gen"]
+    }
+  ]
+}
+```
+
+The engine does not execute templates on its own. A hook or backend must look them up explicitly through `DataManager.get_ai_template()` or `query_ai_templates()`.
+
+---
+
+## 8.3 Behavior tree AI tasks
 
 LimboAI behavior trees can now call the engine-owned AI layer directly through two custom tasks under `systems/ai/`.
 
@@ -1176,6 +1228,10 @@ Example:
 Required:
 - `faction_id`
 
+Notes:
+- Rows always include the static task `description`.
+- When `ai.enable_world_gen` is on, AI is available, `config.json` enables `ai.task_flavor_enabled`, and `ai.world_gen_hooks.task_flavor` points at a valid hook, the backend may append a cached AI flavor line below the static description and into the selected task card's `flavor_text`.
+
 #### `DialogueBackend`
 Required in practical use:
 - `dialogue_resource` or `dialogue_id`
@@ -1345,6 +1401,10 @@ No required params. Common useful optional fields:
 - `screen_description`
 - `cancel_label`
 - `limit`
+
+Notes:
+- Rows always include the recorded event name, args summary, and timestamp.
+- If a world-generation hook calls `GameEvents.add_event_narration(...)`, the backend also exposes `narration_text` for that event row and the stock screen renders it as an extra line.
 
 ---
 

@@ -20,6 +20,7 @@ const FALLBACK_MUTED_TEXT_COLOR := Color("#9aa8bf")
 @onready var _stage_label: Label = $MarginContainer/VBoxContainer/StageLabel
 @onready var _objectives_container: VBoxContainer = $MarginContainer/VBoxContainer/ObjectivesContainer
 @onready var _rewards_label: Label = $MarginContainer/VBoxContainer/RewardsLabel
+@onready var _flavor_label: Label = $MarginContainer/VBoxContainer/FlavorLabel
 
 var _pending_view_model: Dictionary = {}
 
@@ -44,6 +45,8 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	_render_objectives(view_model.get("objectives", []))
 	_rewards_label.text = _format_rewards(view_model.get("rewards", null))
 	_rewards_label.visible = not _rewards_label.text.is_empty()
+	_flavor_label.text = _format_flavor_text(view_model.get("flavor_text", ""))
+	_flavor_label.visible = not _flavor_label.text.is_empty()
 
 
 func _render_objectives(objectives_value: Variant) -> void:
@@ -106,6 +109,11 @@ func _format_rewards(rewards_value: Variant) -> String:
 		return ""
 	var rewards_text := str(rewards_value)
 	return "" if rewards_text.is_empty() else "Rewards: %s" % rewards_text
+
+
+func _format_flavor_text(flavor_value: Variant) -> String:
+	var flavor_text := str(flavor_value).strip_edges()
+	return "" if flavor_text.is_empty() else "Flavor: %s" % flavor_text
 
 
 func _get_semantic_color(color_name: String, fallback: Color) -> Color:

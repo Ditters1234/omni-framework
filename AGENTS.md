@@ -204,7 +204,7 @@ Each backend class is validated against a **contract** — a schema that defines
 
 Modders call `AIManager.generate_async(prompt, context)` from script hooks. Always guard with `AIManager.is_available()`.
 
-AI persona data lives in `ai_personas.json` and loads through `AIPersonaRegistry` into `DataManager.ai_personas`. Entities bind to personas via the optional `ai_persona_id` field. `AIChatService` (`systems/ai/ai_chat_service.gd`) assembles persona-aware prompts and manages conversation history; `DialogueBackend` instantiates it when `ai_mode` is `"hybrid"` or `"freeform"`. See `docs/AI_INTEGRATION_PLAN.md` for the phased consumer integration plan.
+AI persona data lives in `ai_personas.json` and loads through `AIPersonaRegistry` into `DataManager.ai_personas`. Entities bind to personas via the optional `ai_persona_id` field. `AIChatService` (`systems/ai/ai_chat_service.gd`) assembles persona-aware prompts and manages conversation history; `DialogueBackend` instantiates it when `ai_mode` is `"hybrid"` or `"freeform"`. For behavior trees, `BTActionAIQuery` and `BTConditionAICheck` (`systems/ai/bt_action_ai_query.gd`, `systems/ai/bt_condition_ai_check.gd`) extend LimboAI's `BTAction`/`BTCondition` to send AI requests with timeout-aware `RUNNING` behavior, parse responses (`text`, `enum`, `json`, `yes/no`), and write results or fallback values to the blackboard. Shared prompt resolution and response parsing live in `BTAIUtils` (`systems/ai/bt_ai_utils.gd`). See `docs/AI_INTEGRATION_PLAN.md` for the phased consumer integration plan.
 
 ---
 
@@ -223,6 +223,9 @@ These systems provide core runtime functionality but are not autoloads. They're 
 | `ConditionEvaluator` | `systems/condition_evaluator.gd` | Evaluates JSON condition blocks (AND/OR trees) used in quests, tasks, and UI logic |
 | `StatManager` | `systems/stat_manager.gd` | Calculates stat modifiers, applies stat changes, and enforces clamping rules |
 | `AIChatService` | `systems/ai/ai_chat_service.gd` | Persona-aware prompt builder with bounded conversation history, response validation, and fallback selection |
+| `BTActionAIQuery` | `systems/ai/bt_action_ai_query.gd` | LimboAI `BTAction`: async AI query with `text`/`enum`/`json` parsing, timeout, and fallback value |
+| `BTConditionAICheck` | `systems/ai/bt_condition_ai_check.gd` | LimboAI `BTCondition`: async yes/no AI check with configurable default result |
+| `BTAIUtils` | `systems/ai/bt_ai_utils.gd` | Shared `{blackboard_var}` prompt resolution, enum scoring, JSON unwrapping, yes/no parsing |
 
 **Helper utilities:**
 - `backend_helpers.gd` — Phase-neutral utility functions shared by backend screens (catalog, exchange, list, challenge, task provider, dialogue, and future reusable backend needs)
