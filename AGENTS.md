@@ -165,7 +165,7 @@ Each `backend_class` value in JSON maps to a scene in `ui/screens/backends/`:
 | `ChallengeBackend` | `challenge_screen.tscn` | Stat-check pass/fail |
 | `TaskProviderBackend` | `task_provider_screen.tscn` | Faction job board |
 | `CatalogListBackend` | `catalog_list_screen.tscn` | Infinite template vendor |
-| `DialogueBackend` | `dialogue_screen.tscn` | NPC branching dialogue |
+| `DialogueBackend` | `dialogue_screen.tscn` | NPC dialogue with optional AI chat mode (`hybrid`, `freeform`) |
 | `EntitySheetBackend` | `entity_sheet_screen.tscn` | Read-only entity stats/equipment/inventory |
 | `ActiveQuestLogBackend` | `active_quest_log_screen.tscn` | Active quest cards with stages and objectives |
 | `FactionReputationBackend` | `faction_reputation_screen.tscn` | Faction badges and standing |
@@ -204,7 +204,7 @@ Each backend class is validated against a **contract** — a schema that defines
 
 Modders call `AIManager.generate_async(prompt, context)` from script hooks. Always guard with `AIManager.is_available()`.
 
-AI persona data lives in `ai_personas.json` and loads through `AIPersonaRegistry` into `DataManager.ai_personas`. Entities bind to personas via the optional `ai_persona_id` field. See `docs/AI_INTEGRATION_PLAN.md` for the phased consumer integration plan.
+AI persona data lives in `ai_personas.json` and loads through `AIPersonaRegistry` into `DataManager.ai_personas`. Entities bind to personas via the optional `ai_persona_id` field. `AIChatService` (`systems/ai/ai_chat_service.gd`) assembles persona-aware prompts and manages conversation history; `DialogueBackend` instantiates it when `ai_mode` is `"hybrid"` or `"freeform"`. See `docs/AI_INTEGRATION_PLAN.md` for the phased consumer integration plan.
 
 ---
 
@@ -222,6 +222,7 @@ These systems provide core runtime functionality but are not autoloads. They're 
 | `TransactionService` | `systems/transaction_service.gd` | Handles currency exchanges and transaction validation (buy/sell, exchanges, trades) |
 | `ConditionEvaluator` | `systems/condition_evaluator.gd` | Evaluates JSON condition blocks (AND/OR trees) used in quests, tasks, and UI logic |
 | `StatManager` | `systems/stat_manager.gd` | Calculates stat modifiers, applies stat changes, and enforces clamping rules |
+| `AIChatService` | `systems/ai/ai_chat_service.gd` | Persona-aware prompt builder with bounded conversation history, response validation, and fallback selection |
 
 **Helper utilities:**
 - `backend_helpers.gd` — Phase-neutral utility functions shared by backend screens (catalog, exchange, list, challenge, task provider, dialogue, and future reusable backend needs)

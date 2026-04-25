@@ -57,7 +57,7 @@ Implications this document respects:
 
 ### Not yet implemented
 
-- No game system consumes `AIManager` for gameplay yet. The providers are wired but idle.
+- ~~No game system consumes `AIManager` for gameplay yet.~~ `DialogueBackend` AI mode implemented in Phase 3.
 - ~~No mod data schema for AI persona definitions.~~ Implemented in Phase 1.
 - ~~No prompt builder or response parser infrastructure.~~ Implemented in Phase 2.
 - No LimboAI behavior tree nodes for AI-driven NPC decisions.
