@@ -65,15 +65,16 @@ func _render_rows(rows: Array[Dictionary], empty_label: String) -> void:
 
 func _build_row_text(row: Dictionary) -> String:
 	var args_text := str(row.get("args_text", ""))
-	var title := str(row.get("title", ""))
-	if title.is_empty():
-		title = "%s/%s" % [str(row.get("domain", "")), str(row.get("signal_name", ""))]
+	var suffix := "" if args_text.is_empty() else " | %s" % args_text
 	var lines: Array[String] = [
-		"#%s %s" % [str(row.get("sequence", 0)), title],
-		"%s • %s/%s" % [str(row.get("timestamp", "")), str(row.get("domain", "")), str(row.get("signal_name", ""))],
+		"#%s %s/%s%s" % [
+			str(row.get("sequence", 0)),
+			str(row.get("domain", "")),
+			str(row.get("signal_name", "")),
+			suffix,
+		],
+		str(row.get("timestamp", "")),
 	]
-	if not args_text.is_empty() and args_text != "{}":
-		lines.append(args_text)
 	var narration_text := str(row.get("narration_text", "")).strip_edges()
 	if not narration_text.is_empty():
 		lines.append("Narration: %s" % narration_text)

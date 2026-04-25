@@ -201,14 +201,12 @@ static func build_stat_line(entity: EntityInstance, stat_definition: Dictionary)
 			"value": float(entity.stats.get(stat_id, 0.0)),
 			"max_value": float(entity.stats.get(capacity_id, 0.0)),
 			"color_token": color_token,
-			"breakdown_text": "Resource stat • current / capacity",
 		}
 	return {
 		"stat_id": stat_id,
 		"label": humanize_id(stat_id),
 		"value": float(entity.stats.get(stat_id, 0.0)),
 		"color_token": color_token,
-		"breakdown_text": "Base stat",
 	}
 
 
@@ -398,7 +396,6 @@ static func build_quest_card_view_model(quest_template: Dictionary, stage_index:
 	var quest_id := str(quest_template.get("quest_id", ""))
 	var objectives: Array[Dictionary] = []
 	var current_stage_text := "Completed" if completed else ""
-	var stage_label := ""
 	var stages_value: Variant = quest_template.get("stages", [])
 	if stages_value is Array:
 		var stages: Array = stages_value
@@ -406,14 +403,11 @@ static func build_quest_card_view_model(quest_template: Dictionary, stage_index:
 		if completed and stages.size() > 0:
 			resolved_stage_index = clampi(resolved_stage_index, 0, stages.size() - 1)
 		if resolved_stage_index >= 0 and resolved_stage_index < stages.size():
-			stage_label = "Stage %s of %s" % [str(resolved_stage_index + 1), str(stages.size())]
 			var current_stage_value: Variant = stages[resolved_stage_index]
 			if current_stage_value is Dictionary:
 				var current_stage: Dictionary = current_stage_value
-				var stage_title := str(current_stage.get("title", ""))
-				var stage_description := str(current_stage.get("description", ""))
 				if not completed:
-					current_stage_text = stage_title if not stage_title.is_empty() else stage_description
+					current_stage_text = str(current_stage.get("description", current_stage.get("title", "")))
 				var objective_values: Variant = current_stage.get("objectives", [])
 				if objective_values is Array:
 					var raw_objectives: Array = objective_values
@@ -421,9 +415,8 @@ static func build_quest_card_view_model(quest_template: Dictionary, stage_index:
 						if not objective_value is Dictionary:
 							continue
 						var objective: Dictionary = objective_value
-						var objective_label := _format_objective_label(objective)
 						objectives.append({
-							"label": objective_label,
+							"label": str(objective.get("description", objective.get("type", "Objective"))),
 							"satisfied": completed or ConditionEvaluator.evaluate(objective),
 						})
 	if objectives.is_empty() and completed:
@@ -431,38 +424,14 @@ static func build_quest_card_view_model(quest_template: Dictionary, stage_index:
 			"label": "Quest complete.",
 			"satisfied": true,
 		})
-	elif objectives.is_empty():
-		objectives.append({
-			"label": "Advance the current quest stage.",
-			"satisfied": false,
-		})
 	return {
 		"quest_id": quest_id,
 		"display_name": str(quest_template.get("display_name", quest_template.get("title", humanize_id(quest_id)))),
-		"current_stage": current_stage_text if not current_stage_text.is_empty() else ("Completed" if completed else stage_label),
-		"stage_label": stage_label,
+		"current_stage": current_stage_text if not current_stage_text.is_empty() else ("Completed" if completed else ""),
 		"objectives": objectives,
 		"rewards": _duplicate_dictionary(quest_template.get("reward", {})),
-		"flavor_text": str(quest_template.get("description", "")),
 	}
 
-static func _format_objective_label(objective: Dictionary) -> String:
-	var explicit := str(objective.get("description", objective.get("label", ""))).strip_edges()
-	if not explicit.is_empty():
-		return explicit
-	var objective_type := str(objective.get("type", "objective"))
-	var target := str(objective.get("target", objective.get("target_id", objective.get("entity_id", objective.get("location_id", "")))))
-	var amount_text := ""
-	for amount_key in ["count", "amount", "required", "value"]:
-		if objective.has(amount_key):
-			amount_text = str(objective.get(amount_key))
-			break
-	var parts: Array[String] = [humanize_id(objective_type)]
-	if not target.is_empty():
-		parts.append(humanize_id(target))
-	if not amount_text.is_empty():
-		parts.append("x%s" % amount_text)
-	return " ".join(parts)
 
 static func _build_task_objective_label(task_template: Dictionary) -> String:
 	var target := str(task_template.get("target", ""))
@@ -486,14 +455,12 @@ static func _build_effective_stat_line(effective_stats: Dictionary, stat_definit
 			"value": value,
 			"max_value": _read_float(effective_stats.get(capacity_id, 0.0)),
 			"color_token": color_token,
-			"breakdown_text": "Effective resource • includes equipped parts and modifiers",
 		}
 	return {
 		"stat_id": stat_id,
 		"label": humanize_id(stat_id),
 		"value": value,
 		"color_token": color_token,
-		"breakdown_text": "Effective stat • includes equipped parts and modifiers",
 	}
 
 

@@ -3,7 +3,6 @@ extends "res://ui/screens/backends/backend_base.gd"
 class_name OmniEventLogBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
-const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 
 var _params: Dictionary = {}
 
@@ -62,91 +61,19 @@ func _build_rows() -> Array[Dictionary]:
 		if not event_value is Dictionary:
 			continue
 		var event: Dictionary = event_value
-		var signal_name := str(event.get("signal_name", ""))
 		rows.append({
 			"sequence": int(event.get("sequence", 0)),
-			"signal_name": signal_name,
+			"signal_name": str(event.get("signal_name", "")),
 			"domain": str(event.get("domain", "")),
-			"timestamp": _format_timestamp(str(event.get("timestamp", ""))),
-			"title": _build_event_title(signal_name, event.get("args", [])),
+			"timestamp": str(event.get("timestamp", "")),
 			"args_text": _format_args(event.get("args", [])),
 			"narration_text": str(event.get("narration", "")),
 			"deprecated": bool(event.get("deprecated", false)),
 		})
-	rows.append_array(_build_game_state_event_rows())
 	if _get_bool_param(_params, "newest_first", true):
 		rows.reverse()
 	return rows
 
-func _build_game_state_event_rows() -> Array[Dictionary]:
-	var rows: Array[Dictionary] = []
-	if GameState == null:
-		return rows
-	var history: Array = GameState.event_history
-	var limit := _read_limit()
-	var start_index := 0 if limit <= 0 else maxi(history.size() - limit, 0)
-	for index in range(start_index, history.size()):
-		var event_value: Variant = history[index]
-		if not event_value is Dictionary:
-			continue
-		var event: Dictionary = event_value
-		var event_type := str(event.get("event_type", "runtime_event"))
-		var payload: Dictionary = {}
-		if event.get("payload", {}) is Dictionary:
-			payload = (event.get("payload", {}) as Dictionary).duplicate(true)
-		rows.append({
-			"sequence": index + 1,
-			"signal_name": event_type,
-			"domain": "runtime",
-			"timestamp": "Day %s • Tick %s" % [str(event.get("day", 1)), str(event.get("tick", 0))],
-			"title": BACKEND_HELPERS.humanize_id(event_type) if BACKEND_HELPERS != null else event_type,
-			"args_text": _format_arg_value(payload),
-			"narration_text": str(payload.get("description", payload.get("message", ""))),
-			"deprecated": false,
-		})
-	return rows
-
-
-func _build_event_title(signal_name: String, args_value: Variant) -> String:
-	var args: Array = []
-	if args_value is Array:
-		args = args_value
-	match signal_name:
-		"location_changed":
-			return "Location changed: %s → %s" % [_arg_at(args, 0), _arg_at(args, 1)]
-		"quest_started":
-			return "Quest started: %s" % _arg_at(args, 0)
-		"quest_stage_advanced":
-			return "Quest advanced: %s stage %s" % [_arg_at(args, 0), _arg_at(args, 1)]
-		"quest_completed":
-			return "Quest completed: %s" % _arg_at(args, 0)
-		"quest_failed":
-			return "Quest failed: %s" % _arg_at(args, 0)
-		"achievement_unlocked":
-			return "Achievement unlocked: %s" % _arg_at(args, 0)
-		"entity_reputation_changed":
-			return "Reputation changed: %s / %s (%s → %s)" % [_arg_at(args, 0), _arg_at(args, 1), _arg_at(args, 2), _arg_at(args, 3)]
-		"entity_currency_changed":
-			return "Currency changed: %s %s (%s → %s)" % [_arg_at(args, 0), _arg_at(args, 1), _arg_at(args, 2), _arg_at(args, 3)]
-		"part_acquired":
-			return "Part acquired: %s" % _arg_at(args, 1)
-		"part_equipped":
-			return "Part equipped: %s → %s" % [_arg_at(args, 1), _arg_at(args, 2)]
-		_:
-			return signal_name.capitalize().replace("_", " ")
-
-
-func _format_timestamp(timestamp: String) -> String:
-	var trimmed := timestamp.strip_edges()
-	if trimmed.is_empty():
-		return ""
-	return trimmed.replace("T", " ").replace("Z", " UTC")
-
-
-func _arg_at(args: Array, index: int) -> String:
-	if index < 0 or index >= args.size():
-		return "?"
-	return _format_arg_value(args[index])
 
 func _format_args(args_value: Variant) -> String:
 	if not args_value is Array:

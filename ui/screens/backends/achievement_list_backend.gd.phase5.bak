@@ -37,18 +37,15 @@ func initialize(params: Dictionary) -> void:
 func build_view_model() -> Dictionary:
 	var rows := _build_rows()
 	var empty_label := _get_string_param(_params, "empty_label", "No achievements are available.")
-	var unlocked_count := 0
-	for row in rows:
-		if bool(row.get("unlocked", false)):
-			unlocked_count += 1
 	return {
 		"title": _get_string_param(_params, "screen_title", "Achievements"),
 		"description": _get_string_param(_params, "screen_description", "Review achievement unlocks and progress."),
 		"rows": rows,
-		"status_text": empty_label if rows.is_empty() else "%s unlocked / %s visible achievements." % [str(unlocked_count), str(rows.size())],
+		"status_text": empty_label if rows.is_empty() else "%s achievements listed." % str(rows.size()),
 		"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
 		"empty_label": empty_label,
 	}
+
 
 func _build_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
@@ -114,14 +111,13 @@ func _build_progress_text(stat_name: String, progress: float, requirement: float
 	if unlocked:
 		return "Unlocked"
 	if stat_name.is_empty() or requirement <= 0.0:
-		return "Locked — hidden trigger or manual unlock"
-	var pct := clampf(progress / requirement, 0.0, 1.0) * 100.0
-	return "%s: %s / %s (%s%%)" % [
+		return "Locked"
+	return "%s: %s / %s" % [
 		BACKEND_HELPERS.humanize_id(stat_name),
 		_format_number(progress),
 		_format_number(requirement),
-		_format_number(pct),
 	]
+
 
 func _read_float(value: Variant) -> float:
 	if value is int or value is float:

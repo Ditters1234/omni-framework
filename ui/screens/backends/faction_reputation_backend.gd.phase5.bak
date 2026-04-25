@@ -56,21 +56,18 @@ func _build_rows() -> Array[Dictionary]:
 		var faction := DataManager.get_faction(faction_id)
 		if faction.is_empty():
 			continue
-		var rep_value := 0.0 if entity == null else entity.get_reputation(faction_id)
-		var badge := BACKEND_HELPERS.build_faction_badge_view_model(entity, faction_id)
-		badge["color_token"] = _tier_color_token(str(badge.get("reputation_tier", "Neutral")))
 		rows.append({
 			"faction_id": faction_id,
 			"display_name": str(faction.get("display_name", BACKEND_HELPERS.humanize_id(faction_id))),
 			"description": str(faction.get("description", "")),
 			"territory_summary": _build_territory_summary(faction),
-			"standing_summary": _build_standing_summary(rep_value),
-			"badge": badge,
+			"badge": BACKEND_HELPERS.build_faction_badge_view_model(entity, faction_id),
 		})
 	var sort_callable := func(a: Dictionary, b: Dictionary) -> bool:
 		return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
 	rows.sort_custom(sort_callable)
 	return rows
+
 
 func _resolve_faction_ids(entity: EntityInstance) -> Array[String]:
 	var known_only := _get_bool_param(_params, "known_only", true)
@@ -88,40 +85,6 @@ func _resolve_faction_ids(entity: EntityInstance) -> Array[String]:
 	faction_ids.sort()
 	return faction_ids
 
-
-func _build_standing_summary(value: float) -> String:
-	var next_text := ""
-	if value < -75.0:
-		next_text = "%s to leave Hostile" % _format_reputation_number(-75.0 - value)
-	elif value < -25.0:
-		next_text = "%s to Neutral" % _format_reputation_number(-25.0 - value)
-	elif value < 25.0:
-		next_text = "%s to Friendly" % _format_reputation_number(25.0 - value)
-	elif value < 75.0:
-		next_text = "%s to Allied" % _format_reputation_number(75.0 - value)
-	else:
-		next_text = "Maximum tier reached"
-	return "Standing: %s • %s" % [_format_reputation_number(value), next_text]
-
-
-func _tier_color_token(tier: String) -> String:
-	match tier:
-		"Allied":
-			return "positive"
-		"Friendly":
-			return "primary"
-		"Hostile":
-			return "danger"
-		"Unfriendly":
-			return "warning"
-		_:
-			return "secondary"
-
-
-func _format_reputation_number(value: float) -> String:
-	if absf(value - roundf(value)) < 0.001:
-		return "%+d" % int(roundf(value))
-	return "%+.1f" % value
 
 func _build_territory_summary(faction: Dictionary) -> String:
 	var territory_value: Variant = faction.get("territory", faction.get("territories", []))

@@ -81,20 +81,18 @@ func _add_objective_label(text: String, satisfied: bool, muted: bool) -> void:
 
 
 func _format_stage_label(current_stage_value: Variant) -> String:
-	var extra := ""
-	if _pending_view_model.has("stage_label"):
-		extra = str(_pending_view_model.get("stage_label", "")).strip_edges()
 	if current_stage_value is Dictionary:
 		var current_stage: Dictionary = current_stage_value
 		var title := str(current_stage.get("title", current_stage.get("description", "")))
 		if not title.is_empty():
-			return "Current Stage: %s%s" % [title, " • %s" % extra if not extra.is_empty() else ""]
+			return "Current Stage: %s" % title
 	if current_stage_value == null:
-		return extra
+		return ""
 	var current_stage_text := str(current_stage_value)
 	if current_stage_text.is_empty():
-		return extra
-	return "Current Stage: %s%s" % [current_stage_text, " • %s" % extra if not extra.is_empty() else ""]
+		return ""
+	return "Current Stage: %s" % current_stage_text
+
 
 func _format_rewards(rewards_value: Variant) -> String:
 	if rewards_value is Dictionary:

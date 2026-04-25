@@ -18,7 +18,6 @@ const FALLBACK_INFO_COLOR := Color("#84a9ff")
 @onready var _value_label: Label = $MarginContainer/VBoxContainer/HeaderRow/ValueLabel
 @onready var _progress_bar: ProgressBar = $MarginContainer/VBoxContainer/ProgressBar
 var _pending_view_model: Dictionary = {}
-var _breakdown_label: Label = null
 
 
 func _ready() -> void:
@@ -40,7 +39,6 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	var max_value := float(view_model.get("max_value", 0.0))
 	var color_token := str(view_model.get("color_token", "info"))
 	var accent_color := _get_semantic_color(color_token, FALLBACK_INFO_COLOR)
-	var breakdown_text := str(view_model.get("breakdown_text", "")).strip_edges()
 
 	_label.text = label if not label.is_empty() else "Stat"
 	_value_label.text = _build_value_text(value, max_value)
@@ -54,16 +52,6 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	else:
 		_progress_bar.visible = false
 
-	_apply_breakdown_label(breakdown_text)
-
-func _apply_breakdown_label(breakdown_text: String) -> void:
-	if _breakdown_label == null:
-		_breakdown_label = Label.new()
-		_breakdown_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_breakdown_label.add_theme_font_size_override("font_size", 11)
-		$MarginContainer/VBoxContainer.add_child(_breakdown_label)
-	_breakdown_label.text = breakdown_text
-	_breakdown_label.visible = not breakdown_text.is_empty()
 
 func _build_value_text(value: float, max_value: float) -> String:
 	var value_text := _format_number(value)

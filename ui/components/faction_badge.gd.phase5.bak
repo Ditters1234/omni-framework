@@ -40,10 +40,7 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	var emblem_path := str(view_model.get("emblem_path", ""))
 	var reputation_tier := str(view_model.get("reputation_tier", ""))
 	var reputation_value := float(view_model.get("reputation_value", 0.0))
-	var color_value: Variant = view_model.get("color", view_model.get("color_token", null))
-	if color_value == null or str(color_value) == "secondary":
-		color_value = _tier_color_token(reputation_tier)
-	var accent_color := _resolve_color(color_value)
+	var accent_color := _resolve_color(view_model.get("color", null))
 
 	_name_label.text = BACKEND_HELPERS.humanize_id(faction_id) if not faction_id.is_empty() else "Faction"
 	_reputation_label.text = _build_reputation_text(reputation_tier, reputation_value)
@@ -53,19 +50,6 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	_apply_panel_style(accent_color)
 	_apply_emblem(emblem_id, emblem_path)
 
-
-func _tier_color_token(reputation_tier: String) -> String:
-	match reputation_tier:
-		"Allied":
-			return "positive"
-		"Friendly":
-			return "primary"
-		"Hostile":
-			return "danger"
-		"Unfriendly":
-			return "warning"
-		_:
-			return "secondary"
 
 func _apply_emblem(emblem_id: String, emblem_path: String) -> void:
 	var resolved_path := BACKEND_HELPERS.resolve_visual_resource_path(emblem_id)

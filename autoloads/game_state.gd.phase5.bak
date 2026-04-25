@@ -98,7 +98,6 @@ func new_game() -> void:
 			player_entity.discover_location(discovered_location_id)
 	_instantiate_world_entities(player_entity.template_id)
 	_sync_timekeeper()
-	record_event("game_started", {"description": "New game started at %s." % current_location_id})
 	GameEvents.game_started.emit()
 
 
@@ -133,7 +132,6 @@ func set_faction_reputation(faction_id: String, value: float) -> void:
 	if faction_id.is_empty():
 		return
 	faction_reputations[faction_id] = value
-	record_event("faction_reputation_changed", {"faction_id": faction_id, "value": value, "description": "Faction reputation changed: %s %+0.1f" % [faction_id, value]})
 	GameEvents.emit_dynamic("faction_reputation_changed", [faction_id, value])
 
 
@@ -265,7 +263,6 @@ func travel_to(location_id: String, travel_ticks: int = 0) -> void:
 		ScriptHookService.invoke_template_hook(old_template, "on_location_exit", [old_template.duplicate(true)])
 	if not new_template.is_empty():
 		ScriptHookService.invoke_template_hook(new_template, "on_location_enter", [new_template.duplicate(true)])
-	record_event("location_changed", {"from": old_id, "to": current_location_id, "description": "Travelled from %s to %s." % [old_id, current_location_id]})
 	GameEvents.location_changed.emit(old_id, current_location_id)
 	ScriptHookService.invoke_world_event_narration("location_changed", [old_id, current_location_id])
 	if not was_discovered:
@@ -332,7 +329,6 @@ func unlock_achievement(achievement_id: String) -> bool:
 	if not achievement.is_empty():
 		unlock_vfx = str(achievement.get("unlock_vfx", ""))
 		unlock_sound = str(achievement.get("unlock_sound", ""))
-	record_event("achievement_unlocked", {"achievement_id": achievement_id, "description": "Achievement unlocked: %s" % achievement_id})
 	GameEvents.achievement_unlocked.emit(achievement_id, unlock_vfx)
 	_trigger_achievement_unlock_vfx(unlock_vfx)
 	if not unlock_sound.is_empty():

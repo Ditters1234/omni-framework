@@ -77,6 +77,9 @@ func _build_detail_text(row: Dictionary) -> String:
 	var description := str(row.get("description", ""))
 	if not description.is_empty():
 		parts.append(description)
+	var standing_summary := str(row.get("standing_summary", ""))
+	if not standing_summary.is_empty():
+		parts.append(standing_summary)
 	var territory_summary := str(row.get("territory_summary", ""))
 	if not territory_summary.is_empty():
 		parts.append(territory_summary)
