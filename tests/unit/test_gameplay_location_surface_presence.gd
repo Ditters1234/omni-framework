@@ -35,6 +35,7 @@ func test_static_player_template_id_is_filtered_from_present_entity_ids() -> voi
 
 	assert_false(ids.has("test:player"))
 	assert_true(ids.has("test:npc"))
+	surface.free()
 
 
 func test_runtime_player_instance_is_filtered_from_present_entity_ids() -> void:
@@ -66,3 +67,4 @@ func test_runtime_player_instance_is_filtered_from_present_entity_ids() -> void:
 
 	assert_false(ids.has("test:player"))
 	assert_true(ids.has("test:npc"))
+	surface.free()

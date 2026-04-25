@@ -71,7 +71,7 @@ static func validate_payload(backend_class: String, payload: Dictionary, field_p
 			var field_name := str(field_name_value)
 			if not payload.has(field_name):
 				continue
-			var expected_type := int(field_types.get(field_name_value, TYPE_NIL))
+			var expected_type: Variant.Type = field_types.get(field_name_value, TYPE_NIL) as Variant.Type
 			var field_value: Variant = payload.get(field_name, null)
 			if not _matches_variant_type(field_value, expected_type):
 				issues.append(_build_issue(
@@ -90,7 +90,7 @@ static func validate_payload(backend_class: String, payload: Dictionary, field_p
 			var field_value: Variant = payload.get(field_name, [])
 			if not field_value is Array:
 				continue
-			var expected_element_type := int(array_element_types.get(field_name_value, TYPE_NIL))
+			var expected_element_type: Variant.Type = array_element_types.get(field_name_value, TYPE_NIL) as Variant.Type
 			var values: Array = field_value
 			for index in range(values.size()):
 				var element_value: Variant = values[index]
@@ -118,7 +118,7 @@ static func _read_string_array(values: Variant) -> Array[String]:
 	return result
 
 
-static func _matches_variant_type(value: Variant, expected_type: int) -> bool:
+static func _matches_variant_type(value: Variant, expected_type: Variant.Type) -> bool:
 	if expected_type == TYPE_NIL:
 		return true
 	match expected_type:

@@ -484,8 +484,8 @@ func _map_rows_have_distinct_positions(rows: Array) -> bool:
 		var position_value: Variant = row.get("position", {})
 		if not position_value is Dictionary:
 			continue
-		var position: Dictionary = position_value
-		var position_key := "%s|%s" % [str(position.get("x", "")), str(position.get("y", ""))]
+		var pos_dict: Dictionary = position_value
+		var position_key := "%s|%s" % [str(pos_dict.get("x", "")), str(pos_dict.get("y", ""))]
 		if seen_positions.has(position_key):
 			return false
 		seen_positions[position_key] = true

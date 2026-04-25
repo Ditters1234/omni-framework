@@ -565,9 +565,9 @@ func _readable_text_color(color: Color) -> Color:
 
 func _read_normalized_position(value: Variant) -> Vector2:
 	if value is Dictionary:
-		var position: Dictionary = value
-		var x_value: Variant = position.get("x", 0.5)
-		var y_value: Variant = position.get("y", 0.5)
+		var pos_dict: Dictionary = value
+		var x_value: Variant = pos_dict.get("x", 0.5)
+		var y_value: Variant = pos_dict.get("y", 0.5)
 		if (x_value is int or x_value is float) and (y_value is int or y_value is float):
 			return Vector2(clampf(float(x_value), 0.05, 0.95), clampf(float(y_value), 0.05, 0.95))
 	return Vector2(0.5, 0.5)
@@ -796,12 +796,12 @@ func _get_world_bounds() -> Rect2:
 	for position_value in _world_positions_by_id.values():
 		if not position_value is Vector2:
 			continue
-		var position: Vector2 = position_value
+		var pos_vec: Vector2 = position_value
 		if first:
-			bounds = Rect2(position, Vector2.ZERO)
+			bounds = Rect2(pos_vec, Vector2.ZERO)
 			first = false
 		else:
-			bounds = bounds.expand(position)
+			bounds = bounds.expand(pos_vec)
 	if first:
 		return Rect2(Vector2.ZERO, _content_size)
 	return bounds
