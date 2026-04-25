@@ -8,6 +8,13 @@ Update: 2026-04-22 sanity check follow-up
 - `GameState.new_game()` now follows the strict `game.starting_player_id` contract instead of falling back to `base:player`.
 - `DataManager.validate_loaded_content()` now validates `starting_discovered_locations`, `ticks_per_day`, `ticks_per_hour`, and `ui.time_advance_buttons`.
 
+Update: 2026-04-25 docs alignment pass
+- `LocationAccessService` is now fully documented in `LOCATION_ACCESS.md` and the modding guide.
+- `TaskRoutineRunner` is now documented in the modding guide (§11.1) alongside `TASK_ROUTINES.md`.
+- `location_access_service.gd` and `task_routine_runner.gd` are now listed in `PROJECT_STRUCTURE.md` and `SYSTEM_CATALOG.md`.
+- `part_custom_value_changed` signal is now documented in `GAME_EVENTS_TAXONOMY.md`.
+- Runtime entity presence behavior is now documented in both `RUNTIME_ENTITY_PRESENCE.md` and the modding guide (§9).
+
 This audit focuses on issues similar to the `DataManager.connections` bug we discovered:
 - runtime/doc mismatches
 - strict validation that is under-documented

@@ -14,6 +14,8 @@ This folder is the documentation home for Omni-Framework. `PROJECT_STRUCTURE.md`
 | [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) | **Start here.** Complete inventory of all systems, subsystems, relationships, and links to relevant documentation. |
 | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | Current repository structure, implemented folders, autoloads, systems, and documentation-scope guidance |
 | [`TASK_ROUTINES.md`](TASK_ROUTINES.md) | Daily task routine runner for scheduled NPC/entity movement through `TaskRunner` and `LocationGraph` route costs |
+| [`LOCATION_ACCESS.md`](LOCATION_ACCESS.md) | Location entry gating with `entry_condition`, `entry_conditions`, and `locked_message` through `LocationAccessService` |
+| [`RUNTIME_ENTITY_PRESENCE.md`](RUNTIME_ENTITY_PRESENCE.md) | How the gameplay surface resolves which entities appear at a location from static, template, and runtime sources |
 | [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) | UI rollout plan: backend catalog, engine-owned screens, component library, and phased implementation priorities |
 | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) | The modder-facing contract: data schemas, patching rules, backend requirements, config keys, and safe extension patterns |
 | [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) | Canonical stat-pair rules, clamping behavior, validation requirements, and implementation patterns |
@@ -28,14 +30,15 @@ This folder is the documentation home for Omni-Framework. `PROJECT_STRUCTURE.md`
 0. **Start here:** Read [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) for a high-level map of all systems and quick links to detailed docs.
 1. Read [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) to understand the current repository layout before making structural changes.
 2. Read [`TASK_ROUTINES.md`](TASK_ROUTINES.md) before adding scheduled NPC/entity movement.
-3. Read [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) before expanding the routed UI surface, adding a backend, or introducing engine-owned screens.
-4. Read [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) before building the first loaders, registries, or autoload orchestration.
-5. Read [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) before implementing validation or patch application.
-6. Read [`MODDING_GUIDE.md`](MODDING_GUIDE.md) when authoring JSON, patches, assets, or script hooks.
-7. Read [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) before changing stat math, stat schema, or any system that touches resource pools.
-8. Read [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) before expanding `GameEvents`.
-9. Read [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md) before building persistence or migration logic.
-10. Read [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) before building debug overlays or test coverage.
+3. Read [`LOCATION_ACCESS.md`](LOCATION_ACCESS.md) before gating locations behind conditions.
+4. Read [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) before expanding the routed UI surface, adding a backend, or introducing engine-owned screens.
+5. Read [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) before building the first loaders, registries, or autoload orchestration.
+6. Read [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) before implementing validation or patch application.
+7. Read [`MODDING_GUIDE.md`](MODDING_GUIDE.md) when authoring JSON, patches, assets, or script hooks.
+8. Read [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) before changing stat math, stat schema, or any system that touches resource pools.
+9. Read [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) before expanding `GameEvents`.
+10. Read [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md) before building persistence or migration logic.
+11. Read [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) before building debug overlays or test coverage.
 
 ## Current Documentation Policy
 
@@ -44,6 +47,8 @@ Each doc below has an explicit scope. Prefer `PROJECT_STRUCTURE.md` for what exi
 - [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) — complete inventory of all systems, subsystems, and their relationships; entry point for system discovery.
 - [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) - current repo snapshot and implementation structure.
 - [`TASK_ROUTINES.md`](TASK_ROUTINES.md) — implemented daily task routine runner for scheduled entity movement.
+- [`LOCATION_ACCESS.md`](LOCATION_ACCESS.md) — implemented location entry gating through `LocationAccessService`.
+- [`RUNTIME_ENTITY_PRESENCE.md`](RUNTIME_ENTITY_PRESENCE.md) — how entity presence at locations is resolved from static, template, and runtime sources.
 - [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) — backend catalog, engine-owned screen catalog, component rollout, and UI build order.
 - [`MODDING_GUIDE.md`](MODDING_GUIDE.md) — the contracts modders must satisfy, even where enforcement is still being implemented.
 - [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) — stat invariants and validation rules.

@@ -144,6 +144,9 @@ Rules:
 - Self-links are warnings unless explicitly allowed later.
 - Circular graphs are allowed only if graph traversal code supports them safely.
 - `screens[].backend_class` must validate against backend contracts.
+- `entry_condition` must be a valid `ConditionEvaluator` dictionary when present.
+- `entry_conditions` must be an array of valid `ConditionEvaluator` dictionaries when present.
+- `locked_message` must be a non-empty string when present. Lint warning if `entry_condition` or `entry_conditions` is present but `locked_message` is absent.
 
 ### Config
 
@@ -152,6 +155,7 @@ Rules:
 - `game.starting_discovered_locations` must be an array of known location ids when present.
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when present.
 - `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)` when present.
+- `task_routines` must be an array of routine objects when present. Each routine must declare `entity_id` and `entries`. Each entry must declare a tick field (`tick`, `at_tick`, or `tick_into_day`) and a task template field (`task_template_id` or `template_id`). Referenced entity ids and task template ids must exist.
 
 ### Factions
 
@@ -210,6 +214,7 @@ Minimum required contracts:
 - `FactionReputationBackend`: no required fields; optional params are type-checked at load time
 - `AchievementListBackend`: no required fields; optional params are type-checked at load time
 - `EventLogBackend`: no required fields; optional params are type-checked at load time
+- `WorldMapBackend`: no required fields; optional params are type-checked at load time
 
 ## Patch Validation
 
@@ -234,3 +239,6 @@ These should start as warnings even if they do not block loading:
 - Parts with no price and no explicit `unsellable` rule
 - Locations with no path back to the rest of the graph
 - Screens with labels but no descriptions where the UI expects tooltip
+- Entities listed in `entities_present` that also have task routines targeting other locations (likely causes duplicate presence)
+- Locations with `entry_condition` or `entry_conditions` but missing `locked_message`
+- Task routine entries with tick values outside `0` to `ticks_per_day - 1`

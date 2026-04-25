@@ -65,6 +65,8 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 |---|---|---|---|---|
 | `QuestTracker` | `QuestTracker` | `systems/quest_tracker.gd` | GameState, DataManager | Quest HSM built on LimboAI. Drives quest stages, objectives, and completion. |
 | `TaskRunner` | `TaskRunner` | `systems/task_runner.gd` | GameState, DataManager | Tick-driven task execution and completion checking. |
+| `TaskRoutineRunner` | `OmniTaskRoutineRunner` | `systems/task_routine_runner.gd` | GameState, DataManager, TaskRunner | Starts task templates from daily time windows for scheduled NPC/entity movement. Autoload singleton. |
+| `LocationAccessService` | `LocationAccessService` | `systems/location_access_service.gd` | DataManager, ConditionEvaluator | Shared travel/entry gate checks using `entry_condition` and `entry_conditions` on locations. |
 | `ScriptHookLoader` | `ScriptHookLoader` | `systems/script_hook_loader.gd` | ModLoader | Loads and caches GDScript mod hooks for lifecycle callbacks. |
 
 ### UI & Persistence Utilities
@@ -429,6 +431,9 @@ SYSTEM_CATALOG.md (this file)
   ├─→ PROJECT_STRUCTURE.md        (Complete folder layout, system descriptions)
   ├─→ AGENTS.md                   (Boot sequence, architecture rules)
   ├─→ UI_IMPLEMENTATION_PLAN.md    (UI rollout, backend catalog, components)
+  ├─→ TASK_ROUTINES.md             (Daily routine runner for scheduled entity movement)
+  ├─→ LOCATION_ACCESS.md           (Location entry gating with conditions)
+  ├─→ RUNTIME_ENTITY_PRESENCE.md   (How entities appear at locations)
   ├─→ GAME_EVENTS_TAXONOMY.md      (Event naming, domains, stability rules)
   ├─→ STAT_SYSTEM_IMPLEMENTATION.md (Stat math, clamping, validation)
   ├─→ MODDING_GUIDE.md             (Data schemas, patching, script hooks)

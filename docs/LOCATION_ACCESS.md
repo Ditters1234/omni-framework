@@ -13,7 +13,7 @@ It is used by:
 {
   "location_id": "example:merchant_house",
   "display_name": "Sable's Locked Room",
-  "locked_message": "Sable's door is locked.",
+  "locked_message": "Sable's door is locked. Customers are not allowed inside.",
   "entry_condition": {
     "type": "has_flag",
     "flag_id": "example:sable_house_open",
@@ -48,10 +48,15 @@ An array of `ConditionEvaluator` dictionaries. Uses OR logic. At least one must 
     "value": true
   },
   {
-    "has_part": "example:lockpick"
+    "type": "stat_check",
+    "stat": "power",
+    "op": ">=",
+    "value": 10
   }
 ]
 ```
+
+All condition types from `ConditionEvaluator` work here — `has_flag`, `stat_check`, `has_item_tag`, `has_part`, `has_currency`, `reputation_threshold`, `quest_complete`, plus compound `AND`/`OR`/`NOT` blocks. See the modding guide §12 for the full condition reference.
 
 ## Locked message
 
@@ -61,18 +66,20 @@ Use `locked_message` to control the UI message when blocked.
 "locked_message": "The door is locked."
 ```
 
-## Sable's room
+Defaults to `"You cannot enter this location right now."` if omitted.
 
-The included replacement for:
+## Unlocking at runtime
 
-```text
-mods/example/traveling_merchant/data/locations.json
+Use the `set_flag` action from a quest reward, task completion, dialogue branch, or any `ActionDispatcher`-compatible context:
+
+```json
+{
+  "type": "set_flag",
+  "flag_id": "example:sable_house_open",
+  "value": true
+}
 ```
 
-locks Sable's room unless this global flag is true:
+## Example mod
 
-```text
-example:sable_house_open
-```
-
-By default that flag is not set, so the player cannot enter Sable's room.
+The included example mod at `mods/example/traveling_merchant/` uses location access to lock Sable's private room behind the `example:sable_house_open` flag. By default that flag is not set, so the player cannot enter.

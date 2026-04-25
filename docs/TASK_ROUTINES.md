@@ -134,10 +134,24 @@ Each routine entry starts at most once per in-game day. This prevents duplicate 
 
 ## House lockout
 
-This runner only starts movement tasks. For a private nighttime house, pair it with one of these patterns:
+To prevent the player from entering a private NPC location (such as a home), use `LocationAccessService` entry conditions on the location:
 
-1. Use a condition-gated location entry system.
-2. Add a small task-completion hook that sets a global flag such as `base:merchant_house_open`.
-3. Hide or disable the travel button when that flag is false.
+```json
+{
+  "location_id": "base:merchant_house",
+  "display_name": "Merchant's Room",
+  "locked_message": "The merchant's door is locked.",
+  "entry_condition": {
+    "type": "has_flag",
+    "flag_id": "base:merchant_house_open",
+    "value": true
+  },
+  "connections": {
+    "base:market_row": 1
+  }
+}
+```
 
-The recommended next engine-level improvement is a shared travel-gate check in the gameplay location surface, so locked locations can be blocked consistently.
+Both the gameplay location travel buttons and the world map backend check `LocationAccessService` before allowing travel. See `docs/LOCATION_ACCESS.md` for full condition shapes.
+
+The example mod at `mods/example/traveling_merchant/` demonstrates this pattern with Sable's locked room.

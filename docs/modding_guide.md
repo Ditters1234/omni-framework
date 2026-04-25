@@ -589,7 +589,83 @@ Locations are graph nodes plus UI entry points.
   { "base:test_hub": 2 }
   ```
 - Location screens currently use **`display_name`**, not `label`
-- `entities_present` is rendered by the gameplay location surface. Each listed entity can expose its own `interactions` buttons.
+
+### Entity presence at locations
+
+The gameplay location surface resolves which NPCs appear at a location from three sources, merged and deduplicated:
+
+1. **`entities_present`** — static list in `locations.json`. Always shows these entities at this location regardless of their runtime `location_id`.
+2. **`DataManager.query_entities({"location_id": ...})`** — entities whose authored template has a matching `location_id`.
+3. **`GameState.entity_instances`** — all runtime entity instances whose current `location_id` matches. This is the dynamic source — when a `TRAVEL` task completes and changes an entity's `location_id`, the entity appears at the new location automatically.
+
+The player entity is always excluded from presence lists.
+
+For static NPCs that never move, setting `location_id` on the entity template is enough. For NPCs that travel (via task routines or `TRAVEL` tasks), the runtime `location_id` on the entity instance is what the UI reads. Do **not** also add moving NPCs to any location's `entities_present` — that would cause the NPC to appear in two places simultaneously.
+
+### Location entry conditions
+
+Locations can be gated with conditions that must pass before the player can travel there. Both the gameplay location travel buttons and the world map backend check these conditions through `LocationAccessService`.
+
+#### `entry_condition` — single condition (AND logic)
+
+A single `ConditionEvaluator` dictionary. It must pass for entry to be allowed.
+
+```json
+{
+  "location_id": "my_name:my_mod:vip_lounge",
+  "display_name": "VIP Lounge",
+  "locked_message": "Members only. You need a VIP pass.",
+  "entry_condition": {
+    "type": "has_flag",
+    "flag_id": "my_name:my_mod:has_vip_pass",
+    "value": true
+  },
+  "connections": {
+    "my_name:my_mod:lobby": 1
+  }
+}
+```
+
+#### `entry_conditions` — multiple conditions (OR logic)
+
+An array of `ConditionEvaluator` dictionaries. At least one must pass.
+
+```json
+"entry_conditions": [
+  {
+    "type": "has_flag",
+    "flag_id": "my_name:my_mod:warehouse_key",
+    "value": true
+  },
+  {
+    "type": "stat_check",
+    "stat": "power",
+    "op": ">=",
+    "value": 10
+  }
+]
+```
+
+#### `locked_message`
+
+Controls the text shown in the UI when travel is blocked. Defaults to `"You cannot enter this location right now."` if omitted.
+
+All condition types from `ConditionEvaluator` work here — `has_flag`, `stat_check`, `has_item_tag`, `has_part`, `has_currency`, `reputation_threshold`, `quest_complete`, plus compound `AND`/`OR`/`NOT` blocks. See Section 12 (quests) for the full condition reference.
+
+### `map_position` (world map layout)
+
+Locations can declare their position on the world map using normalized coordinates:
+
+```json
+"map_position": { "x": 0.2, "y": 0.7 }
+```
+
+Or as an array:
+```json
+"map_position": [0.2, 0.7]
+```
+
+Values are normalized graph coordinates (0.0–1.0 range works well). If omitted, the world map places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` if present, or from the first faction whose `territory` includes that location.
 
 ### Current patch example
 
@@ -683,12 +759,12 @@ Tasks are time-based operations.
 }
 ```
 
-### Current task types referenced in the existing guide
+### Task type behavior
 
 The following types have special runtime handling in `TaskRunner`:
-- `WAIT` — pure duration-based. Completes after `duration` ticks.
-- `CRAFT` — used internally by `CraftingBackend` for timed recipes.
-- `DELIVER` / `TRAVEL` — auto-complete when the player reaches the `target` location.
+- `WAIT` — pure duration-based. Completes after `remaining_ticks` reaches 0.
+- `CRAFT` — used internally by `CraftingBackend` for timed recipes. Completes after countdown.
+- `DELIVER` / `TRAVEL` — completes after countdown (uses `travel_cost` from the template for duration). On completion, **moves the owning entity** to the `target` location. If the entity is the player, this calls `GameState.travel_to()` (which also updates discovered locations, fires `location_changed`, and invokes script hooks). If the entity is an NPC, it directly sets `entity.location_id`.
 
 The following types are accepted but behave identically to `WAIT` (duration-based, no special logic):
 - `BUILD`
@@ -696,6 +772,14 @@ The following types are accepted but behave identically to `WAIT` (duration-base
 - `SURVIVE`
 
 Modders can use any string as a task type; unrecognized types fall through to duration-based behavior.
+
+### Duration resolution
+
+`TaskRunner` resolves the task countdown in this order:
+1. If `params.duration` or `params.remaining_ticks` is provided at accept time, use that.
+2. If the task type is `DELIVER` or `TRAVEL`, use `template.travel_cost` (falls back to `balance.default_travel_cost_ticks` config).
+3. Otherwise use `template.duration`.
+4. Minimum duration is always 1 tick.
 
 Use:
 - `travel_cost` for travel-based tasks
@@ -739,7 +823,7 @@ Add a `task_routines` key to any loaded `config.json`:
 ### Routine fields
 
 - `routine_id` — unique id for the routine (used internally to prevent duplicate starts)
-- `entity_id` — the entity that will perform the tasks (must exist in `GameState.entity_instances`)
+- `entity_id` — required. The entity that will perform the tasks (must exist in `GameState.entity_instances`)
 - `loop` — currently only `"daily"` is supported
 - `enabled` — optional, defaults to `true`
 - `entries` — array of scheduled task starts
@@ -769,6 +853,8 @@ This means routine JSON does not need hard-coded travel costs as long as locatio
 
 Each routine entry starts at most once per in-game day. The runner resets its tracking when the day changes, when a new game starts, or when a save is loaded.
 
+Entry ticks are relative to the start of each day. The tick range is `0` to `game.ticks_per_day - 1`. If your config sets `ticks_per_day: 24`, valid ticks are 0–23.
+
 ### Task templates for routines
 
 Routine travel tasks are just regular task templates. They should usually be `TRAVEL` type, `repeatable: true`, and have an empty reward:
@@ -788,9 +874,23 @@ Routine travel tasks are just regular task templates. They should usually be `TR
 }
 ```
 
-### Relationship to ticks_per_day
+### Common pattern: private locations
 
-Entry ticks are relative to the start of each day. The tick range is `0` to `game.ticks_per_day - 1`. If your config sets `ticks_per_day: 24`, valid ticks are 0–23. Make sure your scheduled ticks fall within this range.
+When an NPC has a private home location, pair the routine with an entry condition on the location:
+
+```json
+{
+  "location_id": "my_name:my_mod:guard_barracks",
+  "display_name": "Guard Barracks",
+  "locked_message": "The barracks door is locked.",
+  "entry_condition": {
+    "type": "has_flag",
+    "flag_id": "my_name:my_mod:barracks_open",
+    "value": true
+  },
+  "connections": { "my_name:my_mod:front_gate": 1 }
+}
+```
 
 ---
 
@@ -943,6 +1043,7 @@ Common fields:
 - `game`
 - `ui`
 - `stats`
+- `task_routines`
 
 ### Example
 
@@ -976,6 +1077,8 @@ Common fields:
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when provided
 - `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)` when provided, such as `"1 hour"` or `"1 day"`
 - The current base content also defines `game.new_game_flow`, which means the startup flow can be configured through data instead of hardcoding it all in scripts
+
+Task routines are configured through `config.json` under the `task_routines` key (or nested under `routines.task_routines`). See Section 11.1 for the full schema. Mods can add their own routines through their own `config.json`, and multiple mods' routines will all be active simultaneously since config is deep-merged.
 
 ---
 
@@ -1217,6 +1320,35 @@ Actions are side-effect operations dispatched from quest stages, task rewards, c
 | `unlock_location` | `location_id`, optional `entity_id` | Adds to discovered locations |
 | `spawn_entity` | `template_id` (or `entity_template_id`), optional `location_id` | Instantiates a new entity |
 | `learn_recipe` | `recipe_id`, optional `entity_id` | Sets `learned:<recipe_id>` flag |
+
+### `spawn_entity` details
+
+Creates a new `EntityInstance` from an entity template and commits it to `GameState.entity_instances`. If the template's `entity_id` already exists at runtime, the spawned instance gets a unique generated id to avoid collision.
+
+```json
+{
+  "type": "spawn_entity",
+  "template_id": "my_name:my_mod:reinforcement_guard",
+  "location_id": "my_name:my_mod:front_gate"
+}
+```
+
+- `template_id` (or `entity_template_id`) — required. Must reference a valid entity template.
+- `location_id` — optional. If provided, overrides the template's `location_id`. Must reference a valid location.
+
+Once spawned, the entity is fully live — it appears at its location, can receive tasks from routines, and persists through saves.
+
+### `travel` details
+
+The `travel` action also accepts an optional `travel_ticks` field. If `travel_ticks` is 0 or omitted, travel is instant.
+
+```json
+{
+  "type": "travel",
+  "location_id": "my_name:my_mod:hideout",
+  "travel_ticks": 3
+}
+```
 | `unlock_achievement` | `achievement_id` | |
 | `reward` | `reward` (or inline reward fields) | Delegates to `RewardService` |
 | `emit_signal` | `signal_name`, optional `args` | Emits on `GameEvents` |
@@ -1319,6 +1451,8 @@ There is also a helper:
 
 `on_tick` is dispatched once per game tick for every part instance (inventory or equipped) across all entities in `GameState.entity_instances` whose template declares a `script_path`. This includes the player and all NPCs/vendors.
 
+`on_location_enter` and `on_location_exit` fire on the **location template**, not on entities. When the player travels, `GameState.travel_to()` invokes `on_location_exit` on the old location's template and `on_location_enter` on the new location's template. These hooks do not fire when NPCs move via `TRAVEL` tasks.
+
 Use script hooks sparingly. Prefer JSON first.
 
 ---
@@ -1356,6 +1490,12 @@ Entity inventory entries are instances. Each copy needs its own `instance_id`.
 
 ### 7. Treating base content as special in format
 The base pack is special in location, but not in validation. Its data still has to pass the same rules.
+
+### 8. Putting a moving NPC in `entities_present`
+If an NPC moves via task routines or `TRAVEL` tasks, do not also list them in a location's `entities_present`. That would cause the NPC to always appear at that location regardless of where they actually are. Set the entity's initial `location_id` in `entities.json` and let the task system handle movement.
+
+### 9. Forgetting `locked_message` on gated locations
+If you add `entry_condition` or `entry_conditions` to a location but omit `locked_message`, the UI will show the generic default "You cannot enter this location right now." Always provide a thematic `locked_message`.
 
 ---
 
@@ -1434,11 +1574,21 @@ For deeper implementation detail, also review:
 - `docs/PROJECT_STRUCTURE.md`
 - `docs/SCHEMA_AND_LINT_SPEC.md`
 - `docs/STAT_SYSTEM_IMPLEMENTATION.md`
+- `docs/TASK_ROUTINES.md`
+- `docs/LOCATION_ACCESS.md`
 
 If your mod needs custom behavior, also inspect:
 - `core/script_hook.gd`
 - backend scripts under `ui/screens/backends/`
 - loader logic in `autoloads/mod_loader.gd`
+
+For a working example of task routines, NPC movement, and location locking, study the included example mod:
+
+```
+mods/example/traveling_merchant/
+```
+
+It adds a merchant NPC (Sable) who travels between Market Row, the Warehouse, and a private locked room on a daily schedule. The mod demonstrates task routine configuration, `TRAVEL` task templates, location entry conditions with `entry_condition` and `locked_message`, patching base locations with `add_connections`, and entity setup with inventory and interactions.
 
 ---
 
@@ -1457,5 +1607,10 @@ Before shipping a mod, verify:
 - every inventory instance id is unique
 - every referenced part/entity/location/faction/task/quest actually exists
 - every backend payload includes its required fields
+- task routine `entity_id` references an entity that exists in `entities.json`
+- routine entry ticks fall within `0` to `ticks_per_day - 1`
+- routine task templates exist in `tasks.json`
+- locked locations have both `entry_condition` (or `entry_conditions`) and `locked_message`
+- moving NPCs are not also listed in any location's `entities_present`
 
 If those pass, your mod is aligned with the current repo much more closely than the older guide.

@@ -82,6 +82,7 @@ Note: `data_validation_failed` is described in earlier planning docs but is not 
 - `part_removed(entity_id, part_id)`
 - `part_equipped(entity_id, part_id, slot)`
 - `part_unequipped(entity_id, part_id, slot)`
+- `part_custom_value_changed(entity_id, part_id, field_id, value)`
 
 ### Economy
 

@@ -37,7 +37,7 @@ autoloads/
 └── ui_router.gd
 ```
 
-`project.godot` also declares addon-provided autoloads (`DialogueManager` and `ImGuiRoot`). The list above is the engine-owned `autoloads/` script folder specifically, not the full autoload table from the project settings.
+`project.godot` also declares addon-provided autoloads (`DialogueManager` and `ImGuiRoot`) and the system-level autoload `TaskRoutineRunner` (from `systems/task_routine_runner.gd`). The list above is the engine-owned `autoloads/` script folder specifically, not the full autoload table from the project settings.
 
 ### Autoload Contracts
 
@@ -89,11 +89,13 @@ systems/
 ├── assembly_commit_service.gd
 ├── backend_contract_registry.gd
 ├── condition_evaluator.gd
+├── location_access_service.gd
 ├── quest_tracker.gd
 ├── reward_service.gd
 ├── script_hook_loader.gd
 ├── script_hook_service.gd
 ├── stat_manager.gd
+├── task_routine_runner.gd
 ├── task_runner.gd
 └── transaction_service.gd
 ```
@@ -105,8 +107,10 @@ All of the following service scripts are fully implemented and should not be omi
 
 - `assembly_commit_service.gd`
 - `backend_contract_registry.gd`
+- `location_access_service.gd`
 - `reward_service.gd`
 - `script_hook_service.gd`
+- `task_routine_runner.gd`
 - `transaction_service.gd`
 
 ## UI
