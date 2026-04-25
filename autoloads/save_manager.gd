@@ -11,10 +11,29 @@ const TEST_SAVE_DIR_PREFIX := "user://test_saves/"
 const TEST_RUN_MARKERS := ["gut_cmdln.gd", "-gexit", "-gdir=", "--test", "res://tests"]
 const AUTOSAVE_SLOT := 0
 const MAX_SAVE_SLOTS := 5
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2
 const REQUIRED_SAVE_FIELDS := ["game_state"]
 const OPTIONAL_SAVE_FIELDS := ["save_schema_version", "created_at", "updated_at", "slot_metadata"]
 const REQUIRED_RUNTIME_CLASSES := ["EntityInstance", "PartInstance"]
+const REQUIRED_GAME_STATE_FIELDS := [
+	"player_id",
+	"entity_instances",
+	"current_location_id",
+	"current_tick",
+	"current_day",
+	"active_quests",
+	"active_tasks",
+	"completed_quests",
+	"completed_task_templates",
+	"unlocked_achievements",
+	"flags",
+	"achievement_stats",
+	"faction_reputations",
+	"discovered_recipes",
+	"ai_lore_cache",
+	"event_history",
+	"runtime_state_buckets",
+]
 const SLOT_KIND_AUTOSAVE := "autosave"
 const SLOT_KIND_MANUAL := "manual"
 
@@ -160,6 +179,11 @@ func save_game(slot: int) -> void:
 	var path := _slot_path(slot)
 	var existing_payload := _read_raw_payload(path)
 	var payload := _build_save_payload(existing_payload, slot)
+	var round_trip_error := _validate_save_round_trip(payload)
+	if not round_trip_error.is_empty():
+		last_operation_summary = {"kind": "save", "slot": slot, "status": "failed", "reason": round_trip_error}
+		GameEvents.save_failed.emit(slot, round_trip_error)
+		return
 	var payload_error := _validate_raw_payload(payload)
 	if not payload_error.is_empty():
 		last_operation_summary = {"kind": "save", "slot": slot, "status": "failed", "reason": payload_error}
@@ -442,6 +466,8 @@ func _enforce_test_save_isolation() -> void:
 ## Checks schema version and runs any needed migrations before loading.
 func _migrate_if_needed(data: Dictionary) -> Dictionary:
 	var version := int(data.get("save_schema_version", 0))
+	if data.has("game_state") and data["game_state"] is Dictionary:
+		_migrate_game_state_defaults(data["game_state"])
 	# Run any future migration steps here, keyed on version, e.g.:
 	# if version < 2:
 	#     _migrate_v1_to_v2(data)
@@ -458,6 +484,19 @@ func _migrate_if_needed(data: Dictionary) -> Dictionary:
 			"slot_metadata":
 				data[field_name] = {}
 	return data
+
+
+func _migrate_game_state_defaults(game_state_data: Dictionary) -> void:
+	if not game_state_data.has("faction_reputations"):
+		game_state_data["faction_reputations"] = {}
+	if not game_state_data.has("discovered_recipes"):
+		game_state_data["discovered_recipes"] = []
+	if not game_state_data.has("ai_lore_cache"):
+		game_state_data["ai_lore_cache"] = {}
+	if not game_state_data.has("event_history"):
+		game_state_data["event_history"] = []
+	if not game_state_data.has("runtime_state_buckets"):
+		game_state_data["runtime_state_buckets"] = {}
 
 
 func _is_valid_slot(slot: int) -> bool:
@@ -553,12 +592,51 @@ func _validate_raw_payload(data: Dictionary) -> String:
 	var state_data: Variant = data.get("game_state", null)
 	if not state_data is Dictionary:
 		return "Save file field 'game_state' must be a dictionary."
+	for state_field in REQUIRED_GAME_STATE_FIELDS:
+		if not (state_data as Dictionary).has(state_field):
+			return "Save file field 'game_state' is missing required field '%s'." % state_field
 	return ""
 
 
 func _sync_timekeeper_from_game_state() -> void:
 	if TimeKeeper != null and TimeKeeper.has_method("sync_from_game_state"):
 		TimeKeeper.sync_from_game_state()
+
+
+func _validate_save_round_trip(payload: Dictionary) -> String:
+	var encoded: Variant = A2J.to_json(payload.duplicate(true))
+	var decoded: Variant = A2J.from_json(encoded)
+	if not decoded is Dictionary:
+		return "Save payload failed A2J round-trip validation."
+	var decoded_payload: Dictionary = decoded
+	var original_state: Variant = payload.get("game_state", {})
+	var decoded_state: Variant = decoded_payload.get("game_state", {})
+	if not original_state is Dictionary or not decoded_state is Dictionary:
+		return "Save payload lost game_state during A2J round-trip validation."
+	for field_name in REQUIRED_GAME_STATE_FIELDS:
+		if not (decoded_state as Dictionary).has(field_name):
+			return "Save payload lost game_state.%s during A2J round-trip validation." % field_name
+	return ""
+
+
+func get_runtime_round_trip_audit() -> Dictionary:
+	var payload := _build_save_payload({}, 1)
+	var encoded: Variant = A2J.to_json(payload.duplicate(true))
+	var decoded: Variant = A2J.from_json(encoded)
+	var missing_fields: Array[String] = []
+	var original_state: Dictionary = payload.get("game_state", {})
+	var decoded_state: Dictionary = decoded.get("game_state", {}) if decoded is Dictionary else {}
+	for field_name in REQUIRED_GAME_STATE_FIELDS:
+		if not decoded_state.has(field_name):
+			missing_fields.append(field_name)
+	return {
+		"status": "ok" if missing_fields.is_empty() else "failed",
+		"schema_version": SCHEMA_VERSION,
+		"missing_fields_after_round_trip": missing_fields,
+		"saved_game_state_fields": original_state.keys(),
+		"registered_runtime_classes": _registered_runtime_classes.duplicate(),
+		"missing_runtime_classes": _get_missing_runtime_classes(),
+	}
 
 
 func _get_missing_runtime_classes() -> Array[String]:

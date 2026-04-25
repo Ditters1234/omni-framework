@@ -43,6 +43,16 @@ var unlocked_achievements: Array[String] = []
 ## Arbitrary flags set by script hooks / quests: { flag_key → Variant }
 var flags: Dictionary = {}
 var achievement_stats: Dictionary = {}
+
+## Long-lived world/runtime state that must survive save/load.
+## These buckets cover systems that commonly accumulate state outside entity instances.
+var faction_reputations: Dictionary = {}
+var discovered_recipes: Array[String] = []
+var ai_lore_cache: Dictionary = {}
+var event_history: Array[Dictionary] = []
+var runtime_state_buckets: Dictionary = {}
+
+const EVENT_HISTORY_LIMIT := 200
 var _quest_tracker: QuestTracker = null
 
 # ---------------------------------------------------------------------------
@@ -105,8 +115,85 @@ func reset() -> void:
 	unlocked_achievements.clear()
 	flags.clear()
 	achievement_stats.clear()
+	faction_reputations.clear()
+	discovered_recipes.clear()
+	ai_lore_cache.clear()
+	event_history.clear()
+	runtime_state_buckets.clear()
 	ScriptHookService.reset_world_gen_state()
 	_sync_timekeeper()
+
+
+# ---------------------------------------------------------------------------
+# Persistent world/runtime buckets
+# ---------------------------------------------------------------------------
+
+func set_faction_reputation(faction_id: String, value: float) -> void:
+	if faction_id.is_empty():
+		return
+	faction_reputations[faction_id] = value
+	GameEvents.emit_dynamic("faction_reputation_changed", [faction_id, value])
+
+
+func add_faction_reputation(faction_id: String, delta: float) -> void:
+	if faction_id.is_empty() or delta == 0.0:
+		return
+	set_faction_reputation(faction_id, get_faction_reputation(faction_id) + delta)
+
+
+func get_faction_reputation(faction_id: String, default_value: float = 0.0) -> float:
+	return float(faction_reputations.get(faction_id, default_value))
+
+
+func discover_recipe(recipe_id: String) -> bool:
+	if recipe_id.is_empty() or recipe_id in discovered_recipes:
+		return false
+	discovered_recipes.append(recipe_id)
+	GameEvents.emit_dynamic("recipe_discovered", [recipe_id])
+	return true
+
+
+func has_discovered_recipe(recipe_id: String) -> bool:
+	return recipe_id in discovered_recipes
+
+
+func remember_ai_lore(cache_key: String, value: Variant) -> void:
+	if cache_key.is_empty():
+		return
+	ai_lore_cache[cache_key] = value
+
+
+func get_ai_lore(cache_key: String, default_value: Variant = null) -> Variant:
+	return ai_lore_cache.get(cache_key, default_value)
+
+
+func record_event(event_type: String, payload: Dictionary = {}) -> void:
+	if event_type.is_empty():
+		return
+	event_history.append({
+		"event_type": event_type,
+		"day": current_day,
+		"tick": current_tick,
+		"payload": payload.duplicate(true),
+	})
+	while event_history.size() > EVENT_HISTORY_LIMIT:
+		event_history.pop_front()
+
+
+func set_runtime_state(bucket_name: String, key: String, value: Variant) -> void:
+	if bucket_name.is_empty() or key.is_empty():
+		return
+	var bucket_value: Variant = runtime_state_buckets.get(bucket_name, {})
+	var bucket: Dictionary = bucket_value if bucket_value is Dictionary else {}
+	bucket[key] = value
+	runtime_state_buckets[bucket_name] = bucket
+
+
+func get_runtime_state(bucket_name: String, key: String, default_value: Variant = null) -> Variant:
+	var bucket_value: Variant = runtime_state_buckets.get(bucket_name, {})
+	if not bucket_value is Dictionary:
+		return default_value
+	return (bucket_value as Dictionary).get(key, default_value)
 
 
 func _instantiate_world_entities(player_template_id: String) -> void:
@@ -305,6 +392,11 @@ func to_dict() -> Dictionary:
 		"unlocked_achievements": unlocked_achievements.duplicate(),
 		"flags": flags.duplicate(true),
 		"achievement_stats": achievement_stats.duplicate(true),
+		"faction_reputations": faction_reputations.duplicate(true),
+		"discovered_recipes": discovered_recipes.duplicate(),
+		"ai_lore_cache": ai_lore_cache.duplicate(true),
+		"event_history": event_history.duplicate(true),
+		"runtime_state_buckets": runtime_state_buckets.duplicate(true),
 	}
 
 
@@ -329,6 +421,22 @@ func from_dict(data: Dictionary) -> void:
 	var achievement_stats_data: Variant = data.get("achievement_stats", {})
 	if achievement_stats_data is Dictionary:
 		achievement_stats = achievement_stats_data.duplicate(true)
+	var faction_reputations_data: Variant = data.get("faction_reputations", {})
+	if faction_reputations_data is Dictionary:
+		faction_reputations = faction_reputations_data.duplicate(true)
+	discovered_recipes = _to_string_array(data.get("discovered_recipes", []))
+	var ai_lore_cache_data: Variant = data.get("ai_lore_cache", {})
+	if ai_lore_cache_data is Dictionary:
+		ai_lore_cache = ai_lore_cache_data.duplicate(true)
+	var event_history_data: Variant = data.get("event_history", [])
+	if event_history_data is Array:
+		event_history.clear()
+		for event_value in event_history_data:
+			if event_value is Dictionary:
+				event_history.append((event_value as Dictionary).duplicate(true))
+	var runtime_state_buckets_data: Variant = data.get("runtime_state_buckets", {})
+	if runtime_state_buckets_data is Dictionary:
+		runtime_state_buckets = runtime_state_buckets_data.duplicate(true)
 
 	var entity_instances_data: Variant = data.get("entity_instances", {})
 	if not entity_instances_data is Dictionary:
@@ -393,6 +501,10 @@ func validate_runtime_state() -> Array[String]:
 		var template_id := str(task_instance.get("template_id", ""))
 		if not template_id.is_empty() and TaskRegistry.get_task(template_id).is_empty():
 			issues.append("Active task '%s' references missing template '%s'." % [runtime_id, template_id])
+	for event_value in event_history:
+		if not event_value is Dictionary:
+			issues.append("Event history contains a non-dictionary entry.")
+			break
 	return issues
 
 
