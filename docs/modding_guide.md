@@ -704,6 +704,96 @@ Use:
 
 ---
 
+## 11.1 Task routines (NPC schedules)
+
+`TaskRoutineRunner` starts task templates at configured in-game ticks. Use it for daily NPC schedules — wandering merchants, guards rotating posts, couriers making deliveries, or any entity that should move on a clock.
+
+The runner does not move entities directly. It starts `TRAVEL` tasks through `TaskRunner`, and `TaskRunner` moves the entity when the task completes. This means travel duration, rewards, and completion hooks all work the same as any other task.
+
+### Config schema
+
+Add a `task_routines` key to any loaded `config.json`:
+
+```json
+{
+  "task_routines": [
+    {
+      "routine_id": "my_name:my_mod:guard_patrol",
+      "entity_id": "my_name:my_mod:gate_guard",
+      "loop": "daily",
+      "entries": [
+        {
+          "tick": 6,
+          "task_template_id": "my_name:my_mod:guard_to_gate"
+        },
+        {
+          "tick": 18,
+          "task_template_id": "my_name:my_mod:guard_to_barracks"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Routine fields
+
+- `routine_id` — unique id for the routine (used internally to prevent duplicate starts)
+- `entity_id` — the entity that will perform the tasks (must exist in `GameState.entity_instances`)
+- `loop` — currently only `"daily"` is supported
+- `enabled` — optional, defaults to `true`
+- `entries` — array of scheduled task starts
+
+### Entry fields
+
+- `tick` (or `at_tick` or `tick_into_day`) — required. The tick within the current day when the task should start.
+- `task_template_id` (or `template_id`) — required. The task template to start.
+- `target` — optional. Overrides the task template's target location.
+- `duration` / `remaining_ticks` — optional. Overrides the routed travel cost.
+- `task_type` — optional. Overrides the task type from the template.
+- `reward` — optional. Overrides the reward payload.
+- `complete_sound` — optional. Overrides the completion sound.
+- `allow_duplicate` — optional, defaults to `true`. When `true`, the same template can be active from different routine entries simultaneously.
+
+### Travel duration resolution
+
+When a routine entry starts a `TRAVEL` task and no `duration` or `remaining_ticks` is supplied, `TaskRoutineRunner` resolves the travel cost from the location graph:
+
+```
+LocationGraph.get_route_travel_cost(entity.location_id, target_location_id)
+```
+
+This means routine JSON does not need hard-coded travel costs as long as locations are connected through `locations.json`.
+
+### Important behavior
+
+Each routine entry starts at most once per in-game day. The runner resets its tracking when the day changes, when a new game starts, or when a save is loaded.
+
+### Task templates for routines
+
+Routine travel tasks are just regular task templates. They should usually be `TRAVEL` type, `repeatable: true`, and have an empty reward:
+
+```json
+{
+  "task_templates": [
+    {
+      "template_id": "my_name:my_mod:guard_to_gate",
+      "type": "TRAVEL",
+      "target": "my_name:my_mod:front_gate",
+      "repeatable": true,
+      "reward": {},
+      "description": "The guard walks to the front gate."
+    }
+  ]
+}
+```
+
+### Relationship to ticks_per_day
+
+Entry ticks are relative to the start of each day. The tick range is `0` to `game.ticks_per_day - 1`. If your config sets `ticks_per_day: 24`, valid ticks are 0–23. Make sure your scheduled ticks fall within this range.
+
+---
+
 ## 11.5 `recipes.json`
 
 Recipes are inventory-driven crafting templates loaded by `RecipeRegistry` into `DataManager.recipes`.
