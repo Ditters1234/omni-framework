@@ -99,8 +99,8 @@ static func _action_modify_reputation(action: Dictionary) -> void:
 	if entity == null:
 		return
 	var faction_id := str(action.get("faction_id", "")).strip_edges()
-	if faction_id.is_empty() or not DataManager.has_faction(faction_id):
-		push_warning("ActionDispatcher: modify_reputation references missing faction '%s'." % faction_id)
+	if faction_id.is_empty():
+		push_warning("ActionDispatcher: modify_reputation requires faction_id.")
 		return
 	var amount := absf(float(action.get("amount", action.get("delta", 0.0))))
 	if amount <= 0.0:
@@ -213,8 +213,8 @@ static func _action_unlock_location(action: Dictionary) -> void:
 	if entity == null:
 		return
 	var location_id := str(action.get("location_id", "")).strip_edges()
-	if location_id.is_empty() or not DataManager.has_location(location_id):
-		push_warning("ActionDispatcher: unlock_location references missing location '%s'." % location_id)
+	if location_id.is_empty():
+		push_warning("ActionDispatcher: unlock_location requires location_id.")
 		return
 	entity.discover_location(location_id)
 
