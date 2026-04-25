@@ -8,7 +8,7 @@ func before_each() -> void:
 	_original_save_dir = SaveManager.get_save_directory()
 	SaveManager.set_save_directory_for_testing("user://test_saves/save_load_round_trip_hardening/")
 	SaveManager.purge_all_saves()
-	GameState.new_game()
+	_build_minimal_save_fixture()
 
 
 func after_each() -> void:
@@ -18,10 +18,26 @@ func after_each() -> void:
 		SaveManager.set_save_directory_for_testing(_original_save_dir)
 
 
+func _build_minimal_save_fixture() -> void:
+	# Do not call GameState.new_game() here. In focused GUT runs, config/mod
+	# loading can be intentionally minimal, and new_game() requires
+	# game.starting_player_id. This fixture tests SaveManager, not boot config.
+	GameState.reset()
+	var player := EntityInstance.new()
+	player.entity_id = "test:player"
+	player.template_id = ""
+	player.location_id = ""
+	player.stats = {"health": 10.0, "health_max": 10.0}
+	player.currencies = {"credits": 25.0}
+	GameState.player = player
+	GameState.entity_instances[player.entity_id] = player
+	GameState.current_location_id = ""
+	GameState.current_tick = 12
+	GameState.current_day = 1
+
+
 func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
-	if GameState.player == null:
-		pending("Base fixture did not create a player; check game.starting_player_id.")
-		return
+	assert_not_null(GameState.player, "Fixture should create a player without relying on game.starting_player_id.")
 
 	GameState.set_flag("audit.flag", true)
 	GameState.track_achievement_stat("audit_counter", 3.0)
@@ -49,7 +65,7 @@ func test_old_or_incomplete_saves_are_rejected_without_migration() -> void:
 	var legacy_payload := {
 		"save_schema_version": 1,
 		"game_state": {
-			"player_id": "player",
+			"player_id": "test:player",
 			"entity_instances": {},
 			"current_location_id": "",
 			"current_tick": 0,
@@ -67,8 +83,9 @@ func test_old_or_incomplete_saves_are_rejected_without_migration() -> void:
 
 
 func test_purge_all_saves_removes_old_slots() -> void:
+	assert_not_null(GameState.player, "Fixture should create a valid player before saving.")
 	SaveManager.save_game(SLOT)
-	assert_true(SaveManager.slot_exists(SLOT))
+	assert_true(SaveManager.slot_exists(SLOT), str(SaveManager.last_operation_summary.get("reason", "")))
 	var deleted := SaveManager.purge_all_saves()
 	assert_gt(deleted, 0)
 	assert_false(SaveManager.slot_exists(SLOT))
