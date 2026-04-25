@@ -27,6 +27,20 @@
       "prompt_template": "Write one concise mission-briefing sentence for the task '{display_name}' at {location_name}. Employer: {faction_name}. Reward: {reward_summary}. Keep it under 20 words.",
       "fallback": "{display_name} awaits at {location_name}.",
       "tags": ["world_gen", "task_board"]
+    },
+    {
+      "template_id": "base:entity_lore",
+      "purpose": "entity_lore",
+      "prompt_template": "Write a two-sentence in-world lore blurb about {display_name}. Description: {description}. Location: {location_name}.",
+      "fallback": "{display_name} is known around {location_name}. {description}",
+      "tags": ["world_gen", "lore", "entity"]
+    },
+    {
+      "template_id": "base:part_lore",
+      "purpose": "part_lore",
+      "prompt_template": "Write a two-sentence in-world lore blurb about the part {display_name}. Description: {description}. Tags: {tag_summary}.",
+      "fallback": "{display_name} is a recognized piece of kit. {description}",
+      "tags": ["world_gen", "lore", "part"]
     }
   ],
   "patches": []

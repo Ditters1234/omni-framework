@@ -79,6 +79,8 @@ func build_view_model() -> Dictionary:
 			"show_reputation": show_reputation,
 			"status_text": "The entity sheet target could not be resolved.",
 			"summary_text": "",
+			"ai_lore": "",
+			"ai_lore_template_id": "",
 			"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
 			"currency_empty_label": _get_empty_label("currency_empty_label", "No currencies are recorded."),
 			"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
@@ -95,6 +97,11 @@ func build_view_model() -> Dictionary:
 	var inventory_result := _build_inventory_result(target_entity)
 	var inventory_rows := _read_dictionary_rows(inventory_result.get("rows", []))
 	var reputation_rows := _build_reputation_rows(target_entity)
+	var entity_template := BACKEND_HELPERS.get_entity_template(target_entity)
+	var ai_lore_template_id := str(entity_template.get("entity_id", ""))
+	var ai_lore := ScriptHookService.request_entity_lore(entity_template, {
+		"entity_id": target_entity.entity_id,
+	})
 	return {
 		"title": title,
 		"description": description,
@@ -108,6 +115,8 @@ func build_view_model() -> Dictionary:
 		"show_equipped": show_equipped,
 		"show_inventory": show_inventory,
 		"show_reputation": show_reputation,
+		"ai_lore": ai_lore,
+		"ai_lore_template_id": ai_lore_template_id,
 		"status_text": _build_status_text(target_entity, equipped_rows, inventory_result),
 		"summary_text": _build_summary_text(target_entity, equipped_rows, inventory_result),
 		"cancel_label": _get_string_param(_params, "cancel_label", "Back"),

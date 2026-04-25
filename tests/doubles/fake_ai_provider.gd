@@ -9,6 +9,7 @@ var _default_stream_chunks: Array[String] = []
 var _default_delay_frames: int = 0
 var _default_simulate_error: bool = false
 var _default_error_text: String = "FakeAIProvider: simulated failure."
+var _request_count: int = 0
 
 
 func initialize(provider_config: Dictionary) -> void:
@@ -18,6 +19,7 @@ func initialize(provider_config: Dictionary) -> void:
 	_default_delay_frames = int(provider_config.get("delay_frames", 0))
 	_default_simulate_error = bool(provider_config.get("simulate_error", false))
 	_default_error_text = str(provider_config.get("error_text", "FakeAIProvider: simulated failure."))
+	_request_count = 0
 	_default_stream_chunks.clear()
 	var stream_chunks_value: Variant = provider_config.get("chunks", [])
 	if stream_chunks_value is Array:
@@ -49,12 +51,14 @@ func get_debug_snapshot() -> Dictionary:
 		"is_ready": _is_ready,
 		"last_error": _last_error,
 		"last_context": _last_context.duplicate(true),
+		"request_count": _request_count,
 	}
 
 
 func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	_last_context = context.duplicate(true)
 	_last_context["prompt"] = prompt
+	_request_count += 1
 	var delay_frames := int(context.get("delay_frames", _default_delay_frames))
 	for _frame_index in range(maxi(delay_frames, 0)):
 		await get_tree().process_frame
@@ -71,6 +75,7 @@ func generate_streaming_async(
 		context: Dictionary = {}) -> void:
 	_last_context = context.duplicate(true)
 	_last_context["prompt"] = prompt
+	_request_count += 1
 	var delay_frames := int(context.get("delay_frames", _default_delay_frames))
 	for _frame_index in range(maxi(delay_frames, 0)):
 		await get_tree().process_frame

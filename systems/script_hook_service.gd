@@ -7,9 +7,14 @@ class_name ScriptHookService
 const APP_SETTINGS := preload("res://core/app_settings.gd")
 const WORLD_GEN_HOOK_NARRATION := "narration"
 const WORLD_GEN_HOOK_TASK_FLAVOR := "task_flavor"
+const WORLD_GEN_HOOK_LORE := "lore"
 
 static var _task_flavor_cache: Dictionary = {}
 static var _pending_task_flavors: Dictionary = {}
+static var _entity_lore_cache: Dictionary = {}
+static var _pending_entity_lore: Dictionary = {}
+static var _part_lore_cache: Dictionary = {}
+static var _pending_part_lore: Dictionary = {}
 
 
 static func invoke_template_hook(template: Dictionary, method_name: String, args: Array = []) -> void:
@@ -91,9 +96,79 @@ static func store_task_flavor(template_id: String, flavor_text: String) -> void:
 	GameEvents.event_narrated.emit("task_flavor", normalized_template_id, normalized_flavor_text)
 
 
+static func request_entity_lore(entity_template: Dictionary, context: Dictionary = {}) -> String:
+	var template_id := str(entity_template.get("entity_id", "")).strip_edges()
+	if template_id.is_empty():
+		return ""
+	if _entity_lore_cache.has(template_id):
+		return str(_entity_lore_cache.get(template_id, ""))
+	if _pending_entity_lore.has(template_id) or not _can_run_world_gen("lore_enabled"):
+		return ""
+	var hook := _get_global_hook(WORLD_GEN_HOOK_LORE)
+	if hook == null or not hook.has_method("queue_entity_lore_generation"):
+		return ""
+	_pending_entity_lore[template_id] = true
+	hook.callv("queue_entity_lore_generation", [entity_template.duplicate(true), context.duplicate(true)])
+	return ""
+
+
+static func request_part_lore(part_template: Dictionary, context: Dictionary = {}) -> String:
+	var template_id := str(part_template.get("id", "")).strip_edges()
+	if template_id.is_empty():
+		return ""
+	if _part_lore_cache.has(template_id):
+		return str(_part_lore_cache.get(template_id, ""))
+	if _pending_part_lore.has(template_id) or not _can_run_world_gen("lore_enabled"):
+		return ""
+	var hook := _get_global_hook(WORLD_GEN_HOOK_LORE)
+	if hook == null or not hook.has_method("queue_part_lore_generation"):
+		return ""
+	_pending_part_lore[template_id] = true
+	hook.callv("queue_part_lore_generation", [part_template.duplicate(true), context.duplicate(true)])
+	return ""
+
+
+static func store_entity_lore(template_id: String, lore_text: String) -> void:
+	var normalized_template_id := template_id.strip_edges()
+	var normalized_lore_text := lore_text.strip_edges()
+	if normalized_template_id.is_empty():
+		return
+	_pending_entity_lore.erase(normalized_template_id)
+	if normalized_lore_text.is_empty():
+		return
+	_entity_lore_cache[normalized_template_id] = normalized_lore_text
+	if GameEvents == null:
+		return
+	if GameEvents.has_method("emit_dynamic"):
+		GameEvents.emit_dynamic("event_narrated", ["entity_lore", normalized_template_id, normalized_lore_text])
+		return
+	GameEvents.event_narrated.emit("entity_lore", normalized_template_id, normalized_lore_text)
+
+
+static func store_part_lore(template_id: String, lore_text: String) -> void:
+	var normalized_template_id := template_id.strip_edges()
+	var normalized_lore_text := lore_text.strip_edges()
+	if normalized_template_id.is_empty():
+		return
+	_pending_part_lore.erase(normalized_template_id)
+	if normalized_lore_text.is_empty():
+		return
+	_part_lore_cache[normalized_template_id] = normalized_lore_text
+	if GameEvents == null:
+		return
+	if GameEvents.has_method("emit_dynamic"):
+		GameEvents.emit_dynamic("event_narrated", ["part_lore", normalized_template_id, normalized_lore_text])
+		return
+	GameEvents.event_narrated.emit("part_lore", normalized_template_id, normalized_lore_text)
+
+
 static func reset_world_gen_state() -> void:
 	_task_flavor_cache.clear()
 	_pending_task_flavors.clear()
+	_entity_lore_cache.clear()
+	_pending_entity_lore.clear()
+	_part_lore_cache.clear()
+	_pending_part_lore.clear()
 
 
 static func _extract_script_path(template: Dictionary) -> String:
