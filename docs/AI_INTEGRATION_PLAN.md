@@ -6,7 +6,7 @@ This document is a planning reference for the AI integration layer. It catalogs 
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
-Implementation status update: Phases 1–4 are complete. The dialogue AI integration is fully landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls for chat history window and streaming speed, debug overlay AI chat panel, input length hardening, and modding guide authoring documentation.
+Implementation status update: Phases 1–5 are complete. The dialogue AI integration is fully landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls for chat history window and streaming speed, debug overlay AI chat panel, input length hardening, and modding guide authoring documentation. The behavior-tree layer is now landed too: `BTActionAIQuery`, `BTConditionAICheck`, shared prompt/response parsing helpers, timeout-aware fallback behavior, and Kael greeting integration coverage.
 
 Decisions this document assumes:
 
@@ -83,8 +83,8 @@ The dialogue layer is the primary integration. It connects `AIManager` to the ex
 
 | System | Status | Purpose |
 |---|---|---|
-| `BTActionAIQuery` | Planned (Phase 5) | LimboAI action node: send a decision prompt, parse the response into a blackboard variable |
-| `BTConditionAICheck` | Planned (Phase 5) | LimboAI condition node: ask the LLM a yes/no gating question |
+| `BTActionAIQuery` | ✅ Implemented (Phase 5) | LimboAI action node: send a decision prompt, parse the response into a blackboard variable |
+| `BTConditionAICheck` | ✅ Implemented (Phase 5) | LimboAI condition node: ask the LLM a yes/no gating question |
 
 The behavior layer wires `AIManager` into LimboAI behavior trees so NPCs can make context-aware decisions — adjusting vendor prices based on reputation, choosing dialogue topics dynamically, or selecting patrol routes based on world state. These nodes are optional leaves in a BT; the tree always has a static fallback branch.
 
@@ -498,17 +498,17 @@ Deliverable: two NPCs with distinct AI personalities, modder documentation, debu
 
 ### Phase 5 — LimboAI Behavior Tree Nodes (~3–4 days)
 
-AI-informed NPC decision-making via custom BT nodes.
+Current status: complete. `systems/ai/bt_action_ai_query.gd` and `systems/ai/bt_condition_ai_check.gd` now extend LimboAI's `BTAction` / `BTCondition`, resolve `{blackboard_var}` prompt tokens through `systems/ai/bt_ai_utils.gd`, and execute asynchronous `AIManager` requests with timeout-aware `RUNNING` behavior. `BTActionAIQuery` supports `"text"`, `"enum"`, and `"json"` parsing plus fallback-value writes on failure, while `BTConditionAICheck` normalizes yes/no replies and falls back to a default result when AI is unavailable or parsing fails. Coverage lives in `tests/unit/test_ai_bt_nodes.gd`, including enum casing/partial-match parsing, malformed JSON fallback, timeout behavior, and a Kael greeting selector fixture that proves the AI path wins when available and a static branch takes over when it is not.
 
-1. Create `systems/ai/bt_action_ai_query.gd` extending LimboAI's `BTAction`.
-2. Create `systems/ai/bt_condition_ai_check.gd` extending LimboAI's `BTCondition`.
-3. Implement prompt template resolution from blackboard variables.
-4. Implement response parsing: `"text"` (raw), `"enum"` (constrained choice from options list), `"json"` (parsed dictionary).
-5. Implement timeout handling and fallback value writing.
-6. Unit tests: enum parsing with edge cases (extra whitespace, casing, partial matches), JSON parsing with malformed input, timeout behavior.
-7. Create a reference behavior tree for Kael that uses `BTActionAIQuery` to dynamically choose a greeting based on player reputation and time of day, with a static fallback.
-8. Integration test: Kael's BT runs the AI query path when AI is available and falls through to static when it isn't.
-9. Update `MODDING_GUIDE.md` with BT AI node documentation and usage examples.
+1. Create `systems/ai/bt_action_ai_query.gd` extending LimboAI's `BTAction`. Done.
+2. Create `systems/ai/bt_condition_ai_check.gd` extending LimboAI's `BTCondition`. Done.
+3. Implement prompt template resolution from blackboard variables. Done via `systems/ai/bt_ai_utils.gd`.
+4. Implement response parsing: `"text"` (raw), `"enum"` (constrained choice from options list), `"json"` (parsed dictionary). Done.
+5. Implement timeout handling and fallback value writing. Done.
+6. Unit tests: enum parsing with edge cases (extra whitespace, casing, partial matches), JSON parsing with malformed input, timeout behavior. Done.
+7. Create a reference behavior tree for Kael that uses `BTActionAIQuery` to dynamically choose a greeting based on player reputation and time of day, with a static fallback. Done as a code-built integration fixture.
+8. Integration test: Kael's BT runs the AI query path when AI is available and falls through to static when it isn't. Done.
+9. Update `MODDING_GUIDE.md` with BT AI node documentation and usage examples. Done.
 
 Deliverable: modders can add AI decision points to behavior trees with graceful static fallback.
 

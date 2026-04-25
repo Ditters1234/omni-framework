@@ -549,6 +549,55 @@ Those settings live in `user://settings.cfg`, not in mod data.
 
 ---
 
+## 8.2 Behavior tree AI tasks
+
+LimboAI behavior trees can now call the engine-owned AI layer directly through two custom tasks under `systems/ai/`.
+
+- `BTActionAIQuery` resolves `{blackboard_var}` placeholders inside `prompt_template`, sends the request through `AIManager`, and writes the parsed result to `result_var`.
+- `BTConditionAICheck` asks a yes/no question, appends a strict yes/no suffix to the prompt, and returns `SUCCESS` or `FAILURE` from the parsed answer.
+
+### `BTActionAIQuery`
+
+Current exported fields:
+- `prompt_template` - prompt text with optional `{blackboard_var}` placeholders
+- `result_var` - blackboard variable name that receives the parsed result
+- `response_format` - `"text"`, `"enum"`, or `"json"`
+- `enum_options` - required when `response_format` is `"enum"`
+- `timeout_seconds` - timeout before the task fails and writes its fallback
+- `fallback_value` - value written to `result_var` when AI is unavailable, times out, or fails parsing
+
+Prompt placeholders are resolved from the active LimboAI blackboard. Missing variables are left in place and logged as warnings, so it is worth keeping templates explicit and blackboard setup predictable.
+
+`response_format: "enum"` uses forgiving matching for common LLM drift:
+- extra whitespace is ignored
+- casing is ignored
+- partial matches like `"full"` can still resolve to `full_price` when unambiguous
+
+`response_format: "json"` expects a JSON object. Fenced ```json blocks are accepted, but malformed JSON causes the task to fail and write `fallback_value`.
+
+### `BTConditionAICheck`
+
+Current exported fields:
+- `prompt_template`
+- `default_result`
+- `timeout_seconds`
+
+The task automatically appends `Respond with only YES or NO.` unless the prompt already includes that instruction. It accepts common yes/no variants such as `YES.`, `y`, `no`, and `nah`. Ambiguous answers fall back to `default_result`.
+
+### Example pattern
+
+Use these tasks the same way the AI integration plan recommends: AI branch first, static branch second.
+
+```text
+Selector
+  AIQuery greeting -> blackboard.greeting
+  Set greeting = "Stick to business."
+```
+
+The first branch enhances behavior when AI is available. The second branch is the guaranteed fallback path when it is not.
+
+---
+
 ## 9. `locations.json`
 
 Locations are graph nodes plus UI entry points.

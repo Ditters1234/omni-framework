@@ -64,7 +64,7 @@ The project is organized around a classic Godot singleton model with dedicated a
 The `systems/` folder currently contains both direct service scripts and subfolders:
 
 Notable current contents:
-- `systems/ai/ai_chat_service.gd` plus the provider scripts under `systems/ai/providers/`
+- `systems/ai/ai_chat_service.gd`, `bt_action_ai_query.gd`, `bt_condition_ai_check.gd`, and `bt_ai_utils.gd`, plus the provider scripts under `systems/ai/providers/`
 - `systems/loaders/ai_persona_registry.gd` alongside the rest of the JSON registries
 
 ```text
@@ -102,6 +102,7 @@ systems/
 
 `systems/loaders/` also includes `ai_persona_registry.gd`, which loads `ai_personas.json` persona templates into `DataManager`.
 `systems/ai/` now also includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies ahead of the dialogue-layer UI work.
+`systems/ai/` also now includes `bt_action_ai_query.gd` and `bt_condition_ai_check.gd`, two LimboAI custom tasks for AI-driven behavior-tree decisions, plus `bt_ai_utils.gd`, the shared prompt-token and response-parser helper those tasks use.
 
 All of the following service scripts are fully implemented and should not be omitted from any architecture reference:
 

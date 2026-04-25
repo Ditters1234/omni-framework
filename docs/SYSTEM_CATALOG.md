@@ -124,6 +124,8 @@ The `AIManager` autoload routes all AI calls to one of four backends based on th
 
 `systems/ai/ai_chat_service.gd` now provides the first engine-owned AI consumer helper. It is a `RefCounted` prompt builder that resolves persona placeholders from `GameState` and `DataManager`, keeps a bounded role-tagged conversation history, assembles the `context` dictionary expected by `AIManager`, and validates or deflects responses before a UI screen consumes them.
 
+`systems/ai/bt_action_ai_query.gd` and `systems/ai/bt_condition_ai_check.gd` now provide the engine-owned LimboAI behavior-tree bridge for Phase 5. `BTActionAIQuery` resolves `{blackboard_var}` tokens, submits an async AI request, supports `"text"`, `"enum"`, and `"json"` parsing, and writes either the parsed value or a fallback value into the blackboard. `BTConditionAICheck` appends a yes/no instruction, waits asynchronously, and returns `SUCCESS` / `FAILURE` from the normalized answer while falling back to a configurable default result when AI is unavailable, times out, or responds ambiguously. Both tasks share `systems/ai/bt_ai_utils.gd` for prompt expansion and parser logic.
+
 See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for script hook examples.
 
 ### AI Events
