@@ -58,9 +58,10 @@ func generate_streaming_async(
 	var chunks_value: Variant = context.get("chunks", [])
 	if chunks_value is Array:
 		var chunks: Array = chunks_value
-		for chunk_value in chunks:
-			chunk_callback.call(str(chunk_value))
-		return
+		if not chunks.is_empty():
+			for chunk_value in chunks:
+				chunk_callback.call(str(chunk_value))
+			return
 	var response := str(context.get("response", "fake response"))
 	if not response.is_empty():
 		chunk_callback.call(response)
