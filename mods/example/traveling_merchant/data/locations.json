@@ -1,0 +1,21 @@
+{
+  "locations": [
+    {
+      "location_id": "example:merchant_house",
+      "display_name": "Sable's Locked Room",
+      "description": "A rented upper-floor room above Market Row. Sable sleeps here after dark. The door stays locked to customers.",
+      "connections": {
+        "base:market_row": 1
+      },
+      "screens": []
+    }
+  ],
+  "patches": [
+    {
+      "target": "base:market_row",
+      "add_connections": {
+        "example:merchant_house": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Traveling Merchant",
+  "version": "0.1.0",
+  "schema_version": 1,
+  "load_order": 20,
+  "enabled": true,
+  "id": "example:traveling_merchant",
+  "dependencies": [
+    "base"
+  ],
+  "description": "Adds Sable, a simple merchant who travels between Market Row, the Warehouse, and a private house on a daily routine."
+}

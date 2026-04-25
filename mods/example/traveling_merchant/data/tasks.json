@@ -1,0 +1,28 @@
+{
+  "task_templates": [
+    {
+      "template_id": "example:sable_to_market",
+      "type": "TRAVEL",
+      "target": "base:market_row",
+      "repeatable": true,
+      "reward": {},
+      "description": "Sable walks to Market Row."
+    },
+    {
+      "template_id": "example:sable_to_warehouse",
+      "type": "TRAVEL",
+      "target": "base:warehouse",
+      "repeatable": true,
+      "reward": {},
+      "description": "Sable walks to the Warehouse."
+    },
+    {
+      "template_id": "example:sable_go_home",
+      "type": "TRAVEL",
+      "target": "example:merchant_house",
+      "repeatable": true,
+      "reward": {},
+      "description": "Sable heads home for the night."
+    }
+  ]
+}

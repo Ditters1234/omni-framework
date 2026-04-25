@@ -1,0 +1,67 @@
+{
+  "entities": [
+    {
+      "entity_id": "example:traveling_merchant",
+      "display_name": "Sable the Peddler",
+      "description": "A soft-footed trader with a reinforced pack and a habit of appearing exactly when people need spare parts.",
+      "portrait": "",
+      "location_id": "example:merchant_house",
+      "currencies": {
+        "credits": 2500
+      },
+      "stats": {
+        "charisma": 3,
+        "luck": 2,
+        "health": 80,
+        "health_max": 80
+      },
+      "flags": {},
+      "inventory": [
+        {
+          "instance_id": "sable_medkit_001",
+          "template_id": "base:field_medkit"
+        },
+        {
+          "instance_id": "sable_medkit_002",
+          "template_id": "base:field_medkit"
+        },
+        {
+          "instance_id": "sable_chip_001",
+          "template_id": "base:salvage_chip"
+        },
+        {
+          "instance_id": "sable_chip_002",
+          "template_id": "base:salvage_chip"
+        },
+        {
+          "instance_id": "sable_scrap_001",
+          "template_id": "base:scrap_plate"
+        },
+        {
+          "instance_id": "sable_charm_001",
+          "template_id": "base:lucky_charm"
+        }
+      ],
+      "interactions": [
+        {
+          "tab_id": "sable_trade",
+          "label": "Trade",
+          "description": "Browse Sable's traveling stock.",
+          "backend_class": "ExchangeBackend",
+          "source_inventory": "entity:example:traveling_merchant",
+          "destination_inventory": "player",
+          "currency_id": "credits",
+          "transaction_sound": "res://mods/base/assets/audio/sfx_trade.wav"
+        },
+        {
+          "tab_id": "sable_scan",
+          "label": "Scan",
+          "description": "Read Sable's profile.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "example:traveling_merchant",
+          "screen_title": "Sable the Peddler"
+        }
+      ]
+    }
+  ]
+}

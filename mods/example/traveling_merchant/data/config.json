@@ -1,0 +1,23 @@
+{
+  "task_routines": [
+    {
+      "routine_id": "example:sable_daily_route",
+      "entity_id": "example:traveling_merchant",
+      "loop": "daily",
+      "entries": [
+        {
+          "tick": 6,
+          "task_template_id": "example:sable_to_market"
+        },
+        {
+          "tick": 12,
+          "task_template_id": "example:sable_to_warehouse"
+        },
+        {
+          "tick": 18,
+          "task_template_id": "example:sable_go_home"
+        }
+      ]
+    }
+  ]
+}
