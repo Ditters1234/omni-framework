@@ -43,6 +43,8 @@ mods/<author_id>/<mod_id>/
 └── assets/
 ```
 
+AI-aware mods can also add `data/ai_personas.json` to the same folder.
+
 The built-in base pack is the only exception. It lives directly at:
 
 ```text
@@ -150,6 +152,7 @@ The current base pack uses these files:
 - `quests.json`
 - `recipes.json`
 - `achievements.json`
+- `ai_personas.json`
 - `config.json`
 
 If a file is omitted in your mod, that system is simply untouched.
@@ -396,6 +399,7 @@ Inventory entries may also include `custom_values` to override template-declared
 - `currencies`
 - `stats`
 - `flags`
+- `ai_persona_id`
 - `reputation`
 - `discovered_locations`
 - `provides_sockets`
@@ -411,6 +415,8 @@ Inventory entries may also include `custom_values` to override template-declared
 Entity-facing UI such as `EntityPortrait` can render optional portrait/emblem art from `portrait`, `portrait_id`, or `sprite` when those fields are present.
 
 `owned_entity_ids` now round-trips through `EntityInstance` runtime/save serialization even though the base UI does not currently render a dedicated ownership view.
+
+`ai_persona_id` is optional. When present, it must reference a valid persona from `ai_personas.json`. On its own it does not turn on AI dialogue yet; it only binds authored persona data to the entity for AI-aware systems to consume.
 
 ### Current patch example
 
@@ -436,6 +442,67 @@ Entity-facing UI such as `EntityPortrait` can render optional portrait/emblem ar
       "set": {
         "display_name": "Quartermaster Theta+"
       }
+    }
+  ]
+}
+```
+
+---
+
+## 8.1 `ai_personas.json`
+
+AI personas are authored prompt-shaping templates loaded by `AIPersonaRegistry` into `DataManager.ai_personas`.
+
+### Current addition format
+
+```json
+{
+  "ai_personas": [
+    {
+      "persona_id": "my_name:my_mod:street_doc_persona",
+      "display_name": "Street Doc",
+      "system_prompt_template": "You are {display_name}, {description}. Stay focused on clinic work and local rumors.",
+      "personality_traits": ["practical", "guarded"],
+      "speech_style": "Short, clinical answers with occasional sarcasm.",
+      "knowledge_scope": ["implants", "black_market", "clinic"],
+      "forbidden_topics": ["supplier_names"],
+      "response_constraints": {
+        "max_sentences": 3,
+        "tone": "conversational",
+        "always_in_character": true
+      },
+      "fallback_lines": [
+        "Not discussing that.",
+        "Ask me about the work, not the rumors."
+      ],
+      "tags": ["merchant", "doctor"]
+    }
+  ]
+}
+```
+
+### Important current details
+- Persona ids use `persona_id`
+- `persona_id`, `display_name`, and `system_prompt_template` are required
+- `personality_traits`, `knowledge_scope`, `forbidden_topics`, `fallback_lines`, and `tags` must be arrays of non-empty strings when present
+- `response_constraints` must be an object when present
+- `response_constraints.max_sentences` must be a positive integer when present
+- `response_constraints.tone` must be a non-empty string when present
+- `response_constraints.always_in_character` must be a bool when present
+- Entities bind to personas through `entities.json` via `ai_persona_id`
+
+### Current patch format
+
+```json
+{
+  "patches": [
+    {
+      "target": "base:kael_persona",
+      "set": {
+        "speech_style": "Warmer, but still concise."
+      },
+      "add_tags": ["quest_giver"],
+      "remove_tags": ["merchant"]
     }
   ]
 }

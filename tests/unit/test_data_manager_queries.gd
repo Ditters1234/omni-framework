@@ -33,6 +33,18 @@ func before_each() -> void:
 		"required_stations": ["base:forge"],
 		"tags": ["weapon", "starter"]
 	}
+	DataManager.ai_personas["base:vendor_persona"] = {
+		"persona_id": "base:vendor_persona",
+		"display_name": "Vendor",
+		"system_prompt_template": "You are a vendor.",
+		"tags": ["merchant", "helpful"]
+	}
+	DataManager.ai_personas["base:guard_persona"] = {
+		"persona_id": "base:guard_persona",
+		"display_name": "Guard",
+		"system_prompt_template": "You are a guard.",
+		"tags": ["security"]
+	}
 
 
 func test_query_parts_filters_by_tags_and_returns_copies() -> void:
@@ -67,3 +79,15 @@ func test_query_recipes_filters_by_station_tags_and_returns_copies() -> void:
 
 	results[0]["display_name"] = "Mutated"
 	assert_eq(str(DataManager.recipes["base:starter_blade"].get("display_name", "")), "Starter Blade")
+
+
+func test_query_ai_personas_filters_by_tags_and_returns_copies() -> void:
+	var results := DataManager.query_ai_personas({
+		"tags": ["merchant"]
+	})
+
+	assert_eq(results.size(), 1)
+	assert_eq(str(results[0].get("persona_id", "")), "base:vendor_persona")
+
+	results[0]["display_name"] = "Mutated"
+	assert_eq(str(DataManager.ai_personas["base:vendor_persona"].get("display_name", "")), "Vendor")

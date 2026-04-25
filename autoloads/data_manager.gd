@@ -7,6 +7,7 @@ extends Node
 class_name OmniDataManager
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
+const AI_PERSONA_REGISTRY := preload("res://systems/loaders/ai_persona_registry.gd")
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const LOAD_PHASE_IDLE := "idle"
 const LOAD_PHASE_ADDITIONS := "additions"
@@ -31,6 +32,7 @@ var quests: Dictionary = {}            # quest_id → quest template
 var tasks: Dictionary = {}             # template_id → task template
 var recipes: Dictionary = {}           # recipe_id → recipe template
 var achievements: Dictionary = {}      # achievement_id → achievement template
+var ai_personas: Dictionary = {}       # persona_id â†’ AI persona template
 var config: Dictionary = {}            # deep-merged runtime config
 var is_loaded: bool = false
 var load_phase: String = LOAD_PHASE_IDLE
@@ -130,6 +132,14 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 		var achievement_entries: Array = _get_array_field(achievements_data, "achievements", mod_id, achievements_path, LOAD_PHASE_ADDITIONS)
 		achievement_entries = _filter_valid_additions(achievement_entries, achievements, "achievements", "achievement_id", ["achievement_id", "display_name", "stat_name", "requirement"], mod_id, achievements_path, LOAD_PHASE_ADDITIONS)
 		AchievementRegistry.load_additions(achievement_entries)
+
+	var ai_personas_path := mod_data_path.path_join(OmniConstants.DATA_AI_PERSONAS)
+	var ai_personas_data_value: Variant = _load_json_document(mod_id, ai_personas_path, LOAD_PHASE_ADDITIONS)
+	if ai_personas_data_value is Dictionary:
+		var ai_personas_data: Dictionary = ai_personas_data_value
+		var ai_persona_entries: Array = _get_array_field(ai_personas_data, "ai_personas", mod_id, ai_personas_path, LOAD_PHASE_ADDITIONS)
+		ai_persona_entries = _filter_valid_additions(ai_persona_entries, ai_personas, "ai_personas", "persona_id", ["persona_id", "display_name", "system_prompt_template"], mod_id, ai_personas_path, LOAD_PHASE_ADDITIONS)
+		AI_PERSONA_REGISTRY.load_additions(ai_persona_entries)
 
 	var config_path := mod_data_path.path_join(OmniConstants.DATA_CONFIG)
 	var config_data_value: Variant = _load_json_document(mod_id, config_path, LOAD_PHASE_ADDITIONS)
@@ -235,6 +245,15 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		_validate_patch_operations(achievement_patches, ["target", "set"], "achievements", mod_id, achievements_path, LOAD_PHASE_PATCHES)
 		AchievementRegistry.apply_patch(achievement_patches)
 
+	var ai_personas_path := mod_data_path.path_join(OmniConstants.DATA_AI_PERSONAS)
+	var ai_personas_data_value: Variant = _load_json_document(mod_id, ai_personas_path, LOAD_PHASE_PATCHES)
+	if ai_personas_data_value is Dictionary:
+		var ai_personas_data: Dictionary = ai_personas_data_value
+		var ai_persona_patches: Array = _get_array_field(ai_personas_data, "patches", mod_id, ai_personas_path, LOAD_PHASE_PATCHES)
+		_validate_patch_targets(ai_persona_patches, ai_personas, "ai_personas", mod_id, ai_personas_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(ai_persona_patches, ["target", "set", "add_tags", "remove_tags"], "ai_personas", mod_id, ai_personas_path, LOAD_PHASE_PATCHES)
+		AI_PERSONA_REGISTRY.apply_patch(ai_persona_patches)
+
 	var config_path := mod_data_path.path_join(OmniConstants.DATA_CONFIG)
 	var config_data_value: Variant = _load_json_document(mod_id, config_path, LOAD_PHASE_PATCHES)
 	if config_data_value is Dictionary:
@@ -281,6 +300,10 @@ func get_achievement(achievement_id: String) -> Dictionary:
 	return _duplicate_dictionary(achievements.get(achievement_id, {}))
 
 
+func get_ai_persona(persona_id: String) -> Dictionary:
+	return _duplicate_dictionary(ai_personas.get(persona_id, {}))
+
+
 func get_definitions(category: String) -> Array:
 	return _duplicate_array(definitions.get(category, []))
 
@@ -315,6 +338,10 @@ func has_recipe(recipe_id: String) -> bool:
 
 func has_achievement(achievement_id: String) -> bool:
 	return achievements.has(achievement_id)
+
+
+func has_ai_persona(persona_id: String) -> bool:
+	return ai_personas.has(persona_id)
 
 
 func query_parts(filters: Dictionary = {}) -> Array[Dictionary]:
@@ -410,6 +437,25 @@ func query_recipes_by_tag(tag: String) -> Array[Dictionary]:
 	return query_recipes({"tags": [tag]})
 
 
+func query_ai_personas(filters: Dictionary = {}) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var persona_ids := _variant_to_string_array(filters.get("persona_ids", filters.get("template_ids", [])))
+	var tag_filters := _variant_to_string_array(filters.get("tags", []))
+	for persona_id_value in ai_personas.keys():
+		var persona_id := str(persona_id_value)
+		if not persona_ids.is_empty() and not persona_ids.has(persona_id):
+			continue
+		var persona_value: Variant = ai_personas.get(persona_id_value, {})
+		if not persona_value is Dictionary:
+			continue
+		var persona: Dictionary = persona_value
+		var persona_tags := _variant_to_string_array(persona.get("tags", []))
+		if not _contains_all_strings(persona_tags, tag_filters):
+			continue
+		results.append(persona.duplicate(true))
+	return results
+
+
 func get_registry_counts() -> Dictionary:
 	return {
 		"stats": get_definitions("stats").size(),
@@ -422,6 +468,7 @@ func get_registry_counts() -> Dictionary:
 		"tasks": tasks.size(),
 		"recipes": recipes.size(),
 		"achievements": achievements.size(),
+		"ai_personas": ai_personas.size(),
 	}
 
 
@@ -766,6 +813,7 @@ func _validate_template_schemas() -> void:
 	_validate_registry_required_fields(tasks, OmniConstants.DATA_TASKS, "template_id", ["template_id", "type"])
 	_validate_registry_required_fields(recipes, OmniConstants.DATA_RECIPES, "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"])
 	_validate_registry_required_fields(achievements, OmniConstants.DATA_ACHIEVEMENTS, "achievement_id", ["achievement_id", "display_name", "stat_name", "requirement"])
+	_validate_registry_required_fields(ai_personas, OmniConstants.DATA_AI_PERSONAS, "persona_id", ["persona_id", "display_name", "system_prompt_template"])
 
 	for part_value in parts.values():
 		if not part_value is Dictionary:
@@ -801,6 +849,12 @@ func _validate_template_schemas() -> void:
 		_validate_string_array_elements(recipe_id, OmniConstants.DATA_RECIPES, "tags", recipe.get("tags", []))
 		_validate_stat_map(recipe_id, OmniConstants.DATA_RECIPES, "required_stats", recipe.get("required_stats", {}), stat_ids)
 		_validate_recipe_shape(recipe)
+
+	for persona_value in ai_personas.values():
+		if not persona_value is Dictionary:
+			continue
+		var persona: Dictionary = persona_value
+		_validate_ai_persona_shape(persona)
 
 
 func _validate_registry_required_fields(registry: Dictionary, file_path: String, id_field: String, required_fields: Array[String]) -> void:
@@ -904,6 +958,42 @@ func _validate_recipe_shape(recipe: Dictionary) -> void:
 		var count_value: Variant = input.get("count", 1)
 		if not _is_integral_number(count_value) or int(count_value) < 1:
 			_record_issue(recipe_id, OmniConstants.DATA_RECIPES, LOAD_PHASE_VALIDATION, "Recipe '%s' inputs[%d].count must be an integer greater than or equal to 1." % [recipe_id, index])
+
+
+func _validate_ai_persona_shape(persona: Dictionary) -> void:
+	var persona_id := str(persona.get("persona_id", ""))
+	_validate_array_field(persona_id, OmniConstants.DATA_AI_PERSONAS, "personality_traits", persona)
+	_validate_array_field(persona_id, OmniConstants.DATA_AI_PERSONAS, "knowledge_scope", persona)
+	_validate_array_field(persona_id, OmniConstants.DATA_AI_PERSONAS, "forbidden_topics", persona)
+	_validate_array_field(persona_id, OmniConstants.DATA_AI_PERSONAS, "fallback_lines", persona)
+	_validate_array_field(persona_id, OmniConstants.DATA_AI_PERSONAS, "tags", persona)
+	_validate_string_array_elements(persona_id, OmniConstants.DATA_AI_PERSONAS, "personality_traits", persona.get("personality_traits", []))
+	_validate_string_array_elements(persona_id, OmniConstants.DATA_AI_PERSONAS, "knowledge_scope", persona.get("knowledge_scope", []))
+	_validate_string_array_elements(persona_id, OmniConstants.DATA_AI_PERSONAS, "forbidden_topics", persona.get("forbidden_topics", []))
+	_validate_string_array_elements(persona_id, OmniConstants.DATA_AI_PERSONAS, "fallback_lines", persona.get("fallback_lines", []))
+	_validate_string_array_elements(persona_id, OmniConstants.DATA_AI_PERSONAS, "tags", persona.get("tags", []))
+
+	var speech_style_value: Variant = persona.get("speech_style", "")
+	if persona.has("speech_style") and not (speech_style_value is String):
+		_record_issue(persona_id, OmniConstants.DATA_AI_PERSONAS, LOAD_PHASE_VALIDATION, "AI persona '%s' field 'speech_style' must be a string." % persona_id)
+
+	var constraints_value: Variant = persona.get("response_constraints", {})
+	if not constraints_value is Dictionary:
+		if persona.has("response_constraints"):
+			_record_issue(persona_id, OmniConstants.DATA_AI_PERSONAS, LOAD_PHASE_VALIDATION, "AI persona '%s' field 'response_constraints' must be an object." % persona_id)
+		return
+
+	var constraints: Dictionary = constraints_value
+	if constraints.has("max_sentences"):
+		var max_sentences_value: Variant = constraints.get("max_sentences", 0)
+		if not _is_integral_number(max_sentences_value) or int(max_sentences_value) < 1:
+			_record_issue(persona_id, OmniConstants.DATA_AI_PERSONAS, LOAD_PHASE_VALIDATION, "AI persona '%s' response_constraints.max_sentences must be an integer greater than or equal to 1." % persona_id)
+	if constraints.has("tone"):
+		var tone_value: Variant = constraints.get("tone", "")
+		if not tone_value is String or str(tone_value).strip_edges().is_empty():
+			_record_issue(persona_id, OmniConstants.DATA_AI_PERSONAS, LOAD_PHASE_VALIDATION, "AI persona '%s' response_constraints.tone must be a non-empty string." % persona_id)
+	if constraints.has("always_in_character") and not (constraints.get("always_in_character", false) is bool):
+		_record_issue(persona_id, OmniConstants.DATA_AI_PERSONAS, LOAD_PHASE_VALIDATION, "AI persona '%s' response_constraints.always_in_character must be a bool." % persona_id)
 
 
 func _validate_unique_object_ids(entry_id: String, file_path: String, field_name: String, value: Variant) -> void:
@@ -1040,6 +1130,15 @@ func _validate_entity_references() -> void:
 			continue
 		var entity: Dictionary = entity_value
 		var entity_id := str(entity.get("entity_id", ""))
+		if entity.has("ai_persona_id"):
+			var persona_id_value: Variant = entity.get("ai_persona_id", "")
+			if not (persona_id_value is String) or str(persona_id_value).strip_edges().is_empty():
+				_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' field 'ai_persona_id' must be a non-empty string." % entity_id)
+			else:
+				var persona_id := str(persona_id_value)
+				if not has_ai_persona(persona_id):
+					_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' references unknown AI persona '%s'." % [entity_id, persona_id])
+
 		var location_id := str(entity.get("location_id", ""))
 		if not location_id.is_empty() and not has_location(location_id):
 			_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' references unknown location '%s'." % [entity_id, location_id])
@@ -1347,6 +1446,7 @@ func clear_all() -> void:
 	tasks.clear()
 	recipes.clear()
 	achievements.clear()
+	ai_personas.clear()
 	config.clear()
 
 

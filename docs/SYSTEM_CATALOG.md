@@ -92,7 +92,7 @@ These systems parse JSON templates and populate in-memory registries. All are in
 | `RecipeRegistry` | `RecipeRegistry` | `systems/loaders/recipe_registry.gd` | `recipes.json` | `recipe_id` | Crafting recipes that consume inventory parts and produce part templates. |
 | `AchievementRegistry` | `AchievementRegistry` | `systems/loaders/achievement_registry.gd` | `achievements.json` | `achievement_id` | Achievements with unlock conditions and rewards. |
 | `ConfigLoader` | — | `systems/loaders/config_loader.gd` | `config.json` | — (deep-merged) | Engine-wide configuration: AI provider, theme overrides, debug settings. |
-
+| `AIPersonaRegistry` | `AIPersonaRegistry` | `systems/loaders/ai_persona_registry.gd` | `ai_personas.json` | `persona_id` | Mod-authored AI personas used by dialogue and future AI consumers. |
 All loaders support **two-phase patching**:
 1. **Phase 1:** Additions — new entries added to the registry
 2. **Phase 2:** Patches — existing entries are updated non-destructively

@@ -92,6 +92,8 @@ systems/
 └── transaction_service.gd
 ```
 
+`systems/loaders/` also includes `ai_persona_registry.gd`, which loads `ai_personas.json` persona templates into `DataManager`.
+
 All of the following service scripts are fully implemented and should not be omitted from any architecture reference:
 
 - `assembly_commit_service.gd`

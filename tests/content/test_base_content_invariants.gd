@@ -17,6 +17,14 @@ func test_base_bootstrap_content_exists() -> void:
 	assert_eq(str(player_template.get("location_id", "")), starting_location_id)
 
 
+func test_base_kael_ai_persona_exists_and_is_bound() -> void:
+	var kael_template := DataManager.get_entity("base:npc_fixer")
+	assert_eq(str(kael_template.get("ai_persona_id", "")), "base:kael_persona")
+	var kael_persona := DataManager.get_ai_persona("base:kael_persona")
+	assert_false(kael_persona.is_empty())
+	assert_eq(str(kael_persona.get("display_name", "")), "Kael")
+
+
 func test_base_player_head_has_custom_color_values_for_ui_testing() -> void:
 	var head_template := DataManager.get_part("base:human_head")
 	assert_false(head_template.is_empty())

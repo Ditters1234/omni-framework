@@ -113,6 +113,7 @@
       "entity_id": "base:npc_fixer",
       "display_name": "Kael",
       "description": "A soft-spoken fixer who operates out of the old warehouse. Hands out contracts for the Threshold Syndicate and always pays on time.",
+      "ai_persona_id": "base:kael_persona",
       "portrait": "res://mods/base/assets/entity_kael.png",
       "dialogue_blip": "res://mods/base/assets/audio/sfx_dialogue_kael.wav",
       "location_id": "base:warehouse",

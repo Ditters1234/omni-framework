@@ -90,6 +90,36 @@ func test_apply_patches_reports_unknown_patch_operations() -> void:
 	assert_true(_messages_contain(issue_messages, "not a supported parts patch operation"))
 
 
+func test_register_additions_loads_ai_personas_and_apply_patches_updates_tags() -> void:
+	var data_path := _write_data_file(
+		"ai_personas",
+		OmniConstants.DATA_AI_PERSONAS,
+		"{\"ai_personas\": [{\"persona_id\": \"base:test_persona\", \"display_name\": \"Test Persona\", \"system_prompt_template\": \"Stay in character.\", \"tags\": [\"merchant\"]}]}"
+	)
+
+	var issues := DataManager.register_additions("test:ai_personas", data_path)
+
+	assert_eq(issues.size(), 0)
+	assert_eq(str(DataManager.get_ai_persona("base:test_persona").get("display_name", "")), "Test Persona")
+
+	var patch_data_path := _write_data_file(
+		"ai_persona_patch",
+		OmniConstants.DATA_AI_PERSONAS,
+		"{\"patches\": [{\"target\": \"base:test_persona\", \"add_tags\": [\"quest_giver\"], \"remove_tags\": [\"merchant\"]}]}"
+	)
+
+	var patch_issues := DataManager.apply_patches("test:ai_persona_patch", patch_data_path)
+	var persona := DataManager.get_ai_persona("base:test_persona")
+	var tags_value: Variant = persona.get("tags", [])
+
+	assert_eq(patch_issues.size(), 0)
+	assert_true(tags_value is Array)
+	if tags_value is Array:
+		var tags: Array = tags_value
+		assert_true(tags.has("quest_giver"))
+		assert_false(tags.has("merchant"))
+
+
 func test_validate_loaded_content_reports_cross_registry_reference_failures() -> void:
 	DataManager.definitions["currencies"] = ["credits"]
 	DataManager.definitions["stats"] = [
@@ -167,6 +197,19 @@ func test_validate_loaded_content_reports_unknown_stats_and_currencies() -> void
 	assert_true(_messages_contain(issue_messages, "base:bad_part.price references unknown currency 'ghost_money'"))
 	assert_true(_messages_contain(issue_messages, "base:bad_entity.stats references unknown stat 'mystery'"))
 	assert_true(_messages_contain(issue_messages, "base:bad_entity.currencies references unknown currency 'ghost_money'"))
+
+
+func test_validate_loaded_content_reports_unknown_ai_persona_references() -> void:
+	DataManager.entities["base:talker"] = {
+		"entity_id": "base:talker",
+		"display_name": "Talker",
+		"ai_persona_id": "base:missing_persona"
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "references unknown AI persona 'base:missing_persona'"))
 
 
 func test_validate_loaded_content_reports_recipe_reference_failures() -> void:
