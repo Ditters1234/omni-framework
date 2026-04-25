@@ -1,0 +1,38 @@
+{
+  "recipes": [
+    {
+      "recipe_id": "example:undercity_clinic:recycled_plating",
+      "display_name": "Recycled Bone Plating",
+      "description": "Reshape salvage plates into subdermal armor inserts.",
+      "output_template_id": "example:undercity_clinic:recycled_plating",
+      "output_count": 1,
+      "inputs": [
+        { "template_id": "base:scrap_plate", "count": 3 },
+        { "template_id": "example:undercity_clinic:synth_blood", "count": 1 }
+      ],
+      "required_stations": ["example:undercity_clinic:mira_bench"],
+      "required_stats": {},
+      "required_flags": [],
+      "craft_time_ticks": 2,
+      "discovery": "always",
+      "tags": ["armor", "medical"]
+    },
+    {
+      "recipe_id": "example:undercity_clinic:nerve_splice",
+      "display_name": "Nerve Splice",
+      "description": "Wire a pain-bypass circuit from salvage chips and synthetic blood.",
+      "output_template_id": "example:undercity_clinic:nerve_splice",
+      "output_count": 1,
+      "inputs": [
+        { "template_id": "base:salvage_chip", "count": 3 },
+        { "template_id": "example:undercity_clinic:synth_blood", "count": 2 }
+      ],
+      "required_stations": ["example:undercity_clinic:mira_bench"],
+      "required_stats": { "power": 2 },
+      "required_flags": [],
+      "craft_time_ticks": 3,
+      "discovery": "always",
+      "tags": ["implant", "medical"]
+    }
+  ]
+}

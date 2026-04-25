@@ -1,0 +1,68 @@
+{
+  "locations": [
+    {
+      "location_id": "example:undercity_clinic:clinic",
+      "display_name": "Mira's Clinic",
+      "description": "A sealed-off maintenance bay converted into a surgical suite. The air smells like disinfectant and solder. Mira keeps the lights bright and the door locked to anyone she hasn't vetted.",
+      "locked_message": "A reinforced door with no handle. You'll need to find another way in.",
+      "entry_condition": {
+        "type": "has_flag",
+        "flag_id": "example:undercity_clinic:clinic_unlocked",
+        "value": true
+      },
+      "connections": {
+        "base:undercity": 1
+      },
+      "screens": [
+        {
+          "tab_id": "clinic_crafting",
+          "display_name": "Mira's Workbench",
+          "description": "A precision surgical workbench. Better tools than anything on the surface.",
+          "backend_class": "CraftingBackend",
+          "station_id": "example:undercity_clinic:mira_bench",
+          "crafter_entity_id": "player",
+          "input_source_entity_id": "player",
+          "output_destination_entity_id": "player",
+          "screen_title": "Surgical Workbench"
+        },
+        {
+          "tab_id": "clinic_status",
+          "display_name": "Check Status",
+          "description": "Review your current condition.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "player",
+          "screen_title": "Medical Readout"
+        }
+      ]
+    }
+  ],
+  "patches": [
+    {
+      "target": "base:undercity",
+      "add_connections": {
+        "example:undercity_clinic:clinic": 1
+      },
+      "add_screens": [
+        {
+          "tab_id": "undercity_clinic_hint",
+          "display_name": "Sealed Door",
+          "description": "A reinforced maintenance hatch. Locked from the inside. Someone might open it if you prove you can survive down here.",
+          "backend_class": "ChallengeBackend",
+          "required_stat": "armor",
+          "required_value": 2,
+          "screen_title": "Sealed Maintenance Hatch",
+          "screen_description": "The door has a biometric scanner that reads subdermal implant signatures. You need at least 2 armor from implants to register.",
+          "confirm_label": "Activate Scanner",
+          "cancel_label": "Walk Away",
+          "action_payload": {
+            "type": "set_flag",
+            "flag_id": "example:undercity_clinic:clinic_unlocked",
+            "value": true
+          },
+          "success_sound": "res://mods/base/assets/audio/sfx_challenge_success.wav",
+          "failure_sound": "res://mods/base/assets/audio/sfx_challenge_failure.wav"
+        }
+      ]
+    }
+  ]
+}

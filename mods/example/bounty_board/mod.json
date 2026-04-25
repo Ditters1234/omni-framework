@@ -1,0 +1,10 @@
+{
+  "id": "example:bounty_board",
+  "name": "Bounty Board",
+  "version": "1.0.0",
+  "schema_version": 1,
+  "load_order": 30,
+  "enabled": true,
+  "dependencies": ["base"],
+  "description": "Adds the Ironweld Collective, a rival faction with a fortified outpost, a patrolling enforcer, bounty tasks, and a reputation-gated quest line."
+}

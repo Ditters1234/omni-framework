@@ -1,0 +1,24 @@
+{
+  "factions": [
+    {
+      "faction_id": "example:bounty_board:ironweld",
+      "display_name": "Ironweld Collective",
+      "description": "A decentralized network of mechanics, enforcers, and bounty hunters operating out of salvage yards and fabrication bays. They build what they need and break what they don't. Not ideological — just territorial.",
+      "faction_color": "#e87b35",
+      "territory": ["example:bounty_board:outpost"],
+      "roster": [
+        "example:bounty_board:enforcer_voss",
+        "example:bounty_board:handler_rin"
+      ],
+      "reputation_thresholds": {
+        "allied": 100,
+        "friendly": 40,
+        "neutral": 0,
+        "hostile": -30
+      },
+      "quest_pool": [
+        "example:bounty_board:prove_yourself"
+      ]
+    }
+  ]
+}

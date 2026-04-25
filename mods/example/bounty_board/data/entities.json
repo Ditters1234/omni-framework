@@ -1,0 +1,139 @@
+{
+  "entities": [
+    {
+      "entity_id": "example:bounty_board:handler_rin",
+      "display_name": "Handler Rin",
+      "description": "The Ironweld's contract dispatcher. She decides who gets paid and who gets cut loose. Efficient, unreadable, and always holding a data tablet.",
+      "location_id": "example:bounty_board:outpost",
+      "currencies": {
+        "credits": 5000
+      },
+      "stats": {
+        "charisma": 5,
+        "luck": 2,
+        "power": 1,
+        "armor": 0,
+        "health": 90,
+        "health_max": 90,
+        "stamina": 60,
+        "stamina_max": 60
+      },
+      "flags": {},
+      "inventory": [
+        {
+          "instance_id": "rin_badge_001",
+          "template_id": "example:bounty_board:ironweld_badge"
+        },
+        {
+          "instance_id": "rin_knuckles_001",
+          "template_id": "example:bounty_board:shock_knuckles"
+        },
+        {
+          "instance_id": "rin_knuckles_002",
+          "template_id": "example:bounty_board:shock_knuckles"
+        },
+        {
+          "instance_id": "rin_scrambler_001",
+          "template_id": "example:bounty_board:signal_scrambler"
+        },
+        {
+          "instance_id": "rin_medkit_001",
+          "template_id": "base:field_medkit"
+        },
+        {
+          "instance_id": "rin_medkit_002",
+          "template_id": "base:field_medkit"
+        }
+      ],
+      "interactions": [
+        {
+          "tab_id": "rin_bounties",
+          "label": "View Bounties",
+          "description": "Check the Ironweld contract board for available work.",
+          "backend_class": "TaskProviderBackend",
+          "faction_id": "example:bounty_board:ironweld"
+        },
+        {
+          "tab_id": "rin_trade",
+          "label": "Buy Gear",
+          "description": "Purchase Ironweld-issue equipment from Rin's stock.",
+          "backend_class": "ExchangeBackend",
+          "source_inventory": "entity:example:bounty_board:handler_rin",
+          "destination_inventory": "player",
+          "currency_id": "credits"
+        },
+        {
+          "tab_id": "rin_standing",
+          "label": "Check Standing",
+          "description": "Review your reputation with the Ironweld Collective.",
+          "backend_class": "FactionReputationBackend",
+          "target_entity_id": "player"
+        },
+        {
+          "tab_id": "rin_sheet",
+          "label": "Scan",
+          "description": "Read Handler Rin's profile.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "example:bounty_board:handler_rin",
+          "screen_title": "Handler Rin"
+        }
+      ]
+    },
+    {
+      "entity_id": "example:bounty_board:enforcer_voss",
+      "display_name": "Enforcer Voss",
+      "description": "An Ironweld patrol enforcer built like a loading mech. He walks a route between the Outpost and Market Row, watching for trouble and making sure everyone knows the Collective has a presence.",
+      "location_id": "example:bounty_board:outpost",
+      "currencies": {
+        "credits": 800
+      },
+      "stats": {
+        "power": 5,
+        "armor": 4,
+        "charisma": 1,
+        "luck": 0,
+        "health": 150,
+        "health_max": 150,
+        "stamina": 80,
+        "stamina_max": 80
+      },
+      "flags": {},
+      "inventory": [
+        {
+          "instance_id": "voss_knuckles_001",
+          "template_id": "example:bounty_board:shock_knuckles"
+        }
+      ],
+      "interactions": [
+        {
+          "tab_id": "voss_challenge",
+          "label": "Spar",
+          "description": "Challenge Voss to a sparring match. Win and he might put in a word for you.",
+          "backend_class": "ChallengeBackend",
+          "required_stat": "power",
+          "required_value": 4,
+          "screen_title": "Sparring Match",
+          "screen_description": "Voss cracks his knuckles and squares up. You need power 4+ to hold your own.",
+          "confirm_label": "Fight",
+          "cancel_label": "Back Down",
+          "reward": {
+            "credits": 100,
+            "reputation": {
+              "example:bounty_board:ironweld": 20
+            }
+          },
+          "success_sound": "res://mods/base/assets/audio/sfx_challenge_success.wav",
+          "failure_sound": "res://mods/base/assets/audio/sfx_challenge_failure.wav"
+        },
+        {
+          "tab_id": "voss_sheet",
+          "label": "Scan",
+          "description": "Read Enforcer Voss's profile.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "example:bounty_board:enforcer_voss",
+          "screen_title": "Enforcer Voss"
+        }
+      ]
+    }
+  ]
+}

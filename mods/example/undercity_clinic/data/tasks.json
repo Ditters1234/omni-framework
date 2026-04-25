@@ -1,0 +1,49 @@
+{
+  "task_templates": [
+    {
+      "template_id": "example:undercity_clinic:blood_run",
+      "type": "DELIVER",
+      "target": "example:undercity_clinic:clinic",
+      "travel_cost": 2,
+      "reward": {
+        "credits": 90,
+        "reputation": {
+          "base:threshold_syndicate": 10
+        },
+        "items": [
+          {
+            "template_id": "example:undercity_clinic:trauma_patch",
+            "count": 1
+          }
+        ]
+      },
+      "description": "Deliver a cooler of synthetic blood to Mira's clinic. Don't shake it.",
+      "difficulty": 1,
+      "repeatable": true
+    },
+    {
+      "template_id": "example:undercity_clinic:organ_salvage",
+      "type": "WAIT",
+      "duration": 5,
+      "reward": {
+        "credits": 160,
+        "reputation": {
+          "base:threshold_syndicate": 15
+        },
+        "items": [
+          {
+            "template_id": "base:salvage_chip",
+            "count": 2
+          },
+          {
+            "template_id": "example:undercity_clinic:synth_blood",
+            "count": 1
+          }
+        ]
+      },
+      "description": "Assist Mira with a salvage operation on some decommissioned medical drones. Messy but profitable.",
+      "difficulty": 2,
+      "repeatable": true
+    }
+  ]
+}

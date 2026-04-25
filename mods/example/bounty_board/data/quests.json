@@ -1,0 +1,59 @@
+{
+  "quests": [
+    {
+      "quest_id": "example:bounty_board:prove_yourself",
+      "display_name": "Iron Proof",
+      "description": "The Ironweld Collective doesn't take walk-ins. Complete bounties, build reputation, and earn your badge.",
+      "stages": [
+        {
+          "description": "Travel to the Ironweld Outpost.",
+          "objectives": [
+            {
+              "type": "reach_location",
+              "location_id": "example:bounty_board:outpost"
+            }
+          ],
+          "reward": {
+            "credits": 50
+          }
+        },
+        {
+          "description": "Complete bounties until you reach Friendly standing with the Ironweld Collective (40+ reputation).",
+          "objectives": [
+            {
+              "type": "reputation_threshold",
+              "faction_id": "example:bounty_board:ironweld",
+              "threshold": 40,
+              "comparison": ">="
+            }
+          ]
+        },
+        {
+          "description": "Beat Enforcer Voss in a sparring match to prove you can fight.",
+          "objectives": [
+            {
+              "type": "stat_check",
+              "stat": "power",
+              "op": ">=",
+              "value": 4
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "credits": 300,
+        "data_shards": 2,
+        "reputation": {
+          "example:bounty_board:ironweld": 30
+        },
+        "items": [
+          {
+            "template_id": "example:bounty_board:ironweld_badge",
+            "count": 1
+          }
+        ]
+      },
+      "repeatable": false
+    }
+  ]
+}

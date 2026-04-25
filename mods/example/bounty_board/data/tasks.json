@@ -1,0 +1,72 @@
+{
+  "task_templates": [
+    {
+      "template_id": "example:bounty_board:patrol_escort",
+      "type": "DELIVER",
+      "target": "base:market_row",
+      "travel_cost": 3,
+      "reward": {
+        "credits": 100,
+        "reputation": {
+          "example:bounty_board:ironweld": 15
+        }
+      },
+      "description": "Accompany an Ironweld convoy from the Outpost to Market Row. Keep your eyes open.",
+      "difficulty": 1,
+      "repeatable": true
+    },
+    {
+      "template_id": "example:bounty_board:salvage_sweep",
+      "type": "WAIT",
+      "duration": 4,
+      "reward": {
+        "credits": 140,
+        "reputation": {
+          "example:bounty_board:ironweld": 10
+        },
+        "items": [
+          {
+            "template_id": "base:scrap_plate",
+            "count": 2
+          }
+        ]
+      },
+      "description": "Clear and catalog a section of abandoned industrial corridors for Ironweld salvage crews.",
+      "difficulty": 2,
+      "repeatable": true
+    },
+    {
+      "template_id": "example:bounty_board:debt_collection",
+      "type": "DELIVER",
+      "target": "base:undercity",
+      "travel_cost": 4,
+      "reward": {
+        "credits": 200,
+        "data_shards": 1,
+        "reputation": {
+          "example:bounty_board:ironweld": 20,
+          "base:threshold_syndicate": -10
+        }
+      },
+      "description": "Collect on an outstanding debt from a Syndicate-aligned scavenger in the Undercity. The Ironweld doesn't forget what it's owed.",
+      "difficulty": 3,
+      "repeatable": true
+    },
+    {
+      "template_id": "example:bounty_board:voss_to_market",
+      "type": "TRAVEL",
+      "target": "base:market_row",
+      "repeatable": true,
+      "reward": {},
+      "description": "Voss patrols to Market Row."
+    },
+    {
+      "template_id": "example:bounty_board:voss_to_outpost",
+      "type": "TRAVEL",
+      "target": "example:bounty_board:outpost",
+      "repeatable": true,
+      "reward": {},
+      "description": "Voss returns to the Outpost."
+    }
+  ]
+}

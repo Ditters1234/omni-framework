@@ -1,0 +1,65 @@
+{
+  "parts": [
+    {
+      "id": "example:undercity_clinic:combat_stim",
+      "display_name": "Combat Stimulant",
+      "description": "A single-use adrenal injector. Boosts power briefly, but the crash is real.",
+      "tags": ["consumable", "medical", "combat"],
+      "price": {
+        "credits": 65
+      },
+      "stats": {
+        "power": 2
+      },
+      "equippable": false
+    },
+    {
+      "id": "example:undercity_clinic:trauma_patch",
+      "display_name": "Trauma Patch",
+      "description": "A self-sealing wound dressing with embedded coagulant fibers. Standard issue for anyone who works below street level.",
+      "tags": ["consumable", "medical"],
+      "price": {
+        "credits": 30
+      },
+      "equippable": false
+    },
+    {
+      "id": "example:undercity_clinic:recycled_plating",
+      "display_name": "Recycled Bone Plating",
+      "description": "Salvaged ceramic-composite plates reshaped to fit under skin. Not pretty, but effective.",
+      "tags": ["subdermal_armor", "armor", "crafted"],
+      "price": {
+        "credits": 180
+      },
+      "stats": {
+        "armor": 3,
+        "health_max": 15
+      },
+      "equippable": true
+    },
+    {
+      "id": "example:undercity_clinic:nerve_splice",
+      "display_name": "Nerve Splice",
+      "description": "A bypass circuit that reroutes pain signals. You still take the damage, you just don't notice until later.",
+      "tags": ["neural_implant", "device", "crafted"],
+      "price": {
+        "credits": 220
+      },
+      "stats": {
+        "stamina_max": 15,
+        "health_max": -10
+      },
+      "equippable": true
+    },
+    {
+      "id": "example:undercity_clinic:synth_blood",
+      "display_name": "Synthetic Blood Pack",
+      "description": "Oxygenated nanite suspension. Compatible with everything. The label says 'Not for resale' but here it is.",
+      "tags": ["material", "medical"],
+      "price": {
+        "credits": 45
+      },
+      "equippable": false
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "task_routines": [
+    {
+      "routine_id": "example:bounty_board:voss_patrol",
+      "entity_id": "example:bounty_board:enforcer_voss",
+      "loop": "daily",
+      "entries": [
+        {
+          "tick": 8,
+          "task_template_id": "example:bounty_board:voss_to_market"
+        },
+        {
+          "tick": 16,
+          "task_template_id": "example:bounty_board:voss_to_outpost"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "parts": [
+    {
+      "id": "example:bounty_board:ironweld_badge",
+      "display_name": "Ironweld Contractor Badge",
+      "description": "A stamped alloy tag that identifies the wearer as a registered Ironweld contractor. Worn proudly or hidden carefully depending on the neighborhood.",
+      "tags": ["accessory", "trinket", "faction_token"],
+      "price": {
+        "credits": 0
+      },
+      "stats": {
+        "armor": 1
+      },
+      "equippable": false
+    },
+    {
+      "id": "example:bounty_board:shock_knuckles",
+      "display_name": "Shock Knuckles",
+      "description": "Weighted durasteel knuckle plates with an embedded capacitor. One solid hit delivers a short circuit to anything with wiring.",
+      "tags": ["weapon", "melee"],
+      "price": {
+        "credits": 180
+      },
+      "stats": {
+        "power": 3
+      },
+      "equippable": true
+    },
+    {
+      "id": "example:bounty_board:signal_scrambler",
+      "display_name": "Signal Scrambler",
+      "description": "A compact jammer that disrupts short-range comms and surveillance drones. Standard issue for Ironweld enforcement patrols.",
+      "tags": ["device", "neural_implant"],
+      "price": {
+        "credits": 275
+      },
+      "stats": {
+        "luck": 3,
+        "charisma": -1
+      },
+      "equippable": true
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "locations": [
+    {
+      "location_id": "example:bounty_board:outpost",
+      "display_name": "Ironweld Outpost",
+      "description": "A fortified salvage yard on the industrial perimeter. Shipping containers welded into walls, arc-light towers on the corners, and the constant ring of hammers on metal. The Ironweld Collective runs their operations from here.",
+      "faction_id": "example:bounty_board:ironweld",
+      "connections": {
+        "base:warehouse": 2,
+        "base:market_row": 3
+      },
+      "map_position": { "x": 0.8, "y": 0.3 },
+      "screens": [
+        {
+          "tab_id": "outpost_status",
+          "display_name": "Check Status",
+          "description": "Review your current condition.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "player",
+          "screen_title": "Field Status"
+        },
+        {
+          "tab_id": "outpost_quests",
+          "display_name": "Active Contracts",
+          "description": "Check your active contract status.",
+          "backend_class": "ActiveQuestLogBackend",
+          "screen_title": "Active Contracts"
+        }
+      ]
+    }
+  ],
+  "patches": [
+    {
+      "target": "base:warehouse",
+      "add_connections": {
+        "example:bounty_board:outpost": 2
+      }
+    },
+    {
+      "target": "base:market_row",
+      "add_connections": {
+        "example:bounty_board:outpost": 3
+      }
+    }
+  ]
+}

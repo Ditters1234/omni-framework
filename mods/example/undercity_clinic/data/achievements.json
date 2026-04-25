@@ -1,0 +1,12 @@
+{
+  "achievements": [
+    {
+      "achievement_id": "example:undercity_clinic:found_the_doctor",
+      "display_name": "House Call",
+      "description": "Discover Mira's hidden clinic beneath the Undercity.",
+      "stat_name": "locations_discovered",
+      "requirement": 5,
+      "hidden": true
+    }
+  ]
+}

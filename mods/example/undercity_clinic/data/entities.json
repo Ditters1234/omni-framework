@@ -1,0 +1,104 @@
+{
+  "entities": [
+    {
+      "entity_id": "example:undercity_clinic:dr_mira",
+      "display_name": "Dr. Mira",
+      "description": "A former military combat medic who lost her license and found the Undercity. She still has the skills, the hands, and no patience for anyone who wastes her time.",
+      "location_id": "example:undercity_clinic:clinic",
+      "currencies": {
+        "credits": 3000
+      },
+      "stats": {
+        "power": 2,
+        "armor": 1,
+        "charisma": 4,
+        "luck": 1,
+        "health": 120,
+        "health_max": 120,
+        "stamina": 70,
+        "stamina_max": 70
+      },
+      "flags": {},
+      "inventory": [
+        {
+          "instance_id": "mira_stim_001",
+          "template_id": "example:undercity_clinic:combat_stim"
+        },
+        {
+          "instance_id": "mira_stim_002",
+          "template_id": "example:undercity_clinic:combat_stim"
+        },
+        {
+          "instance_id": "mira_stim_003",
+          "template_id": "example:undercity_clinic:combat_stim"
+        },
+        {
+          "instance_id": "mira_patch_001",
+          "template_id": "example:undercity_clinic:trauma_patch"
+        },
+        {
+          "instance_id": "mira_patch_002",
+          "template_id": "example:undercity_clinic:trauma_patch"
+        },
+        {
+          "instance_id": "mira_patch_003",
+          "template_id": "example:undercity_clinic:trauma_patch"
+        },
+        {
+          "instance_id": "mira_blood_001",
+          "template_id": "example:undercity_clinic:synth_blood"
+        },
+        {
+          "instance_id": "mira_blood_002",
+          "template_id": "example:undercity_clinic:synth_blood"
+        },
+        {
+          "instance_id": "mira_blood_003",
+          "template_id": "example:undercity_clinic:synth_blood"
+        },
+        {
+          "instance_id": "mira_blood_004",
+          "template_id": "example:undercity_clinic:synth_blood"
+        },
+        {
+          "instance_id": "mira_medkit_001",
+          "template_id": "base:field_medkit"
+        },
+        {
+          "instance_id": "mira_medkit_002",
+          "template_id": "base:field_medkit"
+        }
+      ],
+      "interactions": [
+        {
+          "tab_id": "mira_trade",
+          "label": "Buy Medical Supplies",
+          "description": "Browse Dr. Mira's stock of stims, patches, and blood packs.",
+          "backend_class": "ExchangeBackend",
+          "source_inventory": "entity:example:undercity_clinic:dr_mira",
+          "destination_inventory": "player",
+          "currency_id": "credits"
+        },
+        {
+          "tab_id": "mira_install",
+          "label": "Install Implants",
+          "description": "Let Mira install or swap out implants and armor from your own inventory.",
+          "backend_class": "AssemblyEditorBackend",
+          "target_entity_id": "player",
+          "option_source_entity_id": "player",
+          "option_tags": ["neural_implant", "subdermal_armor"],
+          "screen_title": "Mira's Operating Table",
+          "screen_description": "Install from your own inventory. No charge for the surgery — Mira owes you one."
+        },
+        {
+          "tab_id": "mira_sheet",
+          "label": "Scan",
+          "description": "Read Dr. Mira's profile.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "example:undercity_clinic:dr_mira",
+          "screen_title": "Dr. Mira"
+        }
+      ]
+    }
+  ]
+}

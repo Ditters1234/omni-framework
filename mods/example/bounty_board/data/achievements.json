@@ -1,0 +1,11 @@
+{
+  "achievements": [
+    {
+      "achievement_id": "example:bounty_board:bounty_hunter",
+      "display_name": "Bounty Hunter",
+      "description": "Complete 5 tasks for the Ironweld Collective.",
+      "stat_name": "tasks_completed",
+      "requirement": 15
+    }
+  ]
+}

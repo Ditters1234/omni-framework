@@ -1,0 +1,49 @@
+{
+  "quests": [
+    {
+      "quest_id": "example:undercity_clinic:find_the_clinic",
+      "display_name": "Underground Medicine",
+      "description": "Word is there's a real doctor operating somewhere beneath the Undercity. Find the clinic and see what she can do for you.",
+      "stages": [
+        {
+          "description": "Get subdermal armor installed. You need at least 2 armor to pass the clinic scanner.",
+          "objectives": [
+            {
+              "type": "stat_check",
+              "stat": "armor",
+              "op": ">=",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "description": "Find and unlock Mira's clinic in the Undercity.",
+          "objectives": [
+            {
+              "type": "has_flag",
+              "flag_id": "example:undercity_clinic:clinic_unlocked",
+              "value": true
+            }
+          ]
+        },
+        {
+          "description": "Visit the clinic.",
+          "objectives": [
+            {
+              "type": "reach_location",
+              "location_id": "example:undercity_clinic:clinic"
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "credits": 250,
+        "data_shards": 3,
+        "reputation": {
+          "base:threshold_syndicate": 25
+        }
+      },
+      "repeatable": false
+    }
+  ]
+}
