@@ -1,44 +1,57 @@
 {
   "parts": [
     {
-      "id": "example:bounty_board:ironweld_badge",
-      "display_name": "Ironweld Contractor Badge",
       "description": "A stamped alloy tag that identifies the wearer as a registered Ironweld contractor. Worn proudly or hidden carefully depending on the neighborhood.",
-      "tags": ["accessory", "trinket", "faction_token"],
+      "display_name": "Ironweld Contractor Badge",
+      "equippable": false,
+      "id": "example:bounty_board:ironweld_badge",
       "price": {
-        "credits": 0
+        "credits": 0.0
       },
+      "sprite": "res://assets/generated/ironweld_badge_frame_0_1777424445.png",
       "stats": {
-        "armor": 1
+        "armor": 1.0
       },
-      "equippable": false
+      "tags": [
+        "accessory",
+        "trinket",
+        "faction_token"
+      ]
     },
     {
-      "id": "example:bounty_board:shock_knuckles",
-      "display_name": "Shock Knuckles",
       "description": "Weighted durasteel knuckle plates with an embedded capacitor. One solid hit delivers a short circuit to anything with wiring.",
-      "tags": ["weapon", "melee"],
+      "display_name": "Shock Knuckles",
+      "equippable": true,
+      "id": "example:bounty_board:shock_knuckles",
       "price": {
-        "credits": 180
+        "credits": 180.0
       },
+      "sprite": "res://assets/generated/shock_knuckles_frame_0_1777424445.png",
       "stats": {
-        "power": 3
+        "power": 3.0
       },
-      "equippable": true
+      "tags": [
+        "weapon",
+        "melee"
+      ]
     },
     {
-      "id": "example:bounty_board:signal_scrambler",
-      "display_name": "Signal Scrambler",
       "description": "A compact jammer that disrupts short-range comms and surveillance drones. Standard issue for Ironweld enforcement patrols.",
-      "tags": ["device", "neural_implant"],
+      "display_name": "Signal Scrambler",
+      "equippable": true,
+      "id": "example:bounty_board:signal_scrambler",
       "price": {
-        "credits": 275
+        "credits": 275.0
       },
+      "sprite": "res://assets/generated/signal_scrambler_frame_0_1777424448.png",
       "stats": {
-        "luck": 3,
-        "charisma": -1
+        "charisma": -1.0,
+        "luck": 3.0
       },
-      "equippable": true
+      "tags": [
+        "device",
+        "neural_implant"
+      ]
     }
   ]
 }

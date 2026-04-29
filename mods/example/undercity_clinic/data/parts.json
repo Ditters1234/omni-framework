@@ -1,65 +1,88 @@
 {
   "parts": [
     {
-      "id": "example:undercity_clinic:combat_stim",
-      "display_name": "Combat Stimulant",
       "description": "A single-use adrenal injector. Boosts power briefly, but the crash is real.",
-      "tags": ["consumable", "medical", "combat"],
+      "display_name": "Combat Stimulant",
+      "equippable": false,
+      "id": "example:undercity_clinic:combat_stim",
       "price": {
-        "credits": 65
+        "credits": 65.0
       },
+      "sprite": "res://assets/generated/combat_stim_frame_0_1777424446.png",
       "stats": {
-        "power": 2
+        "power": 2.0
       },
-      "equippable": false
+      "tags": [
+        "consumable",
+        "medical",
+        "combat"
+      ]
     },
     {
-      "id": "example:undercity_clinic:trauma_patch",
-      "display_name": "Trauma Patch",
       "description": "A self-sealing wound dressing with embedded coagulant fibers. Standard issue for anyone who works below street level.",
-      "tags": ["consumable", "medical"],
+      "display_name": "Trauma Patch",
+      "equippable": false,
+      "id": "example:undercity_clinic:trauma_patch",
       "price": {
-        "credits": 30
+        "credits": 30.0
       },
-      "equippable": false
+      "sprite": "res://assets/generated/trauma_patch_frame_0_1777424446.png",
+      "tags": [
+        "consumable",
+        "medical"
+      ]
     },
     {
-      "id": "example:undercity_clinic:recycled_plating",
-      "display_name": "Recycled Bone Plating",
       "description": "Salvaged ceramic-composite plates reshaped to fit under skin. Not pretty, but effective.",
-      "tags": ["subdermal_armor", "armor", "crafted"],
+      "display_name": "Recycled Bone Plating",
+      "equippable": true,
+      "id": "example:undercity_clinic:recycled_plating",
       "price": {
-        "credits": 180
+        "credits": 180.0
       },
+      "sprite": "res://assets/generated/recycled_plating_frame_0_1777424447.png",
       "stats": {
-        "armor": 3,
-        "health_max": 15
+        "armor": 3.0,
+        "health_max": 15.0
       },
-      "equippable": true
+      "tags": [
+        "subdermal_armor",
+        "armor",
+        "crafted"
+      ]
     },
     {
-      "id": "example:undercity_clinic:nerve_splice",
-      "display_name": "Nerve Splice",
       "description": "A bypass circuit that reroutes pain signals. You still take the damage, you just don't notice until later.",
-      "tags": ["neural_implant", "device", "crafted"],
+      "display_name": "Nerve Splice",
+      "equippable": true,
+      "id": "example:undercity_clinic:nerve_splice",
       "price": {
-        "credits": 220
+        "credits": 220.0
       },
+      "sprite": "res://assets/generated/nerve_splice_frame_0_1777424446.png",
       "stats": {
-        "stamina_max": 15,
-        "health_max": -10
+        "health_max": -10.0,
+        "stamina_max": 15.0
       },
-      "equippable": true
+      "tags": [
+        "neural_implant",
+        "device",
+        "crafted"
+      ]
     },
     {
-      "id": "example:undercity_clinic:synth_blood",
-      "display_name": "Synthetic Blood Pack",
       "description": "Oxygenated nanite suspension. Compatible with everything. The label says 'Not for resale' but here it is.",
-      "tags": ["material", "medical"],
+      "display_name": "Synthetic Blood Pack",
+      "equippable": false,
+      "id": "example:undercity_clinic:synth_blood",
       "price": {
-        "credits": 45
+        "credits": 45.0
       },
-      "equippable": false
+      "sprite": "res://assets/generated/synth_blood_frame_0_1777424445.png",
+      "tags": [
+        "material",
+        "medical"
+      ]
     }
   ]
 }

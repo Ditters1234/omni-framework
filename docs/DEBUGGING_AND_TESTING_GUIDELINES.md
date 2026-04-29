@@ -33,6 +33,15 @@ Use the built-in dev overlay for:
 
 The current implementation is intentionally lightweight and ships as standard Godot UI so it remains easy to keep alive while the platform architecture is still moving.
 
+Current overlay behavior:
+
+- Press `F3` to toggle the overlay in debug builds.
+- Use `Auto` to pause or resume live refresh when inspecting a noisy state.
+- Use `Refresh` for a one-shot full-panel refresh.
+- Use the Events domain selector and event search field to narrow recent `GameEvents` output.
+- Use the entity search field to narrow entity roster/detail output by entity id, template id, or location.
+- Use the `AI / Save` tab for provider readiness, recent AI requests, save/load summaries, validation issues, and clock diagnostics.
+
 ### `imgui-godot`
 
 Use `imgui-godot` for:

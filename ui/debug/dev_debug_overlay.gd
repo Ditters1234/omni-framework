@@ -3,10 +3,13 @@ extends CanvasLayer
 class_name OmniDevDebugOverlay
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
-const PANEL_WIDTH := 620.0
-const PANEL_HEIGHT := 700.0
+const PANEL_WIDTH := 720.0
+const PANEL_HEIGHT := 760.0
+const PANEL_MARGIN := 16.0
 const REFRESH_INTERVAL := 0.25
 const MAX_VISIBLE_EVENTS := 40
+const MAX_VISIBLE_ENTITIES := 30
+const MAX_VISIBLE_INVENTORY_ROWS := 12
 
 # Tab indices
 const TAB_BOOT := 0
@@ -14,13 +17,21 @@ const TAB_REGISTRIES := 1
 const TAB_RUNTIME := 2
 const TAB_EVENTS := 3
 const TAB_ENTITIES := 4
+const TAB_AI_SAVE := 5
 
 var _overlay_visible: bool = false
+var _auto_refresh_enabled: bool = true
 
 var _panel: PanelContainer = null
 var _tab_container: TabContainer = null
 var _tab_labels: Array[RichTextLabel] = []
 var _refresh_timer: Timer = null
+var _status_label: Label = null
+var _auto_refresh_button: Button = null
+var _event_domain_filter: OptionButton = null
+var _event_search_field: LineEdit = null
+var _entity_search_field: LineEdit = null
+var _last_refreshed_msec: int = 0
 
 
 func initialize_overlay() -> void:
@@ -38,6 +49,8 @@ func _ready() -> void:
 	_refresh_timer.timeout.connect(_refresh_active_tab)
 	add_child(_refresh_timer)
 	_refresh_timer.start()
+	get_viewport().size_changed.connect(_update_panel_bounds)
+	_update_panel_bounds()
 	_set_overlay_visible(false)
 	_refresh_all_tabs()
 
@@ -50,12 +63,8 @@ func _input(event: InputEvent) -> void:
 func _build_ui() -> void:
 	_panel = PanelContainer.new()
 	_panel.name = "DebugPanel"
-	_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_panel.offset_left = -PANEL_WIDTH - 16.0
-	_panel.offset_top = 16.0
-	_panel.offset_right = -16.0
-	_panel.offset_bottom = PANEL_HEIGHT + 16.0
 	add_child(_panel)
 
 	var margin := MarginContainer.new()
@@ -69,16 +78,75 @@ func _build_ui() -> void:
 	column.add_theme_constant_override("separation", 4)
 	margin.add_child(column)
 
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 6)
+	column.add_child(header)
+
 	var title := Label.new()
-	title.text = "Omni Dev Overlay  [F3]"
-	column.add_child(title)
+	title.text = "Omni Dev Overlay"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+
+	_status_label = Label.new()
+	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(_status_label)
+
+	_auto_refresh_button = Button.new()
+	_auto_refresh_button.text = "Auto"
+	_auto_refresh_button.toggle_mode = true
+	_auto_refresh_button.button_pressed = true
+	_auto_refresh_button.tooltip_text = "Toggle automatic refresh."
+	_auto_refresh_button.pressed.connect(_on_auto_refresh_pressed)
+	header.add_child(_auto_refresh_button)
+
+	var refresh_button := Button.new()
+	refresh_button.text = "Refresh"
+	refresh_button.tooltip_text = "Refresh all debug panels now."
+	refresh_button.pressed.connect(_refresh_all_tabs)
+	header.add_child(refresh_button)
+
+	var close_button := Button.new()
+	close_button.text = "Close"
+	close_button.tooltip_text = "Hide the overlay. F3 toggles it again."
+	close_button.pressed.connect(func() -> void: _set_overlay_visible(false))
+	header.add_child(close_button)
+
+	var filter_row := HBoxContainer.new()
+	filter_row.add_theme_constant_override("separation", 6)
+	column.add_child(filter_row)
+
+	_event_domain_filter = OptionButton.new()
+	_event_domain_filter.name = "EventDomainFilter"
+	_event_domain_filter.tooltip_text = "Filter the Events tab by GameEvents domain."
+	_event_domain_filter.add_item("all domains")
+	for domain in ["boot", "data", "ui", "time", "quest", "task", "entity", "location", "economy", "ai", "save", "audio"]:
+		_event_domain_filter.add_item(domain)
+	_event_domain_filter.item_selected.connect(func(_index: int) -> void: _refresh_tab(TAB_EVENTS))
+	filter_row.add_child(_event_domain_filter)
+
+	_event_search_field = LineEdit.new()
+	_event_search_field.name = "EventSearchField"
+	_event_search_field.placeholder_text = "event search"
+	_event_search_field.tooltip_text = "Filter visible events by signal, domain, or argument text."
+	_event_search_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_event_search_field.text_changed.connect(func(_new_text: String) -> void: _refresh_tab(TAB_EVENTS))
+	filter_row.add_child(_event_search_field)
+
+	_entity_search_field = LineEdit.new()
+	_entity_search_field.name = "EntitySearchField"
+	_entity_search_field.placeholder_text = "entity search"
+	_entity_search_field.tooltip_text = "Filter the Entities tab by entity id, template id, or location."
+	_entity_search_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_entity_search_field.text_changed.connect(func(_new_text: String) -> void: _refresh_tab(TAB_ENTITIES))
+	filter_row.add_child(_entity_search_field)
 
 	_tab_container = TabContainer.new()
 	_tab_container.custom_minimum_size = Vector2(PANEL_WIDTH - 24.0, PANEL_HEIGHT - 48.0)
 	_tab_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(_tab_container)
 
-	var tab_names := ["Boot", "Registries", "Runtime", "Events", "Entities"]
+	var tab_names := ["Boot", "Registries", "Runtime", "Events", "Entities", "AI / Save"]
 	for tab_name in tab_names:
 		var scroll := ScrollContainer.new()
 		scroll.name = tab_name
@@ -103,23 +171,28 @@ func _set_overlay_visible(p_is_visible: bool) -> void:
 	visible = p_is_visible
 	if _panel:
 		_panel.visible = p_is_visible
+	if p_is_visible:
+		_update_panel_bounds()
 	_refresh_all_tabs()
 
 
 func _refresh_active_tab() -> void:
-	if not _overlay_visible or _tab_container == null:
+	if not _overlay_visible or not _auto_refresh_enabled or _tab_container == null:
 		return
 	_refresh_tab(_tab_container.current_tab)
 
 
 func _refresh_all_tabs() -> void:
+	_update_status_label()
 	for i in range(_tab_labels.size()):
 		_refresh_tab(i)
+	_last_refreshed_msec = Time.get_ticks_msec()
 
 
 func _refresh_tab(tab_index: int) -> void:
 	if tab_index < 0 or tab_index >= _tab_labels.size():
 		return
+	_update_status_label()
 	var lbl := _tab_labels[tab_index]
 	match tab_index:
 		TAB_BOOT:
@@ -132,6 +205,53 @@ func _refresh_tab(tab_index: int) -> void:
 			lbl.text = _build_events_text()
 		TAB_ENTITIES:
 			lbl.text = _build_entities_text()
+		TAB_AI_SAVE:
+			lbl.text = _build_ai_save_text()
+	_last_refreshed_msec = Time.get_ticks_msec()
+
+
+func get_debug_snapshot() -> Dictionary:
+	return {
+		"visible": _overlay_visible,
+		"auto_refresh_enabled": _auto_refresh_enabled,
+		"current_tab": -1 if _tab_container == null else _tab_container.current_tab,
+		"event_domain_filter": _get_selected_event_domain(),
+		"event_search": "" if _event_search_field == null else _event_search_field.text,
+		"entity_search": "" if _entity_search_field == null else _entity_search_field.text,
+		"last_refreshed_msec": _last_refreshed_msec,
+	}
+
+
+func _on_auto_refresh_pressed() -> void:
+	_auto_refresh_enabled = _auto_refresh_button == null or _auto_refresh_button.button_pressed
+	_refresh_all_tabs()
+
+
+func _update_status_label() -> void:
+	if _status_label == null:
+		return
+	var mod_snapshot := ModLoader.get_debug_snapshot()
+	var data_snapshot := DataManager.get_debug_snapshot()
+	var problem_count := int(mod_snapshot.get("error_count", 0)) + int(data_snapshot.get("issue_count", 0))
+	var status_color := "OK" if problem_count == 0 else "%d issues" % problem_count
+	_status_label.text = "%s | F3 | %s" % [
+		status_color,
+		"live" if _auto_refresh_enabled else "paused"
+	]
+
+
+func _update_panel_bounds() -> void:
+	if _panel == null:
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	var width := minf(PANEL_WIDTH, maxf(viewport_size.x - PANEL_MARGIN * 2.0, 360.0))
+	var height := minf(PANEL_HEIGHT, maxf(viewport_size.y - PANEL_MARGIN * 2.0, 360.0))
+	_panel.offset_left = -width - PANEL_MARGIN
+	_panel.offset_top = PANEL_MARGIN
+	_panel.offset_right = -PANEL_MARGIN
+	_panel.offset_bottom = height + PANEL_MARGIN
+	if _tab_container != null:
+		_tab_container.custom_minimum_size = Vector2(maxf(width - 24.0, 320.0), maxf(height - 92.0, 240.0))
 
 
 # ---------------------------------------------------------------------------
@@ -158,6 +278,7 @@ func _build_boot_text() -> String:
 		str(mod_snapshot.get("script_hook_preload_ms", 0)),
 		str(mod_snapshot.get("total_ms", 0))
 	])
+	_bb_kv(b, "validation", "%sms" % str(mod_snapshot.get("data_validation_ms", 0)))
 	if error_count > 0:
 		_bb_kv(b, "errors", "total=%d  fatal=%d  nonfatal=%d" % [
 			error_count, fatal_count, int(mod_snapshot.get("nonfatal_error_count", 0))
@@ -222,7 +343,20 @@ func _build_registries_text() -> String:
 
 	b.append("")
 	_bb_section(b, "Counts")
-	var count_keys := ["stats", "currencies", "parts", "entities", "locations", "factions", "quests", "tasks", "achievements"]
+	var count_keys := [
+		"stats",
+		"currencies",
+		"parts",
+		"entities",
+		"locations",
+		"factions",
+		"quests",
+		"tasks",
+		"recipes",
+		"achievements",
+		"ai_personas",
+		"ai_templates",
+	]
 	for key in count_keys:
 		_bb_kv(b, key, str(int(registry_counts.get(key, 0))))
 
@@ -239,6 +373,24 @@ func _build_registries_text() -> String:
 				b.append("  [color=orange][%s][/color] %s" % [
 					str(issue.get("phase", "")),
 					str(issue.get("message", ""))
+				])
+
+	var recent_files_value: Variant = data_snapshot.get("recent_files", [])
+	if recent_files_value is Array:
+		var recent_files: Array = recent_files_value
+		if not recent_files.is_empty():
+			b.append("")
+			_bb_section(b, "Recent Files")
+			for file_value in recent_files:
+				if not file_value is Dictionary:
+					continue
+				var file_entry: Dictionary = file_value
+				var status := str(file_entry.get("status", ""))
+				var status_color := "red" if status == "invalid" else ("gray" if status == "missing" else "green")
+				b.append("  [color=%s]%s[/color] [color=gray]%s[/color]" % [
+					status_color,
+					status,
+					str(file_entry.get("file_path", ""))
 				])
 
 	return "\n".join(b)
@@ -371,15 +523,105 @@ func _build_runtime_text() -> String:
 	return "\n".join(b)
 
 
+func _build_ai_save_text() -> String:
+	var b := PackedStringArray()
+
+	_bb_section(b, "AI Manager")
+	var ai_snapshot := AIManager.get_debug_snapshot()
+	var ai_available := bool(ai_snapshot.get("available", false))
+	_bb_kv(b, "provider", str(ai_snapshot.get("provider_name", AIManager.get_provider_name())))
+	_bb_kv(b, "enabled", str(bool(ai_snapshot.get("enabled", false))))
+	_bb_kv(b, "available", str(ai_available), not ai_available)
+	_bb_kv(b, "provider node", str(bool(ai_snapshot.get("has_provider_node", false))))
+	_bb_kv(b, "active requests", str(int(ai_snapshot.get("active_request_count", 0))))
+	_bb_kv(b, "request count", str(int(ai_snapshot.get("request_count", 0))))
+	var ai_last_error := str(ai_snapshot.get("last_error", ""))
+	if not ai_last_error.is_empty():
+		_bb_kv(b, "last error", ai_last_error, true)
+
+	var provider_debug_value: Variant = ai_snapshot.get("provider_debug", {})
+	if provider_debug_value is Dictionary:
+		var provider_debug: Dictionary = provider_debug_value
+		if not provider_debug.is_empty():
+			b.append("")
+			_bb_section(b, "Provider")
+			for line in _format_dictionary_lines(provider_debug):
+				b.append("  %s" % line)
+
+	var recent_requests_value: Variant = ai_snapshot.get("recent_requests", [])
+	if recent_requests_value is Array:
+		var recent_requests: Array = recent_requests_value
+		if not recent_requests.is_empty():
+			b.append("")
+			_bb_section(b, "Recent AI Requests")
+			var start_index := maxi(recent_requests.size() - 8, 0)
+			for request_index in range(recent_requests.size() - 1, start_index - 1, -1):
+				var request_value: Variant = recent_requests[request_index]
+				if not request_value is Dictionary:
+					continue
+				var request: Dictionary = request_value
+				var status := str(request.get("status", ""))
+				var status_color := "green" if status == "completed" else ("red" if status == "failed" else "gray")
+				b.append("  [color=%s]%s[/color] [color=aqua]%s[/color] [color=gray]%s[/color]" % [
+					status_color,
+					status,
+					str(request.get("request_id", "")),
+					str(request.get("prompt_preview", ""))
+				])
+				var request_error := str(request.get("error", ""))
+				if not request_error.is_empty():
+					b.append("    [color=red]%s[/color]" % request_error)
+
+	b.append("")
+	_bb_section(b, "Save Manager")
+	var save_snapshot := SaveManager.get_debug_snapshot()
+	if save_snapshot.is_empty():
+		b.append("  [color=gray]<no save operation recorded>[/color]")
+	else:
+		for line in _format_dictionary_lines(save_snapshot):
+			b.append("  %s" % line)
+
+	var validation_value: Variant = save_snapshot.get("validation_issues", [])
+	if validation_value is Array:
+		var validation_issues: Array = validation_value
+		if not validation_issues.is_empty():
+			b.append("")
+			_bb_section(b, "Save Validation")
+			for issue_value in validation_issues:
+				b.append("  [color=red]- %s[/color]" % str(issue_value))
+
+	b.append("")
+	_bb_section(b, "Clock")
+	var time_snapshot := TimeKeeper.get_debug_snapshot()
+	for line in _format_dictionary_lines(time_snapshot):
+		b.append("  %s" % line)
+
+	return "\n".join(b)
+
+
 func _build_events_text() -> String:
 	var b := PackedStringArray()
+	var selected_domain := _get_selected_event_domain()
+	var search_text := _get_event_search_text()
 	_bb_section(b, "Recent Events  (newest first)")
-	var event_history := GameEvents.get_event_history(MAX_VISIBLE_EVENTS)
-	if event_history.is_empty():
+	_bb_kv(b, "domain", "all" if selected_domain.is_empty() else selected_domain)
+	_bb_kv(b, "search", "<empty>" if search_text.is_empty() else search_text)
+	var event_history := GameEvents.get_event_history(200, selected_domain)
+	var visible_events: Array[Dictionary] = []
+	for event_entry_value in event_history:
+		if not event_entry_value is Dictionary:
+			continue
+		var event_entry: Dictionary = event_entry_value
+		if not _event_matches_search(event_entry, search_text):
+			continue
+		visible_events.append(event_entry)
+	if visible_events.is_empty():
 		b.append("  [color=gray]<none>[/color]")
 	else:
-		for i in range(event_history.size() - 1, -1, -1):
-			var event_entry: Dictionary = event_history[i]
+		var rendered_count := mini(visible_events.size(), MAX_VISIBLE_EVENTS)
+		_bb_kv(b, "showing", "%d/%d" % [rendered_count, visible_events.size()])
+		for i in range(visible_events.size() - 1, maxi(visible_events.size() - rendered_count, 0) - 1, -1):
+			var event_entry: Dictionary = visible_events[i]
 			b.append("  %s" % _format_event_entry_bb(event_entry))
 	return "\n".join(b)
 
@@ -544,6 +786,22 @@ func _format_dictionary(values: Dictionary) -> String:
 	return "{%s}" % ", ".join(parts)
 
 
+func _format_dictionary_lines(values: Dictionary) -> Array[String]:
+	var result: Array[String] = []
+	if values.is_empty():
+		return result
+	var keys := values.keys()
+	keys.sort()
+	for key_value in keys:
+		var key := str(key_value)
+		var value: Variant = values.get(key_value)
+		result.append("[color=gray]%s[/color] = [color=white]%s[/color]" % [
+			key,
+			_format_variant(value)
+		])
+	return result
+
+
 func _format_event_entry_bb(event_entry: Dictionary) -> String:
 	var timestamp := str(event_entry.get("timestamp", ""))
 	var signal_name := str(event_entry.get("signal_name", ""))
@@ -577,6 +835,53 @@ func _format_multiline_variant(value: Variant) -> Array[String]:
 	for line_value in lines:
 		result.append(str(line_value))
 	return result
+
+
+func _get_selected_event_domain() -> String:
+	if _event_domain_filter == null:
+		return ""
+	var selected_index := _event_domain_filter.selected
+	if selected_index <= 0:
+		return ""
+	return _event_domain_filter.get_item_text(selected_index)
+
+
+func _get_event_search_text() -> String:
+	if _event_search_field == null:
+		return ""
+	return _event_search_field.text.strip_edges().to_lower()
+
+
+func _get_entity_search_text() -> String:
+	if _entity_search_field == null:
+		return ""
+	return _entity_search_field.text.strip_edges().to_lower()
+
+
+func _event_matches_search(event_entry: Dictionary, search_text: String) -> bool:
+	if search_text.is_empty():
+		return true
+	var haystack := "%s %s %s" % [
+		str(event_entry.get("timestamp", "")),
+		str(event_entry.get("domain", "")),
+		str(event_entry.get("signal_name", "")),
+	]
+	var args_value: Variant = event_entry.get("args", [])
+	if args_value is Array:
+		for arg in args_value:
+			haystack += " " + str(arg)
+	return haystack.to_lower().contains(search_text)
+
+
+func _entity_matches_search(entity: EntityInstance, search_text: String) -> bool:
+	if search_text.is_empty():
+		return true
+	var haystack := "%s %s %s" % [
+		entity.entity_id,
+		entity.template_id,
+		entity.location_id,
+	]
+	return haystack.to_lower().contains(search_text)
 
 
 func _extract_backend_contract_issues(recent_issues_value: Variant) -> Array[String]:
