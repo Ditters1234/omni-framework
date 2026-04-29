@@ -293,14 +293,14 @@ func test_task_provider_backend_lists_faction_tasks_and_accepts_selected_task() 
 func test_dialogue_backend_resolves_sample_dialogue_resource() -> void:
 	var backend: RefCounted = DIALOGUE_BACKEND.new()
 	backend.initialize({
-		"dialogue_resource": "res://tests/fixtures/dialogue/sample_greeting.dialogue",
+		"dialogue_resource": "res://tests/fixtures/dialogue/fixture_dialogue_resource.tres",
 		"screen_title": "Talk",
 	})
 
 	var view_model: Dictionary = backend.build_view_model()
 
 	assert_eq(str(view_model.get("title", "")), "Talk")
-	assert_eq(str(view_model.get("dialogue_resource", "")), "res://tests/fixtures/dialogue/sample_greeting.dialogue")
+	assert_eq(str(view_model.get("dialogue_resource", "")), "res://tests/fixtures/dialogue/fixture_dialogue_resource.tres")
 	assert_eq(str(view_model.get("status_text", "")), "")
 
 

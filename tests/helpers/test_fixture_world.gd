@@ -2,7 +2,7 @@ extends RefCounted
 
 class_name TestFixtureWorld
 
-const SAMPLE_DIALOGUE_RESOURCE := "res://tests/fixtures/dialogue/sample_greeting.dialogue"
+const SAMPLE_DIALOGUE_RESOURCE := "res://tests/fixtures/dialogue/fixture_dialogue_resource.tres"
 const START_LOCATION_ID := "base:start"
 const CONNECTED_LOCATION_ID := "base:field"
 const PLAYER_TEMPLATE_ID := "base:player"

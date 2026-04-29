@@ -5,7 +5,7 @@ const DIALOGUE_SCREEN_SCENE := preload("res://ui/screens/backends/dialogue_scree
 const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 
 const FAKE_PROVIDER_SCRIPT_PATH := "res://tests/doubles/fake_ai_provider.gd"
-const AI_HANDOFF_DIALOGUE := "res://tests/fixtures/dialogue/sample_ai_handoff.dialogue"
+const AI_HANDOFF_DIALOGUE := "res://tests/fixtures/dialogue/fixture_dialogue_resource.tres"
 const FIXTURE_PERSONA_ID := "base:fixture_vendor_persona"
 const FIXTURE_FACTION_ID := "base:fixture_faction"
 
@@ -51,6 +51,8 @@ func after_each() -> void:
 	}))
 	_delete_settings_file()
 	APP_SETTINGS.reset_settings_path_for_testing()
+	await get_tree().process_frame
+	await get_tree().process_frame
 	await get_tree().process_frame
 
 

@@ -67,7 +67,7 @@ const SCREEN_CASES := [
 	{
 		"scene_path": UI_ROUTE_CATALOG.DIALOGUE_SCENE,
 		"params": {
-			"dialogue_resource": "res://tests/fixtures/dialogue/sample_greeting.dialogue",
+			"dialogue_resource": "res://tests/fixtures/dialogue/fixture_dialogue_resource.tres",
 			"speaker_entity_id": "base:screen_smoke_vendor",
 			"screen_title": "Smoke Dialogue",
 		},
@@ -132,6 +132,8 @@ func after_each() -> void:
 	if _test_viewport != null and is_instance_valid(_test_viewport):
 		_test_viewport.queue_free()
 	_test_viewport = null
+	await get_tree().process_frame
+	await get_tree().process_frame
 	await get_tree().process_frame
 
 

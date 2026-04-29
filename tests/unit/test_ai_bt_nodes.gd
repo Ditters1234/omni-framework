@@ -8,7 +8,7 @@ const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 const FAKE_PROVIDER_SCRIPT_PATH := "res://tests/doubles/fake_ai_provider.gd"
 
 
-class TestSetGreetingAction:
+class FixtureSetGreetingAction:
 	extends BTAction
 
 	@export var greeting_var: StringName = &"greeting"
@@ -226,7 +226,7 @@ func _build_kael_greeting_tree() -> BTSelector:
 	ai_query.response_format = "enum"
 	ai_query.enum_options = PackedStringArray(["trusted_evening", "neutral_day", "wary_night"])
 
-	var fallback_action := TestSetGreetingAction.new()
+	var fallback_action := FixtureSetGreetingAction.new()
 	fallback_action.greeting_var = &"greeting"
 	fallback_action.greeting_value = "Stick to business."
 

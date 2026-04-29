@@ -2,13 +2,14 @@ extends GutTest
 
 const TEST_TICK_HOOK_PATH := "res://tests/fixtures/hooks/test_part_tick_hook.gd"
 const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
+const APP_SETTINGS := preload("res://core/app_settings.gd")
 
 var _original_config: Dictionary = {}
 
 
 func before_each() -> void:
 	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
-	AIManager.initialize()
+	AIManager.initialize(_make_ai_disabled_settings())
 	TimeKeeper.stop()
 	GameEvents.clear_event_history()
 	_original_config = DataManager.config.duplicate(true)
@@ -17,6 +18,8 @@ func before_each() -> void:
 func after_each() -> void:
 	DataManager.config = _original_config.duplicate(true)
 	TimeKeeper.stop()
+	AIManager.initialize(_make_ai_disabled_settings())
+	await get_tree().process_frame
 
 
 func test_stop_preserves_tick_position_for_correct_next_day_rollover() -> void:
@@ -112,3 +115,12 @@ func test_advance_tick_dispatches_on_tick_for_carried_part_hooks() -> void:
 
 	assert_eq(int(GameState.get_flag("test_tick_hook_call_count", 0)), 1)
 	assert_eq(int(GameState.get_flag("test_tick_hook_last_tick", -1)), GameState.current_tick)
+
+
+func _make_ai_disabled_settings() -> Dictionary:
+	var settings := APP_SETTINGS.get_default_settings()
+	var ai_settings := APP_SETTINGS.get_ai_settings(settings)
+	ai_settings[APP_SETTINGS.AI_ENABLED] = false
+	ai_settings[APP_SETTINGS.AI_PROVIDER] = AIManager.PROVIDER_DISABLED
+	settings[APP_SETTINGS.SECTION_AI] = ai_settings
+	return settings

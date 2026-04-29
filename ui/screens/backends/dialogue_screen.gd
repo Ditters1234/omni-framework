@@ -139,7 +139,7 @@ func _start_dialogue_if_needed() -> void:
 	if not ResourceLoader.exists(resource_path):
 		_status_label.text = "The configured dialogue resource could not be loaded."
 		return
-	var resource_value: Variant = load(resource_path)
+	var resource_value: Variant = ResourceLoader.load(resource_path, "", ResourceLoader.CACHE_MODE_IGNORE)
 	var dialogue_resource := resource_value as Resource
 	if dialogue_resource == null:
 		_status_label.text = "The configured dialogue resource could not be loaded."

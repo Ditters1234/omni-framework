@@ -53,7 +53,7 @@ func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
 
 	var after := GameState.to_dict()
 	assert_eq(after.get("flags", {}).get("audit.flag", false), true)
-	assert_eq(after.get("achievement_stats", {}).get("audit_counter", 0.0), 3.0)
+	assert_eq(float(after.get("achievement_stats", {}).get("audit_counter", 0.0)), 3.0)
 	assert_eq(after.get("ai_lore_cache", {}).get("audit:lore", {}).get("text", ""), "remember me")
 	assert_eq(after.get("runtime_state_buckets", {}).get("audit_bucket", {}).get("audit_key", {}).get("nested", []), ["a", "b", "c"])
 	assert_gt(after.get("event_history", []).size(), 0)
