@@ -63,21 +63,24 @@ Do not use GUT for:
 - Runtime debugging that belongs in ImGui panels
 - Testing editor plugin behavior unless there is a strong reason
 
-Headless command-line runs should use the checked-in `.gutconfig.json`:
+Headless command-line runs should use the checked-in `.gutconfig.json`.
+On Windows, use the helper script so tests run through the Godot console
+executable and isolate `user://` under the workspace:
 
-```text
-godot --headless -s res://addons/gut/gut_cmdln.gd -gexit
+```powershell
+.\tools\run_gut.ps1
 ```
 
 For focused runs, select by test script filename fragment:
 
-```text
-godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gselect=test_entity_instance_stats
+```powershell
+.\tools\run_gut.ps1 -Select test_entity_instance_stats
 ```
 
-On the current Windows Godot 4.6.2 Mono setup, avoid GUT CLI path override flags
-such as `-gdir` and `-gtest`; they can crash before GUT prints its banner. Keep
-suite discovery in `.gutconfig.json` and use `-gselect` for targeted runs.
+On the current Windows Godot 4.6.2 setup, avoid the GUI shim for headless runs
+and avoid GUT CLI path override flags such as `-gdir` and `-gtest`; they can
+crash before GUT prints its banner. Keep suite discovery in `.gutconfig.json`
+and use `-gselect` for targeted runs.
 
 ## Debug Overlay Principles
 

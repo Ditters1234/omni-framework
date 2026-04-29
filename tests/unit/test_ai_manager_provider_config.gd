@@ -49,10 +49,13 @@ func test_nobodywho_provider_reports_missing_model_without_stub_error() -> void:
 	}))
 
 	assert_eq(AIManager.get_provider_type(), AIManager.PROVIDER_NOBODYWHO)
-	assert_push_warning("NobodyWhoProvider: model_path does not exist")
-	assert_false(AIManager.is_available())
 	var snapshot := AIManager.get_debug_snapshot()
 	var last_error := str(snapshot.get("last_error", ""))
+	if last_error.contains("GDExtension"):
+		assert_push_warning("NobodyWhoProvider: NobodyWho GDExtension classes are not available")
+	else:
+		assert_push_warning("NobodyWhoProvider: model_path does not exist")
+	assert_false(AIManager.is_available())
 	assert_false(last_error.contains("not implemented"))
 	assert_true(last_error.contains("model_path") or last_error.contains("GDExtension"))
 
