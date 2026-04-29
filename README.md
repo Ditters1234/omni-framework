@@ -37,7 +37,7 @@ The current repo structure shows these implemented high-level pieces:
 - **Autoload-driven boot flow** with dedicated managers for AI, audio, data, events, save/load, time, routing, game state, and mod loading.
 - **System layer** that includes action dispatching, stat evaluation, quest tracking, task running, rewards, transactions, script hook services, assembly commit support, backend contract registration, and loader/provider subfolders.
 - **UI layer** with `main.tscn`, `main.gd`, `ui_route_catalog.gd`, plus `components/`, `debug/`, `screens/`, and `theme/` folders.
-- **12 backend-driven screens** fully implemented (Phase 4 + Phase 5): Assembly Editor, Exchange, List, Challenge, Task Provider, Catalog List, Dialogue, Entity Sheet, Active Quest Log, Faction Reputation, Achievement List, and Event Log.
+- **14 backend-driven screens** implemented across Phase 4 through Phase 7: Assembly Editor, Exchange, List, Challenge, Task Provider, Catalog List, Crafting, Dialogue, Entity Sheet, Active Quest Log, Faction Reputation, Achievement List, Event Log, and World Map.
 - **Mod-first content layout** under `mods/`, with the engine expecting a base mod to exist.
 
 ## Documentation
@@ -55,14 +55,14 @@ The repository includes a `tests/` folder and a `.gutconfig.json`, indicating GU
 
 Run tests headlessly:
 
-```bash
-godot --headless -s res://addons/gut/gut_cmdln.gd -gexit
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\run_gut.ps1
 ```
 
 For a focused run:
 
-```bash
-godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gselect=test_entity_instance_stats
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\run_gut.ps1 -Select test_entity_instance_stats
 ```
 
 ## Notes on Scope

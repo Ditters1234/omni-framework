@@ -1,6 +1,6 @@
 # Omni-Framework Modding Guide
 
-This guide is written against the current `main` branch layout and base content in the repository. It is meant to be a practical, drop-in replacement for `docs/modding_guide.md`.
+This guide is written against the current `main` branch layout and base content in the repository.
 
 ## What Omni-Framework expects right now
 

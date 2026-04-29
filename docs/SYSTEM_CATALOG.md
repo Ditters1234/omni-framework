@@ -50,8 +50,8 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
-| `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, `learn_recipe`, `modify_reputation`, etc. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for schema. |
-| `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for syntax. |
+| `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, `learn_recipe`, `modify_reputation`, etc. See [`modding_guide.md`](modding_guide.md) for schema. |
+| `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic. See [`modding_guide.md`](modding_guide.md) for syntax. |
 | `StatManager` | `StatManager` | `systems/stat_manager.gd` | DataManager | Calculates stat modifiers, applies stat changes, enforces clamping rules. See [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md). |
 | `BackendContractRegistry` | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | — | Validates `backend_class` IDs and their payload schemas. Locked after `ModLoader`. |
 | `RewardService` | `RewardService` | `systems/reward_service.gd` | GameState, SaveManager | Distributes currency, items, unlocks when quests/tasks complete. |
@@ -100,7 +100,7 @@ All loaders support **two-phase patching**:
 1. **Phase 1:** Additions — new entries added to the registry
 2. **Phase 2:** Patches — existing entries are updated non-destructively
 
-See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for patch syntax and [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for validation rules.
+See [`modding_guide.md`](modding_guide.md) for patch syntax and [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for validation rules.
 
 All data IDs use **namespacing:** `author:mod:name`. Base game uses `base:` prefix.
 
@@ -108,7 +108,7 @@ All data IDs use **namespacing:** `author:mod:name`. Base game uses `base:` pref
 
 ## AI Systems
 
-The `AIManager` autoload routes all AI calls to one of four backends based on the AI provider setting in `user://settings.cfg`. AI provider configuration is engine-owned and not moddable via `config.json` — see [`MODDING_GUIDE.md`](MODDING_GUIDE.md) §3.10 ("AI Connection Ownership").
+The `AIManager` autoload routes all AI calls to one of four backends based on the AI provider setting in `user://settings.cfg`. AI provider configuration is engine-owned and not moddable via `config.json` — see [`modding_guide.md`](modding_guide.md) §3.10 ("AI Connection Ownership").
 
 ### AI Providers
 
@@ -127,7 +127,7 @@ The `AIManager` autoload routes all AI calls to one of four backends based on th
 
 `systems/ai/bt_action_ai_query.gd` and `systems/ai/bt_condition_ai_check.gd` now provide the engine-owned LimboAI behavior-tree bridge for Phase 5. `BTActionAIQuery` resolves `{blackboard_var}` tokens, submits an async AI request, supports `"text"`, `"enum"`, and `"json"` parsing, and writes either the parsed value or a fallback value into the blackboard. `BTConditionAICheck` appends a yes/no instruction, waits asynchronously, and returns `SUCCESS` / `FAILURE` from the normalized answer while falling back to a configurable default result when AI is unavailable, times out, or responds ambiguously. Both tasks share `systems/ai/bt_ai_utils.gd` for prompt expansion and parser logic.
 
-See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for script hook examples.
+See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`modding_guide.md`](modding_guide.md) for script hook examples.
 
 ### AI Events
 
@@ -163,20 +163,20 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 
 | Backend Class | Scene | Validated By | Purpose | Modder Docs |
 |---|---|---|---|---|
-| `AssemblyEditorBackend` | `ui/screens/backends/assembly_editor_screen.tscn` | Part attachment, slot limits, stat budget | Attach/detach parts, preview stat changes, and edit selected equipped-part `custom_fields` in the draft session before confirm. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `ExchangeBackend` | `ui/screens/backends/exchange_screen.tscn` | Inventory lists, pricing, currency type | Buy/sell items from NPC vendor. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `ListBackend` | `ui/screens/backends/list_screen.tscn` | Array of displayable items | Render a data list (journal, bestiary, etc.). | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `ChallengeBackend` | `ui/screens/backends/challenge_screen.tscn` | Stat check rules, pass/fail actions | Stat-check pass/fail outcome. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `TaskProviderBackend` | `ui/screens/backends/task_provider_screen.tscn` | Faction ID, difficulty filter, task list | Faction job board with repeatable tasks and optional cached AI flavor text. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `CraftingBackend` | `ui/screens/backends/crafting_screen.tscn` | Station ID, recipe filters, crafter/input/output entities | Recipe crafting with input status and timed production support. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager `.dialogue` ref plus optional `ai_mode` | NPC branching dialogue with optional hybrid/freeform AI chat handoff driven by `AIChatService`. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Read-only entity stats, currency balances, equipment, inventory, and faction standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `ActiveQuestLogBackend` | `ui/screens/backends/active_quest_log_screen.tscn` | Optional completed quest display | Active quest cards with stages, objectives, and rewards. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `AchievementListBackend` | `ui/screens/backends/achievement_list_screen.tscn` | Optional locked/unlocked filters | Achievement unlock state and stat progress, with hidden achievements suppressed until unlocked. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `EventLogBackend` | `ui/screens/backends/event_log_screen.tscn` | Optional event limit/domain/signal filters | Recent `GameEvents` history with optional narrated flavor lines. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
-| `WorldMapBackend` | `ui/screens/backends/world_map_screen.tscn` | Optional title/description and display filters | Location graph with faction-tinted nodes, adaptive zoom decluttering, route lines, zoom/pan/orientation controls, and travel-on-click that consumes the cheapest routed total `travel_cost` in ticks. | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| `AssemblyEditorBackend` | `ui/screens/backends/assembly_editor_screen.tscn` | Part attachment, slot limits, stat budget | Attach/detach parts, preview stat changes, and edit selected equipped-part `custom_fields` in the draft session before confirm. | [`modding_guide.md`](modding_guide.md) |
+| `ExchangeBackend` | `ui/screens/backends/exchange_screen.tscn` | Inventory lists, pricing, currency type | Buy/sell items from NPC vendor. | [`modding_guide.md`](modding_guide.md) |
+| `ListBackend` | `ui/screens/backends/list_screen.tscn` | Array of displayable items | Render a data list (journal, bestiary, etc.). | [`modding_guide.md`](modding_guide.md) |
+| `ChallengeBackend` | `ui/screens/backends/challenge_screen.tscn` | Stat check rules, pass/fail actions | Stat-check pass/fail outcome. | [`modding_guide.md`](modding_guide.md) |
+| `TaskProviderBackend` | `ui/screens/backends/task_provider_screen.tscn` | Faction ID, difficulty filter, task list | Faction job board with repeatable tasks and optional cached AI flavor text. | [`modding_guide.md`](modding_guide.md) |
+| `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`modding_guide.md`](modding_guide.md) |
+| `CraftingBackend` | `ui/screens/backends/crafting_screen.tscn` | Station ID, recipe filters, crafter/input/output entities | Recipe crafting with input status and timed production support. | [`modding_guide.md`](modding_guide.md) |
+| `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager `.dialogue` ref plus optional `ai_mode` | NPC branching dialogue with optional hybrid/freeform AI chat handoff driven by `AIChatService`. | [`modding_guide.md`](modding_guide.md) |
+| `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Read-only entity stats, currency balances, equipment, inventory, and faction standing. | [`modding_guide.md`](modding_guide.md) |
+| `ActiveQuestLogBackend` | `ui/screens/backends/active_quest_log_screen.tscn` | Optional completed quest display | Active quest cards with stages, objectives, and rewards. | [`modding_guide.md`](modding_guide.md) |
+| `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`modding_guide.md`](modding_guide.md) |
+| `AchievementListBackend` | `ui/screens/backends/achievement_list_screen.tscn` | Optional locked/unlocked filters | Achievement unlock state and stat progress, with hidden achievements suppressed until unlocked. | [`modding_guide.md`](modding_guide.md) |
+| `EventLogBackend` | `ui/screens/backends/event_log_screen.tscn` | Optional event limit/domain/signal filters | Recent `GameEvents` history with optional narrated flavor lines. | [`modding_guide.md`](modding_guide.md) |
+| `WorldMapBackend` | `ui/screens/backends/world_map_screen.tscn` | Optional title/description and display filters | Location graph with faction-tinted nodes, adaptive zoom decluttering, route lines, zoom/pan/orientation controls, and travel-on-click that consumes the cheapest routed total `travel_cost` in ticks. | [`modding_guide.md`](modding_guide.md) |
 
 **How it works:**
 1. Modders define a location/NPC with a `backend_class` and `backend_config` dict in JSON.
@@ -257,7 +257,7 @@ See [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) for:
 
 ## Mod System
 
-The **mod pipeline** is the engine's content backbone. See [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for full modder reference.
+The **mod pipeline** is the engine's content backbone. See [`modding_guide.md`](modding_guide.md) for full modder reference.
 
 ### Mod Structure
 
@@ -339,7 +339,7 @@ All third-party integrations are in `addons/`.
 | **Any-JSON** | `addons/A2J/` | `A2J` (autoload) | Lossless variant serialization for save files. | ✅ |
 | **LimboAI** | `addons/limboai/` | GDExtension | Hierarchical State Machine for quests, behavior trees. | ✅ |
 | **Dialogue Manager** | `addons/dialogue_manager/` | `DialogueManager` (autoload) | Branching NPC dialogue. | ✅ |
-| **NobodyWho** | `addons/nobodywho/` | GDExtension | Embedded local LLM inference. | ✅ |
+| **NobodyWho** | `addons/nobodywho/` | Optional GDExtension | Embedded local LLM inference. | Ship when native extension is enabled |
 
 ### Dev-Only Addons (Excluded from Release)
 
@@ -422,7 +422,7 @@ See [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for full architectural guardr
 | **Stat math and validation** | [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) |
 | **Schema rules and lint** | [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) |
 | **Save versioning and migration** | [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md) |
-| **Modding contracts and data** | [`MODDING_GUIDE.md`](MODDING_GUIDE.md) |
+| **Modding contracts and data** | [`modding_guide.md`](modding_guide.md) |
 | **Coding style and loader patterns** | [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) |
 | **Debug tooling and testing** | [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) |
 
@@ -440,7 +440,7 @@ SYSTEM_CATALOG.md (this file)
   ├─→ RUNTIME_ENTITY_PRESENCE.md   (How entities appear at locations)
   ├─→ GAME_EVENTS_TAXONOMY.md      (Event naming, domains, stability rules)
   ├─→ STAT_SYSTEM_IMPLEMENTATION.md (Stat math, clamping, validation)
-  ├─→ MODDING_GUIDE.md             (Data schemas, patching, script hooks)
+  ├─→ modding_guide.md             (Data schemas, patching, script hooks)
   ├─→ SCHEMA_AND_LINT_SPEC.md      (Validation rules, lint severity)
   ├─→ SAVE_SCHEMA_AND_MIGRATION.md (Persistence, versioning, migration)
   ├─→ CODING_STANDARDS_AND_LOADER_PATTERNS.md (Implementation habits)

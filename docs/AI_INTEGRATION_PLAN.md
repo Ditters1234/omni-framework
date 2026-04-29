@@ -1,6 +1,6 @@
 # Omni-Framework — AI Integration Plan
 
-> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the AI architecture overview, [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for script hook patterns, and [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) for the `AIManager` autoload and provider catalog.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the AI architecture overview, [`modding_guide.md`](modding_guide.md) for script hook patterns, and [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) for the `AIManager` autoload and provider catalog.
 
 This document is a planning reference for the AI integration layer. It catalogs the consumer systems that will use `AIManager`, the new data schemas, modder-facing contracts, and phased work required to connect the existing LLM infrastructure to gameplay.
 
@@ -451,7 +451,7 @@ Current status: complete. `AIPersonaRegistry`, `DataManager` integration (`get_a
 2. Register `get_ai_persona(id)` and `query_ai_personas(...)` on `DataManager`. Done.
 3. Add `ai_persona_id` as an optional validated field on entity templates in `EntityRegistry`. Validation: if present, must reference a valid persona ID after all mods are loaded. Done.
 4. Ship a base mod persona (`base:kael_persona`) wired to `base:npc_fixer`. Done.
-5. Add `ai_personas.json` to the mod data spec in `MODDING_GUIDE.md`. Done.
+5. Add `ai_personas.json` to the mod data spec in `modding_guide.md`. Done.
 
 Deliverable: persona data loads through the standard mod pipeline, is queryable via `DataManager`, and validates at boot time.
 
@@ -485,11 +485,11 @@ Deliverable: a player can talk to Kael using both scripted branches and freeform
 
 ### Phase 4 — Polish and Modder Surface (~2–3 days)
 
-Current status: complete. The base mod now ships `base:theta_persona` bound to Quartermaster Theta, and Theta's talk interaction demonstrates `ai_mode: "freeform"` while still keeping authored dialogue as the disabled-AI fallback. `MODDING_GUIDE.md` now documents persona tokens and authoring guidance, the settings screen exposes `ai.chat_history_window` and `ai.streaming_speed`, and the debug overlay surfaces the active `AIChatService` snapshot. Runtime hardening also landed for hidden failed responses, unique request IDs across AI boot cycles, bounded player input length, and stream-state cleanup on close/re-entry.
+Current status: complete. The base mod now ships `base:theta_persona` bound to Quartermaster Theta, and Theta's talk interaction demonstrates `ai_mode: "freeform"` while still keeping authored dialogue as the disabled-AI fallback. `modding_guide.md` now documents persona tokens and authoring guidance, the settings screen exposes `ai.chat_history_window` and `ai.streaming_speed`, and the debug overlay surfaces the active `AIChatService` snapshot. Runtime hardening also landed for hidden failed responses, unique request IDs across AI boot cycles, bounded player input length, and stream-state cleanup on close/re-entry.
 
 1. Add a second NPC AI persona (`base:theta_persona`) wired to Quartermaster Theta, demonstrating a different personality and speech style. Done.
 2. Add `ai_mode: "freeform"` to Theta's talk interaction to demonstrate the freeform-only mode. Done.
-3. Update `MODDING_GUIDE.md` with a full AI persona authoring guide: schema reference, prompt template tokens, personality tuning tips, fallback line guidelines. Done.
+3. Update `modding_guide.md` with a full AI persona authoring guide: schema reference, prompt template tokens, personality tuning tips, fallback line guidelines. Done.
 4. Add debug overlay panel for `AIChatService`: current persona, conversation history, last prompt sent, last response received, validation results. Done.
 5. Add `AppSettings` UI controls for `ai.chat_history_window` and `ai.streaming_speed` in the settings screen. Done.
 6. Edge case hardening: rapid re-entry to AI chat, switching NPCs mid-conversation, provider errors during streaming, very long player inputs. Done for the current dialogue scope.
@@ -508,7 +508,7 @@ Current status: complete. `systems/ai/bt_action_ai_query.gd` and `systems/ai/bt_
 6. Unit tests: enum parsing with edge cases (extra whitespace, casing, partial matches), JSON parsing with malformed input, timeout behavior. Done.
 7. Create a reference behavior tree for Kael that uses `BTActionAIQuery` to dynamically choose a greeting based on player reputation and time of day, with a static fallback. Done as a code-built integration fixture.
 8. Integration test: Kael's BT runs the AI query path when AI is available and falls through to static when it isn't. Done.
-9. Update `MODDING_GUIDE.md` with BT AI node documentation and usage examples. Done.
+9. Update `modding_guide.md` with BT AI node documentation and usage examples. Done.
 
 Deliverable: modders can add AI decision points to behavior trees with graceful static fallback.
 

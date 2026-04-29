@@ -1,6 +1,6 @@
 # Omni-Framework GameEvents Taxonomy
 
-> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the signal-bus architecture, [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) for inspecting events at runtime, and [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for script hooks that respond to events.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the signal-bus architecture, [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) for inspecting events at runtime, and [`modding_guide.md`](modding_guide.md) for script hooks that respond to events.
 
 This document defines how `GameEvents` should be organized, named, and used as the engine grows. It complements the signal-bus role described in `PROJECT_STRUCTURE.md`.
 

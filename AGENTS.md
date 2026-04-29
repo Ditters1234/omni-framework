@@ -33,7 +33,7 @@ Core pillars:
 | File | Purpose |
 |---|---|
 | `docs/PROJECT_STRUCTURE.md` | Canonical folder layout, all autoloads, core systems, UI framework, theme system, AI architecture |
-| `docs/MODDING_GUIDE.md` | Full modder reference — data schemas, JSON examples, patching, backend classes, script hooks |
+| `docs/modding_guide.md` | Full modder reference — data schemas, JSON examples, patching, backend classes, script hooks |
 | `docs/STAT_SYSTEM_IMPLEMENTATION.md` | Stat + capacity stat system, clamping rules, GDScript patterns |
 
 **Always read the relevant doc section before editing architecture.**
@@ -109,12 +109,12 @@ Engine-owned autoloads live under `autoloads/`. Addon-provided autoloads such as
 | Any-JSON | `addons/A2J/` | Lossless variant serialization (`A2J` autoload) | ✅ Ship |
 | LimboAI | `addons/limboai/` | GDExtension — HSM for quests, behavior trees | ✅ Ship |
 | Dialogue Manager | `addons/dialogue_manager/` | Branching NPC dialogue (`DialogueManager` autoload) | ✅ Ship |
-| NobodyWho | `addons/nobodywho/` | GDExtension — embedded local LLM inference | ✅ Ship |
+| NobodyWho | `addons/nobodywho/` | Optional GDExtension - embedded local LLM inference | Ship when native extension is enabled |
 | ImGui | `addons/imgui-godot/` | In-game debug overlay and dev tooling | ❌ DEV ONLY |
 | GUT | `addons/gut/` | Unit testing | ❌ DEV ONLY |
 | ziva_agent | `addons/ziva_agent/` | AI dev assistant | ❌ DEV ONLY — remove before release |
 
-GDExtensions (LimboAI, NobodyWho) load automatically — no plugin.cfg needed.
+LimboAI loads as a GDExtension with no plugin.cfg. NobodyWho is optional and only loads when its local `.gdextension` file is enabled.
 Plugins requiring enable: A2J, dialogue_manager, gut, and imgui-godot — already set in project.godot `[editor_plugins]`.
 
 ---
@@ -190,7 +190,7 @@ Each backend class is validated against a **contract** — a schema that defines
 **Modders extending backends:**
 - Backends are defined in JSON with a `backend_class` string and a `backend_config` dict.
 - The backend config must match the contract registered for that class.
-- Custom backends can be registered in mod scripts — see `docs/MODDING_GUIDE.md` for schema examples.
+- Custom backends can be registered in mod scripts — see `docs/modding_guide.md` for schema examples.
 - Official backends use `backend_helpers.gd` for phase-neutral common operations. Backend-specific helpers should stay scoped to their backend, such as `assembly_editor_config.gd` and `assembly_editor_option_provider.gd`.
 
 ---

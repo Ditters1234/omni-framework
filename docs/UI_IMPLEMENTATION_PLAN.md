@@ -1,8 +1,8 @@
 # Omni-Framework — UI Implementation Plan & Recommendations
 
-> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the UI framework architecture, [`MODDING_GUIDE.md`](MODDING_GUIDE.md) for the data contracts that drive UI backends, and [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) for backend implementation patterns.
+> **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the UI framework architecture, [`modding_guide.md`](modding_guide.md) for the data contracts that drive UI backends, and [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) for backend implementation patterns.
 
-This document is a planning reference for the UI layer. It catalogs the backend screens, reusable components, engine-owned screens, new data schemas, and phased work required to bring the UI to parity with the data-first, genre-agnostic contract described in `PROJECT_STRUCTURE.md` and `MODDING_GUIDE.md`.
+This document is a planning reference for the UI layer. It catalogs the backend screens, reusable components, engine-owned screens, new data schemas, and phased work required to bring the UI to parity with the data-first, genre-agnostic contract described in `PROJECT_STRUCTURE.md` and `modding_guide.md`.
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
@@ -103,7 +103,7 @@ Notes on the new proposals:
 
 **`EntitySheetBackend`** is the read-only complement to AssemblyEditor. Every genre needs this — "press C to open character sheet" is a universal UI idiom. It aggregates stats, per-part modifier breakdowns, inventory summary, and faction standings into one view.
 
-**`FactionReputationBackend`** could in theory live inside EntitySheet, but factions in this engine are a first-class relational database (see `MODDING_GUIDE.md §3.6`). A dedicated view is cleaner, and it composes better with the faction emblem and territory data that already exist on faction templates.
+**`FactionReputationBackend`** could in theory live inside EntitySheet, but factions in this engine are a first-class relational database (see `modding_guide.md §3.6`). A dedicated view is cleaner, and it composes better with the faction emblem and territory data that already exist on faction templates.
 
 **`AchievementListBackend`** + **`EventLogBackend`** both consume existing engine state that currently has no UI surface. `AchievementRegistry` has full templates. `GameEvents` already maintains a bounded `_event_history`. Both are near-free to build once `ListBackend` is robust, but their contracts are simple enough that distinct backends are easier to validate than overloading `ListBackend` with `data_source: "achievements"` magic strings.
 
