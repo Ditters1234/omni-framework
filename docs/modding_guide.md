@@ -1064,7 +1064,7 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
             "label": "Strike",
             "check": { "type": "stat_check", "entity_id": "encounter:player", "stat": "strength", "op": ">=", "value": 4 },
             "on_success": [
-              { "effect": "modify_stat", "target": "opponent", "stat": "health", "delta": -5 },
+              { "effect": "modify_stat", "target": "opponent", "stat": "health", "base_delta": -5 },
               { "effect": "log", "text": "{user_name} lands a clean hit." }
             ],
             "on_failure": [
@@ -1078,7 +1078,7 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
             "label": "Swing",
             "weight": 1,
             "on_success": [
-              { "effect": "modify_stat", "target": "player", "stat": "health", "delta": -3 }
+              { "effect": "modify_stat", "target": "player", "stat": "health", "base_delta": -3 }
             ]
           }
         ]
@@ -1092,7 +1092,7 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
             "outcome_id": "victory",
             "conditions": { "type": "stat_check", "entity_id": "encounter:opponent", "stat": "health", "op": "<=", "value": 0 },
             "screen_text": "The opponent yields.",
-            "reward": { "currency": { "credits": 5 } },
+            "reward": { "credits": 5 },
             "pop_on_resolve": true
           }
         ]
@@ -1115,6 +1115,163 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
 - Outcome `reward` is applied through `RewardService`; outcome `action_payload` is dispatched through `ActionDispatcher`.
 - Encounter patches support `set`, `add_player_actions`, `remove_player_action_ids`, `add_opponent_actions`, `remove_opponent_action_ids`, `add_outcomes`, and `remove_outcome_ids`.
 - Load validation rejects unsupported effects, unknown real stats in `modify_stat`, unknown local meters in encounter-stat effects, unknown outcomes in `resolve`, missing tag ids on tag effects, malformed outcome action payloads, and invalid `push_screen` targets.
+
+> **Note on `reward` shape:** outcome `reward` is a flat dict keyed by currency stat id, e.g. `{ "credits": 25 }`. Do not nest it under a `"currency"` key — that is not a recognised field.
+
+---
+
+### Cookbook
+
+#### How do I make a non-combat encounter?
+
+Leave out any `modify_stat` effects that touch `health`. Define one or more encounter-local meters as your progress axis and drive them with `modify_encounter_stat` effects. Wire `encounter_stat_check` conditions on the resolution outcomes so the encounter ends when a meter threshold is reached. The opponent side can be a no-damage pressure action (draining the player's `stamina`, filling a `pressure` meter, etc.) or omitted entirely — if all opponent actions are unavailable the backend logs `"The opponent hesitates."` and the round advances cleanly.
+
+Minimal negotiation skeleton:
+
+```json
+{
+  "encounter_id": "my_name:my_mod:merchant_negotiation",
+  "display_name": "Negotiate",
+  "participants": {
+    "player": { "entity_id": "player" },
+    "opponent": { "entity_id": "my_name:my_mod:merchant" }
+  },
+  "encounter_stats": {
+    "concession": { "label": "Concession", "default": 0, "min": 0, "max": 100 }
+  },
+  "actions": {
+    "player": [
+      {
+        "action_id": "persuade",
+        "label": "Persuade",
+        "check": { "type": "stat_check", "entity_id": "encounter:player", "stat": "charisma", "op": ">=", "value": 3 },
+        "on_success": [
+          { "effect": "modify_encounter_stat", "stat": "concession", "base_delta": 30, "stat_modifiers": { "user.charisma": 5.0 } },
+          { "effect": "log", "text": "{user_name} makes a compelling point." }
+        ],
+        "on_failure": [
+          { "effect": "modify_encounter_stat", "stat": "concession", "base_delta": 5 },
+          { "effect": "log", "text": "{target_name} looks unmoved." }
+        ]
+      },
+      {
+        "action_id": "give_up",
+        "label": "Walk Away",
+        "on_success": [
+          { "effect": "log", "text": "{user_name} ends the negotiation." },
+          { "effect": "resolve", "outcome_id": "abandoned" }
+        ]
+      }
+    ],
+    "opponent": [
+      {
+        "action_id": "deflect",
+        "label": "Deflect",
+        "weight": 1,
+        "on_success": [
+          { "effect": "modify_encounter_stat", "stat": "concession", "base_delta": -10 },
+          { "effect": "log", "text": "{user_name} pushes back." }
+        ]
+      }
+    ]
+  },
+  "opponent_strategy": { "kind": "weighted_random" },
+  "resolution": {
+    "max_rounds": 6,
+    "max_rounds_outcome": "abandoned",
+    "cancel_outcome": "abandoned",
+    "outcomes": [
+      {
+        "outcome_id": "deal",
+        "conditions": { "type": "encounter_stat_check", "stat": "concession", "op": ">=", "value": 100 },
+        "reward": { "credits": 50 },
+        "action_payload": { "type": "set_flag", "flag_id": "my_name:my_mod:merchant_deal_struck", "value": true },
+        "screen_text": "The merchant agrees to your terms.",
+        "pop_on_resolve": true
+      },
+      {
+        "outcome_id": "abandoned",
+        "trigger": "manual",
+        "screen_text": "No deal today.",
+        "pop_on_resolve": true
+      }
+    ]
+  }
+}
+```
+
+---
+
+#### How do I make an opponent that gets more aggressive when low on health?
+
+Use `weight_modifiers` on the opponent action you want to escalate. Each entry has an `if` block (any `ConditionEvaluator` condition) and a replacement `weight`. The first matching modifier wins, so put narrow conditions before broad fallbacks.
+
+```json
+"opponent": [
+  {
+    "action_id": "heavy_strike",
+    "label": "Heavy Strike",
+    "weight": 1,
+    "weight_modifiers": [
+      {
+        "if": { "type": "stat_check", "entity_id": "encounter:opponent", "stat": "health", "op": "<", "value": 30 },
+        "weight": 6
+      }
+    ],
+    "on_success": [
+      { "effect": "modify_stat", "target": "player", "stat": "health", "base_delta": -12 },
+      { "effect": "log", "text": "{user_name} swings desperately." }
+    ]
+  },
+  {
+    "action_id": "jab",
+    "label": "Jab",
+    "weight": 3,
+    "on_success": [
+      { "effect": "modify_stat", "target": "player", "stat": "health", "base_delta": -4 }
+    ]
+  }
+]
+```
+
+At full health `heavy_strike` has weight 1 vs `jab`'s 3 — a 25 % chance. Below 30 health its weight jumps to 6 vs 3, making it the 67 % pick. The same pattern works with any condition the engine supports: `has_encounter_tag`, `encounter_stat_check`, `has_flag`, etc.
+
+---
+
+#### How do I add a flee option?
+
+Add a player action with a `resolve` effect naming a `"manual"` outcome. Manual outcomes only fire when a `resolve` effect explicitly targets them — they are never matched by the automatic resolution loop.
+
+Put any `log` effect **before** the `resolve` effect; `resolve` stops further effects in the same list immediately.
+
+```json
+"player": [
+  {
+    "action_id": "flee",
+    "label": "Flee",
+    "on_success": [
+      { "effect": "log", "text": "{user_name} breaks away and runs." },
+      { "effect": "resolve", "outcome_id": "fled" }
+    ]
+  }
+]
+```
+
+```json
+"resolution": {
+  "cancel_outcome": "fled",
+  "outcomes": [
+    {
+      "outcome_id": "fled",
+      "trigger": "manual",
+      "screen_text": "You get away clean.",
+      "pop_on_resolve": true
+    }
+  ]
+}
+```
+
+Setting `cancel_outcome` to the same `outcome_id` means the Back button also routes through the authored outcome, so any `reward` or `action_payload` on the fled outcome applies whether the player presses Flee or Back. If you want Back to exit silently without firing the outcome, omit `cancel_outcome`.
 
 ---
 
