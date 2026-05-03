@@ -45,6 +45,65 @@ func test_player_resolution_stops_opponent_action() -> void:
 	assert_eq(backend.get_resolved_outcome_id(), "victory")
 
 
+func test_resolve_effect_stops_later_effects() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var health_before := player.get_stat("health")
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:test_encounter"})
+
+	backend.select_action("resolve_then_damage")
+
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_player)
+	if updated_player != null:
+		assert_eq(updated_player.get_stat("health"), health_before)
+	assert_eq(backend.get_resolved_outcome_id(), "fled")
+
+
+func test_encounter_tags_gate_followup_actions_and_expire() -> void:
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:test_encounter"})
+
+	backend.select_action("guard")
+	var guarded_view := backend.build_view_model()
+	assert_true(_action_available(guarded_view, "guarded_finish"))
+
+	backend.select_action("guarded_finish")
+
+	assert_eq(backend.get_resolved_outcome_id(), "victory")
+
+
+func test_max_rounds_resolves_after_opponent_action() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var health_before := player.get_stat("health")
+	var max_round_encounter := DataManager.get_encounter("base:test_encounter")
+	var resolution_value: Variant = max_round_encounter.get("resolution", {})
+	assert_true(resolution_value is Dictionary)
+	if not resolution_value is Dictionary:
+		return
+	var resolution: Dictionary = resolution_value
+	resolution["max_rounds"] = 1
+	resolution["max_rounds_outcome"] = "timeout"
+	max_round_encounter["resolution"] = resolution
+	DataManager.encounters["base:max_round_encounter"] = max_round_encounter
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:max_round_encounter"})
+
+	backend.select_action("wait")
+
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_player)
+	if updated_player != null:
+		assert_eq(updated_player.get_stat("health"), health_before - 5.0)
+	assert_eq(backend.get_resolved_outcome_id(), "timeout")
+
+
 func _seed_encounter_fixture() -> void:
 	var opponent_template := {
 		"entity_id": "base:test_opponent",
@@ -84,6 +143,36 @@ func _seed_encounter_fixture() -> void:
 						{"effect": "modify_stat", "target": "opponent", "stat": "health", "base_delta": -100}
 					],
 				},
+				{
+					"action_id": "resolve_then_damage",
+					"label": "Resolve Then Damage",
+					"on_success": [
+						{"effect": "resolve", "outcome_id": "fled"},
+						{"effect": "modify_stat", "target": "player", "stat": "health", "base_delta": -10}
+					],
+				},
+				{
+					"action_id": "guard",
+					"label": "Guard",
+					"on_success": [
+						{"effect": "apply_tag", "target": "player", "tag": "guarded", "duration_rounds": 2}
+					],
+				},
+				{
+					"action_id": "guarded_finish",
+					"label": "Guarded Finish",
+					"availability": {"type": "has_encounter_tag", "role": "player", "tag": "guarded"},
+					"on_success": [
+						{"effect": "modify_stat", "target": "opponent", "stat": "health", "base_delta": -100}
+					],
+				},
+				{
+					"action_id": "wait",
+					"label": "Wait",
+					"on_success": [
+						{"effect": "log", "text": "Waiting."}
+					],
+				},
 			],
 			"opponent": [
 				{
@@ -104,6 +193,30 @@ func _seed_encounter_fixture() -> void:
 					"conditions": {"type": "stat_check", "entity_id": "encounter:opponent", "stat": "health", "op": "<=", "value": 0},
 					"screen_text": "Won.",
 				},
+				{
+					"outcome_id": "timeout",
+					"trigger": "manual",
+					"screen_text": "Timed out.",
+				},
+				{
+					"outcome_id": "fled",
+					"trigger": "manual",
+					"screen_text": "Fled.",
+				},
 			],
 		},
 	}
+
+
+func _action_available(view_model: Dictionary, action_id: String) -> bool:
+	var actions_value: Variant = view_model.get("actions", [])
+	if not actions_value is Array:
+		return false
+	var actions: Array = actions_value
+	for action_value in actions:
+		if not action_value is Dictionary:
+			continue
+		var action: Dictionary = action_value
+		if str(action.get("action_id", "")) == action_id:
+			return bool(action.get("available", false))
+	return false

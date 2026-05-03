@@ -1025,6 +1025,7 @@ func _validate_currency_map(entry_id: String, file_path: String, field_path: Str
 
 func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary) -> void:
 	var encounter_id := str(encounter.get("encounter_id", ""))
+	var encounter_stat_ids: Dictionary = {}
 	var participants_value: Variant = encounter.get("participants", {})
 	if not participants_value is Dictionary:
 		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' participants must be an object." % encounter_id)
@@ -1043,6 +1044,7 @@ func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary) -> 
 		var encounter_stats: Dictionary = encounter_stats_value
 		for stat_key_value in encounter_stats.keys():
 			var stat_id := str(stat_key_value)
+			encounter_stat_ids[stat_id] = true
 			if stat_ids.has(stat_id):
 				push_warning("Encounter '%s' encounter_stats.%s overlaps a real stat id; namespace use keeps this safe." % [encounter_id, stat_id])
 			var stat_def_value: Variant = encounter_stats.get(stat_key_value, {})
@@ -1051,28 +1053,28 @@ func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary) -> 
 	elif encounter.has("encounter_stats"):
 		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' encounter_stats must be an object." % encounter_id)
 
+	var resolution_value: Variant = encounter.get("resolution", {})
+	var outcome_ids: Dictionary = {}
+	if not resolution_value is Dictionary:
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' resolution must be an object." % encounter_id)
+	else:
+		var resolution: Dictionary = resolution_value
+		outcome_ids = _validate_encounter_outcomes(encounter_id, resolution.get("outcomes", []))
+		for field_name in ["max_rounds_outcome", "cancel_outcome"]:
+			var outcome_id := str(resolution.get(field_name, encounter.get(field_name, "")))
+			if not outcome_id.is_empty() and not outcome_ids.has(outcome_id):
+				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s references unknown outcome '%s'." % [encounter_id, field_name, outcome_id])
+
 	var actions_value: Variant = encounter.get("actions", {})
-	var action_ids_by_role: Dictionary = {}
 	if actions_value is Dictionary:
 		var actions: Dictionary = actions_value
 		for role in ["player", "opponent"]:
-			_validate_encounter_action_list(encounter_id, role, actions.get(role, []), action_ids_by_role)
+			_validate_encounter_action_list(encounter_id, role, actions.get(role, []), outcome_ids, stat_ids, encounter_stat_ids)
 	else:
 		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' actions must be an object." % encounter_id)
 
-	var resolution_value: Variant = encounter.get("resolution", {})
-	if not resolution_value is Dictionary:
-		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' resolution must be an object." % encounter_id)
-		return
-	var resolution: Dictionary = resolution_value
-	var outcome_ids := _validate_encounter_outcomes(encounter_id, resolution.get("outcomes", []))
-	for field_name in ["max_rounds_outcome", "cancel_outcome"]:
-		var outcome_id := str(resolution.get(field_name, encounter.get(field_name, "")))
-		if not outcome_id.is_empty() and not outcome_ids.has(outcome_id):
-			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s references unknown outcome '%s'." % [encounter_id, field_name, outcome_id])
 
-
-func _validate_encounter_action_list(encounter_id: String, role: String, value: Variant, _action_ids_by_role: Dictionary) -> void:
+func _validate_encounter_action_list(encounter_id: String, role: String, value: Variant, outcome_ids: Dictionary, stat_ids: Dictionary, encounter_stat_ids: Dictionary) -> void:
 	if not value is Array:
 		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' actions.%s must be an array." % [encounter_id, role])
 		return
@@ -1094,6 +1096,8 @@ func _validate_encounter_action_list(encounter_id: String, role: String, value: 
 		for effect_field in ["cost", "on_success", "on_failure"]:
 			if action.has(effect_field) and not action.get(effect_field, []) is Array:
 				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' action '%s' field '%s' must be an array." % [encounter_id, action_id, effect_field])
+			elif action.has(effect_field):
+				_validate_encounter_effects(encounter_id, "action '%s' %s" % [action_id, effect_field], action.get(effect_field, []), outcome_ids, stat_ids, encounter_stat_ids)
 
 
 func _validate_encounter_outcomes(encounter_id: String, value: Variant) -> Dictionary:
@@ -1115,7 +1119,47 @@ func _validate_encounter_outcomes(encounter_id: String, value: Variant) -> Dicti
 		if outcome_ids.has(outcome_id):
 			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' has duplicate outcome_id '%s'." % [encounter_id, outcome_id])
 		outcome_ids[outcome_id] = true
+		var action_payload_value: Variant = outcome.get("action_payload", null)
+		if action_payload_value != null:
+			if not action_payload_value is Dictionary:
+				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' outcome '%s' action_payload must be an object." % [encounter_id, outcome_id])
+			else:
+				_validate_action_payload(encounter_id, OmniConstants.DATA_ENCOUNTERS, action_payload_value, "resolution.outcomes.%s.action_payload" % outcome_id)
 	return outcome_ids
+
+
+func _validate_encounter_effects(encounter_id: String, label: String, value: Variant, outcome_ids: Dictionary, stat_ids: Dictionary, encounter_stat_ids: Dictionary) -> void:
+	if not value is Array:
+		return
+	var effects: Array = value
+	var supported_effects := ["modify_stat", "modify_encounter_stat", "set_encounter_stat", "set_flag", "log", "resolve", "apply_tag", "remove_tag"]
+	for index in range(effects.size()):
+		var effect_value: Variant = effects[index]
+		if not effect_value is Dictionary:
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s[%d] must be an object." % [encounter_id, label, index])
+			continue
+		var effect: Dictionary = effect_value
+		var effect_type := str(effect.get("effect", "")).strip_edges()
+		if effect_type.is_empty() or not supported_effects.has(effect_type):
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s[%d] has unsupported effect '%s'." % [encounter_id, label, index, effect_type])
+			continue
+		match effect_type:
+			"modify_stat":
+				var stat_id := str(effect.get("stat", effect.get("stat_id", ""))).strip_edges()
+				if stat_id.is_empty() or not stat_ids.has(stat_id):
+					_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s[%d] references unknown real stat '%s'." % [encounter_id, label, index, stat_id])
+			"modify_encounter_stat", "set_encounter_stat":
+				var encounter_stat_id := str(effect.get("stat", "")).strip_edges()
+				if encounter_stat_id.is_empty() or not encounter_stat_ids.has(encounter_stat_id):
+					_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s[%d] references unknown encounter stat '%s'." % [encounter_id, label, index, encounter_stat_id])
+			"resolve":
+				var outcome_id := str(effect.get("outcome_id", "")).strip_edges()
+				if outcome_id.is_empty() or not outcome_ids.has(outcome_id):
+					_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s[%d] references unknown outcome '%s'." % [encounter_id, label, index, outcome_id])
+			"apply_tag", "remove_tag":
+				var tag_id := str(effect.get("tag", effect.get("tag_id", ""))).strip_edges()
+				if tag_id.is_empty():
+					_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s[%d] must declare a tag." % [encounter_id, label, index])
 
 
 func _validate_recipe_shape(recipe: Dictionary) -> void:

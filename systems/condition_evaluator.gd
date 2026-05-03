@@ -238,6 +238,8 @@ static func _evaluate_typed_condition(condition: Dictionary, context: Dictionary
 			return _check_has_part(condition, context)
 		"encounter_stat_check":
 			return _check_encounter_stat(condition, context)
+		"has_encounter_tag":
+			return _check_encounter_tag(condition, context)
 		_:
 			push_warning("ConditionEvaluator: unknown condition type '%s'" % condition_type)
 			return false
@@ -346,6 +348,22 @@ static func _check_encounter_stat(condition: Dictionary, context: Dictionary = {
 		"==": return actual == required
 		"!=": return actual != required
 	return false
+
+
+static func _check_encounter_tag(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var tags_value: Variant = context.get("encounter_tags", {})
+	if not tags_value is Dictionary:
+		return false
+	var tags_by_role: Dictionary = tags_value
+	var role := str(condition.get("role", condition.get("target", "player")))
+	var role_tags_value: Variant = tags_by_role.get(role, {})
+	if not role_tags_value is Dictionary:
+		return false
+	var role_tags: Dictionary = role_tags_value
+	var tag_id := str(condition.get("tag", condition.get("tag_id", ""))).strip_edges()
+	if tag_id.is_empty() or not role_tags.has(tag_id):
+		return false
+	return int(role_tags.get(tag_id, 0)) > 0
 
 
 static func _resolve_entity(entity_id: String, context: Dictionary = {}) -> EntityInstance:

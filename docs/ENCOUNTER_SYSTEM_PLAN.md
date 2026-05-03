@@ -671,7 +671,7 @@ The brawl currently acts as the canonical `modding_guide.md` example; the negoti
 
 Each phase is shippable in isolation. Phases 1–4 deliver a working but minimal encounter system; phases 5+ add polish and depth.
 
-Current status: the first implementation pass covers the v1 data pipeline, backend state machine, routed screen, `base:tutorial_brawl`, backend registration, event signals, and core backend tests. The remaining work is mostly polish and expansion: dedicated encounter UI components, more reference encounters, deeper validation, tags, advanced strategies, and persisted encounter instances.
+Current status: the second implementation pass covers the data pipeline, backend state machine, routed screen, `base:tutorial_brawl`, backend registration, event signals, core backend tests, encounter tags, stricter effect/outcome validation, post-resolve effect guarding, and max-round ordering. The remaining work is mostly polish and expansion: dedicated encounter UI components, more reference encounters, advanced strategies, richer tooltips, and persisted encounter instances.
 
 ### Phase 1 — Schema, Registry, Data Pipeline (~2 days)
 
@@ -693,7 +693,7 @@ Current status: the first implementation pass covers the v1 data pipeline, backe
 - Register `EncounterBackend` contract with `BackendContractRegistry`.
 - Implement `initialize` (template load, participant resolution, encounter_stats default population).
 - Implement `select_action` happy path: availability recheck → cost effects → check → on_success/on_failure → immediate resolution check → opponent weighted random → end-of-round → resolution check.
-- Implement effect handlers for `modify_stat`, `modify_encounter_stat`, `set_encounter_stat`, `log`, `set_flag`, `resolve`. (Defer `apply_tag` / `remove_tag` to Phase 6.)
+- Implement effect handlers for `modify_stat`, `modify_encounter_stat`, `set_encounter_stat`, `log`, `set_flag`, `resolve`, `apply_tag`, and `remove_tag`.
 - Implement `systems/encounter_runtime.gd` weighted-random helper with injectable RNG and stat-modifier formula evaluator.
 - Extend `ConditionEvaluator` with explicit optional context, the `encounter:` entity prefix, and the `encounter_stat_check` typed condition.
 - Implement `RewardService` and `ActionDispatcher` calls in resolve path.
@@ -733,9 +733,9 @@ Current status: the first implementation pass covers the v1 data pipeline, backe
 
 ### Phase 6 — Tags, Multi-Effect Sequencing, Edge Cases (~2–3 days)
 
-- Implement `apply_tag` / `remove_tag` effects with round-decremented duration.
-- Implement tag-aware availability checks (a `has_tag` typed condition extension on `ConditionEvaluator`).
-- Effect ordering audit: costs apply only after backend availability recheck accepts the action, then still apply if the action's later check fails. Opponent actions do not resolve if the player's action or immediate automatic resolution ends the encounter. Codify and test these rules.
+- Implement `apply_tag` / `remove_tag` effects with round-decremented duration. **Done in second pass.**
+- Implement tag-aware availability checks (`has_encounter_tag` on `ConditionEvaluator`). **Done in second pass.**
+- Effect ordering audit: costs apply only after backend availability recheck accepts the action, then still apply if the action's later check fails. Opponent actions do not resolve if the player's action or immediate automatic resolution ends the encounter. Resolve effects stop later effects in the same list. **Codified and covered by backend tests.**
 - Per-outcome `screen_text` rendering on resolve before navigation.
 - Cancel-mid-action safety (defer to next paint frame to avoid double-resolve).
 
@@ -821,7 +821,7 @@ That's the entire surface. No GDScript. No scenes. No registry boilerplate. Same
 - Real-time encounters. The system is turn-based; there is no time-pressure UI.
 - Grid/tactical positioning. No movement, no range, no line-of-sight.
 - Loot tables on opponents. Outcomes hand out fixed rewards; randomized loot is a future system, not an encounter responsibility.
-- Combo / chain / cooldown mechanics. Achievable via tags + availability conditions in v2; no first-class support in v1.
+- Combo / chain / cooldown mechanics. Some patterns are achievable with tags + availability conditions, but there is no first-class cooldown/chain system yet.
 - Cross-encounter persistent debuffs. Real stat changes persist via the existing entity model. Tags are encounter-local.
 - Network or multiplayer encounters. Engine is single-player.
 - Visual novel-style branching dialogue inside encounters. Use `DialogueBackend` before/after; encounters are mechanical.

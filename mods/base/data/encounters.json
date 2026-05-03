@@ -53,8 +53,8 @@
             "label": "Flee",
             "description": "End the sparring session.",
             "on_success": [
-              { "effect": "resolve", "outcome_id": "fled" },
-              { "effect": "log", "text": "{user_name} steps out of the ring." }
+              { "effect": "log", "text": "{user_name} steps out of the ring." },
+              { "effect": "resolve", "outcome_id": "fled" }
             ]
           }
         ],

@@ -184,7 +184,12 @@ Rules:
 - `actions.player` and `actions.opponent` must be arrays of action objects with non-empty `action_id` values.
 - Action IDs must be unique per role.
 - `cost`, `on_success`, and `on_failure` must be arrays when present.
+- Effect entries must be objects with a supported `effect`: `modify_stat`, `modify_encounter_stat`, `set_encounter_stat`, `set_flag`, `log`, `resolve`, `apply_tag`, or `remove_tag`.
+- `modify_stat` must reference a known real stat; encounter-stat effects must reference declared encounter-local stats.
+- `resolve` must reference a declared outcome.
+- `apply_tag` and `remove_tag` must declare a non-empty `tag` or `tag_id`.
 - `resolution.outcomes` must be an array of objects with unique, non-empty `outcome_id` values.
+- Outcome `action_payload` must be an object when present and follows normal `ActionDispatcher` payload validation.
 - `max_rounds_outcome` and `cancel_outcome` must reference declared outcomes when present.
 - Encounter-local stats may share names with real stats, but this should stay intentional because the runtime keeps them in a separate context namespace.
 

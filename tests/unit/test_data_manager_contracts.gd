@@ -229,6 +229,53 @@ func test_validate_loaded_content_reports_unknown_stats_and_currencies() -> void
 	assert_true(_messages_contain(issue_messages, "base:bad_entity.currencies references unknown currency 'ghost_money'"))
 
 
+func test_validate_loaded_content_reports_encounter_contract_failures() -> void:
+	DataManager.definitions["stats"] = [
+		{"id": "health", "kind": "resource", "paired_capacity_id": "health_max"},
+		{"id": "health_max", "kind": "capacity", "paired_base_id": "health"}
+	]
+	DataManager.encounters["base:bad_encounter"] = {
+		"encounter_id": "base:bad_encounter",
+		"participants": {
+			"player": {"entity_id": "player"},
+			"opponent": {"entity_id": "base:opponent"},
+		},
+		"encounter_stats": {
+			"pressure": {"default": 0, "min": 0, "max": 100}
+		},
+		"actions": {
+			"player": [
+				{
+					"action_id": "bad",
+					"on_success": [
+						{"effect": "modify_stat", "target": "opponent", "stat": "missing_stat", "delta": -1},
+						{"effect": "modify_encounter_stat", "stat": "missing_meter", "delta": 1},
+						{"effect": "resolve", "outcome_id": "missing_outcome"},
+						{"effect": "apply_tag", "target": "player"}
+					]
+				}
+			],
+			"opponent": []
+		},
+		"resolution": {
+			"outcomes": [
+				{"outcome_id": "done", "action_payload": {"type": "push_screen", "screen_id": "missing_screen"}}
+			],
+			"cancel_outcome": "missing_cancel"
+		}
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "references unknown real stat 'missing_stat'"))
+	assert_true(_messages_contain(issue_messages, "references unknown encounter stat 'missing_meter'"))
+	assert_true(_messages_contain(issue_messages, "references unknown outcome 'missing_outcome'"))
+	assert_true(_messages_contain(issue_messages, "must declare a tag"))
+	assert_true(_messages_contain(issue_messages, "cancel_outcome references unknown outcome 'missing_cancel'"))
+	assert_true(_messages_contain(issue_messages, "screen_id references unknown routed screen 'missing_screen'"))
+
+
 func test_validate_loaded_content_reports_unknown_ai_persona_references() -> void:
 	DataManager.entities["base:talker"] = {
 		"entity_id": "base:talker",

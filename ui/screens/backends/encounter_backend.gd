@@ -129,13 +129,14 @@ func select_action(action_id: String) -> Dictionary:
 		return {}
 	var success := _resolve_action("player", action)
 	_emit_action_resolved("player", action, success)
-	var navigation := _evaluate_resolution()
+	var navigation := _evaluate_resolution(false)
 	if not navigation.is_empty() or is_resolved():
 		return navigation
 	_resolve_opponent_turn()
-	navigation = _evaluate_resolution()
+	navigation = _evaluate_resolution(true)
 	if not navigation.is_empty() or is_resolved():
 		return navigation
+	_decrement_tags()
 	_advance_round()
 	return {}
 
@@ -177,17 +178,19 @@ func _resolve_action(role: String, action: Dictionary) -> bool:
 	var user := _player if role == "player" else _opponent
 	var target := _opponent if role == "player" else _player
 	for effect in ENCOUNTER_RUNTIME.read_effects(action.get("cost", [])):
-		_apply_effect(effect, user, target, action)
+		if _apply_effect(effect, user, target, action):
+			return false
 	var success := ENCOUNTER_RUNTIME.evaluate_action_check(action, _build_context())
 	var effects := ENCOUNTER_RUNTIME.read_effects(action.get("on_success" if success else "on_failure", []))
 	for effect in effects:
-		_apply_effect(effect, user, target, action)
+		if _apply_effect(effect, user, target, action):
+			break
 	if effects.is_empty():
 		_append_log("%s %s." % [_display_name(user), "succeeds" if success else "fails"])
 	return success
 
 
-func _apply_effect(effect: Dictionary, user: EntityInstance, target: EntityInstance, action: Dictionary) -> void:
+func _apply_effect(effect: Dictionary, user: EntityInstance, target: EntityInstance, action: Dictionary) -> bool:
 	var effect_type := str(effect.get("effect", "")).strip_edges()
 	match effect_type:
 		"modify_stat":
@@ -200,13 +203,19 @@ func _apply_effect(effect: Dictionary, user: EntityInstance, target: EntityInsta
 			_apply_set_flag(effect)
 		"log":
 			_append_log(_format_log_text(str(effect.get("text", "")), user, target, action))
+		"apply_tag":
+			_apply_tag(effect, user, target)
+		"remove_tag":
+			_apply_remove_tag(effect, user, target)
 		"resolve":
 			var outcome_id := str(effect.get("outcome_id", "")).strip_edges()
 			if not outcome_id.is_empty():
 				_resolve(outcome_id, "manual")
+				return true
 		_:
 			if not effect_type.is_empty():
 				push_warning("EncounterBackend: unsupported effect '%s'." % effect_type)
+	return is_resolved()
 
 
 func _apply_modify_stat(effect: Dictionary, user: EntityInstance, fallback_target: EntityInstance) -> void:
@@ -259,13 +268,36 @@ func _apply_set_flag(effect: Dictionary) -> void:
 		entity.set_flag(flag_id, effect.get("value", true))
 
 
-func _evaluate_resolution() -> Dictionary:
+func _apply_tag(effect: Dictionary, user: EntityInstance, fallback_target: EntityInstance) -> void:
+	var target_role := str(effect.get("target", "target"))
+	var tag_map: Dictionary = _tag_map_for_effect_target(target_role, user, fallback_target)
+	if tag_map.is_empty() and not _effect_target_is_participant(target_role, user, fallback_target):
+		return
+	var tag_id := str(effect.get("tag", effect.get("tag_id", ""))).strip_edges()
+	if tag_id.is_empty():
+		return
+	var duration: int = maxi(1, int(effect.get("duration_rounds", effect.get("duration", 1))))
+	tag_map[tag_id] = duration
+
+
+func _apply_remove_tag(effect: Dictionary, user: EntityInstance, fallback_target: EntityInstance) -> void:
+	var target_role := str(effect.get("target", "target"))
+	var tag_map: Dictionary = _tag_map_for_effect_target(target_role, user, fallback_target)
+	if tag_map.is_empty() and not _effect_target_is_participant(target_role, user, fallback_target):
+		return
+	var tag_id := str(effect.get("tag", effect.get("tag_id", ""))).strip_edges()
+	if tag_id.is_empty():
+		return
+	tag_map.erase(tag_id)
+
+
+func _evaluate_resolution(include_max_rounds: bool = true) -> Dictionary:
 	if is_resolved():
 		return _navigation_for_resolved()
 	var outcome := _find_matching_outcome()
 	if not outcome.is_empty():
 		return _resolve(str(outcome.get("outcome_id", "")), "automatic")
-	if _max_rounds > 0 and _round >= _max_rounds:
+	if include_max_rounds and _max_rounds > 0 and _round >= _max_rounds:
 		var max_rounds_outcome := str(_get_resolution().get("max_rounds_outcome", "")).strip_edges()
 		if not max_rounds_outcome.is_empty():
 			return _resolve(max_rounds_outcome, "max_rounds")
@@ -335,6 +367,24 @@ func _advance_round() -> void:
 		_encounter_stats["round"] = float(_round)
 	if GameEvents:
 		GameEvents.encounter_round_advanced.emit(_encounter_id, _round)
+
+
+func _decrement_tags() -> void:
+	_decrement_tag_map(_player_tags)
+	_decrement_tag_map(_opponent_tags)
+
+
+func _decrement_tag_map(tag_map: Dictionary) -> void:
+	var expired_tags: Array[String] = []
+	for tag_key_value in tag_map.keys():
+		var tag_id := str(tag_key_value)
+		var remaining := int(tag_map.get(tag_key_value, 0)) - 1
+		if remaining <= 0:
+			expired_tags.append(tag_id)
+		else:
+			tag_map[tag_id] = remaining
+	for tag_id in expired_tags:
+		tag_map.erase(tag_id)
 
 
 func _build_player_action_models() -> Array[Dictionary]:
@@ -478,6 +528,20 @@ func _participant_for_effect_target(target_role: String, user: EntityInstance, f
 		"target":
 			return fallback_target
 	return fallback_target
+
+
+func _tag_map_for_effect_target(target_role: String, user: EntityInstance, fallback_target: EntityInstance) -> Dictionary:
+	var participant := _participant_for_effect_target(target_role, user, fallback_target)
+	if participant == _player:
+		return _player_tags
+	if participant == _opponent:
+		return _opponent_tags
+	return {}
+
+
+func _effect_target_is_participant(target_role: String, user: EntityInstance, fallback_target: EntityInstance) -> bool:
+	var participant := _participant_for_effect_target(target_role, user, fallback_target)
+	return participant == _player or participant == _opponent
 
 
 func _emit_action_resolved(role: String, action: Dictionary, success: bool) -> void:

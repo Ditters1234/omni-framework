@@ -1108,10 +1108,13 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
 - `participants.player` and `participants.opponent` are the v1 fixed roles. `entity_id` accepts `"player"`, `"entity:<id>"`, or a raw entity id.
 - Launch payloads may override participants with `player_entity_id`, `opponent_entity_id`, or `participant_overrides`.
 - Player actions are shown as buttons. Opponent actions are selected by weighted random among available actions.
-- `availability` and `check` use `ConditionEvaluator`; encounter contexts add `encounter:player`, `encounter:opponent`, and the typed condition `encounter_stat_check`.
-- Supported v1 effects are `modify_stat`, `modify_encounter_stat`, `set_encounter_stat`, `set_flag`, `log`, and `resolve`.
+- `availability` and `check` use `ConditionEvaluator`; encounter contexts add `encounter:player`, `encounter:opponent`, `encounter_stat_check`, and `has_encounter_tag`.
+- Supported effects are `modify_stat`, `modify_encounter_stat`, `set_encounter_stat`, `set_flag`, `log`, `resolve`, `apply_tag`, and `remove_tag`.
+- `resolve` stops later effects in the same action list. Put any final `log` effect before the `resolve` effect.
+- `apply_tag` writes an encounter-local tag to `player` or `opponent`; `duration_rounds` defaults to `1` and decrements after a full unresolved round. `has_encounter_tag` checks these tags from action availability or checks.
 - Outcome `reward` is applied through `RewardService`; outcome `action_payload` is dispatched through `ActionDispatcher`.
 - Encounter patches support `set`, `add_player_actions`, `remove_player_action_ids`, `add_opponent_actions`, `remove_opponent_action_ids`, `add_outcomes`, and `remove_outcome_ids`.
+- Load validation rejects unsupported effects, unknown real stats in `modify_stat`, unknown local meters in encounter-stat effects, unknown outcomes in `resolve`, missing tag ids on tag effects, malformed outcome action payloads, and invalid `push_screen` targets.
 
 ---
 
