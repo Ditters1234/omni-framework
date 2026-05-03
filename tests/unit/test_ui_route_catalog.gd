@@ -35,6 +35,7 @@ func test_backend_screen_ids_map_to_known_routes() -> void:
 		"AchievementListBackend",
 		"EventLogBackend",
 		"WorldMapBackend",
+		"EncounterBackend",
 	]
 
 	for backend_class in backend_classes:

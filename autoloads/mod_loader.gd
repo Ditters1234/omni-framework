@@ -21,6 +21,7 @@ const FACTION_REPUTATION_BACKEND := preload("res://ui/screens/backends/faction_r
 const ACHIEVEMENT_LIST_BACKEND := preload("res://ui/screens/backends/achievement_list_backend.gd")
 const EVENT_LOG_BACKEND := preload("res://ui/screens/backends/event_log_backend.gd")
 const WORLD_MAP_BACKEND := preload("res://ui/screens/backends/world_map_backend.gd")
+const ENCOUNTER_BACKEND := preload("res://ui/screens/backends/encounter_backend.gd")
 const SCRIPT_HOOK_LOADER := preload("res://systems/script_hook_loader.gd")
 
 const MODS_PATH := "res://mods/"
@@ -134,6 +135,7 @@ func _register_backend_contracts() -> void:
 	ACHIEVEMENT_LIST_BACKEND.register_contract()
 	EVENT_LOG_BACKEND.register_contract()
 	WORLD_MAP_BACKEND.register_contract()
+	ENCOUNTER_BACKEND.register_contract()
 	BACKEND_CONTRACT_REGISTRY.lock()
 
 

@@ -36,6 +36,7 @@ mods/<author_id>/<mod_id>/
 │   ├── tasks.json
 │   ├── quests.json
 │   ├── recipes.json
+│   ├── encounters.json
 │   ├── achievements.json
 │   └── config.json
 ├── dialogue/
@@ -151,6 +152,7 @@ The current base pack uses these files:
 - `tasks.json`
 - `quests.json`
 - `recipes.json`
+- `encounters.json`
 - `achievements.json`
 - `ai_personas.json`
 - `ai_templates.json`
@@ -283,7 +285,7 @@ Parts are the core content building blocks. They can represent equipment, module
 ```json
 {
   "instance_id": "player_head_001",
-  "template_id": "base:human_head",
+  "template_id": "base:human_head_male",
   "custom_values": {
     "eye_color": "green",
     "hair_color": "black"
@@ -1035,6 +1037,84 @@ Supported discovery modes are `always`, `learned_on_flag`, and `auto_on_ingredie
 
 ---
 
+## 11.7 `encounters.json`
+
+Encounters are data-authored, turn-based scenes loaded through `EncounterRegistry` and launched with `EncounterBackend`. They mutate real entity stats through committed `EntityInstance` copies, while encounter-local meters such as intimidation or progress live only inside the active backend instance.
+
+### Current addition format
+
+```json
+{
+  "encounters": [
+    {
+      "encounter_id": "my_name:my_mod:tavern_brawl",
+      "display_name": "Tavern Brawl",
+      "screen_title": "Tavern Brawl",
+      "participants": {
+        "player": { "entity_id": "player" },
+        "opponent": { "entity_id": "entity:my_name:my_mod:drunk_patron" }
+      },
+      "encounter_stats": {
+        "intimidation": { "label": "Intimidation", "default": 0, "min": 0, "max": 100 }
+      },
+      "actions": {
+        "player": [
+          {
+            "action_id": "strike",
+            "label": "Strike",
+            "check": { "type": "stat_check", "entity_id": "encounter:player", "stat": "strength", "op": ">=", "value": 4 },
+            "on_success": [
+              { "effect": "modify_stat", "target": "opponent", "stat": "health", "delta": -5 },
+              { "effect": "log", "text": "{user_name} lands a clean hit." }
+            ],
+            "on_failure": [
+              { "effect": "log", "text": "{user_name} misses." }
+            ]
+          }
+        ],
+        "opponent": [
+          {
+            "action_id": "swing",
+            "label": "Swing",
+            "weight": 1,
+            "on_success": [
+              { "effect": "modify_stat", "target": "player", "stat": "health", "delta": -3 }
+            ]
+          }
+        ]
+      },
+      "resolution": {
+        "max_rounds": 8,
+        "max_rounds_outcome": "fled",
+        "cancel_outcome": "fled",
+        "outcomes": [
+          {
+            "outcome_id": "victory",
+            "conditions": { "type": "stat_check", "entity_id": "encounter:opponent", "stat": "health", "op": "<=", "value": 0 },
+            "screen_text": "The opponent yields.",
+            "reward": { "currency": { "credits": 5 } },
+            "pop_on_resolve": true
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+### Important current details
+
+- Required fields are `encounter_id`, `participants`, `actions`, and `resolution`.
+- `participants.player` and `participants.opponent` are the v1 fixed roles. `entity_id` accepts `"player"`, `"entity:<id>"`, or a raw entity id.
+- Launch payloads may override participants with `player_entity_id`, `opponent_entity_id`, or `participant_overrides`.
+- Player actions are shown as buttons. Opponent actions are selected by weighted random among available actions.
+- `availability` and `check` use `ConditionEvaluator`; encounter contexts add `encounter:player`, `encounter:opponent`, and the typed condition `encounter_stat_check`.
+- Supported v1 effects are `modify_stat`, `modify_encounter_stat`, `set_encounter_stat`, `set_flag`, `log`, and `resolve`.
+- Outcome `reward` is applied through `RewardService`; outcome `action_payload` is dispatched through `ActionDispatcher`.
+- Encounter patches support `set`, `add_player_actions`, `remove_player_action_ids`, `add_opponent_actions`, `remove_opponent_action_ids`, `add_outcomes`, and `remove_outcome_ids`.
+
+---
+
 ## 12. `quests.json`
 
 Quests are progression/state-tracking structures.
@@ -1195,6 +1275,7 @@ The current loader registers these backend classes:
 - `CatalogListBackend`
 - `CraftingBackend`
 - `DialogueBackend`
+- `EncounterBackend`
 - `EntitySheetBackend`
 - `ActiveQuestLogBackend`
 - `FactionReputationBackend`
@@ -1287,6 +1368,24 @@ No required params. Common useful optional fields:
 - `discovered_only`
 
 The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location. The runtime screen also provides route lines, mouse-wheel zoom, drag panning, fit/current centering controls, and radial/horizontal/vertical orientation modes. The graph now declutters while zoomed out by shrinking nodes into compact pills or markers and hiding travel-cost badges until there is enough space to read them. Traveling from the map consumes the cheapest routed total `travel_cost` in ticks; unreachable destinations are rejected instead of free-teleporting.
+
+#### `EncounterBackend`
+Required:
+- `encounter_id`
+
+Useful optional fields:
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+- `player_entity_id`
+- `opponent_entity_id`
+- `participant_overrides`
+- `next_screen_id`
+- `next_screen_params`
+- `pop_on_resolve`
+- `default_sound`
+
+Most encounter behavior lives in the referenced `encounters.json` template. The backend payload is mainly for launch context, participant overrides, and navigation overrides.
 
 #### `EntitySheetBackend`
 No required params. Common useful optional fields:

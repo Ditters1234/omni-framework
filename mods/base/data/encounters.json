@@ -1,0 +1,127 @@
+{
+  "encounters": [
+    {
+      "encounter_id": "base:tutorial_brawl",
+      "display_name": "Training Brawl",
+      "description": "A sparring drone tests your combat basics.",
+      "screen_title": "Training Brawl",
+      "screen_description": "Trade blows, intimidate the drone, or step away.",
+      "tags": ["tutorial", "combat"],
+      "participants": {
+        "player": { "entity_id": "player" },
+        "opponent": { "entity_id": "base:training_drone" }
+      },
+      "encounter_stats": {
+        "intimidation": { "default": 0, "min": 0, "max": 100, "label": "Intimidation", "color_token": "warning" },
+        "round": { "default": 1, "kind": "counter", "label": "Round" }
+      },
+      "actions": {
+        "player": [
+          {
+            "action_id": "strike",
+            "label": "Strike",
+            "description": "Spend stamina to damage the opponent.",
+            "availability": { "type": "stat_check", "entity_id": "encounter:player", "stat": "stamina", "op": ">=", "value": 5 },
+            "cost": [
+              { "effect": "modify_stat", "target": "player", "stat": "stamina", "base_delta": -5 }
+            ],
+            "check": { "type": "stat_check", "entity_id": "encounter:player", "stat": "power", "op": ">=", "value": 1 },
+            "on_success": [
+              { "effect": "modify_stat", "target": "opponent", "stat": "health", "base_delta": -8, "stat_modifiers": { "user.power": -2.0, "target.armor": 1.0 } },
+              { "effect": "log", "text": "{user_name} lands a clean hit with {action_label}." }
+            ],
+            "on_failure": [
+              { "effect": "log", "text": "{user_name}'s strike glances off." }
+            ]
+          },
+          {
+            "action_id": "intimidate",
+            "label": "Intimidate",
+            "description": "Use charisma to build encounter pressure.",
+            "check": { "type": "stat_check", "entity_id": "encounter:player", "stat": "charisma", "op": ">=", "value": 1 },
+            "on_success": [
+              { "effect": "modify_encounter_stat", "stat": "intimidation", "base_delta": 25, "stat_modifiers": { "user.charisma": 5.0 } },
+              { "effect": "log", "text": "{user_name} rattles {target_name}'s targeting routine." }
+            ],
+            "on_failure": [
+              { "effect": "modify_encounter_stat", "stat": "intimidation", "base_delta": 5 },
+              { "effect": "log", "text": "{target_name} does not seem impressed." }
+            ]
+          },
+          {
+            "action_id": "flee",
+            "label": "Flee",
+            "description": "End the sparring session.",
+            "on_success": [
+              { "effect": "resolve", "outcome_id": "fled" },
+              { "effect": "log", "text": "{user_name} steps out of the ring." }
+            ]
+          }
+        ],
+        "opponent": [
+          {
+            "action_id": "zap",
+            "label": "Training Zap",
+            "weight": 3,
+            "on_success": [
+              { "effect": "modify_stat", "target": "player", "stat": "health", "base_delta": -4, "stat_modifiers": { "target.armor": 0.5 } },
+              { "effect": "log", "text": "{user_name} tags {target_name} with a low-power zap." }
+            ]
+          },
+          {
+            "action_id": "feint",
+            "label": "Feint",
+            "weight": 1,
+            "weight_modifiers": [
+              {
+                "if": { "type": "stat_check", "entity_id": "encounter:opponent", "stat": "health", "op": "<", "value": 20 },
+                "weight": 4
+              }
+            ],
+            "on_success": [
+              { "effect": "modify_stat", "target": "player", "stat": "stamina", "base_delta": -3 },
+              { "effect": "log", "text": "{user_name} forces {target_name} to waste momentum." }
+            ]
+          }
+        ]
+      },
+      "opponent_strategy": { "kind": "weighted_random" },
+      "resolution": {
+        "outcomes": [
+          {
+            "outcome_id": "victory",
+            "conditions": { "type": "stat_check", "entity_id": "encounter:opponent", "stat": "health", "op": "<=", "value": 0 },
+            "reward": { "credits": 25 },
+            "action_payload": { "type": "set_flag", "flag_id": "training_brawl_won", "value": true },
+            "screen_text": "The drone powers down and prints a small credit chit.",
+            "pop_on_resolve": true
+          },
+          {
+            "outcome_id": "intimidated",
+            "conditions": { "type": "encounter_stat_check", "stat": "intimidation", "op": ">=", "value": 100 },
+            "reward": { "credits": 10 },
+            "screen_text": "The drone flags your posture as sufficiently threatening and yields.",
+            "pop_on_resolve": true
+          },
+          {
+            "outcome_id": "defeat",
+            "conditions": { "type": "stat_check", "entity_id": "encounter:player", "stat": "health", "op": "<=", "value": 1 },
+            "screen_text": "The drone ends the exercise before you drop.",
+            "pop_on_resolve": true
+          },
+          {
+            "outcome_id": "fled",
+            "trigger": "manual",
+            "screen_text": "You leave the training ring.",
+            "pop_on_resolve": true
+          }
+        ],
+        "max_rounds": 8,
+        "max_rounds_outcome": "fled",
+        "cancel_outcome": "fled",
+        "evaluation_order": "first_match"
+      }
+    }
+  ],
+  "patches": []
+}

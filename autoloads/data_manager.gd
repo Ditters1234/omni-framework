@@ -9,6 +9,7 @@ class_name OmniDataManager
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const AI_PERSONA_REGISTRY := preload("res://systems/loaders/ai_persona_registry.gd")
 const AI_TEMPLATE_REGISTRY := preload("res://systems/loaders/ai_template_registry.gd")
+const ENCOUNTER_REGISTRY := preload("res://systems/loaders/encounter_registry.gd")
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const LOAD_PHASE_IDLE := "idle"
 const LOAD_PHASE_ADDITIONS := "additions"
@@ -32,6 +33,7 @@ var factions: Dictionary = {}          # faction_id → faction template
 var quests: Dictionary = {}            # quest_id → quest template
 var tasks: Dictionary = {}             # template_id → task template
 var recipes: Dictionary = {}           # recipe_id → recipe template
+var encounters: Dictionary = {}        # encounter_id -> encounter template
 var achievements: Dictionary = {}      # achievement_id → achievement template
 var ai_personas: Dictionary = {}       # persona_id â†’ AI persona template
 var ai_templates: Dictionary = {}      # template_id -> AI prompt template
@@ -126,6 +128,14 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 		var recipe_entries: Array = _get_array_field(recipes_data, "recipes", mod_id, recipes_path, LOAD_PHASE_ADDITIONS)
 		recipe_entries = _filter_valid_additions(recipe_entries, recipes, "recipes", "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"], mod_id, recipes_path, LOAD_PHASE_ADDITIONS)
 		RecipeRegistry.load_additions(recipe_entries)
+
+	var encounters_path := mod_data_path.path_join(OmniConstants.DATA_ENCOUNTERS)
+	var encounters_data_value: Variant = _load_json_document(mod_id, encounters_path, LOAD_PHASE_ADDITIONS)
+	if encounters_data_value is Dictionary:
+		var encounters_data: Dictionary = encounters_data_value
+		var encounter_entries: Array = _get_array_field(encounters_data, "encounters", mod_id, encounters_path, LOAD_PHASE_ADDITIONS)
+		encounter_entries = _filter_valid_additions(encounter_entries, encounters, "encounters", "encounter_id", ["encounter_id", "participants", "actions", "resolution"], mod_id, encounters_path, LOAD_PHASE_ADDITIONS)
+		ENCOUNTER_REGISTRY.load_additions(encounter_entries)
 
 	var achievements_path := mod_data_path.path_join(OmniConstants.DATA_ACHIEVEMENTS)
 	var achievements_data_value: Variant = _load_json_document(mod_id, achievements_path, LOAD_PHASE_ADDITIONS)
@@ -246,6 +256,15 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		_validate_patch_operations(recipe_patches, ["target", "set", "add_tags", "remove_tags"], "recipes", mod_id, recipes_path, LOAD_PHASE_PATCHES)
 		RecipeRegistry.apply_patch(recipe_patches)
 
+	var encounters_path := mod_data_path.path_join(OmniConstants.DATA_ENCOUNTERS)
+	var encounters_data_value: Variant = _load_json_document(mod_id, encounters_path, LOAD_PHASE_PATCHES)
+	if encounters_data_value is Dictionary:
+		var encounters_data: Dictionary = encounters_data_value
+		var encounter_patches: Array = _get_array_field(encounters_data, "patches", mod_id, encounters_path, LOAD_PHASE_PATCHES)
+		_validate_patch_targets(encounter_patches, encounters, "encounters", mod_id, encounters_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(encounter_patches, ["target", "set", "add_player_actions", "remove_player_action_ids", "add_opponent_actions", "remove_opponent_action_ids", "add_outcomes", "remove_outcome_ids"], "encounters", mod_id, encounters_path, LOAD_PHASE_PATCHES)
+		ENCOUNTER_REGISTRY.apply_patch(encounter_patches)
+
 	var achievements_path := mod_data_path.path_join(OmniConstants.DATA_ACHIEVEMENTS)
 	var achievements_data_value: Variant = _load_json_document(mod_id, achievements_path, LOAD_PHASE_PATCHES)
 	if achievements_data_value is Dictionary:
@@ -315,6 +334,10 @@ func get_recipe(recipe_id: String) -> Dictionary:
 	return _duplicate_dictionary(recipes.get(recipe_id, {}))
 
 
+func get_encounter(encounter_id: String) -> Dictionary:
+	return _duplicate_dictionary(encounters.get(encounter_id, {}))
+
+
 func get_achievement(achievement_id: String) -> Dictionary:
 	return _duplicate_dictionary(achievements.get(achievement_id, {}))
 
@@ -357,6 +380,10 @@ func has_task(template_id: String) -> bool:
 
 func has_recipe(recipe_id: String) -> bool:
 	return recipes.has(recipe_id)
+
+
+func has_encounter(encounter_id: String) -> bool:
+	return encounters.has(encounter_id)
 
 
 func has_achievement(achievement_id: String) -> bool:
@@ -464,6 +491,25 @@ func query_recipes_by_tag(tag: String) -> Array[Dictionary]:
 	return query_recipes({"tags": [tag]})
 
 
+func query_encounters(filters: Dictionary = {}) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var encounter_ids := _variant_to_string_array(filters.get("encounter_ids", filters.get("template_ids", [])))
+	var tag_filters := _variant_to_string_array(filters.get("tags", []))
+	for encounter_id_value in encounters.keys():
+		var encounter_id := str(encounter_id_value)
+		if not encounter_ids.is_empty() and not encounter_ids.has(encounter_id):
+			continue
+		var encounter_value: Variant = encounters.get(encounter_id_value, {})
+		if not encounter_value is Dictionary:
+			continue
+		var encounter: Dictionary = encounter_value
+		var encounter_tags := _variant_to_string_array(encounter.get("tags", []))
+		if not _contains_all_strings(encounter_tags, tag_filters):
+			continue
+		results.append(encounter.duplicate(true))
+	return results
+
+
 func query_ai_personas(filters: Dictionary = {}) -> Array[Dictionary]:
 	var results: Array[Dictionary] = []
 	var persona_ids := _variant_to_string_array(filters.get("persona_ids", filters.get("template_ids", [])))
@@ -516,6 +562,7 @@ func get_registry_counts() -> Dictionary:
 		"quests": quests.size(),
 		"tasks": tasks.size(),
 		"recipes": recipes.size(),
+		"encounters": encounters.size(),
 		"achievements": achievements.size(),
 		"ai_personas": ai_personas.size(),
 		"ai_templates": ai_templates.size(),
@@ -862,6 +909,7 @@ func _validate_template_schemas() -> void:
 	_validate_registry_required_fields(quests, OmniConstants.DATA_QUESTS, "quest_id", ["quest_id", "display_name", "stages"])
 	_validate_registry_required_fields(tasks, OmniConstants.DATA_TASKS, "template_id", ["template_id", "type"])
 	_validate_registry_required_fields(recipes, OmniConstants.DATA_RECIPES, "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"])
+	_validate_registry_required_fields(encounters, OmniConstants.DATA_ENCOUNTERS, "encounter_id", ["encounter_id", "participants", "actions", "resolution"])
 	_validate_registry_required_fields(achievements, OmniConstants.DATA_ACHIEVEMENTS, "achievement_id", ["achievement_id", "display_name", "stat_name", "requirement"])
 	_validate_registry_required_fields(ai_personas, OmniConstants.DATA_AI_PERSONAS, "persona_id", ["persona_id", "display_name", "system_prompt_template"])
 	_validate_registry_required_fields(ai_templates, OmniConstants.DATA_AI_TEMPLATES, "template_id", ["template_id", "purpose", "prompt_template"])
@@ -900,6 +948,12 @@ func _validate_template_schemas() -> void:
 		_validate_string_array_elements(recipe_id, OmniConstants.DATA_RECIPES, "tags", recipe.get("tags", []))
 		_validate_stat_map(recipe_id, OmniConstants.DATA_RECIPES, "required_stats", recipe.get("required_stats", {}), stat_ids)
 		_validate_recipe_shape(recipe)
+
+	for encounter_value in encounters.values():
+		if not encounter_value is Dictionary:
+			continue
+		var encounter: Dictionary = encounter_value
+		_validate_encounter_schema(encounter, stat_ids)
 
 	for persona_value in ai_personas.values():
 		if not persona_value is Dictionary:
@@ -967,6 +1021,101 @@ func _validate_currency_map(entry_id: String, file_path: String, field_path: Str
 		if currency_ids.has(currency_id):
 			continue
 		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown currency '%s'." % [entry_id, field_path, currency_id])
+
+
+func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary) -> void:
+	var encounter_id := str(encounter.get("encounter_id", ""))
+	var participants_value: Variant = encounter.get("participants", {})
+	if not participants_value is Dictionary:
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' participants must be an object." % encounter_id)
+	else:
+		var participants: Dictionary = participants_value
+		for role in ["player", "opponent"]:
+			if not participants.has(role):
+				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' is missing participants.%s." % [encounter_id, role])
+				continue
+			var participant_value: Variant = participants.get(role, {})
+			if not participant_value is Dictionary:
+				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' participants.%s must be an object." % [encounter_id, role])
+
+	var encounter_stats_value: Variant = encounter.get("encounter_stats", {})
+	if encounter_stats_value is Dictionary:
+		var encounter_stats: Dictionary = encounter_stats_value
+		for stat_key_value in encounter_stats.keys():
+			var stat_id := str(stat_key_value)
+			if stat_ids.has(stat_id):
+				push_warning("Encounter '%s' encounter_stats.%s overlaps a real stat id; namespace use keeps this safe." % [encounter_id, stat_id])
+			var stat_def_value: Variant = encounter_stats.get(stat_key_value, {})
+			if not stat_def_value is Dictionary:
+				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' encounter_stats.%s must be an object." % [encounter_id, stat_id])
+	elif encounter.has("encounter_stats"):
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' encounter_stats must be an object." % encounter_id)
+
+	var actions_value: Variant = encounter.get("actions", {})
+	var action_ids_by_role: Dictionary = {}
+	if actions_value is Dictionary:
+		var actions: Dictionary = actions_value
+		for role in ["player", "opponent"]:
+			_validate_encounter_action_list(encounter_id, role, actions.get(role, []), action_ids_by_role)
+	else:
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' actions must be an object." % encounter_id)
+
+	var resolution_value: Variant = encounter.get("resolution", {})
+	if not resolution_value is Dictionary:
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' resolution must be an object." % encounter_id)
+		return
+	var resolution: Dictionary = resolution_value
+	var outcome_ids := _validate_encounter_outcomes(encounter_id, resolution.get("outcomes", []))
+	for field_name in ["max_rounds_outcome", "cancel_outcome"]:
+		var outcome_id := str(resolution.get(field_name, encounter.get(field_name, "")))
+		if not outcome_id.is_empty() and not outcome_ids.has(outcome_id):
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s references unknown outcome '%s'." % [encounter_id, field_name, outcome_id])
+
+
+func _validate_encounter_action_list(encounter_id: String, role: String, value: Variant, _action_ids_by_role: Dictionary) -> void:
+	if not value is Array:
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' actions.%s must be an array." % [encounter_id, role])
+		return
+	var actions: Array = value
+	var seen_ids: Dictionary = {}
+	for index in range(actions.size()):
+		var action_value: Variant = actions[index]
+		if not action_value is Dictionary:
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' actions.%s[%d] must be an object." % [encounter_id, role, index])
+			continue
+		var action: Dictionary = action_value
+		var action_id := str(action.get("action_id", "")).strip_edges()
+		if action_id.is_empty():
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' actions.%s[%d].action_id must be non-empty." % [encounter_id, role, index])
+			continue
+		if seen_ids.has(action_id):
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' has duplicate %s action_id '%s'." % [encounter_id, role, action_id])
+		seen_ids[action_id] = true
+		for effect_field in ["cost", "on_success", "on_failure"]:
+			if action.has(effect_field) and not action.get(effect_field, []) is Array:
+				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' action '%s' field '%s' must be an array." % [encounter_id, action_id, effect_field])
+
+
+func _validate_encounter_outcomes(encounter_id: String, value: Variant) -> Dictionary:
+	var outcome_ids: Dictionary = {}
+	if not value is Array:
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' resolution.outcomes must be an array." % encounter_id)
+		return outcome_ids
+	var outcomes: Array = value
+	for index in range(outcomes.size()):
+		var outcome_value: Variant = outcomes[index]
+		if not outcome_value is Dictionary:
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' resolution.outcomes[%d] must be an object." % [encounter_id, index])
+			continue
+		var outcome: Dictionary = outcome_value
+		var outcome_id := str(outcome.get("outcome_id", "")).strip_edges()
+		if outcome_id.is_empty():
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' resolution.outcomes[%d].outcome_id must be non-empty." % [encounter_id, index])
+			continue
+		if outcome_ids.has(outcome_id):
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' has duplicate outcome_id '%s'." % [encounter_id, outcome_id])
+		outcome_ids[outcome_id] = true
+	return outcome_ids
 
 
 func _validate_recipe_shape(recipe: Dictionary) -> void:
@@ -1555,6 +1704,7 @@ func clear_all() -> void:
 	quests.clear()
 	tasks.clear()
 	recipes.clear()
+	encounters.clear()
 	achievements.clear()
 	ai_personas.clear()
 	ai_templates.clear()

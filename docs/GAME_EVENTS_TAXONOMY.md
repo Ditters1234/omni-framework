@@ -101,6 +101,15 @@ Note: `data_validation_failed` is described in earlier planning docs but is not 
 - `dialogue_started(entity_id, dialogue_resource)`
 - `dialogue_ended(entity_id, dialogue_resource)`
 
+### Encounters
+
+- `encounter_started(payload)` when an encounter backend initializes with resolved participants
+- `encounter_round_advanced(encounter_id, round)` after a full unresolved round advances
+- `encounter_action_resolved(payload)` after a player or opponent action applies its success/failure effects
+- `encounter_resolved(payload)` when an outcome fires through automatic resolution, a manual resolve effect, max rounds, or cancel
+
+Encounter payload dictionaries include stable primitive fields such as `encounter_id`, `round`, `actor`, `action_id`, `success`, `outcome_id`, and `reason` depending on the signal.
+
 ### Achievements
 
 - `achievement_unlocked(achievement_id, unlock_vfx)`

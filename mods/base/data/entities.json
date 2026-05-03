@@ -22,12 +22,12 @@
         { "id": "feet", "accepted_tags": ["feet"], "label": "Feet" }
       ],
       "inventory": [
-        { "instance_id": "p_head_001", "template_id": "base:human_head", "custom_values": { "eye_color": "green", "hair_color": "black" } },
-        { "instance_id": "p_torso_001", "template_id": "base:human_torso" },
-        { "instance_id": "p_arms_001", "template_id": "base:human_arms" },
-        { "instance_id": "p_legs_001", "template_id": "base:human_legs" },
-        { "instance_id": "p_hands_001", "template_id": "base:human_hands" },
-        { "instance_id": "p_feet_001", "template_id": "base:human_feet" },
+        { "instance_id": "p_head_001", "template_id": "base:human_head_male", "custom_values": { "eye_color": "green", "hair_color": "black" } },
+        { "instance_id": "p_torso_001", "template_id": "base:human_torso_male" },
+        { "instance_id": "p_arms_001", "template_id": "base:human_arms_male" },
+        { "instance_id": "p_legs_001", "template_id": "base:human_legs_male" },
+        { "instance_id": "p_hands_001", "template_id": "base:human_hands_male" },
+        { "instance_id": "p_feet_001", "template_id": "base:human_feet_male" },
         { "instance_id": "p_baton_001", "template_id": "base:stun_baton" },
         { "instance_id": "p_chip_001", "template_id": "base:salvage_chip" },
         { "instance_id": "p_chip_002", "template_id": "base:salvage_chip" },
@@ -41,6 +41,26 @@
         "hands": "p_hands_001",
         "feet": "p_feet_001"
       }
+    },
+    {
+      "entity_id": "base:training_drone",
+      "display_name": "Training Drone",
+      "description": "A battered clinic sparring unit with padded arms and very little bedside manner.",
+      "location_id": "base:market_row",
+      "currencies": {},
+      "stats": { "power": 1, "armor": 1, "health": 35, "health_max": 35, "stamina": 30, "stamina_max": 30 },
+      "flags": {},
+      "inventory": [],
+      "interactions": [
+        {
+          "tab_id": "training_brawl",
+          "label": "Spar",
+          "description": "Run a short training encounter.",
+          "backend_class": "EncounterBackend",
+          "encounter_id": "base:tutorial_brawl",
+          "opponent_entity_id": "entity:base:training_drone"
+        }
+      ]
     },
     {
       "entity_id": "base:npc_theta",

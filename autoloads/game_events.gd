@@ -50,6 +50,12 @@ const SIGNAL_CATALOG := {
 		{"name": "dialogue_started", "args": ["entity_id", "dialogue_resource"]},
 		{"name": "dialogue_ended", "args": ["entity_id", "dialogue_resource"]},
 	],
+	"encounters": [
+		{"name": "encounter_started", "args": ["payload"]},
+		{"name": "encounter_round_advanced", "args": ["encounter_id", "round"]},
+		{"name": "encounter_action_resolved", "args": ["payload"]},
+		{"name": "encounter_resolved", "args": ["payload"]},
+	],
 	"achievements": [
 		{"name": "achievement_unlocked", "args": ["achievement_id", "unlock_vfx"]},
 	],
@@ -137,6 +143,14 @@ signal task_started(task_id: String, entity_id: String)
 signal task_completed(task_id: String, entity_id: String)
 signal dialogue_started(entity_id: String, dialogue_resource: String)
 signal dialogue_ended(entity_id: String, dialogue_resource: String)
+
+# ---------------------------------------------------------------------------
+# Encounters
+# ---------------------------------------------------------------------------
+signal encounter_started(payload: Dictionary)
+signal encounter_round_advanced(encounter_id: String, round: int)
+signal encounter_action_resolved(payload: Dictionary)
+signal encounter_resolved(payload: Dictionary)
 
 # ---------------------------------------------------------------------------
 # Achievements

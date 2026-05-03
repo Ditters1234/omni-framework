@@ -78,6 +78,7 @@ systems/
 │   ├── achievement_registry.gd
 │   ├── config_loader.gd
 │   ├── definition_loader.gd
+│   ├── encounter_registry.gd
 │   ├── entity_registry.gd
 │   ├── faction_registry.gd
 │   ├── location_graph.gd
@@ -89,6 +90,7 @@ systems/
 ├── assembly_commit_service.gd
 ├── backend_contract_registry.gd
 ├── condition_evaluator.gd
+├── encounter_runtime.gd
 ├── location_access_service.gd
 ├── quest_tracker.gd
 ├── reward_service.gd
@@ -100,7 +102,8 @@ systems/
 └── transaction_service.gd
 ```
 
-`systems/loaders/` also includes `ai_persona_registry.gd` and `ai_template_registry.gd`, which load `ai_personas.json` and `ai_templates.json` into `DataManager`.
+`systems/loaders/` also includes `ai_persona_registry.gd`, `ai_template_registry.gd`, and `encounter_registry.gd`, which load `ai_personas.json`, `ai_templates.json`, and `encounters.json` into `DataManager`.
+`systems/encounter_runtime.gd` provides encounter condition context, weighted opponent action selection, encounter-local stat clamping, and JSON-native effect delta math.
 `systems/ai/` now also includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies ahead of the dialogue-layer UI work.
 `systems/ai/` also now includes `bt_action_ai_query.gd` and `bt_condition_ai_check.gd`, two LimboAI custom tasks for AI-driven behavior-tree decisions, plus `bt_ai_utils.gd`, the shared prompt-token and response-parser helper those tasks use.
 `script_hook_service.gd` now also owns the Phase 6 world-generation bridge: it resolves config-declared global AI hook paths, caches generated task flavor text, and dispatches event narration requests after quest, travel, and day-advance events are recorded.
@@ -159,6 +162,8 @@ ui/
 │   │   ├── crafting_screen.gd / .tscn
 │   │   ├── dialogue_backend.gd
 │   │   ├── dialogue_screen.gd / .tscn
+│   │   ├── encounter_backend.gd
+│   │   ├── encounter_screen.gd / .tscn
 │   │   ├── entity_sheet_backend.gd
 │   │   ├── entity_sheet_screen.gd / .tscn
 │   │   ├── event_log_backend.gd
@@ -194,8 +199,9 @@ The UI layer includes:
 
 - A root entry scene at `ui/main.tscn` and accompanying controller (`main.gd`)
 - A route catalog (`ui_route_catalog.gd`) — the shared catalog for `backend_class → screen_id` mapping and the runtime `screen_id → scene_path` registry
-- **14 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting complete, Phase 7 world map initial pass): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`, `WorldMapBackend`
+- **15 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting complete, Phase 7 world map initial pass, encounter v1 complete): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EncounterBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`, `WorldMapBackend`
 - `DialogueBackend` now supports authored `.dialogue` trees plus optional `ai_mode` handoff (`hybrid` / `freeform`) using `systems/ai/ai_chat_service.gd` and `GameEvents.ai_token_received`
+- `EncounterBackend` runs data-authored, turn-based encounters from `encounters.json`, using real entity stat mutations plus encounter-local meters and outcome rewards/actions.
 - `ui/screens/backends/` also includes the world map implementation trio: `world_map_backend.gd`, `world_map_graph.gd`, and `world_map_screen.gd`
 - A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts
 - Debug overlay at `ui/debug/dev_debug_overlay.gd`

@@ -17,21 +17,21 @@ class_name ConditionEvaluator
 
 ## Evaluates a condition dictionary against the current GameState.
 ## Returns true only if ALL conditions in the block are satisfied.
-static func evaluate(conditions: Dictionary) -> bool:
+static func evaluate(conditions: Dictionary, context: Dictionary = {}) -> bool:
 	if conditions.is_empty():
 		return true
 
-	if not _evaluate_logic_block(conditions):
+	if not _evaluate_logic_block(conditions, context):
 		return false
 	if conditions.has("type"):
-		return _evaluate_typed_condition(conditions)
-	return _evaluate_legacy_condition(conditions)
+		return _evaluate_typed_condition(conditions, context)
+	return _evaluate_legacy_condition(conditions, context)
 
 
 ## Evaluates an array of condition blocks (OR logic — any one passing = true).
-static func evaluate_any(condition_list: Array) -> bool:
+static func evaluate_any(condition_list: Array, context: Dictionary = {}) -> bool:
 	for cond in condition_list:
-		if cond is Dictionary and evaluate(cond):
+		if cond is Dictionary and evaluate(cond, context):
 			return true
 	return false
 
@@ -40,8 +40,8 @@ static func evaluate_any(condition_list: Array) -> bool:
 # Private helpers
 # ---------------------------------------------------------------------------
 
-static func _check_stat(stat_check: Dictionary) -> bool:
-	var entity := _resolve_entity(str(stat_check.get("entity_id", "player")))
+static func _check_stat(stat_check: Dictionary, context: Dictionary = {}) -> bool:
+	var entity := _resolve_entity(str(stat_check.get("entity_id", "player")), context)
 	if entity == null:
 		return false
 	var stat_key := str(stat_check.get("stat", ""))
@@ -58,7 +58,7 @@ static func _check_stat(stat_check: Dictionary) -> bool:
 	return false
 
 
-static func _check_flag(flag_check: Variant) -> bool:
+static func _check_flag(flag_check: Variant, context: Dictionary = {}) -> bool:
 	if flag_check is String:
 		return GameState.has_flag(str(flag_check))
 	if not flag_check is Dictionary:
@@ -69,7 +69,7 @@ static func _check_flag(flag_check: Variant) -> bool:
 	var expected: Variant = flag_dict.get("value", true)
 	if entity_id == "global":
 		return _flag_values_match(GameState.get_flag(flag_id), expected)
-	var entity := _resolve_entity(entity_id)
+	var entity := _resolve_entity(entity_id, context)
 	if entity == null:
 		return false
 	return _flag_values_match(entity.get_flag(flag_id, null), expected)
@@ -86,17 +86,17 @@ static func _flag_values_match(actual: Variant, expected: Variant) -> bool:
 	return false
 
 
-static func _check_has_part(part_check: Variant) -> bool:
+static func _check_has_part(part_check: Variant, context: Dictionary = {}) -> bool:
 	if part_check is String:
 		return _check_has_part({
 			"entity_id": "player",
 			"template_id": str(part_check),
 			"count": 1,
-		})
+		}, context)
 	if not part_check is Dictionary:
 		return false
 	var part_dict: Dictionary = part_check
-	var entity := _resolve_entity(str(part_dict.get("entity_id", "player")))
+	var entity := _resolve_entity(str(part_dict.get("entity_id", "player")), context)
 	if entity == null:
 		return false
 	var template_id := str(part_dict.get("template_id", part_dict.get("part_id", "")))
@@ -113,8 +113,8 @@ static func _check_has_part(part_check: Variant) -> bool:
 	return false
 
 
-static func _check_currency(currency_check: Dictionary) -> bool:
-	var entity := _resolve_entity(str(currency_check.get("entity_id", "player")))
+static func _check_currency(currency_check: Dictionary, context: Dictionary = {}) -> bool:
+	var entity := _resolve_entity(str(currency_check.get("entity_id", "player")), context)
 	if entity == null:
 		return false
 	var key := str(currency_check.get("currency_id", currency_check.get("key", "")))
@@ -122,11 +122,11 @@ static func _check_currency(currency_check: Dictionary) -> bool:
 	return entity.get_currency(key) >= amount
 
 
-static func _check_has_item_tag(item_check: Variant) -> bool:
+static func _check_has_item_tag(item_check: Variant, context: Dictionary = {}) -> bool:
 	if not item_check is Dictionary:
 		return false
 	var item_dict: Dictionary = item_check
-	var entity := _resolve_entity(str(item_dict.get("entity_id", "player")))
+	var entity := _resolve_entity(str(item_dict.get("entity_id", "player")), context)
 	if entity == null:
 		return false
 	var tag := str(item_dict.get("tag", ""))
@@ -147,18 +147,18 @@ static func _check_has_item_tag(item_check: Variant) -> bool:
 	return false
 
 
-static func _check_stat_comparison(stat_check: Dictionary, fallback_op: String) -> bool:
+static func _check_stat_comparison(stat_check: Dictionary, fallback_op: String, context: Dictionary = {}) -> bool:
 	var stat_dict: Dictionary = stat_check.duplicate(true)
 	if not stat_dict.has("op"):
 		stat_dict["op"] = fallback_op
-	return _check_stat(stat_dict)
+	return _check_stat(stat_dict, context)
 
 
-static func _check_reputation(reputation_check: Variant) -> bool:
+static func _check_reputation(reputation_check: Variant, context: Dictionary = {}) -> bool:
 	if not reputation_check is Dictionary:
 		return false
 	var reputation_dict: Dictionary = reputation_check
-	var entity := _resolve_entity(str(reputation_dict.get("entity_id", "player")))
+	var entity := _resolve_entity(str(reputation_dict.get("entity_id", "player")), context)
 	if entity == null:
 		return false
 	var faction_id := str(reputation_dict.get("faction_id", ""))
@@ -175,7 +175,7 @@ static func _check_reputation(reputation_check: Variant) -> bool:
 	return false
 
 
-static func _evaluate_logic_block(conditions: Dictionary) -> bool:
+static func _evaluate_logic_block(conditions: Dictionary, context: Dictionary = {}) -> bool:
 	if conditions.has("AND"):
 		var and_conditions_data: Variant = conditions.get("AND", [])
 		if not and_conditions_data is Array:
@@ -183,7 +183,7 @@ static func _evaluate_logic_block(conditions: Dictionary) -> bool:
 		var and_conditions: Array = and_conditions_data
 		# An empty AND list is vacuously satisfied (no constraints); skip it.
 		for child in and_conditions:
-			if not _evaluate_node(child):
+			if not _evaluate_node(child, context):
 				return false
 	if conditions.has("OR"):
 		var or_conditions_data: Variant = conditions.get("OR", [])
@@ -194,48 +194,50 @@ static func _evaluate_logic_block(conditions: Dictionary) -> bool:
 		if not or_conditions.is_empty():
 			var any_passed := false
 			for child in or_conditions:
-				if _evaluate_node(child):
+				if _evaluate_node(child, context):
 					any_passed = true
 					break
 			if not any_passed:
 				return false
 	if conditions.has("NOT"):
 		var not_condition: Variant = conditions.get("NOT", null)
-		if _evaluate_node(not_condition):
+		if _evaluate_node(not_condition, context):
 			return false
 	return true
 
 
-static func _evaluate_node(condition_node: Variant) -> bool:
+static func _evaluate_node(condition_node: Variant, context: Dictionary = {}) -> bool:
 	if not condition_node is Dictionary:
 		return false
 	var condition_dict: Dictionary = condition_node
-	return evaluate(condition_dict)
+	return evaluate(condition_dict, context)
 
 
-static func _evaluate_typed_condition(condition: Dictionary) -> bool:
+static func _evaluate_typed_condition(condition: Dictionary, context: Dictionary = {}) -> bool:
 	var condition_type := str(condition.get("type", ""))
 	match condition_type:
 		"has_flag":
-			return _check_typed_has_flag(condition)
+			return _check_typed_has_flag(condition, context)
 		"stat_check":
-			return _check_stat(condition)
+			return _check_stat(condition, context)
 		"stat_greater_than":
-			return _check_stat_comparison(condition, ">")
+			return _check_stat_comparison(condition, ">", context)
 		"stat_less_than":
-			return _check_stat_comparison(condition, "<")
+			return _check_stat_comparison(condition, "<", context)
 		"has_item_tag":
-			return _check_has_item_tag(condition)
+			return _check_has_item_tag(condition, context)
 		"has_currency":
-			return _check_currency(condition)
+			return _check_currency(condition, context)
 		"reputation_threshold":
-			return _check_reputation(condition)
+			return _check_reputation(condition, context)
 		"quest_complete":
 			return _check_quest_complete(condition)
 		"reach_location":
-			return _check_location(condition)
+			return _check_location(condition, context)
 		"has_part":
-			return _check_has_part(condition)
+			return _check_has_part(condition, context)
+		"encounter_stat_check":
+			return _check_encounter_stat(condition, context)
 		_:
 			push_warning("ConditionEvaluator: unknown condition type '%s'" % condition_type)
 			return false
@@ -244,46 +246,46 @@ static func _evaluate_typed_condition(condition: Dictionary) -> bool:
 ## Extracts the flag payload from a typed condition dict so _check_flag
 ## receives the same shape it gets from the legacy path (a string or sub-dict),
 ## not the entire typed condition wrapper.
-static func _check_typed_has_flag(condition: Dictionary) -> bool:
+static func _check_typed_has_flag(condition: Dictionary, context: Dictionary = {}) -> bool:
 	if condition.has("entity_id") or condition.has("value"):
 		var flag_payload := {
 			"entity_id": condition.get("entity_id", "global"),
 			"flag_id": str(condition.get("flag_id", condition.get("key", ""))),
 			"value": condition.get("value", true),
 		}
-		return _check_flag(flag_payload)
-	return _check_flag(str(condition.get("flag_id", condition.get("key", ""))))
+		return _check_flag(flag_payload, context)
+	return _check_flag(str(condition.get("flag_id", condition.get("key", ""))), context)
 
 
-static func _evaluate_legacy_condition(conditions: Dictionary) -> bool:
+static func _evaluate_legacy_condition(conditions: Dictionary, context: Dictionary = {}) -> bool:
 	var stat_check_data: Variant = conditions.get("stat_check", null)
-	if stat_check_data is Dictionary and not _check_stat(stat_check_data):
+	if stat_check_data is Dictionary and not _check_stat(stat_check_data, context):
 		return false
 	var has_flag_data: Variant = conditions.get("has_flag", null)
-	if has_flag_data != null and not _check_flag(has_flag_data):
+	if has_flag_data != null and not _check_flag(has_flag_data, context):
 		return false
 	var has_part_data: Variant = conditions.get("has_part", null)
-	if has_part_data != null and not _check_has_part(has_part_data):
+	if has_part_data != null and not _check_has_part(has_part_data, context):
 		return false
 	var has_item_tag_data: Variant = conditions.get("has_item_tag", null)
-	if has_item_tag_data != null and not _check_has_item_tag(has_item_tag_data):
+	if has_item_tag_data != null and not _check_has_item_tag(has_item_tag_data, context):
 		return false
 	var has_currency_data: Variant = conditions.get("has_currency", null)
-	if has_currency_data is Dictionary and not _check_currency(has_currency_data):
+	if has_currency_data is Dictionary and not _check_currency(has_currency_data, context):
 		return false
 	var stat_gt_data: Variant = conditions.get("stat_greater_than", null)
-	if stat_gt_data is Dictionary and not _check_stat_comparison(stat_gt_data, ">"):
+	if stat_gt_data is Dictionary and not _check_stat_comparison(stat_gt_data, ">", context):
 		return false
 	var stat_lt_data: Variant = conditions.get("stat_less_than", null)
-	if stat_lt_data is Dictionary and not _check_stat_comparison(stat_lt_data, "<"):
+	if stat_lt_data is Dictionary and not _check_stat_comparison(stat_lt_data, "<", context):
 		return false
 	var reputation_data: Variant = conditions.get("reputation_threshold", null)
-	if reputation_data != null and not _check_reputation(reputation_data):
+	if reputation_data != null and not _check_reputation(reputation_data, context):
 		return false
 	var quest_complete_data: Variant = conditions.get("quest_complete", null)
 	if quest_complete_data != null and not _check_quest_complete(quest_complete_data):
 		return false
-	if conditions.has("location") and not _check_location({"location_id": conditions.get("location", "")}):
+	if conditions.has("location") and not _check_location({"location_id": conditions.get("location", "")}, context):
 		return false
 	return true
 
@@ -297,13 +299,13 @@ static func _check_quest_complete(quest_check: Variant) -> bool:
 	return str(quest_dict.get("quest_id", "")) in GameState.completed_quests
 
 
-static func _check_location(location_check: Variant) -> bool:
+static func _check_location(location_check: Variant, context: Dictionary = {}) -> bool:
 	if location_check is String:
 		return GameState.current_location_id == str(location_check)
 	if not location_check is Dictionary:
 		return false
 	var location_dict: Dictionary = location_check
-	var entity := _resolve_entity(str(location_dict.get("entity_id", "player")))
+	var entity := _resolve_entity(str(location_dict.get("entity_id", "player")), context)
 	if entity == null:
 		return false
 	var location_id := str(location_dict.get("location_id", location_dict.get("location", "")))
@@ -325,7 +327,34 @@ static func _collect_entity_parts(entity: EntityInstance) -> Array[PartInstance]
 	return parts
 
 
-static func _resolve_entity(entity_id: String) -> EntityInstance:
+static func _check_encounter_stat(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var stats_value: Variant = context.get("encounter_stats", {})
+	if not stats_value is Dictionary:
+		return false
+	var stats: Dictionary = stats_value
+	var stat_key := str(condition.get("stat", ""))
+	if stat_key.is_empty() or not stats.has(stat_key):
+		return false
+	var actual := float(stats.get(stat_key, 0.0))
+	var required := float(condition.get("value", 0.0))
+	var op := str(condition.get("op", ">="))
+	match op:
+		">=": return actual >= required
+		">": return actual > required
+		"<=": return actual <= required
+		"<": return actual < required
+		"==": return actual == required
+		"!=": return actual != required
+	return false
+
+
+static func _resolve_entity(entity_id: String, context: Dictionary = {}) -> EntityInstance:
 	if entity_id.is_empty() or entity_id == "player":
 		return GameState.player as EntityInstance
+	if entity_id.begins_with("encounter:"):
+		var role := entity_id.trim_prefix("encounter:")
+		var encounter_entities_value: Variant = context.get("encounter_entities", {})
+		if encounter_entities_value is Dictionary:
+			var encounter_entities: Dictionary = encounter_entities_value
+			return encounter_entities.get(role, null) as EntityInstance
 	return GameState.get_entity_instance(entity_id)

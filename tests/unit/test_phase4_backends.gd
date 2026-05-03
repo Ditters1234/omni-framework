@@ -11,6 +11,7 @@ const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd
 const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_backend.gd")
 const CRAFTING_BACKEND := preload("res://ui/screens/backends/crafting_backend.gd")
 const WORLD_MAP_BACKEND := preload("res://ui/screens/backends/world_map_backend.gd")
+const ENCOUNTER_BACKEND := preload("res://ui/screens/backends/encounter_backend.gd")
 
 
 func before_each() -> void:
@@ -35,6 +36,7 @@ func test_mod_loader_registers_phase4_backend_contracts() -> void:
 	assert_true(registered_backend_classes.has("AchievementListBackend"))
 	assert_true(registered_backend_classes.has("EventLogBackend"))
 	assert_true(registered_backend_classes.has("WorldMapBackend"))
+	assert_true(registered_backend_classes.has("EncounterBackend"))
 
 
 func test_exchange_backend_moves_stocked_part_and_transfers_currency() -> void:

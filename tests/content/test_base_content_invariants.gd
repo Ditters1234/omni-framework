@@ -32,7 +32,7 @@ func test_base_kael_ai_persona_exists_and_is_bound() -> void:
 
 
 func test_base_player_head_has_custom_color_values_for_ui_testing() -> void:
-	var head_template := DataManager.get_part("base:human_head")
+	var head_template := DataManager.get_part("base:human_head_male")
 	assert_false(head_template.is_empty())
 	var custom_fields_value: Variant = head_template.get("custom_fields", [])
 	assert_true(custom_fields_value is Array)

@@ -23,6 +23,7 @@ const SCREEN_FACTION_REP := "faction_rep"
 const SCREEN_ACHIEVEMENT_LIST := "achievement_list"
 const SCREEN_EVENT_LOG := "event_log"
 const SCREEN_WORLD_MAP := "world_map"
+const SCREEN_ENCOUNTER := "encounter"
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu/main_menu_screen.tscn"
 const ASSEMBLY_EDITOR_SCENE := "res://ui/screens/backends/assembly_editor_screen.tscn"
@@ -44,6 +45,7 @@ const FACTION_REP_SCENE := "res://ui/screens/backends/faction_reputation_screen.
 const ACHIEVEMENT_LIST_SCENE := "res://ui/screens/backends/achievement_list_screen.tscn"
 const EVENT_LOG_SCENE := "res://ui/screens/backends/event_log_screen.tscn"
 const WORLD_MAP_SCENE := "res://ui/screens/backends/world_map_screen.tscn"
+const ENCOUNTER_SCENE := "res://ui/screens/backends/encounter_screen.tscn"
 
 const ENGINE_SCREEN_IDS := [
 	SCREEN_MAIN_MENU,
@@ -67,6 +69,7 @@ const ENGINE_SCREEN_IDS := [
 	SCREEN_ACHIEVEMENT_LIST,
 	SCREEN_EVENT_LOG,
 	SCREEN_WORLD_MAP,
+	SCREEN_ENCOUNTER,
 ]
 
 const BACKEND_SCREEN_MAP := {
@@ -84,6 +87,7 @@ const BACKEND_SCREEN_MAP := {
 	"AchievementListBackend": "achievement_list",
 	"EventLogBackend": "event_log",
 	"WorldMapBackend": "world_map",
+	"EncounterBackend": "encounter",
 }
 
 const RUNTIME_SCREEN_REGISTRY := {
@@ -108,6 +112,7 @@ const RUNTIME_SCREEN_REGISTRY := {
 	SCREEN_ACHIEVEMENT_LIST: ACHIEVEMENT_LIST_SCENE,
 	SCREEN_EVENT_LOG: EVENT_LOG_SCENE,
 	SCREEN_WORLD_MAP: WORLD_MAP_SCENE,
+	SCREEN_ENCOUNTER: ENCOUNTER_SCENE,
 }
 
 

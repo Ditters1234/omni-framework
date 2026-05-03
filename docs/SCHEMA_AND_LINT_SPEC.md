@@ -177,6 +177,17 @@ Rules:
 - `target` must exist when the task type requires it.
 - Reward references and currencies must validate.
 
+### Encounters
+
+- Required: `encounter_id`, `participants`, `actions`, `resolution`
+- `participants.player` and `participants.opponent` must be objects in v1.
+- `actions.player` and `actions.opponent` must be arrays of action objects with non-empty `action_id` values.
+- Action IDs must be unique per role.
+- `cost`, `on_success`, and `on_failure` must be arrays when present.
+- `resolution.outcomes` must be an array of objects with unique, non-empty `outcome_id` values.
+- `max_rounds_outcome` and `cancel_outcome` must reference declared outcomes when present.
+- Encounter-local stats may share names with real stats, but this should stay intentional because the runtime keeps them in a separate context namespace.
+
 ### Achievements
 
 - Required: `achievement_id`, `display_name`, `stat_name`, `requirement`
@@ -209,6 +220,7 @@ Minimum required contracts:
 - `DialogueBackend`: `dialogue_resource`
 - `ChallengeBackend`: `required_stat`, `required_value`
 - `CatalogListBackend`: `data_source`, `action_payload`
+- `EncounterBackend`: `encounter_id`
 - `EntitySheetBackend`: no required fields; optional params are type-checked at load time
 - `ActiveQuestLogBackend`: no required fields; optional params are type-checked at load time
 - `FactionReputationBackend`: no required fields; optional params are type-checked at load time

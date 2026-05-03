@@ -53,6 +53,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 | `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, `learn_recipe`, `modify_reputation`, etc. See [`modding_guide.md`](modding_guide.md) for schema. |
 | `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic. See [`modding_guide.md`](modding_guide.md) for syntax. |
 | `StatManager` | `StatManager` | `systems/stat_manager.gd` | DataManager | Calculates stat modifiers, applies stat changes, enforces clamping rules. See [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md). |
+| `EncounterRuntime` | `EncounterRuntime` | `systems/encounter_runtime.gd` | ConditionEvaluator | Stateless encounter helper for weighted opponent action selection, encounter condition context, local-stat clamping, and JSON-native effect delta math. |
 | `BackendContractRegistry` | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | — | Validates `backend_class` IDs and their payload schemas. Locked after `ModLoader`. |
 | `RewardService` | `RewardService` | `systems/reward_service.gd` | GameState, SaveManager | Distributes currency, items, unlocks when quests/tasks complete. |
 | `TransactionService` | `TransactionService` | `systems/transaction_service.gd` | GameState, SaveManager | Handles buy/sell/exchange validation and currency movement. |
@@ -92,6 +93,7 @@ These systems parse JSON templates and populate in-memory registries. All are in
 | `QuestRegistry` | `QuestRegistry` | `systems/loaders/quest_registry.gd` | `quests.json` | `quest_id` | Quest templates with branching objectives and rewards. |
 | `TaskRegistry` | `TaskRegistry` | `systems/loaders/task_registry.gd` | `tasks.json` | `template_id` | Repeatable tasks issued by factions; includes difficulty, reward, objectives. |
 | `RecipeRegistry` | `RecipeRegistry` | `systems/loaders/recipe_registry.gd` | `recipes.json` | `recipe_id` | Crafting recipes that consume inventory parts and produce part templates. |
+| `EncounterRegistry` | `EncounterRegistry` | `systems/loaders/encounter_registry.gd` | `encounters.json` | `encounter_id` | Turn-based encounter templates with participants, player/opponent actions, encounter-local stats, and resolution outcomes. |
 | `AchievementRegistry` | `AchievementRegistry` | `systems/loaders/achievement_registry.gd` | `achievements.json` | `achievement_id` | Achievements with unlock conditions and rewards. |
 | `ConfigLoader` | — | `systems/loaders/config_loader.gd` | `config.json` | — (deep-merged) | Engine-owned gameplay/UI defaults from mod data. AI provider ownership is intentionally excluded and lives in `AppSettings`. |
 | `AIPersonaRegistry` | `AIPersonaRegistry` | `systems/loaders/ai_persona_registry.gd` | `ai_personas.json` | `persona_id` | Mod-authored AI personas used by dialogue and future AI consumers. |
@@ -171,6 +173,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `CatalogListBackend` | `ui/screens/backends/catalog_list_screen.tscn` | Template vendor mode, catalog filter | Infinite vendor: buy from any part template. | [`modding_guide.md`](modding_guide.md) |
 | `CraftingBackend` | `ui/screens/backends/crafting_screen.tscn` | Station ID, recipe filters, crafter/input/output entities | Recipe crafting with input status and timed production support. | [`modding_guide.md`](modding_guide.md) |
 | `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager `.dialogue` ref plus optional `ai_mode` | NPC branching dialogue with optional hybrid/freeform AI chat handoff driven by `AIChatService`. | [`modding_guide.md`](modding_guide.md) |
+| `EncounterBackend` | `ui/screens/backends/encounter_screen.tscn` | Encounter ID, participant overrides, navigation overrides | Data-authored, turn-based encounters with player actions, weighted opponent actions, real stat mutation, encounter-local meters, and outcome rewards/actions. | [`modding_guide.md`](modding_guide.md) |
 | `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Read-only entity stats, currency balances, equipment, inventory, and faction standing. | [`modding_guide.md`](modding_guide.md) |
 | `ActiveQuestLogBackend` | `ui/screens/backends/active_quest_log_screen.tscn` | Optional completed quest display | Active quest cards with stages, objectives, and rewards. | [`modding_guide.md`](modding_guide.md) |
 | `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`modding_guide.md`](modding_guide.md) |
@@ -248,6 +251,7 @@ See [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) for:
 - **Inventory:** `part_acquired`, `part_removed`, `part_equipped`, `part_unequipped`
 - **Economy:** `entity_currency_changed`, `transaction_completed`
 - **Quests/Tasks:** `quest_started`, `quest_stage_advanced`, `quest_completed`, `task_started`, `task_completed`
+- **Encounters:** `encounter_started`, `encounter_round_advanced`, `encounter_action_resolved`, `encounter_resolved`
 - **Achievements:** `achievement_unlocked`
 - **UI:** `ui_screen_pushed`, `ui_screen_popped`, `ui_notification_requested`
 - **AI:** `ai_response_received`, `ai_token_received`, `ai_error`
