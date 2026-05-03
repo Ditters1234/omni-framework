@@ -6,32 +6,116 @@
       "description": "Freshly assembled and dropped into the threshold. No history. No allegiance. Just parts and potential.",
       "portrait": "res://mods/base/assets/entity_player.png",
       "location_id": "base:apartment",
-      "currencies": { "credits": 400, "data_shards": 2 },
-      "stats": {
-        "power": 1, "armor": 0, "charisma": 1, "luck": 0,
-        "health": 100, "health_max": 100, "stamina": 50, "stamina_max": 50
+      "currencies": {
+        "credits": 400,
+        "data_shards": 2
       },
-      "flags": { "tutorial_complete": false },
-      "discovered_locations": ["base:apartment", "base:market_row"],
+      "stats": {
+        "power": 1,
+        "armor": 0,
+        "charisma": 1,
+        "luck": 0,
+        "health": 100,
+        "health_max": 100,
+        "stamina": 50,
+        "stamina_max": 50
+      },
+      "flags": {
+        "tutorial_complete": false
+      },
+      "discovered_locations": [
+        "base:apartment",
+        "base:market_row"
+      ],
       "provides_sockets": [
-        { "id": "head", "accepted_tags": ["head"], "label": "Head" },
-        { "id": "torso", "accepted_tags": ["torso"], "label": "Torso" },
-        { "id": "arms", "accepted_tags": ["arms"], "label": "Arms" },
-        { "id": "legs", "accepted_tags": ["legs"], "label": "Legs" },
-        { "id": "hands", "accepted_tags": ["hands"], "label": "Hands" },
-        { "id": "feet", "accepted_tags": ["feet"], "label": "Feet" }
+        {
+          "id": "head",
+          "accepted_tags": [
+            "head"
+          ],
+          "label": "Head"
+        },
+        {
+          "id": "torso",
+          "accepted_tags": [
+            "torso"
+          ],
+          "label": "Torso"
+        },
+        {
+          "id": "arms",
+          "accepted_tags": [
+            "arms"
+          ],
+          "label": "Arms"
+        },
+        {
+          "id": "legs",
+          "accepted_tags": [
+            "legs"
+          ],
+          "label": "Legs"
+        },
+        {
+          "id": "hands",
+          "accepted_tags": [
+            "hands"
+          ],
+          "label": "Hands"
+        },
+        {
+          "id": "feet",
+          "accepted_tags": [
+            "feet"
+          ],
+          "label": "Feet"
+        }
       ],
       "inventory": [
-        { "instance_id": "p_head_001", "template_id": "base:human_head_male", "custom_values": { "eye_color": "green", "hair_color": "black" } },
-        { "instance_id": "p_torso_001", "template_id": "base:human_torso_male" },
-        { "instance_id": "p_arms_001", "template_id": "base:human_arms_male" },
-        { "instance_id": "p_legs_001", "template_id": "base:human_legs_male" },
-        { "instance_id": "p_hands_001", "template_id": "base:human_hands_male" },
-        { "instance_id": "p_feet_001", "template_id": "base:human_feet_male" },
-        { "instance_id": "p_baton_001", "template_id": "base:stun_baton" },
-        { "instance_id": "p_chip_001", "template_id": "base:salvage_chip" },
-        { "instance_id": "p_chip_002", "template_id": "base:salvage_chip" },
-        { "instance_id": "p_medkit_001", "template_id": "base:field_medkit" }
+        {
+          "instance_id": "p_head_001",
+          "template_id": "base:human_head_male",
+          "custom_values": {
+            "eye_color": "green",
+            "hair_color": "black"
+          }
+        },
+        {
+          "instance_id": "p_torso_001",
+          "template_id": "base:human_torso_male"
+        },
+        {
+          "instance_id": "p_arms_001",
+          "template_id": "base:human_arms_male"
+        },
+        {
+          "instance_id": "p_legs_001",
+          "template_id": "base:human_legs_male"
+        },
+        {
+          "instance_id": "p_hands_001",
+          "template_id": "base:human_hands_male"
+        },
+        {
+          "instance_id": "p_feet_001",
+          "template_id": "base:human_feet_male"
+        },
+        {
+          "instance_id": "p_baton_001",
+          "template_id": "base:stun_baton"
+        },
+        {
+          "instance_id": "p_chip_001",
+          "template_id": "base:salvage_chip"
+        },
+        {
+          "instance_id": "p_chip_002",
+          "template_id": "base:salvage_chip"
+        },
+        {
+          "instance_id": "p_medkit_001",
+          "template_id": "base:field_medkit"
+        }
       ],
       "assembly_socket_map": {
         "head": "p_head_001",
@@ -48,7 +132,14 @@
       "description": "A battered clinic sparring unit with padded arms and very little bedside manner.",
       "location_id": "base:market_row",
       "currencies": {},
-      "stats": { "power": 1, "armor": 1, "health": 35, "health_max": 35, "stamina": 30, "stamina_max": 30 },
+      "stats": {
+        "power": 1,
+        "armor": 1,
+        "health": 35,
+        "health_max": 35,
+        "stamina": 30,
+        "stamina_max": 30
+      },
       "flags": {},
       "inventory": [],
       "interactions": [
@@ -58,6 +149,14 @@
           "description": "Run a short training encounter.",
           "backend_class": "EncounterBackend",
           "encounter_id": "base:tutorial_brawl",
+          "opponent_entity_id": "entity:base:training_drone"
+        },
+        {
+          "tab_id": "training_endurance",
+          "label": "Endurance Trial",
+          "description": "A sustained pressure test. Manage your stamina.",
+          "backend_class": "EncounterBackend",
+          "encounter_id": "base:tutorial_endurance",
           "opponent_entity_id": "entity:base:training_drone"
         }
       ]
@@ -70,20 +169,60 @@
       "portrait": "res://mods/base/assets/entity_theta.png",
       "dialogue_blip": "res://mods/base/assets/audio/sfx_dialogue_theta.wav",
       "location_id": "base:market_row",
-      "currencies": { "credits": 9999, "data_shards": 50 },
-      "stats": { "charisma": 4, "power": 2, "health": 150, "health_max": 150 },
-      "flags": { "met_player": false },
+      "currencies": {
+        "credits": 9999,
+        "data_shards": 50
+      },
+      "stats": {
+        "charisma": 4,
+        "power": 2,
+        "health": 150,
+        "health_max": 150
+      },
+      "flags": {
+        "met_player": false
+      },
       "inventory": [
-        { "instance_id": "theta_optic_001", "template_id": "base:optic_implant" },
-        { "instance_id": "theta_armor_001", "template_id": "base:kevlar_weave" },
-        { "instance_id": "theta_baton_001", "template_id": "base:stun_baton" },
-        { "instance_id": "theta_reflex_001", "template_id": "base:reflex_booster" },
-        { "instance_id": "theta_ceramic_001", "template_id": "base:ceramic_plating" },
-        { "instance_id": "theta_mono_001", "template_id": "base:mono_blade" },
-        { "instance_id": "theta_synth_head_001", "template_id": "base:synth_head" },
-        { "instance_id": "theta_synth_torso_001", "template_id": "base:synth_torso" },
-        { "instance_id": "theta_synth_arms_001", "template_id": "base:synth_arms" },
-        { "instance_id": "theta_synth_legs_001", "template_id": "base:synth_legs" }
+        {
+          "instance_id": "theta_optic_001",
+          "template_id": "base:optic_implant"
+        },
+        {
+          "instance_id": "theta_armor_001",
+          "template_id": "base:kevlar_weave"
+        },
+        {
+          "instance_id": "theta_baton_001",
+          "template_id": "base:stun_baton"
+        },
+        {
+          "instance_id": "theta_reflex_001",
+          "template_id": "base:reflex_booster"
+        },
+        {
+          "instance_id": "theta_ceramic_001",
+          "template_id": "base:ceramic_plating"
+        },
+        {
+          "instance_id": "theta_mono_001",
+          "template_id": "base:mono_blade"
+        },
+        {
+          "instance_id": "theta_synth_head_001",
+          "template_id": "base:synth_head"
+        },
+        {
+          "instance_id": "theta_synth_torso_001",
+          "template_id": "base:synth_torso"
+        },
+        {
+          "instance_id": "theta_synth_arms_001",
+          "template_id": "base:synth_arms"
+        },
+        {
+          "instance_id": "theta_synth_legs_001",
+          "template_id": "base:synth_legs"
+        }
       ],
       "interactions": [
         {
@@ -111,7 +250,15 @@
           "description": "Run a bioscan on Theta.",
           "backend_class": "EntitySheetBackend",
           "target_entity_id": "base:npc_theta",
-          "screen_title": "Quartermaster Theta — Bioscan"
+          "screen_title": "Quartermaster Theta \u2014 Bioscan"
+        },
+        {
+          "tab_id": "theta_negotiate",
+          "label": "Negotiate",
+          "description": "Try to talk Theta into better supply terms.",
+          "backend_class": "EncounterBackend",
+          "encounter_id": "base:tutorial_negotiation",
+          "opponent_entity_id": "entity:base:npc_theta"
         },
         {
           "tab_id": "theta_challenge",
@@ -139,13 +286,29 @@
       "portrait": "res://mods/base/assets/entity_kael.png",
       "dialogue_blip": "res://mods/base/assets/audio/sfx_dialogue_kael.wav",
       "location_id": "base:warehouse",
-      "currencies": { "credits": 5000 },
-      "stats": { "charisma": 5, "luck": 3, "health": 80, "health_max": 80 },
+      "currencies": {
+        "credits": 5000
+      },
+      "stats": {
+        "charisma": 5,
+        "luck": 3,
+        "health": 80,
+        "health_max": 80
+      },
       "flags": {},
       "inventory": [
-        { "instance_id": "kael_charm_001", "template_id": "base:lucky_charm" },
-        { "instance_id": "kael_medkit_001", "template_id": "base:field_medkit" },
-        { "instance_id": "kael_medkit_002", "template_id": "base:field_medkit" }
+        {
+          "instance_id": "kael_charm_001",
+          "template_id": "base:lucky_charm"
+        },
+        {
+          "instance_id": "kael_medkit_001",
+          "template_id": "base:field_medkit"
+        },
+        {
+          "instance_id": "kael_medkit_002",
+          "template_id": "base:field_medkit"
+        }
       ],
       "interactions": [
         {
@@ -173,7 +336,7 @@
           "description": "Size Kael up.",
           "backend_class": "EntitySheetBackend",
           "target_entity_id": "base:npc_fixer",
-          "screen_title": "Kael — Street Profile"
+          "screen_title": "Kael \u2014 Street Profile"
         }
       ]
     }

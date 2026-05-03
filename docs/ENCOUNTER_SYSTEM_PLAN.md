@@ -660,10 +660,10 @@ Layout guidelines:
 Built-in encounters under `mods/base/` exercise the schema:
 
 1. **`base:tutorial_brawl`** — Combat. One opponent. Player has Strike / Intimidate / Flee. Opponent has Zap / Feint. Outcomes cover defeating the opponent, filling intimidation, player defeat, and fleeing/canceling.
-2. **`base:tutorial_negotiation`** — Deferred reference encounter for a no-damage, local-meter-only flow.
-3. **`base:tutorial_endurance`** — Deferred reference encounter for stamina costs and forced tactical paths.
+2. **`base:tutorial_negotiation`** — No-damage, local-meter-only flow. Player has Pitch / Sweeten the Deal / Walk Away. Theta has Deflect / Stonewall. Concession meter drives the single win outcome; stonewall tag blocks Pitch for one round; sweeten_deal is gated by `data_shards` and a one-encounter tag so it can only fire once. Wired to Theta's interaction list.
+3. **`base:tutorial_endurance`** — Stamina costs and forced tactical paths. Player has Heavy Strike / Light Strike / Recover / Desperate Strike. Heavy Strike is blocked by a `staggered` tag. Recover restores stamina but applies `recovering`, which doubles the drone's pulse weight. Desperate Strike unlocks only below 10 stamina. Pressure meter provides a second loss condition alongside health and rounds. Wired to the training drone's interaction list.
 
-The brawl currently acts as the canonical `modding_guide.md` example; the negotiation and endurance templates remain useful follow-up fixtures.
+All three encounters are now authored and wired to NPCs.
 
 ---
 
@@ -671,7 +671,7 @@ The brawl currently acts as the canonical `modding_guide.md` example; the negoti
 
 Each phase is shippable in isolation. Phases 1–4 deliver a working but minimal encounter system; phases 5+ add polish and depth.
 
-Current status: the second implementation pass covers the data pipeline, backend state machine, routed screen, `base:tutorial_brawl`, backend registration, event signals, core backend tests, encounter tags, stricter effect/outcome validation, post-resolve effect guarding, and max-round ordering. The remaining work is mostly polish and expansion: dedicated encounter UI components, more reference encounters, advanced strategies, richer tooltips, and persisted encounter instances.
+Current status: the second implementation pass covers the data pipeline, backend state machine, routed screen, `base:tutorial_brawl`, backend registration, event signals, core backend tests, encounter tags, stricter effect/outcome validation, post-resolve effect guarding, and max-round ordering. All three reference encounters (`base:tutorial_brawl`, `base:tutorial_negotiation`, `base:tutorial_endurance`) are now authored and wired to NPCs. Cookbook docs in `modding_guide.md` section 11.7 cover the non-combat, aggressive-opponent, and flee-option patterns. The remaining work is mostly polish: dedicated encounter UI components, advanced strategies, richer availability tooltips, and persisted encounter instances.
 
 ### Phase 1 — Schema, Registry, Data Pipeline (~2 days)
 

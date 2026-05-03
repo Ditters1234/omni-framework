@@ -6,14 +6,31 @@
       "description": "A sparring drone tests your combat basics.",
       "screen_title": "Training Brawl",
       "screen_description": "Trade blows, intimidate the drone, or step away.",
-      "tags": ["tutorial", "combat"],
+      "tags": [
+        "tutorial",
+        "combat"
+      ],
       "participants": {
-        "player": { "entity_id": "player" },
-        "opponent": { "entity_id": "base:training_drone" }
+        "player": {
+          "entity_id": "player"
+        },
+        "opponent": {
+          "entity_id": "base:training_drone"
+        }
       },
       "encounter_stats": {
-        "intimidation": { "default": 0, "min": 0, "max": 100, "label": "Intimidation", "color_token": "warning" },
-        "round": { "default": 1, "kind": "counter", "label": "Round" }
+        "intimidation": {
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "label": "Intimidation",
+          "color_token": "warning"
+        },
+        "round": {
+          "default": 1,
+          "kind": "counter",
+          "label": "Round"
+        }
       },
       "actions": {
         "player": [
@@ -21,31 +38,86 @@
             "action_id": "strike",
             "label": "Strike",
             "description": "Spend stamina to damage the opponent.",
-            "availability": { "type": "stat_check", "entity_id": "encounter:player", "stat": "stamina", "op": ">=", "value": 5 },
+            "availability": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "stamina",
+              "op": ">=",
+              "value": 5
+            },
             "cost": [
-              { "effect": "modify_stat", "target": "player", "stat": "stamina", "base_delta": -5 }
+              {
+                "effect": "modify_stat",
+                "target": "player",
+                "stat": "stamina",
+                "base_delta": -5
+              }
             ],
-            "check": { "type": "stat_check", "entity_id": "encounter:player", "stat": "power", "op": ">=", "value": 1 },
+            "check": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "power",
+              "op": ">=",
+              "value": 1
+            },
             "on_success": [
-              { "effect": "modify_stat", "target": "opponent", "stat": "health", "base_delta": -8, "stat_modifiers": { "user.power": -2.0, "target.armor": 1.0 } },
-              { "effect": "log", "text": "{user_name} lands a clean hit with {action_label}." }
+              {
+                "effect": "modify_stat",
+                "target": "opponent",
+                "stat": "health",
+                "base_delta": -8,
+                "stat_modifiers": {
+                  "user.power": -2.0,
+                  "target.armor": 1.0
+                }
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} lands a clean hit with {action_label}."
+              }
             ],
             "on_failure": [
-              { "effect": "log", "text": "{user_name}'s strike glances off." }
+              {
+                "effect": "log",
+                "text": "{user_name}'s strike glances off."
+              }
             ]
           },
           {
             "action_id": "intimidate",
             "label": "Intimidate",
             "description": "Use charisma to build encounter pressure.",
-            "check": { "type": "stat_check", "entity_id": "encounter:player", "stat": "charisma", "op": ">=", "value": 1 },
+            "check": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "charisma",
+              "op": ">=",
+              "value": 1
+            },
             "on_success": [
-              { "effect": "modify_encounter_stat", "stat": "intimidation", "base_delta": 25, "stat_modifiers": { "user.charisma": 5.0 } },
-              { "effect": "log", "text": "{user_name} rattles {target_name}'s targeting routine." }
+              {
+                "effect": "modify_encounter_stat",
+                "stat": "intimidation",
+                "base_delta": 25,
+                "stat_modifiers": {
+                  "user.charisma": 5.0
+                }
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} rattles {target_name}'s targeting routine."
+              }
             ],
             "on_failure": [
-              { "effect": "modify_encounter_stat", "stat": "intimidation", "base_delta": 5 },
-              { "effect": "log", "text": "{target_name} does not seem impressed." }
+              {
+                "effect": "modify_encounter_stat",
+                "stat": "intimidation",
+                "base_delta": 5
+              },
+              {
+                "effect": "log",
+                "text": "{target_name} does not seem impressed."
+              }
             ]
           },
           {
@@ -53,8 +125,14 @@
             "label": "Flee",
             "description": "End the sparring session.",
             "on_success": [
-              { "effect": "log", "text": "{user_name} steps out of the ring." },
-              { "effect": "resolve", "outcome_id": "fled" }
+              {
+                "effect": "log",
+                "text": "{user_name} steps out of the ring."
+              },
+              {
+                "effect": "resolve",
+                "outcome_id": "fled"
+              }
             ]
           }
         ],
@@ -64,8 +142,19 @@
             "label": "Training Zap",
             "weight": 3,
             "on_success": [
-              { "effect": "modify_stat", "target": "player", "stat": "health", "base_delta": -4, "stat_modifiers": { "target.armor": 0.5 } },
-              { "effect": "log", "text": "{user_name} tags {target_name} with a low-power zap." }
+              {
+                "effect": "modify_stat",
+                "target": "player",
+                "stat": "health",
+                "base_delta": -4,
+                "stat_modifiers": {
+                  "target.armor": 0.5
+                }
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} tags {target_name} with a low-power zap."
+              }
             ]
           },
           {
@@ -74,38 +163,79 @@
             "weight": 1,
             "weight_modifiers": [
               {
-                "if": { "type": "stat_check", "entity_id": "encounter:opponent", "stat": "health", "op": "<", "value": 20 },
+                "if": {
+                  "type": "stat_check",
+                  "entity_id": "encounter:opponent",
+                  "stat": "health",
+                  "op": "<",
+                  "value": 20
+                },
                 "weight": 4
               }
             ],
             "on_success": [
-              { "effect": "modify_stat", "target": "player", "stat": "stamina", "base_delta": -3 },
-              { "effect": "log", "text": "{user_name} forces {target_name} to waste momentum." }
+              {
+                "effect": "modify_stat",
+                "target": "player",
+                "stat": "stamina",
+                "base_delta": -3
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} forces {target_name} to waste momentum."
+              }
             ]
           }
         ]
       },
-      "opponent_strategy": { "kind": "weighted_random" },
+      "opponent_strategy": {
+        "kind": "weighted_random"
+      },
       "resolution": {
         "outcomes": [
           {
             "outcome_id": "victory",
-            "conditions": { "type": "stat_check", "entity_id": "encounter:opponent", "stat": "health", "op": "<=", "value": 0 },
-            "reward": { "credits": 25 },
-            "action_payload": { "type": "set_flag", "flag_id": "training_brawl_won", "value": true },
+            "conditions": {
+              "type": "stat_check",
+              "entity_id": "encounter:opponent",
+              "stat": "health",
+              "op": "<=",
+              "value": 0
+            },
+            "reward": {
+              "credits": 25
+            },
+            "action_payload": {
+              "type": "set_flag",
+              "flag_id": "training_brawl_won",
+              "value": true
+            },
             "screen_text": "The drone powers down and prints a small credit chit.",
             "pop_on_resolve": true
           },
           {
             "outcome_id": "intimidated",
-            "conditions": { "type": "encounter_stat_check", "stat": "intimidation", "op": ">=", "value": 100 },
-            "reward": { "credits": 10 },
+            "conditions": {
+              "type": "encounter_stat_check",
+              "stat": "intimidation",
+              "op": ">=",
+              "value": 100
+            },
+            "reward": {
+              "credits": 10
+            },
             "screen_text": "The drone flags your posture as sufficiently threatening and yields.",
             "pop_on_resolve": true
           },
           {
             "outcome_id": "defeat",
-            "conditions": { "type": "stat_check", "entity_id": "encounter:player", "stat": "health", "op": "<=", "value": 1 },
+            "conditions": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "health",
+              "op": "<=",
+              "value": 1
+            },
             "screen_text": "The drone ends the exercise before you drop.",
             "pop_on_resolve": true
           },
@@ -117,6 +247,545 @@
           }
         ],
         "max_rounds": 8,
+        "max_rounds_outcome": "fled",
+        "cancel_outcome": "fled",
+        "evaluation_order": "first_match"
+      }
+    },
+    {
+      "encounter_id": "base:tutorial_negotiation",
+      "display_name": "Supply Negotiation",
+      "description": "Talk Theta into better terms. No fists, just words.",
+      "screen_title": "Supply Negotiation",
+      "screen_description": "Build concession with each exchange. Theta pushes back harder the closer you get.",
+      "tags": [
+        "tutorial",
+        "negotiation"
+      ],
+      "participants": {
+        "player": {
+          "entity_id": "player"
+        },
+        "opponent": {
+          "entity_id": "base:npc_theta"
+        }
+      },
+      "encounter_stats": {
+        "concession": {
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "label": "Concession",
+          "color_token": "success"
+        },
+        "round": {
+          "default": 1,
+          "kind": "counter",
+          "label": "Round"
+        }
+      },
+      "actions": {
+        "player": [
+          {
+            "action_id": "pitch",
+            "label": "Pitch",
+            "description": "Make your case. Charisma scales how much ground you gain.",
+            "availability": {
+              "NOT": {
+                "type": "has_encounter_tag",
+                "role": "player",
+                "tag": "stonewalled"
+              }
+            },
+            "check": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "charisma",
+              "op": ">=",
+              "value": 1
+            },
+            "on_success": [
+              {
+                "effect": "modify_encounter_stat",
+                "stat": "concession",
+                "base_delta": 20,
+                "stat_modifiers": {
+                  "user.charisma": 8.0
+                }
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} makes a solid point. {target_name} shifts slightly."
+              }
+            ],
+            "on_failure": [
+              {
+                "effect": "modify_encounter_stat",
+                "stat": "concession",
+                "base_delta": 5
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} stumbles over the argument. {target_name} looks unimpressed."
+              }
+            ]
+          },
+          {
+            "action_id": "sweeten_deal",
+            "label": "Sweeten the Deal",
+            "description": "Offer a data shard as a gesture. One-time move.",
+            "availability": {
+              "AND": [
+                {
+                  "type": "has_currency",
+                  "currency_id": "data_shards",
+                  "value": 1
+                },
+                {
+                  "NOT": {
+                    "type": "has_encounter_tag",
+                    "role": "player",
+                    "tag": "sweetener_used"
+                  }
+                }
+              ]
+            },
+            "on_success": [
+              {
+                "effect": "modify_encounter_stat",
+                "stat": "concession",
+                "base_delta": 35
+              },
+              {
+                "effect": "apply_tag",
+                "target": "player",
+                "tag": "sweetener_used",
+                "duration_rounds": 99
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} slides a data shard across the counter. {target_name}'s expression softens."
+              }
+            ]
+          },
+          {
+            "action_id": "walk_away",
+            "label": "Walk Away",
+            "description": "End the negotiation.",
+            "on_success": [
+              {
+                "effect": "log",
+                "text": "{user_name} turns to leave."
+              },
+              {
+                "effect": "resolve",
+                "outcome_id": "no_deal"
+              }
+            ]
+          }
+        ],
+        "opponent": [
+          {
+            "action_id": "deflect",
+            "label": "Deflect",
+            "weight": 2,
+            "weight_modifiers": [
+              {
+                "if": {
+                  "type": "encounter_stat_check",
+                  "stat": "concession",
+                  "op": ">=",
+                  "value": 60
+                },
+                "weight": 4
+              }
+            ],
+            "on_success": [
+              {
+                "effect": "modify_encounter_stat",
+                "stat": "concession",
+                "base_delta": -15
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} finds a counter-argument and chips away at the progress."
+              }
+            ]
+          },
+          {
+            "action_id": "stonewall",
+            "label": "Stonewall",
+            "weight": 1,
+            "on_success": [
+              {
+                "effect": "apply_tag",
+                "target": "player",
+                "tag": "stonewalled",
+                "duration_rounds": 1
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} shuts down the thread. {target_name} cannot get a word in this round."
+              }
+            ]
+          }
+        ]
+      },
+      "opponent_strategy": {
+        "kind": "weighted_random"
+      },
+      "resolution": {
+        "outcomes": [
+          {
+            "outcome_id": "deal",
+            "conditions": {
+              "type": "encounter_stat_check",
+              "stat": "concession",
+              "op": ">=",
+              "value": 100
+            },
+            "reward": {
+              "credits": 75,
+              "data_shards": 1
+            },
+            "action_payload": {
+              "type": "set_flag",
+              "flag_id": "theta_supply_deal",
+              "value": true
+            },
+            "screen_text": "Theta taps the counter twice. Deal. You walk away with better terms.",
+            "pop_on_resolve": true
+          },
+          {
+            "outcome_id": "no_deal",
+            "trigger": "manual",
+            "screen_text": "No deal today. Theta goes back to her work.",
+            "pop_on_resolve": true
+          }
+        ],
+        "max_rounds": 6,
+        "max_rounds_outcome": "no_deal",
+        "cancel_outcome": "no_deal",
+        "evaluation_order": "first_match"
+      }
+    },
+    {
+      "encounter_id": "base:tutorial_endurance",
+      "display_name": "Endurance Trial",
+      "description": "The drone pushes hard and keeps pushing. Managing your stamina is the challenge.",
+      "screen_title": "Endurance Trial",
+      "screen_description": "Stamina is the resource. Spend it to deal damage, recover it when pinned. Don't run dry.",
+      "tags": [
+        "tutorial",
+        "endurance"
+      ],
+      "participants": {
+        "player": {
+          "entity_id": "player"
+        },
+        "opponent": {
+          "entity_id": "base:training_drone"
+        }
+      },
+      "encounter_stats": {
+        "pressure": {
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "label": "Pressure",
+          "color_token": "danger"
+        },
+        "round": {
+          "default": 1,
+          "kind": "counter",
+          "label": "Round"
+        }
+      },
+      "actions": {
+        "player": [
+          {
+            "action_id": "heavy_strike",
+            "label": "Heavy Strike",
+            "description": "Costs 15 stamina. High damage, but only usable when fresh and not staggered.",
+            "availability": {
+              "AND": [
+                {
+                  "type": "stat_check",
+                  "entity_id": "encounter:player",
+                  "stat": "stamina",
+                  "op": ">=",
+                  "value": 15
+                },
+                {
+                  "NOT": {
+                    "type": "has_encounter_tag",
+                    "role": "player",
+                    "tag": "staggered"
+                  }
+                }
+              ]
+            },
+            "cost": [
+              {
+                "effect": "modify_stat",
+                "target": "player",
+                "stat": "stamina",
+                "base_delta": -15
+              }
+            ],
+            "check": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "power",
+              "op": ">=",
+              "value": 1
+            },
+            "on_success": [
+              {
+                "effect": "modify_stat",
+                "target": "opponent",
+                "stat": "health",
+                "base_delta": -14,
+                "stat_modifiers": {
+                  "user.power": -3.0,
+                  "target.armor": 1.0
+                }
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} puts everything into it. {target_name} staggers."
+              }
+            ],
+            "on_failure": [
+              {
+                "effect": "log",
+                "text": "{user_name} overcommits and hits air."
+              }
+            ]
+          },
+          {
+            "action_id": "light_strike",
+            "label": "Light Strike",
+            "description": "Costs 5 stamina. Low damage, always available while stamina holds.",
+            "availability": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "stamina",
+              "op": ">=",
+              "value": 5
+            },
+            "cost": [
+              {
+                "effect": "modify_stat",
+                "target": "player",
+                "stat": "stamina",
+                "base_delta": -5
+              }
+            ],
+            "on_success": [
+              {
+                "effect": "modify_stat",
+                "target": "opponent",
+                "stat": "health",
+                "base_delta": -4,
+                "stat_modifiers": {
+                  "user.power": -1.0,
+                  "target.armor": 0.5
+                }
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} lands a quick, controlled hit."
+              }
+            ],
+            "on_failure": [
+              {
+                "effect": "log",
+                "text": "{user_name}'s tap barely registers."
+              }
+            ]
+          },
+          {
+            "action_id": "recover",
+            "label": "Recover",
+            "description": "Restore 20 stamina. The drone gets a free pressure surge while you catch your breath.",
+            "on_success": [
+              {
+                "effect": "modify_stat",
+                "target": "player",
+                "stat": "stamina",
+                "base_delta": 20
+              },
+              {
+                "effect": "apply_tag",
+                "target": "player",
+                "tag": "recovering",
+                "duration_rounds": 1
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} pulls back and steadies their breathing."
+              }
+            ]
+          },
+          {
+            "action_id": "desperate_strike",
+            "label": "Desperate Strike",
+            "description": "Only usable when your stamina is nearly gone. Free, automatic hit.",
+            "availability": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "stamina",
+              "op": "<",
+              "value": 10
+            },
+            "on_success": [
+              {
+                "effect": "modify_stat",
+                "target": "opponent",
+                "stat": "health",
+                "base_delta": -10
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} throws everything left into one last hit."
+              }
+            ]
+          }
+        ],
+        "opponent": [
+          {
+            "action_id": "pulse",
+            "label": "Training Pulse",
+            "weight": 3,
+            "weight_modifiers": [
+              {
+                "if": {
+                  "type": "has_encounter_tag",
+                  "role": "player",
+                  "tag": "recovering"
+                },
+                "weight": 6
+              }
+            ],
+            "on_success": [
+              {
+                "effect": "modify_stat",
+                "target": "player",
+                "stat": "health",
+                "base_delta": -3,
+                "stat_modifiers": {
+                  "target.armor": 0.5
+                }
+              },
+              {
+                "effect": "modify_encounter_stat",
+                "stat": "pressure",
+                "base_delta": 15
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} keeps up the tempo. Pressure builds."
+              }
+            ]
+          },
+          {
+            "action_id": "overload",
+            "label": "Overload Burst",
+            "weight": 1,
+            "weight_modifiers": [
+              {
+                "if": {
+                  "type": "encounter_stat_check",
+                  "stat": "pressure",
+                  "op": ">=",
+                  "value": 60
+                },
+                "weight": 3
+              }
+            ],
+            "on_success": [
+              {
+                "effect": "modify_stat",
+                "target": "player",
+                "stat": "stamina",
+                "base_delta": -12
+              },
+              {
+                "effect": "modify_encounter_stat",
+                "stat": "pressure",
+                "base_delta": 25
+              },
+              {
+                "effect": "apply_tag",
+                "target": "player",
+                "tag": "staggered",
+                "duration_rounds": 1
+              },
+              {
+                "effect": "log",
+                "text": "{user_name} unleashes a burst that leaves {target_name} locked up for a beat."
+              }
+            ]
+          }
+        ]
+      },
+      "opponent_strategy": {
+        "kind": "weighted_random"
+      },
+      "resolution": {
+        "outcomes": [
+          {
+            "outcome_id": "victory",
+            "conditions": {
+              "type": "stat_check",
+              "entity_id": "encounter:opponent",
+              "stat": "health",
+              "op": "<=",
+              "value": 0
+            },
+            "reward": {
+              "credits": 30
+            },
+            "action_payload": {
+              "type": "set_flag",
+              "flag_id": "endurance_trial_won",
+              "value": true
+            },
+            "screen_text": "The drone shuts down. You outlasted it.",
+            "pop_on_resolve": true
+          },
+          {
+            "outcome_id": "overwhelmed",
+            "conditions": {
+              "type": "encounter_stat_check",
+              "stat": "pressure",
+              "op": ">=",
+              "value": 100
+            },
+            "screen_text": "The drone's sustained assault overwhelms you. The session ends.",
+            "pop_on_resolve": true
+          },
+          {
+            "outcome_id": "defeat",
+            "conditions": {
+              "type": "stat_check",
+              "entity_id": "encounter:player",
+              "stat": "health",
+              "op": "<=",
+              "value": 1
+            },
+            "screen_text": "The drone cuts the exercise. You took too much damage.",
+            "pop_on_resolve": true
+          },
+          {
+            "outcome_id": "fled",
+            "trigger": "manual",
+            "screen_text": "You call the session early.",
+            "pop_on_resolve": true
+          }
+        ],
+        "max_rounds": 10,
         "max_rounds_outcome": "fled",
         "cancel_outcome": "fled",
         "evaluation_order": "first_match"
