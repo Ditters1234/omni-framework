@@ -153,7 +153,7 @@
   <h1>⬡ Omni-Framework</h1>
   <span class="subtitle">Mod Editor</span>
   <div class="spacer"></div>
-  <button class="btn" onclick="importModFiles()" title="Select mod.json + any data/*.json files from an existing mod folder">Load Mod Files</button>
+  <button class="btn" onclick="importModFiles()" title="Select the mod folder to load all JSON files automatically">Load Mod Folder</button>
   <button class="btn" onclick="importProject()" title="Load a previously saved editor project JSON">Load Project</button>
   <button class="btn" onclick="showExport()">Export All Files</button>
   <button class="btn primary" onclick="copyCurrentJSON()">Copy Current JSON</button>
@@ -241,6 +241,7 @@
 
 <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
 <input type="file" id="import-folder-input" accept=".json" multiple style="display:none" onchange="handleFolderImport(event)">
+<input type="file" id="import-dir-input" webkitdirectory style="display:none" onchange="handleFolderImport(event)">
 
 <script>
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -1487,8 +1488,8 @@ function downloadAll() {
 
 // ─── IMPORT ───────────────────────────────────────────────────────────────────
 
-// Load Mod Files: select mod.json + any data/*.json files together
-function importModFiles() { document.getElementById('import-folder-input').click(); }
+// Load Mod Folder: use directory picker so all JSON files load automatically
+function importModFiles() { document.getElementById('import-dir-input').click(); }
 
 // Load Project: load a previously saved editor project JSON
 function importProject() { document.getElementById('import-input').click(); }
@@ -1512,10 +1513,15 @@ const FILE_MAP = {
 };
 
 function handleFolderImport(e) {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
+  // Filter to only the JSON filenames we know about, regardless of subfolder depth
+  const allFiles = Array.from(e.target.files);
+  const files = allFiles.filter(f => FILE_MAP[f.name] !== undefined);
+  if (!files.length) {
+    setVal('No recognised mod JSON files found in the selected folder.', 'warn');
+    e.target.value = '';
+    return;
+  }
 
-  // Read all files as promises
   const reads = files.map(f => new Promise((res, rej) => {
     const reader = new FileReader();
     reader.onload = ev => {
@@ -1527,50 +1533,38 @@ function handleFolderImport(e) {
   }));
 
   Promise.all(reads).then(results => {
-    // Find mod.json to get the mod id
     const manifestFile = results.find(r => r.name === 'mod.json');
     const manifest = manifestFile?.data;
     const modId = manifest?.id || `imported_${uid()}`;
-    const [author, modid] = modId.includes(':') ? modId.split(':') : [modId, 'mod'];
+    const parts = modId.split(':');
+    const author = parts[0] || modId;
+    const modid = parts[1] || 'mod';
 
     const mod = defaultMod(modId, author, modid);
 
     results.forEach(({ name, data }) => {
       const mapping = FILE_MAP[name];
-      if (!mapping) return; // skip unknown files
+      if (!mapping) return;
 
-      if (name === 'mod.json') {
-        mod.manifest = data;
-        return;
-      }
-      if (name === 'config.json') {
-        mod.config = data;
-        return;
-      }
-      if (name === 'definitions.json') {
-        mod.definitions = data;
-        return;
-      }
+      if (name === 'mod.json') { mod.manifest = data; return; }
+      if (name === 'config.json') { mod.config = data; return; }
+      if (name === 'definitions.json') { mod.definitions = data; return; }
 
-      // Data files with additions + patches arrays
       const { section, key } = mapping;
       if (!mod[section]) mod[section] = {};
-      // Load additions array
       if (key && data[key]) mod[section][key] = data[key];
-      // Load patches array
       if (data.patches) mod[section].patches = data.patches;
     });
 
-    // Register and switch to the mod
     state.mods[modId] = mod;
     state.activeMod = modId;
     rebuildModSelect();
     document.getElementById('author-input').value = author;
-    document.getElementById('modid-input').value = modid || 'mod';
+    document.getElementById('modid-input').value = modid;
     showSection('manifest');
 
     const loaded = results.map(r => r.name).join(', ');
-    setVal(`Loaded ${results.length} file(s): ${loaded}`);
+    setVal(`✓ Loaded ${results.length} file(s): ${loaded}`);
   }).catch(err => {
     console.error('Import error:', err);
     setVal('Import error: ' + (err?.message || err), 'err');
@@ -1626,6 +1620,7 @@ function init() {
   document.getElementById('author-input').value = 'author';
   document.getElementById('modid-input').value = 'my_mod';
 }
+
 init();
 </script>
 </body>
