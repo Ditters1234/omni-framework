@@ -340,6 +340,7 @@ func _resolve(outcome_id: String, reason: String) -> Dictionary:
 	_resolved_screen_text = str(outcome.get("screen_text", "Encounter resolved."))
 	_status_text = _resolved_screen_text
 	_append_log(_resolved_screen_text)
+	_emit_resolution_feedback(outcome_id, reason, reward_value)
 	if GameEvents:
 		GameEvents.encounter_resolved.emit({
 			"encounter_id": _encounter_id,
@@ -351,6 +352,25 @@ func _resolve(outcome_id: String, reason: String) -> Dictionary:
 	if not sound_ref.is_empty():
 		AudioManager.play_sfx(sound_ref)
 	return {}
+
+
+func _emit_resolution_feedback(outcome_id: String, reason: String, reward_value: Variant) -> void:
+	var display_name := str(_template.get("display_name", _template.get("screen_title", _encounter_id)))
+	var reward_summary := RewardService.build_reward_summary(reward_value, "No rewards")
+	var message := "Encounter complete: %s" % display_name
+	if not reward_summary.is_empty():
+		message = "%s | Rewards: %s" % [message, reward_summary]
+	GameState.record_event("encounter_resolved", {
+		"encounter_id": _encounter_id,
+		"outcome_id": outcome_id,
+		"reason": reason,
+		"round": _round,
+		"display_name": display_name,
+		"reward_summary": reward_summary,
+		"description": message,
+	})
+	if GameEvents:
+		GameEvents.ui_notification_requested.emit(message, OmniConstants.NOTIFICATION_LEVEL_INFO)
 
 
 func _navigation_for_resolved() -> Dictionary:

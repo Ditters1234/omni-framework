@@ -5,6 +5,7 @@ const ENCOUNTER_BACKEND := preload("res://ui/screens/backends/encounter_backend.
 
 
 func before_each() -> void:
+	watch_signals(GameEvents)
 	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	_seed_encounter_fixture()
 
@@ -48,6 +49,29 @@ func test_player_resolution_stops_opponent_action() -> void:
 	assert_true(bool(view_model.get("resolved", false)))
 	assert_eq(str(view_model.get("resolved_screen_text", "")), "Won.")
 	assert_true(_reward_line_exists(view_model, "Credits +5"))
+
+
+func test_encounter_completion_notifies_and_records_reward_summary() -> void:
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:test_encounter"})
+
+	backend.select_action("finish")
+
+	assert_signal_emitted(GameEvents, "ui_notification_requested")
+	var notification_params: Array = get_signal_parameters(GameEvents, "ui_notification_requested")
+	assert_eq(str(notification_params[0]), "Encounter complete: Fixture Encounter | Rewards: Credits +5")
+	assert_eq(str(notification_params[1]), OmniConstants.NOTIFICATION_LEVEL_INFO)
+	assert_false(GameState.event_history.is_empty())
+	if not GameState.event_history.is_empty():
+		var latest: Dictionary = GameState.event_history.back()
+		assert_eq(str(latest.get("event_type", "")), "encounter_resolved")
+		var payload_value: Variant = latest.get("payload", {})
+		assert_true(payload_value is Dictionary)
+		if payload_value is Dictionary:
+			var payload: Dictionary = payload_value
+			assert_eq(str(payload.get("encounter_id", "")), "base:test_encounter")
+			assert_eq(str(payload.get("outcome_id", "")), "victory")
+			assert_eq(str(payload.get("reward_summary", "")), "Credits +5")
 
 
 func test_resolve_effect_stops_later_effects() -> void:
