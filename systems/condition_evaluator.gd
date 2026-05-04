@@ -375,4 +375,10 @@ static func _resolve_entity(entity_id: String, context: Dictionary = {}) -> Enti
 		if encounter_entities_value is Dictionary:
 			var encounter_entities: Dictionary = encounter_entities_value
 			return encounter_entities.get(role, null) as EntityInstance
+	if entity_id.begins_with("quest:"):
+		var role := entity_id.trim_prefix("quest:")
+		var quest_entities_value: Variant = context.get("quest_entities", {})
+		if quest_entities_value is Dictionary:
+			var quest_entities: Dictionary = quest_entities_value
+			return quest_entities.get(role, null) as EntityInstance
 	return GameState.get_entity_instance(entity_id)

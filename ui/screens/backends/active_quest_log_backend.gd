@@ -49,19 +49,23 @@ func build_view_model() -> Dictionary:
 
 func _build_active_cards() -> Array[Dictionary]:
 	var cards: Array[Dictionary] = []
-	var quest_ids: Array = GameState.active_quests.keys()
-	quest_ids.sort()
-	for quest_id_value in quest_ids:
-		var quest_id := str(quest_id_value)
+	var runtime_ids: Array = GameState.active_quests.keys()
+	runtime_ids.sort()
+	for runtime_id_value in runtime_ids:
+		var runtime_id := str(runtime_id_value)
+		var quest_instance_value: Variant = GameState.active_quests.get(runtime_id_value, {})
+		var quest_id := runtime_id
+		var stage_index := 0
+		if quest_instance_value is Dictionary:
+			var quest_instance: Dictionary = quest_instance_value
+			quest_id = str(quest_instance.get("quest_id", runtime_id))
+			stage_index = int(quest_instance.get("stage_index", 0))
 		var quest_template := DataManager.get_quest(quest_id)
 		if quest_template.is_empty():
 			continue
-		var stage_index := 0
-		var quest_instance_value: Variant = GameState.active_quests.get(quest_id_value, {})
-		if quest_instance_value is Dictionary:
-			var quest_instance: Dictionary = quest_instance_value
-			stage_index = int(quest_instance.get("stage_index", 0))
-		cards.append(BACKEND_HELPERS.build_quest_card_view_model(quest_template, stage_index, false))
+		var card := BACKEND_HELPERS.build_quest_card_view_model(quest_template, stage_index, false)
+		card["runtime_id"] = runtime_id
+		cards.append(card)
 	return cards
 
 
@@ -70,12 +74,28 @@ func _build_completed_cards() -> Array[Dictionary]:
 	var quest_ids := GameState.completed_quests.duplicate()
 	quest_ids.sort()
 	for quest_id in quest_ids:
+		if _has_active_quest_template(str(quest_id)):
+			continue
 		var quest_template := DataManager.get_quest(str(quest_id))
 		if quest_template.is_empty():
 			continue
 		var final_stage_index := _resolve_final_stage_index(quest_template)
 		cards.append(BACKEND_HELPERS.build_quest_card_view_model(quest_template, final_stage_index, true))
 	return cards
+
+
+func _has_active_quest_template(quest_id: String) -> bool:
+	for runtime_id_value in GameState.active_quests.keys():
+		var runtime_id := str(runtime_id_value)
+		if runtime_id == quest_id:
+			return true
+		var quest_instance_value: Variant = GameState.active_quests.get(runtime_id_value, {})
+		if not quest_instance_value is Dictionary:
+			continue
+		var quest_instance: Dictionary = quest_instance_value
+		if str(quest_instance.get("quest_id", runtime_id)) == quest_id:
+			return true
+	return false
 
 
 func _resolve_final_stage_index(quest_template: Dictionary) -> int:

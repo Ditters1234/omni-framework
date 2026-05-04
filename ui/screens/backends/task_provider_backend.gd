@@ -52,7 +52,7 @@ func build_view_model() -> Dictionary:
 	var selected_row := _get_selected_row(tasks)
 	var title := str(_params.get("screen_title", "Task Provider"))
 	var description := str(_params.get("screen_description", "Browse faction jobs and accept one into the active task queue."))
-	var summary := str(_params.get("screen_summary", "Task templates come directly from the configured faction quest_pool."))
+	var summary := str(_params.get("screen_summary", "Faction contracts come directly from the configured faction quest_pool."))
 	var empty_label := str(_params.get("empty_label", "This faction does not currently offer any tasks."))
 	return {
 		"title": title,
@@ -75,22 +75,23 @@ func select_row(template_id: String) -> void:
 
 
 func confirm() -> Dictionary:
-	var template_id := _selected_template_id
-	if template_id.is_empty():
-		_status_text = "Select a task before accepting it."
+	var quest_id := _selected_template_id
+	if quest_id.is_empty():
+		_status_text = "Select a contract before accepting it."
 		return {}
 	var assignee_lookup := str(_params.get("assignee_entity_id", "player"))
-	var runtime_id := TimeKeeper.accept_task(template_id, {
-		"entity_id": assignee_lookup,
-	})
-	if runtime_id.is_empty():
-		_status_text = "That task could not be accepted right now."
+	if not GameState.start_quest(quest_id, {
+		"assignee_entity_id": assignee_lookup,
+		"owner_entity_id": "player",
+		"reward_recipient_entity_id": "player",
+	}):
+		_status_text = "That contract could not be accepted right now."
 		return {}
 	var accept_sound := str(_params.get("accept_sound", ""))
 	if not accept_sound.is_empty():
 		AudioManager.play_sfx(accept_sound)
-	var task_template := TaskRegistry.get_task(template_id)
-	_status_text = "Accepted %s." % str(task_template.get("display_name", template_id))
+	var quest_template := DataManager.get_quest(quest_id)
+	_status_text = "Accepted %s." % str(quest_template.get("display_name", quest_id))
 	_selected_template_id = ""
 	return {}
 
@@ -99,36 +100,93 @@ func _build_task_rows(faction_id: String) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	if faction_id.is_empty():
 		return rows
+	var faction := DataManager.get_faction(faction_id)
 	var provider_entity_id := str(_params.get("provider_entity_id", ""))
-	var task_templates_value: Variant = TaskRegistry.get_for_faction(faction_id)
-	if task_templates_value is Array:
-		var task_templates: Array = task_templates_value
-		for task_template_value in task_templates:
-			if not task_template_value is Dictionary:
-				continue
-			var task_template: Dictionary = task_template_value
-			var template_id := str(task_template.get("template_id", ""))
-			if template_id.is_empty() or not TimeKeeper.can_accept_task(template_id):
-				continue
-			var task_card_view_model := BACKEND_HELPERS.build_task_card_view_model(task_template)
-			var ai_flavor_text := ScriptHookService.request_task_flavor(task_template, {
-				"faction_id": faction_id,
-				"provider_entity_id": provider_entity_id,
-			})
-			if not ai_flavor_text.is_empty():
-				task_card_view_model["flavor_text"] = ai_flavor_text
-			rows.append({
-				"template_id": template_id,
-				"display_name": str(task_template.get("display_name", task_template.get("title", template_id))),
-				"detail_text": str(task_template.get("description", "")),
-				"ai_flavor_text": ai_flavor_text,
-				"selected": template_id == _selected_template_id,
-				"quest_card_view_model": task_card_view_model,
-			})
+	var quest_pool_value: Variant = faction.get("quest_pool", [])
+	if not quest_pool_value is Array:
+		return rows
+	var quest_pool: Array = quest_pool_value
+	for quest_id_value in quest_pool:
+		var quest_id := str(quest_id_value)
+		var quest_template := DataManager.get_quest(quest_id)
+		if quest_id.is_empty() or quest_template.is_empty() or not _can_offer_quest(quest_template):
+			continue
+		var quest_card_view_model := BACKEND_HELPERS.build_quest_card_view_model(quest_template, 0, false)
+		var ai_flavor_text := ScriptHookService.request_task_flavor(_build_flavor_template(quest_template), {
+			"faction_id": faction_id,
+			"provider_entity_id": provider_entity_id,
+		})
+		if not ai_flavor_text.is_empty():
+			quest_card_view_model["flavor_text"] = ai_flavor_text
+		rows.append({
+			"template_id": quest_id,
+			"display_name": str(quest_template.get("display_name", quest_template.get("title", quest_id))),
+			"detail_text": str(quest_template.get("description", "")),
+			"ai_flavor_text": ai_flavor_text,
+			"selected": quest_id == _selected_template_id,
+			"quest_card_view_model": quest_card_view_model,
+		})
 	var sort_callable := func(a: Dictionary, b: Dictionary) -> bool:
 		return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
 	rows.sort_custom(sort_callable)
 	return rows
+
+
+func _can_offer_quest(quest_template: Dictionary) -> bool:
+	var quest_id := str(quest_template.get("quest_id", ""))
+	if quest_id.is_empty() or _has_active_quest_template(quest_id):
+		return false
+	if quest_id in GameState.completed_quests and not bool(quest_template.get("repeatable", false)):
+		return false
+	return true
+
+
+func _has_active_quest_template(quest_id: String) -> bool:
+	for runtime_id_value in GameState.active_quests.keys():
+		var runtime_id := str(runtime_id_value)
+		if runtime_id == quest_id:
+			return true
+		var quest_instance_value: Variant = GameState.active_quests.get(runtime_id_value, {})
+		if not quest_instance_value is Dictionary:
+			continue
+		var quest_instance: Dictionary = quest_instance_value
+		if str(quest_instance.get("quest_id", runtime_id)) == quest_id:
+			return true
+	return false
+
+
+func _build_flavor_template(quest_template: Dictionary) -> Dictionary:
+	var quest_id := str(quest_template.get("quest_id", ""))
+	return {
+		"template_id": quest_id,
+		"display_name": str(quest_template.get("display_name", quest_template.get("title", quest_id))),
+		"description": str(quest_template.get("description", "")),
+		"type": "CONTRACT",
+		"target": _resolve_first_reach_location(quest_template),
+		"reward": _read_dictionary(quest_template.get("reward", {})),
+	}
+
+
+func _resolve_first_reach_location(quest_template: Dictionary) -> String:
+	var stages_value: Variant = quest_template.get("stages", [])
+	if not stages_value is Array:
+		return ""
+	var stages: Array = stages_value
+	for stage_value in stages:
+		if not stage_value is Dictionary:
+			continue
+		var stage: Dictionary = stage_value
+		var objectives_value: Variant = stage.get("objectives", [])
+		if not objectives_value is Array:
+			continue
+		var objectives: Array = objectives_value
+		for objective_value in objectives:
+			if not objective_value is Dictionary:
+				continue
+			var objective: Dictionary = objective_value
+			if str(objective.get("type", "")) == "reach_location":
+				return str(objective.get("location_id", objective.get("location", "")))
+	return ""
 
 
 func _build_provider_portrait(faction_id: String) -> Dictionary:

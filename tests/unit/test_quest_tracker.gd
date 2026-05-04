@@ -123,6 +123,55 @@ func test_quest_completion_notifies_with_reward_summary() -> void:
 			assert_eq(str(payload.get("reward_summary", "")), "Credits +50")
 
 
+func test_assigned_entity_can_complete_quest_objective_for_player_reward() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var robot_template := {
+		"entity_id": "base:test_robot",
+		"display_name": "Test Robot",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"stats": {},
+		"inventory": [],
+	}
+	DataManager.entities["base:test_robot"] = robot_template.duplicate(true)
+	var robot := EntityInstance.from_template(robot_template)
+	GameState.commit_entity_instance(robot)
+	DataManager.quests["base:robot_delivery"] = {
+		"quest_id": "base:robot_delivery",
+		"display_name": "Robot Delivery",
+		"stages": [
+			{
+				"description": "Send the robot to the field.",
+				"objectives": [
+					{
+						"type": "reach_location",
+						"entity_id": "quest:assignee",
+						"location_id": TEST_FIXTURE_WORLD.connected_location_id(),
+					}
+				],
+			}
+		],
+		"reward": {"credits": 25},
+	}
+	var credits_before := player.get_currency("credits")
+	assert_true(GameState.start_quest("base:robot_delivery", {
+		"assignee_entity_id": "base:test_robot",
+		"reward_recipient_entity_id": "player",
+	}))
+
+	GameState.travel_to(TEST_FIXTURE_WORLD.connected_location_id())
+	assert_true(GameState.active_quests.has("base:robot_delivery"))
+	robot.location_id = TEST_FIXTURE_WORLD.connected_location_id()
+	GameState.commit_entity_instance(robot)
+	GameEvents.location_changed.emit(TEST_FIXTURE_WORLD.starting_location_id(), TEST_FIXTURE_WORLD.connected_location_id())
+
+	assert_true("base:robot_delivery" in GameState.completed_quests)
+	assert_false(GameState.active_quests.has("base:robot_delivery"))
+	assert_eq(player.get_currency("credits"), credits_before + 25.0)
+
+
 func test_manual_complete_moves_quest_to_completed() -> void:
 	assert_true(GameState.start_quest(TEST_QUEST_ID))
 	watch_signals(GameEvents)

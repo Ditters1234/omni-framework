@@ -1,6 +1,51 @@
 {
   "quests": [
     {
+      "quest_id": "base:deliver_package",
+      "display_name": "Deliver Package",
+      "description": "Deliver a sealed package to a dead drop near your apartment. Don't open it.",
+      "stages": [
+        {
+          "description": "Carry the package to the apartment dead drop.",
+          "objectives": [
+            { "type": "reach_location", "entity_id": "quest:assignee", "location_id": "base:apartment" }
+          ]
+        }
+      ],
+      "reward": {
+        "credits": 75,
+        "reputation": { "base:threshold_syndicate": 10 }
+      },
+      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
+      "repeatable": true
+    },
+    {
+      "quest_id": "base:supply_run",
+      "display_name": "Supply Run",
+      "description": "Pick up a crate from the Undercity salvage crews and haul it back to the Warehouse.",
+      "stages": [
+        {
+          "description": "Reach the Undercity salvage pickup.",
+          "objectives": [
+            { "type": "reach_location", "entity_id": "quest:assignee", "location_id": "base:undercity" }
+          ]
+        },
+        {
+          "description": "Return the crate to the Warehouse.",
+          "objectives": [
+            { "type": "reach_location", "entity_id": "quest:assignee", "location_id": "base:warehouse" }
+          ]
+        }
+      ],
+      "reward": {
+        "credits": 120,
+        "reputation": { "base:threshold_syndicate": 15 },
+        "items": [{ "template_id": "base:salvage_chip", "count": 1 }]
+      },
+      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
+      "repeatable": true
+    },
+    {
       "quest_id": "base:first_steps",
       "display_name": "First Steps",
       "description": "Get oriented in the Threshold district. Arm yourself, find the market, and meet the people who matter.",

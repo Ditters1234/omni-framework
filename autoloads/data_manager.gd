@@ -595,6 +595,7 @@ func validate_loaded_content() -> Array[Dictionary]:
 	_validate_template_schemas()
 	_validate_config_references()
 	_validate_entity_references()
+	_validate_faction_references()
 	_validate_location_references()
 	_validate_backend_contracts()
 	_validate_action_payloads()
@@ -1497,6 +1498,38 @@ func _validate_entity_references() -> void:
 					_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' socket '%s' references missing inventory instance '%s'." % [entity_id, str(slot_key), instance_id])
 		elif entity.has("assembly_socket_map"):
 			_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' field 'assembly_socket_map' must be an object." % entity_id)
+
+
+func _validate_faction_references() -> void:
+	for faction_value in factions.values():
+		if not faction_value is Dictionary:
+			continue
+		var faction: Dictionary = faction_value
+		var faction_id := str(faction.get("faction_id", ""))
+		_validate_string_array_elements(faction_id, OmniConstants.DATA_FACTIONS, "territory", faction.get("territory", []))
+		_validate_string_array_elements(faction_id, OmniConstants.DATA_FACTIONS, "roster", faction.get("roster", []))
+		_validate_string_array_elements(faction_id, OmniConstants.DATA_FACTIONS, "quest_pool", faction.get("quest_pool", []))
+		var territory_value: Variant = faction.get("territory", [])
+		if territory_value is Array:
+			var territory: Array = territory_value
+			for location_id_value in territory:
+				var location_id := str(location_id_value)
+				if not location_id.is_empty() and not has_location(location_id):
+					_record_issue(faction_id, OmniConstants.DATA_FACTIONS, LOAD_PHASE_VALIDATION, "Faction '%s' territory references unknown location '%s'." % [faction_id, location_id])
+		var roster_value: Variant = faction.get("roster", [])
+		if roster_value is Array:
+			var roster: Array = roster_value
+			for entity_id_value in roster:
+				var entity_id := str(entity_id_value)
+				if not entity_id.is_empty() and not has_entity(entity_id):
+					_record_issue(faction_id, OmniConstants.DATA_FACTIONS, LOAD_PHASE_VALIDATION, "Faction '%s' roster references unknown entity '%s'." % [faction_id, entity_id])
+		var quest_pool_value: Variant = faction.get("quest_pool", [])
+		if quest_pool_value is Array:
+			var quest_pool: Array = quest_pool_value
+			for quest_id_value in quest_pool:
+				var quest_id := str(quest_id_value)
+				if not quest_id.is_empty() and not has_quest(quest_id):
+					_record_issue(faction_id, OmniConstants.DATA_FACTIONS, LOAD_PHASE_VALIDATION, "Faction '%s' quest_pool references unknown quest '%s'." % [faction_id, quest_id])
 
 
 func _validate_location_references() -> void:

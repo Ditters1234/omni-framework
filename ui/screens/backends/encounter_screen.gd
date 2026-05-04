@@ -138,7 +138,7 @@ func _render_resolution_summary(view_model: Dictionary) -> void:
 		reward_lines = reward_lines_value
 	if reward_lines.is_empty():
 		var empty_reward_label := Label.new()
-		empty_reward_label.text = "None"
+		empty_reward_label.text = "You received no rewards."
 		_center_host.add_child(empty_reward_label)
 		return
 	for reward_line_value in reward_lines:
@@ -147,7 +147,7 @@ func _render_resolution_summary(view_model: Dictionary) -> void:
 			continue
 		var line := Label.new()
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		line.text = reward_line
+		line.text = "You received %s." % reward_line
 		_center_host.add_child(line)
 
 

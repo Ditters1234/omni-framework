@@ -798,7 +798,7 @@ Values are normalized graph coordinates (0.0–1.0 range works well). If omitted
 
 ## 10. `factions.json`
 
-Factions group entities, territory, tasks, and reputation thresholds.
+Factions group entities, territory, contract quests, and reputation thresholds.
 
 ### Current addition format
 
@@ -818,7 +818,7 @@ Factions group entities, territory, tasks, and reputation thresholds.
         "neutral": 0,
         "hostile": -25
       },
-      "quest_pool": ["my_name:my_mod:delivery_run"]
+      "quest_pool": ["my_name:my_mod:delivery_contract"]
     }
   ]
 }
@@ -836,7 +836,7 @@ Faction-facing UI such as `FactionBadge` resolves emblem art from those fields w
 
 ## 11. `tasks.json`
 
-Tasks are time-based operations.
+Tasks are time-based operations that entities perform. They are the low-level work queue for movement, waiting, crafting, routines, and other autonomous entity behavior. Player-facing work with objectives, completion notifications, and rewards should be authored as quests/contracts in `quests.json`.
 
 ### Current addition format
 
@@ -844,17 +844,12 @@ Tasks are time-based operations.
 {
   "task_templates": [
     {
-      "template_id": "my_name:my_mod:delivery_run",
-      "type": "DELIVER",
+      "template_id": "my_name:my_mod:worker_travel_to_clinic",
+      "type": "TRAVEL",
       "target": "my_name:my_mod:back_alley",
       "travel_cost": 2,
-      "reward": {
-        "credits": 80,
-        "reputation": {
-          "my_name:my_mod:night_clinic": 10
-        }
-      },
-      "description": "Deliver parts to the clinic.",
+      "reward": {},
+      "description": "Move the assigned entity to the clinic.",
       "difficulty": 1,
       "repeatable": true
     }
@@ -887,7 +882,7 @@ Modders can use any string as a task type; unrecognized types fall through to du
 Use:
 - `travel_cost` for travel-based tasks
 - `duration` for pure timed waits/crafting
-- `reward` for currencies, reputation, and other rewards
+- `reward` only for low-level system payouts. Player-visible contract rewards should usually live on the quest/contract that the task helps complete.
 
 ---
 
@@ -1280,7 +1275,7 @@ Setting `cancel_outcome` to the same `outcome_id` means the Back button also rou
 
 ## 12. `quests.json`
 
-Quests are progression/state-tracking structures.
+Quests are progression/state-tracking structures. They are also the player-facing contract layer: objectives, rewards, notifications, and quest log entries live here. A quest can be assigned to a non-player entity by starting it with an `assignee_entity_id`; objectives can reference that entity with `entity_id: "quest:assignee"`.
 
 ### Current addition format
 
@@ -1320,6 +1315,35 @@ Quests are progression/state-tracking structures.
   ]
 }
 ```
+
+### Assignable contract example
+
+```json
+{
+  "quest_id": "my_name:my_mod:delivery_contract",
+  "display_name": "Delivery Contract",
+  "description": "Send an assigned entity to the clinic drop point.",
+  "stages": [
+    {
+      "description": "Assigned courier reaches the clinic.",
+      "objectives": [
+        {
+          "type": "reach_location",
+          "entity_id": "quest:assignee",
+          "location_id": "my_name:my_mod:back_alley"
+        }
+      ]
+    }
+  ],
+  "reward": {
+    "credits": 80,
+    "reputation": { "my_name:my_mod:night_clinic": 10 }
+  },
+  "repeatable": true
+}
+```
+
+The task layer can move the assigned entity with a `TRAVEL` task. The quest layer decides when the contract is complete and who receives the reward. By default, quest rewards go to the player; callers can override `reward_recipient_entity_id` when starting the quest.
 
 ### Objective types
 
@@ -1475,8 +1499,10 @@ Required:
 - `faction_id`
 
 Notes:
-- Rows always include the static task `description`.
-- When `ai.enable_world_gen` is on, AI is available, `config.json` enables `ai.task_flavor_enabled`, and `ai.world_gen_hooks.task_flavor` points at a valid hook, the backend may append a cached AI flavor line below the static description and into the selected task card's `flavor_text`.
+- `faction_id` must reference a faction whose `quest_pool` points at quest/contract templates.
+- The backend starts the selected quest for `assignee_entity_id` (default `"player"`) and keeps rewards assigned to the player unless a custom caller overrides `reward_recipient_entity_id`.
+- Rows always include the static quest `description`.
+- When `ai.enable_world_gen` is on, AI is available, `config.json` enables `ai.task_flavor_enabled`, and `ai.world_gen_hooks.task_flavor` points at a valid hook, the backend may append a cached AI flavor line below the static description and into the selected contract card's `flavor_text`.
 
 #### `DialogueBackend`
 Required in practical use:

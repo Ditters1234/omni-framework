@@ -340,10 +340,10 @@ func unlock_achievement(achievement_id: String) -> bool:
 # Quests
 # ---------------------------------------------------------------------------
 
-func start_quest(quest_id: String) -> bool:
+func start_quest(quest_id: String, params: Dictionary = {}) -> bool:
 	if _quest_tracker == null:
 		return false
-	return _quest_tracker.start_quest(quest_id)
+	return _quest_tracker.start_quest(quest_id, params)
 
 
 func advance_quest(quest_id: String, transition: String = "") -> void:
@@ -507,9 +507,14 @@ func validate_runtime_state() -> Array[String]:
 
 func _validate_persistent_runtime_buckets(issues: Array[String]) -> void:
 	for quest_id_value in active_quests.keys():
-		var quest_id := str(quest_id_value)
+		var runtime_id := str(quest_id_value)
+		var quest_id := runtime_id
+		var quest_instance_value: Variant = active_quests.get(quest_id_value, {})
+		if quest_instance_value is Dictionary:
+			var quest_instance: Dictionary = quest_instance_value
+			quest_id = str(quest_instance.get("quest_id", runtime_id))
 		if not quest_id.is_empty() and QuestRegistry.get_quest(quest_id).is_empty():
-			issues.append("Active quest '%s' references missing quest template." % quest_id)
+			issues.append("Active quest '%s' references missing quest template '%s'." % [runtime_id, quest_id])
 
 	for quest_id_value in completed_quests:
 		var quest_id := str(quest_id_value)

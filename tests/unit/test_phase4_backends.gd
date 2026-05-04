@@ -249,19 +249,24 @@ func test_challenge_backend_defers_reward_events_until_after_commit() -> void:
 	assert_true(_event_history_contains("flag_changed"))
 
 
-func test_task_provider_backend_lists_faction_tasks_and_accepts_selected_task() -> void:
+func test_task_provider_backend_lists_faction_contracts_and_accepts_selected_quest() -> void:
 	DataManager.factions["base:test_faction"] = {
 		"faction_id": "base:test_faction",
 		"display_name": "Test Faction",
-		"quest_pool": ["base:test_task"],
+		"quest_pool": ["base:test_contract"],
 	}
-	DataManager.tasks["base:test_task"] = {
-		"template_id": "base:test_task",
+	DataManager.quests["base:test_contract"] = {
+		"quest_id": "base:test_contract",
 		"display_name": "Courier Run",
 		"description": "Deliver the package to the marked drop point.",
-		"type": "DELIVER",
-		"target": "base:start",
-		"travel_cost": 2,
+		"stages": [
+			{
+				"description": "Wait for dispatch.",
+				"objectives": [
+					{"type": "has_flag", "flag_id": "dispatch_ready", "value": true}
+				]
+			}
+		],
 		"reward": {"credits": 5},
 		"repeatable": true,
 	}
@@ -289,7 +294,41 @@ func test_task_provider_backend_lists_faction_tasks_and_accepts_selected_task() 
 
 	backend.confirm()
 
-	assert_eq(GameState.active_tasks.size(), 1)
+	assert_eq(GameState.active_quests.size(), 1)
+	assert_true(GameState.active_quests.has("base:test_contract"))
+
+
+func test_task_provider_backend_hides_contract_active_under_runtime_id() -> void:
+	DataManager.factions["base:test_faction"] = {
+		"faction_id": "base:test_faction",
+		"display_name": "Test Faction",
+		"quest_pool": ["base:test_contract"],
+	}
+	DataManager.quests["base:test_contract"] = {
+		"quest_id": "base:test_contract",
+		"display_name": "Courier Run",
+		"description": "Deliver the package to the marked drop point.",
+		"stages": [],
+		"repeatable": true,
+	}
+	GameState.active_quests["runtime_contract_1"] = {
+		"runtime_id": "runtime_contract_1",
+		"quest_id": "base:test_contract",
+		"stage_index": 0,
+	}
+
+	var backend: RefCounted = TASK_PROVIDER_BACKEND.new()
+	backend.initialize({
+		"faction_id": "base:test_faction",
+	})
+
+	var view_model: Dictionary = backend.build_view_model()
+	var rows_value: Variant = view_model.get("rows", [])
+
+	assert_true(rows_value is Array)
+	if rows_value is Array:
+		var rows: Array = rows_value
+		assert_eq(rows.size(), 0)
 
 
 func test_dialogue_backend_resolves_sample_dialogue_resource() -> void:

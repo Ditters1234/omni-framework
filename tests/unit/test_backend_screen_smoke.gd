@@ -194,15 +194,20 @@ func _seed_backend_screen_runtime() -> void:
 	DataManager.factions["base:screen_smoke_faction"] = {
 		"faction_id": "base:screen_smoke_faction",
 		"display_name": "Smoke Faction",
-		"quest_pool": ["base:screen_smoke_task"],
+		"quest_pool": ["base:screen_smoke_contract"],
 	}
-	DataManager.tasks["base:screen_smoke_task"] = {
-		"template_id": "base:screen_smoke_task",
+	DataManager.quests["base:screen_smoke_contract"] = {
+		"quest_id": "base:screen_smoke_contract",
 		"display_name": "Smoke Courier",
 		"description": "Carry a test parcel.",
-		"type": "DELIVER",
-		"target": "base:start",
-		"travel_cost": 1,
+		"stages": [
+			{
+				"description": "Wait for dispatch.",
+				"objectives": [
+					{"type": "has_flag", "flag_id": "screen_smoke_dispatch", "value": true}
+				]
+			}
+		],
 		"reward": {"credits": 1},
 		"repeatable": true,
 	}

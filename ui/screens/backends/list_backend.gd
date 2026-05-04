@@ -180,23 +180,25 @@ func _build_inventory_rows(data_source: String) -> Array[Dictionary]:
 
 func _build_active_quest_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
-	for quest_id_value in GameState.active_quests.keys():
-		var quest_id := str(quest_id_value)
+	for runtime_id_value in GameState.active_quests.keys():
+		var runtime_id := str(runtime_id_value)
+		var quest_instance_value: Variant = GameState.active_quests.get(runtime_id_value, {})
+		var quest_id := runtime_id
+		var stage_index := 0
+		if quest_instance_value is Dictionary:
+			var quest_instance: Dictionary = quest_instance_value
+			quest_id = str(quest_instance.get("quest_id", runtime_id))
+			stage_index = int(quest_instance.get("stage_index", 0))
 		var quest_template := DataManager.get_quest(quest_id)
 		if quest_template.is_empty():
 			continue
-		var stage_index := 0
-		var quest_instance_value: Variant = GameState.active_quests.get(quest_id_value, {})
-		if quest_instance_value is Dictionary:
-			var quest_instance: Dictionary = quest_instance_value
-			stage_index = int(quest_instance.get("stage_index", 0))
 		var stage_view_model := BACKEND_HELPERS.build_quest_card_view_model(quest_template, stage_index, false)
 		rows.append({
-			"row_id": quest_id,
+			"row_id": runtime_id,
 			"quest_id": quest_id,
 			"display_name": str(quest_template.get("display_name", quest_id)),
 			"detail_text": str(stage_view_model.get("current_stage", "")),
-			"selected": quest_id == _selected_row_id,
+			"selected": runtime_id == _selected_row_id,
 			"detail_kind": "quest_card",
 			"detail_view_model": stage_view_model,
 		})

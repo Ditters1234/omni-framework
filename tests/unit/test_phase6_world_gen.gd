@@ -204,15 +204,24 @@ func _seed_phase6_fixture_data() -> void:
 	DataManager.factions["base:phase6_faction"] = {
 		"faction_id": "base:phase6_faction",
 		"display_name": "Phase 6 Dispatch",
-		"quest_pool": ["base:phase6_task"],
+		"quest_pool": ["base:phase6_contract"],
 	}
-	DataManager.tasks["base:phase6_task"] = {
-		"template_id": "base:phase6_task",
+	DataManager.quests["base:phase6_contract"] = {
+		"quest_id": "base:phase6_contract",
 		"display_name": "Courier Drop",
 		"description": "Deliver the package to the connected location.",
-		"type": "DELIVER",
-		"target": TEST_FIXTURE_WORLD.connected_location_id(),
-		"travel_cost": 2,
+		"stages": [
+			{
+				"description": "Reach the connected location.",
+				"objectives": [
+					{
+						"type": "reach_location",
+						"entity_id": "quest:assignee",
+						"location_id": TEST_FIXTURE_WORLD.connected_location_id(),
+					}
+				],
+			}
+		],
 		"reward": {"credits": 5},
 		"repeatable": true,
 	}

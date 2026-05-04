@@ -160,7 +160,7 @@ Rules:
 ### Factions
 
 - Required: `faction_id`, `display_name`
-- `territory`, `roster`, and `quest_pool` references must exist.
+- `territory`, `roster`, and `quest_pool` references must exist. `quest_pool` entries reference `quests.json` quest/contract ids, not `tasks.json` task template ids.
 - Reputation threshold values should be numeric and monotonic if ordered tiers are expected.
 
 ### Quests

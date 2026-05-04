@@ -1,35 +1,6 @@
 {
   "task_templates": [
     {
-      "template_id": "base:deliver_package",
-      "type": "DELIVER",
-      "target": "base:apartment",
-      "travel_cost": 2,
-      "reward": {
-        "credits": 75,
-        "reputation": { "base:threshold_syndicate": 10 }
-      },
-      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
-      "description": "Deliver a sealed package to a dead drop near your apartment. Don't open it.",
-      "difficulty": 1,
-      "repeatable": true
-    },
-    {
-      "template_id": "base:supply_run",
-      "type": "DELIVER",
-      "target": "base:warehouse",
-      "travel_cost": 3,
-      "reward": {
-        "credits": 120,
-        "reputation": { "base:threshold_syndicate": 15 },
-        "items": [{ "template_id": "base:salvage_chip", "count": 1 }]
-      },
-      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
-      "description": "Pick up a crate from the Undercity salvage crews and haul it back to the Warehouse.",
-      "difficulty": 2,
-      "repeatable": true
-    },
-    {
       "template_id": "base:downtime",
       "type": "WAIT",
       "duration": 4,

@@ -1,6 +1,6 @@
 ## TaskRegistry — Loads tasks.json into DataManager.tasks.
 ## Key field: "template_id" (namespaced, e.g. "base:courier_run")
-## Tasks are repeatable jobs offered by faction entities (job boards).
+## Tasks are repeatable entity operations. Player-facing contracts live in quests.json.
 extends RefCounted
 
 class_name TaskRegistry
@@ -42,7 +42,7 @@ static func get_all() -> Array:
 	return DataManager.tasks.values()
 
 
-## Returns task templates offered by a given faction.
+## Legacy helper: returns task templates listed by a faction. Contract boards now use quest_pool as quest ids.
 static func get_for_faction(faction_id: String) -> Array:
 	var result: Array = []
 	var faction := DataManager.get_faction(faction_id)

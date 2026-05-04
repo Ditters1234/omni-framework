@@ -416,8 +416,13 @@ func _build_time_of_day() -> String:
 
 func _build_active_quest_summary() -> String:
 	var quest_names: Array[String] = []
-	for quest_id_value in GameState.active_quests.keys():
-		var quest_id := str(quest_id_value)
+	for runtime_id_value in GameState.active_quests.keys():
+		var runtime_id := str(runtime_id_value)
+		var quest_instance_value: Variant = GameState.active_quests.get(runtime_id_value, {})
+		var quest_id := runtime_id
+		if quest_instance_value is Dictionary:
+			var quest_instance: Dictionary = quest_instance_value
+			quest_id = str(quest_instance.get("quest_id", runtime_id))
 		if quest_id.is_empty():
 			continue
 		var quest_template := DataManager.get_quest(quest_id)
@@ -457,8 +462,13 @@ func _build_knowledge_block() -> String:
 		]
 		_append_unique_line(lines, seen_lines, location_line)
 
-	for quest_id_value in GameState.active_quests.keys():
-		var quest_id := str(quest_id_value)
+	for runtime_id_value in GameState.active_quests.keys():
+		var runtime_id := str(runtime_id_value)
+		var quest_instance_value: Variant = GameState.active_quests.get(runtime_id_value, {})
+		var quest_id := runtime_id
+		if quest_instance_value is Dictionary:
+			var quest_instance: Dictionary = quest_instance_value
+			quest_id = str(quest_instance.get("quest_id", runtime_id))
 		if quest_id.is_empty():
 			continue
 		var quest_template := DataManager.get_quest(quest_id)
