@@ -31,7 +31,7 @@ What each layer is responsible for:
 |---|---|---|
 | **Mod persona data** | Define NPC personalities, prompt templates, response constraints via JSON | Reference API keys, model names, or provider-specific settings |
 | **Prompt builder** | Assemble a complete prompt from persona + game context + conversation history | Cache responses, manage provider state |
-| **AIManager** | Route the prompt to the configured provider, manage request lifecycle | Know what the prompt is for — it is a generic pipe |
+| **AIManager** | Route the prompt to the configured provider, serialize provider calls, manage request lifecycle | Know what the prompt is for — it is a generic pipe |
 | **Provider** | Send the request, parse the wire format, return text | Know about game state, NPCs, or dialogue systems |
 | **Response parser** | Validate, extract, and constrain the LLM output for the consuming system | Call the provider directly — always go through AIManager |
 | **Game system** | Consume the parsed response and update state | Assume AI is available — always guard first |
@@ -41,6 +41,7 @@ Implications this document respects:
 - Adding a new AI consumer means adding a prompt builder, a response parser, and wiring them into an existing system — not modifying `AIManager` or the providers.
 - Modders extend AI behavior by writing persona JSON and prompt templates in their mod's `data/` folder, plus optional script hooks. They never touch provider code.
 - Every AI consumer must produce identical gameplay when AI is disabled. The static fallback is the baseline; AI enhances it.
+- Consumers do not coordinate provider concurrency themselves. `AIManager` queues `generate_async` and streaming requests globally so single-generation providers such as NobodyWho cannot receive overlapping prompts from different systems.
 
 ---
 
@@ -48,7 +49,7 @@ Implications this document respects:
 
 ### Implemented
 
-- `AIManager` (autoload) — provider abstraction, request tracking, streaming, debug snapshots. Boots last in the autoload sequence.
+- `AIManager` (autoload) — provider abstraction, global request queue, request tracking, streaming, debug snapshots. Boots last in the autoload sequence.
 - Three providers: `openai_provider.gd` (covers OpenAI, Ollama, LM Studio), `anthropic_provider.gd` (Anthropic Messages API), `nobodywho_provider.gd` (embedded local LLM via GDExtension).
 - `GameEvents` signals: `ai_response_received`, `ai_token_received`, `ai_error`.
 - `AppSettings` AI configuration block in `user://settings.cfg` (provider selection, API key, model, max tokens, system prompt).
@@ -515,7 +516,7 @@ Deliverable: modders can add AI decision points to behavior trees with graceful 
 
 ### Phase 6 — World Generation Hooks (~3 days)
 
-Current status: complete. `systems/loaders/ai_template_registry.gd` now loads `ai_templates.json` into `DataManager.ai_templates`, the base mod ships `mods/base/scripts/ai_narration_hook.gd` and `ai_task_flavor_hook.gd`, and `config.json` can declare `ai.world_gen_hooks` so `ScriptHookService` can preload and invoke those global hook scripts. `GameEvents` now records `event_narrated`, `EventLogBackend` exposes optional `narration_text`, `TaskProviderBackend` caches and surfaces `ai_flavor_text` / selected-task `flavor_text`, `EncounterBackend` can asynchronously replace authored action-log fallback lines with AI-flavored text after mechanics resolve, and the settings screen persists `ai.enable_world_gen`. Coverage lives in `tests/unit/test_phase6_world_gen.gd` plus updated settings/data-manager/encounter tests, with disabled-AI no-op coverage and narrated event-log/task-board/encounter-log assertions.
+Current status: complete. `systems/loaders/ai_template_registry.gd` now loads `ai_templates.json` into `DataManager.ai_templates`, the base mod ships `mods/base/scripts/ai_narration_hook.gd` and `ai_task_flavor_hook.gd`, and `config.json` can declare `ai.world_gen_hooks` so `ScriptHookService` can preload and invoke those global hook scripts. `GameEvents` now records `event_narrated`, `EventLogBackend` exposes optional `narration_text`, `TaskProviderBackend` caches and surfaces `ai_flavor_text` / selected-task `flavor_text`, `EncounterBackend` can asynchronously replace authored action-log fallback lines with AI-flavored text after mechanics resolve, and shows fallback text only when AI generation fails or is unavailable. `AIManager` globally serializes all provider requests for single-generation providers. The settings screen persists `ai.enable_world_gen`. Coverage lives in `tests/unit/test_phase6_world_gen.gd` plus updated settings/data-manager/encounter tests, with disabled-AI no-op coverage and narrated event-log/task-board/encounter-log assertions.
 
 1. Create `mods/base/scripts/ai_narration_hook.gd` extending `ScriptHook`. Wire to `quest_completed`, `location_changed`, and `day_advanced` signals.
 2. Create `mods/base/scripts/ai_task_flavor_hook.gd`. Wire to `TaskProviderBackend`'s view model assembly.

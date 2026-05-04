@@ -123,6 +123,76 @@ func test_ai_encounter_log_flavor_updates_log_without_changing_mechanics() -> vo
 	assert_true(_reward_line_exists(view_model, "Credits +5"))
 
 
+func test_ai_encounter_log_flavor_holds_fallback_and_serializes_requests() -> void:
+	_configure_saved_ai_settings(true)
+	AIManager.clear_provider_script_overrides()
+	AIManager.set_provider_script_override(AIManager.PROVIDER_OPENAI_COMPATIBLE, FAKE_PROVIDER_SCRIPT_PATH)
+	AIManager.initialize({
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: true,
+			APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_OPENAI_COMPATIBLE,
+			"response": "A generated action line arrives.",
+			"delay_frames": 3,
+		}
+	})
+	ScriptHookService.invalidate_world_gen_settings_cache()
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:test_encounter"})
+
+	backend.select_action("double_log")
+	var pending_view := backend.build_view_model()
+	assert_true(_log_line_exists(pending_view, "Resolving action..."))
+	assert_false(_log_line_exists(pending_view, "First authored fallback."))
+	assert_false(_log_line_exists(pending_view, "Second authored fallback."))
+
+	var saw_global_queue := false
+	var provider_request_count := 0
+	var provider_max_concurrent_requests := 0
+	for _frame_index in range(8):
+		await get_tree().process_frame
+		var queue_snapshot := AIManager.get_debug_snapshot()
+		if int(queue_snapshot.get("queued_request_count", 0)) > 0 or bool(queue_snapshot.get("queue_processing", false)):
+			saw_global_queue = true
+		var provider_debug_value: Variant = queue_snapshot.get("provider_debug", {})
+		if provider_debug_value is Dictionary:
+			var provider_debug: Dictionary = provider_debug_value
+			provider_request_count = int(provider_debug.get("request_count", 0))
+			provider_max_concurrent_requests = int(provider_debug.get("max_concurrent_requests", 0))
+	assert_true(saw_global_queue)
+	assert_true(provider_request_count >= 1)
+	assert_eq(provider_max_concurrent_requests, 1)
+
+	for _frame_index in range(10):
+		await get_tree().process_frame
+	var resolved_view := backend.build_view_model()
+	assert_true(_log_line_exists(resolved_view, "A generated action line arrives."))
+
+
+func test_ai_encounter_log_flavor_shows_fallback_on_error() -> void:
+	_configure_saved_ai_settings(true)
+	AIManager.clear_provider_script_overrides()
+	AIManager.set_provider_script_override(AIManager.PROVIDER_OPENAI_COMPATIBLE, FAKE_PROVIDER_SCRIPT_PATH)
+	AIManager.initialize({
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: true,
+			APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_OPENAI_COMPATIBLE,
+			"simulate_error": true,
+			"error_text": "FakeAIProvider: scripted log failure.",
+		}
+	})
+	ScriptHookService.invalidate_world_gen_settings_cache()
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:test_encounter"})
+
+	backend.select_action("single_log")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_push_warning("FakeAIProvider: scripted log failure.")
+	var view_model := backend.build_view_model()
+	assert_true(_log_line_exists(view_model, "Single authored fallback."))
+
+
 func test_resolve_effect_stops_later_effects() -> void:
 	var player := GameState.player as EntityInstance
 	assert_not_null(player)
@@ -272,6 +342,21 @@ func _seed_encounter_fixture() -> void:
 					"availability": {"type": "has_encounter_tag", "role": "player", "tag": "guarded"},
 					"on_success": [
 						{"effect": "modify_stat", "target": "opponent", "stat": "health", "base_delta": -100}
+					],
+				},
+				{
+					"action_id": "double_log",
+					"label": "Double Log",
+					"on_success": [
+						{"effect": "log", "text": "First authored fallback."},
+						{"effect": "log", "text": "Second authored fallback."}
+					],
+				},
+				{
+					"action_id": "single_log",
+					"label": "Single Log",
+					"on_success": [
+						{"effect": "log", "text": "Single authored fallback."}
 					],
 				},
 				{

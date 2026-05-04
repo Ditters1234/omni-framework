@@ -10,6 +10,8 @@ var _default_delay_frames: int = 0
 var _default_simulate_error: bool = false
 var _default_error_text: String = "FakeAIProvider: simulated failure."
 var _request_count: int = 0
+var _active_request_count: int = 0
+var _max_concurrent_requests: int = 0
 
 
 func initialize(provider_config: Dictionary) -> void:
@@ -20,6 +22,8 @@ func initialize(provider_config: Dictionary) -> void:
 	_default_simulate_error = bool(provider_config.get("simulate_error", false))
 	_default_error_text = str(provider_config.get("error_text", "FakeAIProvider: simulated failure."))
 	_request_count = 0
+	_active_request_count = 0
+	_max_concurrent_requests = 0
 	_default_stream_chunks.clear()
 	var stream_chunks_value: Variant = provider_config.get("chunks", [])
 	if stream_chunks_value is Array:
@@ -52,10 +56,13 @@ func get_debug_snapshot() -> Dictionary:
 		"last_error": _last_error,
 		"last_context": _last_context.duplicate(true),
 		"request_count": _request_count,
+		"active_request_count": _active_request_count,
+		"max_concurrent_requests": _max_concurrent_requests,
 	}
 
 
 func generate_async(prompt: String, context: Dictionary = {}) -> String:
+	_begin_fake_request()
 	_last_context = context.duplicate(true)
 	_last_context["prompt"] = prompt
 	_request_count += 1
@@ -65,14 +72,18 @@ func generate_async(prompt: String, context: Dictionary = {}) -> String:
 	var simulate_error := bool(context.get("simulate_error", _default_simulate_error))
 	if simulate_error:
 		_last_error = str(context.get("error_text", _default_error_text))
+		_end_fake_request()
 		return ""
-	return str(context.get("response", _default_response))
+	var response := str(context.get("response", _default_response))
+	_end_fake_request()
+	return response
 
 
 func generate_streaming_async(
 		prompt: String,
 		chunk_callback: Callable,
 		context: Dictionary = {}) -> void:
+	_begin_fake_request()
 	_last_context = context.duplicate(true)
 	_last_context["prompt"] = prompt
 	_request_count += 1
@@ -82,6 +93,7 @@ func generate_streaming_async(
 	var simulate_error := bool(context.get("simulate_error", _default_simulate_error))
 	if simulate_error:
 		_last_error = str(context.get("error_text", "FakeAIProvider: simulated streaming failure."))
+		_end_fake_request()
 		return
 	var chunks_value: Variant = context.get("chunks", [])
 	if chunks_value is Array:
@@ -89,11 +101,23 @@ func generate_streaming_async(
 		if not chunks.is_empty():
 			for chunk_value in chunks:
 				chunk_callback.call(str(chunk_value))
+			_end_fake_request()
 			return
 	if not _default_stream_chunks.is_empty():
 		for chunk in _default_stream_chunks:
 			chunk_callback.call(chunk)
+		_end_fake_request()
 		return
 	var response := str(context.get("response", _default_response))
 	if not response.is_empty():
 		chunk_callback.call(response)
+	_end_fake_request()
+
+
+func _begin_fake_request() -> void:
+	_active_request_count += 1
+	_max_concurrent_requests = maxi(_max_concurrent_requests, _active_request_count)
+
+
+func _end_fake_request() -> void:
+	_active_request_count = maxi(_active_request_count - 1, 0)

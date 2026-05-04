@@ -18,6 +18,7 @@ const REQUEST_STATUS_PENDING := "pending"
 const REQUEST_STATUS_COMPLETED := "completed"
 const REQUEST_STATUS_FAILED := "failed"
 const REQUEST_STATUS_SKIPPED := "skipped"
+const REQUEST_STATUS_QUEUED := "queued"
 const PROVIDER_SCRIPT_PATHS := {
 	PROVIDER_OPENAI_COMPATIBLE: "res://systems/ai/providers/openai_provider.gd",
 	PROVIDER_ANTHROPIC: "res://systems/ai/providers/anthropic_provider.gd",
@@ -33,6 +34,11 @@ var _request_serial: int = 0
 var _active_requests: Dictionary = {}
 var _recent_requests: Array[Dictionary] = []
 var _last_error: String = ""
+var _request_queue: Array[Dictionary] = []
+var _queue_processing: bool = false
+var _queue_epoch: int = 0
+
+signal _ai_queue_completed(request_id: String)
 
 # ---------------------------------------------------------------------------
 # Boot
@@ -103,7 +109,13 @@ func generate(
 		callback: Callable = Callable()) -> String:
 	var normalized_context := _normalize_context(context)
 	var request_id := _begin_request("generate", prompt, normalized_context)
-	call_deferred("_run_generate_with_callback", request_id, prompt, normalized_context, callback)
+	_enqueue_request({
+		"request_id": request_id,
+		"kind": "generate",
+		"prompt": prompt,
+		"context": normalized_context,
+		"callback": callback,
+	})
 	return request_id
 
 
@@ -114,7 +126,7 @@ func generate(
 func generate_async(prompt: String, context: Variant = []) -> String:
 	var normalized_context := _normalize_context(context)
 	var request_id := _begin_request("generate_async", prompt, normalized_context)
-	return await _run_generate_request(request_id, prompt, normalized_context)
+	return await _enqueue_generate_request(request_id, prompt, normalized_context)
 
 
 ## Generates a streaming response and returns the request id immediately.
@@ -122,7 +134,13 @@ func generate_async(prompt: String, context: Variant = []) -> String:
 func generate_streaming(prompt: String, context: Variant = []) -> String:
 	var normalized_context := _normalize_context(context)
 	var request_id := _begin_request("generate_streaming", prompt, normalized_context)
-	call_deferred("_run_generate_streaming", request_id, prompt, normalized_context, Callable())
+	_enqueue_request({
+		"request_id": request_id,
+		"kind": "streaming",
+		"prompt": prompt,
+		"context": normalized_context,
+		"chunk_callback": Callable(),
+	})
 	return request_id
 
 
@@ -134,7 +152,19 @@ func generate_streaming_async(
 		context: Variant = []) -> void:
 	var normalized_context := _normalize_context(context)
 	var request_id := _begin_request("generate_streaming_async", prompt, normalized_context)
-	call_deferred("_run_generate_streaming", request_id, prompt, normalized_context, chunk_callback)
+	_enqueue_request({
+		"request_id": request_id,
+		"kind": "streaming",
+		"prompt": prompt,
+		"context": normalized_context,
+		"chunk_callback": chunk_callback,
+	})
+	var completion_signal := Signal(self, "_ai_queue_completed")
+	while true:
+		var completed_request_id_value: Variant = await completion_signal
+		var completed_request_id := str(completed_request_id_value)
+		if completed_request_id == request_id:
+			break
 
 
 func get_debug_snapshot() -> Dictionary:
@@ -154,6 +184,8 @@ func get_debug_snapshot() -> Dictionary:
 		"available": is_available(),
 		"has_provider_node": _provider != null,
 		"active_request_count": _active_requests.size(),
+		"queued_request_count": _request_queue.size(),
+		"queue_processing": _queue_processing,
 		"request_count": _request_counter,
 		"last_error": _last_error,
 		"last_request": _get_last_request_entry(),
@@ -230,17 +262,29 @@ func _normalize_context(context: Variant) -> Dictionary:
 	return {}
 
 
-func _run_generate_with_callback(
-		request_id: String,
-		prompt: String,
-		context: Dictionary,
-		callback: Callable) -> void:
-	var response := await _run_generate_request(request_id, prompt, context)
-	if callback.is_valid():
-		callback.call(response)
+func _enqueue_generate_request(request_id: String, prompt: String, context: Dictionary) -> String:
+	var completion_signal := Signal(self, "_ai_queue_completed")
+	_enqueue_request({
+		"request_id": request_id,
+		"kind": "generate",
+		"prompt": prompt,
+		"context": context.duplicate(true),
+		"callback": Callable(),
+	})
+	while true:
+		var current_request := _get_completed_request_by_id(request_id)
+		if not current_request.is_empty():
+			return str(current_request.get("response", ""))
+		var completed_request_id_value: Variant = await completion_signal
+		var completed_request_id := str(completed_request_id_value)
+		if completed_request_id == request_id:
+			break
+	var last_request := _get_completed_request_by_id(request_id)
+	return str(last_request.get("response", ""))
 
 
-func _run_generate_request(request_id: String, prompt: String, context: Dictionary) -> String:
+func _run_generate_request(request_id: String, prompt: String, context: Dictionary, epoch: int = -1) -> String:
+	var active_epoch := _queue_epoch if epoch < 0 else epoch
 	var noop_reason := _get_noop_reason(prompt)
 	if not noop_reason.is_empty():
 		_finalize_request_skipped(request_id, noop_reason)
@@ -252,6 +296,8 @@ func _run_generate_request(request_id: String, prompt: String, context: Dictiona
 
 	_clear_provider_error()
 	var response_value: Variant = await _provider.call("generate_async", prompt, context)
+	if active_epoch != _queue_epoch:
+		return ""
 	var response := ""
 	if response_value != null:
 		response = str(response_value)
@@ -267,11 +313,23 @@ func _run_generate_request(request_id: String, prompt: String, context: Dictiona
 	return response
 
 
-func _run_generate_streaming(
+func _enqueue_request(queue_entry: Dictionary) -> void:
+	var request_id := str(queue_entry.get("request_id", ""))
+	_set_request_status(request_id, REQUEST_STATUS_QUEUED)
+	var queued_entry := queue_entry.duplicate(true)
+	queued_entry["epoch"] = _queue_epoch
+	_request_queue.append(queued_entry)
+	if not _queue_processing:
+		_queue_processing = true
+		call_deferred("_process_request_queue", _queue_epoch)
+
+
+func _run_streaming_request(
 		request_id: String,
 		prompt: String,
 		context: Dictionary,
-		chunk_callback: Callable) -> void:
+		chunk_callback: Callable,
+		epoch: int) -> void:
 	var noop_reason := _get_noop_reason(prompt)
 	if not noop_reason.is_empty():
 		_finalize_request_skipped(request_id, noop_reason)
@@ -285,6 +343,8 @@ func _run_generate_streaming(
 	var chunks: Array[String] = []
 	var manager_chunk_callback := Callable(self, "_record_stream_chunk").bind(request_id, chunks, chunk_callback)
 	await _provider.call("generate_streaming_async", prompt, manager_chunk_callback, context)
+	if epoch != _queue_epoch:
+		return
 	var provider_error := _consume_provider_error()
 	if not provider_error.is_empty():
 		_finalize_request_error(request_id, provider_error)
@@ -295,6 +355,35 @@ func _run_generate_streaming(
 		_finalize_request_error(request_id, "AIManager: provider returned an empty streaming response.")
 		return
 	_finalize_request_success(request_id, response)
+
+
+func _process_request_queue(epoch: int) -> void:
+	while epoch == _queue_epoch and not _request_queue.is_empty():
+		var queue_entry: Dictionary = _request_queue.pop_front()
+		if int(queue_entry.get("epoch", -1)) != epoch:
+			continue
+		var request_id := str(queue_entry.get("request_id", ""))
+		var kind := str(queue_entry.get("kind", "generate"))
+		var prompt := str(queue_entry.get("prompt", ""))
+		var context := _get_dictionary(queue_entry.get("context", {}))
+		_set_request_status(request_id, REQUEST_STATUS_PENDING)
+		if kind == "streaming":
+			var chunk_callback_value: Variant = queue_entry.get("chunk_callback", Callable())
+			var chunk_callback := Callable()
+			if chunk_callback_value is Callable:
+				chunk_callback = chunk_callback_value
+			await _run_streaming_request(request_id, prompt, context, chunk_callback, epoch)
+		else:
+			var response := await _run_generate_request(request_id, prompt, context, epoch)
+			var callback_value: Variant = queue_entry.get("callback", Callable())
+			if callback_value is Callable:
+				var callback: Callable = callback_value
+				if epoch == _queue_epoch and callback.is_valid():
+					callback.call(response)
+		if epoch == _queue_epoch:
+			_ai_queue_completed.emit(request_id)
+	if epoch == _queue_epoch:
+		_queue_processing = false
 
 
 func _record_stream_chunk(
@@ -347,6 +436,7 @@ func _begin_request(mode: String, prompt: String, context: Dictionary) -> String
 		"prompt_preview": _preview_text(prompt),
 		"history_count": _get_history_count(context),
 		"has_system_prompt": _has_system_prompt(context),
+		"response": "",
 		"response_preview": "",
 		"error": "",
 	}
@@ -357,6 +447,7 @@ func _finalize_request_success(request_id: String, response: String) -> void:
 	var request_entry := _get_active_request_entry(request_id)
 	request_entry["status"] = REQUEST_STATUS_COMPLETED
 	request_entry["completed_at"] = Time.get_datetime_string_from_system(true, true)
+	request_entry["response"] = response
 	request_entry["response_preview"] = _preview_text(response)
 	request_entry["error"] = ""
 	_store_completed_request(request_id, request_entry)
@@ -368,6 +459,7 @@ func _finalize_request_error(request_id: String, error_text: String) -> void:
 	var request_entry := _get_active_request_entry(request_id)
 	request_entry["status"] = REQUEST_STATUS_FAILED
 	request_entry["completed_at"] = Time.get_datetime_string_from_system(true, true)
+	request_entry["response"] = ""
 	request_entry["response_preview"] = ""
 	request_entry["error"] = error_text
 	_store_completed_request(request_id, request_entry)
@@ -379,6 +471,7 @@ func _finalize_request_skipped(request_id: String, reason: String) -> void:
 	var request_entry := _get_active_request_entry(request_id)
 	request_entry["status"] = REQUEST_STATUS_SKIPPED
 	request_entry["completed_at"] = Time.get_datetime_string_from_system(true, true)
+	request_entry["response"] = ""
 	request_entry["response_preview"] = ""
 	request_entry["error"] = reason
 	_store_completed_request(request_id, request_entry)
@@ -389,6 +482,20 @@ func _store_completed_request(request_id: String, request_entry: Dictionary) -> 
 	_recent_requests.append(request_entry.duplicate(true))
 	if _recent_requests.size() > MAX_RECENT_REQUESTS:
 		_recent_requests.pop_front()
+
+
+func _set_request_status(request_id: String, status: String) -> void:
+	var request_entry := _get_active_request_entry(request_id)
+	request_entry["status"] = status
+	_active_requests[request_id] = request_entry
+
+
+func _get_completed_request_by_id(request_id: String) -> Dictionary:
+	for entry_value in _recent_requests:
+		var entry: Dictionary = entry_value
+		if str(entry.get("request_id", "")) == request_id:
+			return entry.duplicate(true)
+	return {}
 
 
 func _get_active_request_entry(request_id: String) -> Dictionary:
@@ -405,9 +512,17 @@ func _get_active_request_entry(request_id: String) -> Dictionary:
 		"prompt_preview": "",
 		"history_count": 0,
 		"has_system_prompt": false,
+		"response": "",
 		"response_preview": "",
 		"error": "",
 	}
+
+
+func _get_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary: Dictionary = value
+		return dictionary.duplicate(true)
+	return {}
 
 
 func _get_last_request_entry() -> Dictionary:
@@ -448,9 +563,12 @@ func _teardown_provider() -> void:
 func _reset_runtime_state() -> void:
 	_active_requests.clear()
 	_recent_requests.clear()
+	_request_queue.clear()
 	_request_counter = 0
 	_last_error = ""
 	_ai_enabled = false
+	_queue_processing = false
+	_queue_epoch += 1
 
 
 func _set_last_error(error_text: String) -> void:

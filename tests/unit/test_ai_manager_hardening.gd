@@ -139,6 +139,82 @@ func test_generate_streaming_returns_request_id_and_emits_tokens_and_response() 
 	assert_eq(str(response_history[0].get("args", ["", ""])[1]), "Dust hangs")
 
 
+func test_ai_manager_serializes_overlapping_async_requests() -> void:
+	_configure_fake_provider()
+
+	var first_state := {"done": false, "response": ""}
+	var second_state := {"done": false, "response": ""}
+	_start_generate_probe("First.", {"response": "first", "delay_frames": 3}, first_state)
+	_start_generate_probe("Second.", {"response": "second"}, second_state)
+
+	await get_tree().process_frame
+	var early_snapshot := AIManager.get_debug_snapshot()
+	assert_true(int(early_snapshot.get("active_request_count", 0)) <= 2)
+	assert_true(int(early_snapshot.get("queued_request_count", 0)) <= 1)
+	var provider_debug_value: Variant = early_snapshot.get("provider_debug", {})
+	assert_true(provider_debug_value is Dictionary)
+	if provider_debug_value is Dictionary:
+		var provider_debug: Dictionary = provider_debug_value
+		assert_eq(int(provider_debug.get("max_concurrent_requests", 0)), 1)
+
+	for _frame_index in range(8):
+		await get_tree().process_frame
+
+	assert_true(bool(first_state.get("done", false)))
+	assert_true(bool(second_state.get("done", false)))
+	assert_eq(str(first_state.get("response", "")), "first")
+	assert_eq(str(second_state.get("response", "")), "second")
+
+	var final_snapshot := AIManager.get_debug_snapshot()
+	assert_eq(int(final_snapshot.get("active_request_count", 0)), 0)
+	assert_eq(int(final_snapshot.get("queued_request_count", 0)), 0)
+	assert_false(bool(final_snapshot.get("queue_processing", false)))
+	var final_provider_debug_value: Variant = final_snapshot.get("provider_debug", {})
+	assert_true(final_provider_debug_value is Dictionary)
+	if final_provider_debug_value is Dictionary:
+		var final_provider_debug: Dictionary = final_provider_debug_value
+		assert_eq(int(final_provider_debug.get("request_count", 0)), 2)
+		assert_eq(int(final_provider_debug.get("max_concurrent_requests", 0)), 1)
+
+
+func test_ai_manager_serializes_streaming_behind_active_generate() -> void:
+	_configure_fake_provider()
+	watch_signals(GameEvents)
+
+	var first_state := {"done": false, "response": ""}
+	_start_generate_probe("First.", {"response": "first", "delay_frames": 3}, first_state)
+	var streaming_request_id := AIManager.generate_streaming("Stream after first.", {
+		"chunks": ["after"]
+	})
+
+	await get_tree().process_frame
+	var early_snapshot := AIManager.get_debug_snapshot()
+	var provider_debug_value: Variant = early_snapshot.get("provider_debug", {})
+	assert_true(provider_debug_value is Dictionary)
+	if provider_debug_value is Dictionary:
+		var provider_debug: Dictionary = provider_debug_value
+		assert_eq(int(provider_debug.get("max_concurrent_requests", 0)), 1)
+
+	for _frame_index in range(8):
+		await get_tree().process_frame
+
+	assert_true(bool(first_state.get("done", false)))
+	assert_signal_emitted(GameEvents, "ai_token_received")
+	var token_params_value: Variant = get_signal_parameters(GameEvents, "ai_token_received")
+	assert_true(token_params_value is Array)
+	if token_params_value is Array:
+		var token_params: Array = token_params_value
+		assert_eq(str(token_params[0]), streaming_request_id)
+		assert_eq(str(token_params[1]), "after")
+	var final_snapshot := AIManager.get_debug_snapshot()
+	var final_provider_debug_value: Variant = final_snapshot.get("provider_debug", {})
+	assert_true(final_provider_debug_value is Dictionary)
+	if final_provider_debug_value is Dictionary:
+		var final_provider_debug: Dictionary = final_provider_debug_value
+		assert_eq(int(final_provider_debug.get("request_count", 0)), 2)
+		assert_eq(int(final_provider_debug.get("max_concurrent_requests", 0)), 1)
+
+
 func test_generate_async_accepts_documented_array_context_shape() -> void:
 	_configure_fake_provider()
 
@@ -188,6 +264,12 @@ func _configure_fake_provider() -> void:
 		APP_SETTINGS.AI_MODEL: "fake-model",
 		"ready": true,
 	}))
+
+
+func _start_generate_probe(prompt: String, context: Dictionary, state: Dictionary) -> void:
+	var response := await AIManager.generate_async(prompt, context)
+	state["response"] = response
+	state["done"] = true
 
 
 func _make_settings(ai_overrides: Dictionary) -> Dictionary:

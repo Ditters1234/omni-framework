@@ -110,7 +110,7 @@ All data IDs use **namespacing:** `author:mod:name`. Base game uses `base:` pref
 
 ## AI Systems
 
-The `AIManager` autoload routes all AI calls to one of four backends based on the AI provider setting in `user://settings.cfg`. AI provider configuration is engine-owned and not moddable via `config.json` — see [`modding_guide.md`](modding_guide.md) §3.10 ("AI Connection Ownership").
+The `AIManager` autoload routes all AI calls to one of four backends based on the AI provider setting in `user://settings.cfg`. AI provider configuration is engine-owned and not moddable via `config.json` — see [`modding_guide.md`](modding_guide.md) §3.10 ("AI Connection Ownership"). All `generate_async` and streaming requests pass through the manager's global FIFO queue so concurrent AI consumers do not overlap provider calls. This keeps single-generation providers such as NobodyWho safe while preserving one public API for dialogue, behavior trees, world narration, lore, task flavor, and encounter logs.
 
 ### AI Providers
 
@@ -123,7 +123,7 @@ The `AIManager` autoload routes all AI calls to one of four backends based on th
 
 `NobodyWhoProvider` accepts local `.gguf` paths and NobodyWho-supported remote model references (`huggingface:`, `hf://`, `http://`, `https://`). Local paths are validated before reporting availability; remote references are passed to the GDExtension so NobodyWho can download and cache them. The provider creates `NobodyWhoModel` and `NobodyWhoChat` nodes in-process, listens to `response_updated` for streaming chunks, `response_finished` for completed responses, and `worker_failed` for load failures. `max_tokens` remains part of the shared AI settings contract, but the current NobodyWho GDExtension surface does not expose a direct max-token setter.
 
-**Usage:** Mod scripts call `AIManager.generate_async(prompt, context)` and listen to AI events. Always guard with `AIManager.is_available()`.
+**Usage:** Mod scripts call `AIManager.generate_async(prompt, context)` and listen to AI events. Always guard with `AIManager.is_available()`. Consumers should not call provider nodes directly or add their own provider-concurrency locks; `AIManager` owns request serialization and lifecycle tracking.
 
 `systems/ai/ai_chat_service.gd` now provides the first engine-owned AI consumer helper. It is a `RefCounted` prompt builder that resolves persona placeholders from `GameState` and `DataManager`, keeps a bounded role-tagged conversation history, assembles the `context` dictionary expected by `AIManager`, and validates or deflects responses before a UI screen consumes them.
 

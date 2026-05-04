@@ -9,6 +9,7 @@ const ENCOUNTER_RUNTIME := preload("res://systems/encounter_runtime.gd")
 const AI_LOG_TEMPLATE_ID := "base:encounter_log_flavor"
 const AI_LOG_SYSTEM_PROMPT := "You rewrite resolved encounter actions for a game log. Preserve the supplied mechanical result and stat changes. Return exactly one short sentence."
 const AI_LOG_MAX_LENGTH := 180
+const AI_LOG_PENDING_TEXT := "Resolving action..."
 
 var _params: Dictionary = {}
 var _encounter_id: String = ""
@@ -28,6 +29,8 @@ var _player: EntityInstance = null
 var _opponent: EntityInstance = null
 var _rng := RandomNumberGenerator.new()
 var _log_sequence: int = 0
+var _ai_log_queue: Array[Dictionary] = []
+var _ai_log_generation_active: bool = false
 
 
 static func register_contract() -> void:
@@ -77,6 +80,8 @@ func initialize(params: Dictionary) -> void:
 	_resolved_reward_lines.clear()
 	_status_text = ""
 	_log_sequence = 0
+	_ai_log_queue.clear()
+	_ai_log_generation_active = false
 	_rng.randomize()
 	if _template.is_empty():
 		_status_text = "Encounter '%s' could not be found." % _encounter_id
@@ -616,33 +621,59 @@ func _append_log(text: String, ai_context: Dictionary = {}) -> void:
 		return
 	_log_sequence += 1
 	var entry_id := "%s:%d:%d" % [_encounter_id, _round, _log_sequence]
+	var ai_request := _build_ai_log_request(entry_id, normalized_text, ai_context)
+	var display_text := AI_LOG_PENDING_TEXT if not ai_request.is_empty() else normalized_text
 	_log.append({
 		"entry_id": entry_id,
 		"round": _round,
-		"text": normalized_text,
+		"text": display_text,
 		"fallback_text": normalized_text,
-		"ai_pending": not ai_context.is_empty(),
+		"ai_pending": not ai_request.is_empty(),
 	})
 	while _log.size() > 50:
 		_log.pop_front()
-	if not ai_context.is_empty():
-		_queue_ai_log_flavor(entry_id, normalized_text, ai_context)
+	if not ai_request.is_empty():
+		_enqueue_ai_log_request(ai_request)
 
 
-func _queue_ai_log_flavor(entry_id: String, fallback_text: String, ai_context: Dictionary) -> void:
+func _build_ai_log_request(entry_id: String, fallback_text: String, ai_context: Dictionary) -> Dictionary:
+	if ai_context.is_empty():
+		return {}
 	if not ScriptHookService.can_run_world_gen("encounter_log_flavor_enabled"):
-		_mark_log_entry_ai_done(entry_id)
-		return
+		return {}
 	var ai_template := DataManager.get_ai_template(AI_LOG_TEMPLATE_ID)
 	if ai_template.is_empty():
-		_mark_log_entry_ai_done(entry_id)
-		return
+		return {}
 	var tokens := _build_ai_log_tokens(fallback_text, ai_context)
 	var prompt := _resolve_template_tokens(str(ai_template.get("prompt_template", "")), tokens)
 	if prompt.is_empty():
-		_mark_log_entry_ai_done(entry_id)
+		return {}
+	return {
+		"entry_id": entry_id,
+		"prompt": prompt,
+		"fallback_text": fallback_text,
+	}
+
+
+func _enqueue_ai_log_request(ai_request: Dictionary) -> void:
+	_ai_log_queue.append(ai_request.duplicate(true))
+	if not _ai_log_generation_active:
+		_process_ai_log_queue_async()
+
+
+func _process_ai_log_queue_async() -> void:
+	if _ai_log_generation_active:
 		return
-	_generate_ai_log_flavor_async(entry_id, prompt, fallback_text)
+	_ai_log_generation_active = true
+	while not _ai_log_queue.is_empty():
+		var request: Dictionary = _ai_log_queue.pop_front()
+		await _await_process_frame()
+		await _generate_ai_log_flavor_async(
+			str(request.get("entry_id", "")),
+			str(request.get("prompt", "")),
+			str(request.get("fallback_text", ""))
+		)
+	_ai_log_generation_active = false
 
 
 func _generate_ai_log_flavor_async(entry_id: String, prompt: String, fallback_text: String) -> void:
@@ -655,6 +686,14 @@ func _generate_ai_log_flavor_async(entry_id: String, prompt: String, fallback_te
 	_update_log_entry_text(entry_id, final_text)
 	if GameEvents:
 		GameEvents.event_narrated.emit("encounter_log", entry_id, final_text)
+
+
+func _await_process_frame() -> void:
+	var main_loop := Engine.get_main_loop()
+	var tree := main_loop as SceneTree
+	if tree == null:
+		return
+	await tree.process_frame
 
 
 func _update_log_entry_text(entry_id: String, text: String) -> void:
