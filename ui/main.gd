@@ -19,6 +19,7 @@ var _timekeeper_was_running_before_pause: bool = false
 
 
 func _ready() -> void:
+	_raise_notification_popup()
 	if OS.is_debug_build():
 		var debug_overlay := DEV_DEBUG_OVERLAY.new()
 		debug_overlay.initialize_overlay()
@@ -114,10 +115,12 @@ func _route_stack_contains(screen_id: String) -> bool:
 
 
 func _on_ui_screen_stack_changed(_screen_id: String) -> void:
+	_raise_notification_popup()
 	_sync_pause_state()
 
 
 func _on_notification_requested(message: String, level: String) -> void:
+	_raise_notification_popup()
 	_notification_popup.call("render", {
 		"message": message,
 		"level": level,
@@ -126,6 +129,19 @@ func _on_notification_requested(message: String, level: String) -> void:
 
 func _on_legacy_notification_requested(message: String, level: String) -> void:
 	_on_notification_requested(message, level)
+
+
+func _raise_notification_popup() -> void:
+	if _notification_popup == null or not is_instance_valid(_notification_popup):
+		return
+	_notification_popup.z_index = 100
+	var parent := _notification_popup.get_parent()
+	if parent == null:
+		return
+	var popup_index := _notification_popup.get_index()
+	var top_index := parent.get_child_count() - 1
+	if popup_index < top_index:
+		parent.move_child(_notification_popup, top_index)
 
 
 func _sync_pause_state() -> void:

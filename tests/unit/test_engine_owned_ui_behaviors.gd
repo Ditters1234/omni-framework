@@ -101,6 +101,37 @@ func test_main_menu_new_game_opens_character_creator_surface_without_crashing() 
 	assert_eq(str(snapshot.get("active_surface_screen_id", "")), "assembly_editor")
 
 
+func test_global_notification_popup_renders_above_routed_screens() -> void:
+	_main_scene = MAIN_SCENE.instantiate()
+	_spawned_nodes.append(_main_scene)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(_main_scene)
+	await get_tree().process_frame
+
+	GameState.new_game()
+	UIRouter.replace_all("gameplay_shell")
+	await get_tree().process_frame
+
+	GameEvents.ui_notification_requested.emit("Quest complete: Delivery", OmniConstants.NOTIFICATION_LEVEL_INFO)
+	await get_tree().process_frame
+
+	var screen_layer := _main_scene.get_node("ScreenLayer") as CanvasLayer
+	assert_not_null(screen_layer)
+	if screen_layer == null:
+		return
+	var popup := screen_layer.get_node("NotificationPopup") as Control
+	assert_not_null(popup)
+	if popup == null:
+		return
+	assert_true(popup.visible)
+	assert_eq(popup.get_index(), screen_layer.get_child_count() - 1)
+
+	var popup_message := popup.get_node("MarginContainer/HBoxContainer/MessageLabel") as Label
+	assert_not_null(popup_message)
+	if popup_message != null:
+		assert_eq(popup_message.text, "Quest complete: Delivery")
+
+
 func test_save_slot_list_delete_requires_confirmation_before_removing_slot() -> void:
 	GameState.new_game()
 	SaveManager.save_game(1)
