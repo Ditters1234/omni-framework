@@ -6,7 +6,7 @@ This document is a planning reference for the AI integration layer. It catalogs 
 
 It is written to be revised. Treat it as the current best thinking, not a frozen spec.
 
-Implementation status update: Phases 1–7 are complete. The full AI integration plan is landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls, debug overlay, BT AI nodes (BTActionAIQuery, BTConditionAICheck), world generation hooks (narration, task flavor, entity/part lore), ai_templates.json, session-level lore caching, and the engine-owned `ai.enable_world_gen` toggle.
+Implementation status update: Phases 1–7 are complete. The full AI integration plan is landed — persona data pipeline, prompt builder, dialogue backend AI mode (hybrid + freeform), streaming typewriter display, two reference NPCs (Kael hybrid, Theta freeform), settings screen controls, debug overlay, BT AI nodes (BTActionAIQuery, BTConditionAICheck), world generation hooks (narration, task flavor, entity/part lore), AI-flavored encounter action log text, ai_templates.json, session-level lore caching, and the engine-owned `ai.enable_world_gen` toggle.
 
 Decisions this document assumes:
 
@@ -432,7 +432,8 @@ A mod's `config.json` gains an optional `ai` section for mod-level AI defaults:
     "default_persona_id": "base:generic_npc",
     "narration_enabled": true,
     "task_flavor_enabled": true,
-    "lore_enabled": true
+    "lore_enabled": true,
+    "encounter_log_flavor_enabled": true
   }
 }
 ```
@@ -514,7 +515,7 @@ Deliverable: modders can add AI decision points to behavior trees with graceful 
 
 ### Phase 6 — World Generation Hooks (~3 days)
 
-Current status: complete. `systems/loaders/ai_template_registry.gd` now loads `ai_templates.json` into `DataManager.ai_templates`, the base mod ships `mods/base/scripts/ai_narration_hook.gd` and `ai_task_flavor_hook.gd`, and `config.json` can declare `ai.world_gen_hooks` so `ScriptHookService` can preload and invoke those global hook scripts. `GameEvents` now records `event_narrated`, `EventLogBackend` exposes optional `narration_text`, `TaskProviderBackend` caches and surfaces `ai_flavor_text` / selected-task `flavor_text`, and the settings screen persists `ai.enable_world_gen`. Coverage lives in `tests/unit/test_phase6_world_gen.gd` plus updated settings/data-manager tests, with disabled-AI no-op coverage and narrated event-log/task-board assertions.
+Current status: complete. `systems/loaders/ai_template_registry.gd` now loads `ai_templates.json` into `DataManager.ai_templates`, the base mod ships `mods/base/scripts/ai_narration_hook.gd` and `ai_task_flavor_hook.gd`, and `config.json` can declare `ai.world_gen_hooks` so `ScriptHookService` can preload and invoke those global hook scripts. `GameEvents` now records `event_narrated`, `EventLogBackend` exposes optional `narration_text`, `TaskProviderBackend` caches and surfaces `ai_flavor_text` / selected-task `flavor_text`, `EncounterBackend` can asynchronously replace authored action-log fallback lines with AI-flavored text after mechanics resolve, and the settings screen persists `ai.enable_world_gen`. Coverage lives in `tests/unit/test_phase6_world_gen.gd` plus updated settings/data-manager/encounter tests, with disabled-AI no-op coverage and narrated event-log/task-board/encounter-log assertions.
 
 1. Create `mods/base/scripts/ai_narration_hook.gd` extending `ScriptHook`. Wire to `quest_completed`, `location_changed`, and `day_advanced` signals.
 2. Create `mods/base/scripts/ai_task_flavor_hook.gd`. Wire to `TaskProviderBackend`'s view model assembly.

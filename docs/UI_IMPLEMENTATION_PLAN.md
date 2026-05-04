@@ -193,38 +193,37 @@ The generic library itself is now fully landed for the current plan: `currency_d
 
 ---
 
-## 6. Combat Deferral Strategy
+## 6. Encounter Backend Status
 
-The goal is: build the UI layer today without combat, while preserving the ability to add a `CombatBackend` later without reworking the architecture.
+The old combat placeholder has been fulfilled as `EncounterBackend` v1 rather than a separate `CombatBackend`. The shipped implementation is a data-authored, turn-based encounter surface selected through the existing backend routing pipeline with `backend_class: "EncounterBackend"` and an `encounter_id`.
 
-### 6.1 What combat would eventually need
+### 6.1 What EncounterBackend Provides
 
-Whenever combat lands, the UI shape will be some combination of:
+`EncounterBackend` covers compact combat, negotiation, endurance, hazard, and pressure scenes. It supports:
 
-- A turn queue / initiative tracker.
-- Per-combatant action selection (attack / ability / item / defend / flee).
-- Target selection (single, area, self).
-- Animated or discrete damage/heal/status resolution per action.
-- Combat log (already handled by `EventLogBackend` if combat uses `GameEvents`).
-- End-of-combat rewards screen (XP, loot, currency).
+- Fixed v1 participant roles (`player` and `opponent`).
+- Authored player actions and weighted-random opponent actions.
+- Real stat mutation and encounter-local meters.
+- Automatic/manual outcomes, max-round/cancel outcomes, rewards, and action payloads.
+- Resolution review, visual completion notifications, runtime event history, and optional AI-flavored action log lines.
 
-All of that is "another backend" in the mod pipeline, selected via `backend_class: "CombatBackend"` with params like `"encounter_id": "base:goblin_ambush"`. There is nothing in the current architecture that prevents this.
+The older `CombatBackend` name should be treated as obsolete planning language. Advanced combat features should extend the encounter system deliberately instead of adding a parallel backend unless there is a clear architectural reason.
 
-### 6.2 What we must not do now
+### 6.2 Still Future Work
 
-To keep the door open:
+Advanced encounter depth remains outside this UI rollout. Future work may add:
 
-- **Do not assume non-real-time everywhere in the UIRouter.** The router already takes params and pushes scenes; that's fine for combat later. Don't bake "turn" or "tick" assumptions into the router API.
-- **Do not hardcode the stat system around non-combat semantics.** Stats are already pair-based (`health` / `health_max`) per `STAT_SYSTEM_IMPLEMENTATION.md`. Damage is a stat delta. Nothing needs to change.
-- **Do not assume `ChallengeBackend` is how all uncertainty resolves.** `ChallengeBackend` is a single gated roll. Combat rolls repeatedly under a turn structure. Keep them as sibling backends when combat lands; resist the urge to make Challenge "do combat too."
-- **Avoid `ActionDispatcher` coupling that assumes all actions resolve instantly.** `action_payload` types today are atomic (set_flag, add_currency, start_task). A future combat action payload (`"begin_encounter"`) may hand control to a combat backend that runs for many ticks. Treat action payloads as potentially asynchronous — ActionDispatcher should already tolerate that, but it's worth noting in comments when that file is next edited.
+- Multi-participant rosters and target picking.
+- Initiative queues, cooldowns, statuses, and animations.
+- Mid-encounter save/load.
+- Dedicated encounter entry actions if content needs to launch encounters from quests, dialogue, or tasks without a backend screen transition.
 
-### 6.3 What to do when combat is ready
+### 6.3 Obsolete CombatBackend Sketch
 
-Sketch, not spec:
+Historical sketch, not current spec. Prefer extending `EncounterBackend` unless future requirements clearly need a separate backend:
 
-- New data type: `encounters.json` → `EncounterRegistry`. Template fields include enemy roster, environment conditions, starting stance, victory conditions, rewards.
-- New backend: `CombatBackend` with `encounter_id` as the required field.
+- New data type: `encounters.json` -> `EncounterRegistry`. Template fields include enemy roster, environment conditions, starting stance, victory conditions, rewards.
+- Historical proposal: `CombatBackend` with `encounter_id` as the required field. Current implementation uses `EncounterBackend`.
 - New scene: `ui/screens/backends/combat_screen.tscn` with initiative tracker, action panels, target picker.
 - New components: `combatant_card` (variant of `entity_portrait` with initiative indicator and HP bar), `action_button_grid`.
 - Events: `combat_started`, `combat_turn_started`, `combat_action_resolved`, `combat_ended` on `GameEvents`.

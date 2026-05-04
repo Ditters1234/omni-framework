@@ -81,6 +81,10 @@ static func request_task_flavor(task_template: Dictionary, context: Dictionary =
 	return ""
 
 
+static func can_run_world_gen(config_flag: String) -> bool:
+	return _can_run_world_gen(config_flag)
+
+
 static func store_task_flavor(template_id: String, flavor_text: String) -> void:
 	var normalized_template_id := template_id.strip_edges()
 	var normalized_flavor_text := flavor_text.strip_edges()

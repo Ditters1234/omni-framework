@@ -193,6 +193,7 @@ Rules:
 - `max_rounds_outcome` and `cancel_outcome` must reference declared outcomes when present.
 - Encounter-local stats may share names with real stats, but this should stay intentional because the runtime keeps them in a separate context namespace.
 - `opponent_strategy` must be an object when present. The only supported production kind is `weighted_random`; advanced strategy kinds are reserved for later work.
+- Optional AI encounter log flavor uses `ai.encounter_log_flavor_enabled` plus the `base:encounter_log_flavor` AI template. This text is presentation-only and must not affect encounter mechanics.
 
 ### Achievements
 

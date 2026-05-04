@@ -1,13 +1,36 @@
 extends GutTest
 
+const APP_SETTINGS := preload("res://core/app_settings.gd")
 const TEST_FIXTURE_WORLD := preload("res://tests/helpers/test_fixture_world.gd")
 const ENCOUNTER_BACKEND := preload("res://ui/screens/backends/encounter_backend.gd")
+const FAKE_PROVIDER_SCRIPT_PATH := "res://tests/doubles/fake_ai_provider.gd"
 
 
 func before_each() -> void:
 	watch_signals(GameEvents)
+	ScriptHookService.reset_world_gen_state()
+	AIManager.clear_provider_script_overrides()
+	_configure_saved_ai_settings(false)
+	AIManager.initialize({
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: false,
+			APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
+		}
+	})
 	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	_seed_encounter_fixture()
+
+
+func after_each() -> void:
+	AIManager.clear_provider_script_overrides()
+	AIManager.initialize({
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: false,
+			APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_DISABLED,
+		}
+	})
+	ScriptHookService.reset_world_gen_state()
+	await get_tree().process_frame
 
 
 func test_unavailable_action_does_not_apply_cost() -> void:
@@ -72,6 +95,32 @@ func test_encounter_completion_notifies_and_records_reward_summary() -> void:
 			assert_eq(str(payload.get("encounter_id", "")), "base:test_encounter")
 			assert_eq(str(payload.get("outcome_id", "")), "victory")
 			assert_eq(str(payload.get("reward_summary", "")), "Credits +5")
+
+
+func test_ai_encounter_log_flavor_updates_log_without_changing_mechanics() -> void:
+	_configure_saved_ai_settings(true)
+	AIManager.clear_provider_script_overrides()
+	AIManager.set_provider_script_override(AIManager.PROVIDER_OPENAI_COMPATIBLE, FAKE_PROVIDER_SCRIPT_PATH)
+	AIManager.initialize({
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: true,
+			APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_OPENAI_COMPATIBLE,
+			"response": "The test opponent buckles as the finishing blow lands.",
+		}
+	})
+	ScriptHookService.invalidate_world_gen_settings_cache()
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:test_encounter"})
+
+	backend.select_action("finish")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_eq(backend.get_resolved_outcome_id(), "victory")
+	assert_signal_emitted(GameEvents, "event_narrated")
+	var view_model := backend.build_view_model()
+	assert_true(_log_line_exists(view_model, "The test opponent buckles as the finishing blow lands."))
+	assert_true(_reward_line_exists(view_model, "Credits +5"))
 
 
 func test_resolve_effect_stops_later_effects() -> void:
@@ -168,6 +217,12 @@ func _seed_encounter_fixture() -> void:
 	DataManager.entities["base:test_opponent"] = opponent_template.duplicate(true)
 	var opponent := EntityInstance.from_template(opponent_template)
 	GameState.commit_entity_instance(opponent)
+	DataManager.ai_templates["base:encounter_log_flavor"] = {
+		"template_id": "base:encounter_log_flavor",
+		"purpose": "encounter_log_flavor",
+		"prompt_template": "Rewrite {fallback_text}. Changes: {stat_delta_summary}.",
+		"fallback": "{fallback_text}",
+	}
 	DataManager.encounters["base:test_encounter"] = {
 		"encounter_id": "base:test_encounter",
 		"display_name": "Fixture Encounter",
@@ -192,7 +247,8 @@ func _seed_encounter_fixture() -> void:
 					"action_id": "finish",
 					"label": "Finish",
 					"on_success": [
-						{"effect": "modify_stat", "target": "opponent", "stat": "health", "base_delta": -100}
+						{"effect": "modify_stat", "target": "opponent", "stat": "health", "base_delta": -100},
+						{"effect": "log", "text": "{user_name} finishes {target_name}."}
 					],
 				},
 				{
@@ -288,3 +344,28 @@ func _reward_line_exists(view_model: Dictionary, expected_line: String) -> bool:
 		if str(reward_line_value) == expected_line:
 			return true
 	return false
+
+
+func _log_line_exists(view_model: Dictionary, expected_line: String) -> bool:
+	var log_value: Variant = view_model.get("log", [])
+	if not log_value is Array:
+		return false
+	var log_entries: Array = log_value
+	for entry_value in log_entries:
+		if not entry_value is Dictionary:
+			continue
+		var entry: Dictionary = entry_value
+		if str(entry.get("text", "")) == expected_line:
+			return true
+	return false
+
+
+func _configure_saved_ai_settings(enable_world_gen: bool) -> void:
+	var save_error := APP_SETTINGS.save_settings({
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: enable_world_gen,
+			APP_SETTINGS.AI_PROVIDER: APP_SETTINGS.AI_PROVIDER_OPENAI_COMPATIBLE if enable_world_gen else APP_SETTINGS.AI_PROVIDER_DISABLED,
+			APP_SETTINGS.AI_ENABLE_WORLD_GEN: enable_world_gen,
+		}
+	})
+	assert_eq(save_error, OK)

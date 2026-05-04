@@ -534,6 +534,8 @@ Persona JSON does not control provider selection or connection details. The engi
 
 Those settings live in `user://settings.cfg`, not in mod data.
 
+`ai.enable_world_gen` is also the master gate for optional AI-flavored encounter log lines. When disabled or unavailable, encounter logs use the authored JSON fallback text.
+
 ### Current patch format
 
 ```json
@@ -1111,6 +1113,7 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
 - Outcome `reward` is applied through `RewardService`; outcome `action_payload` is dispatched through `ActionDispatcher`.
 - When an encounter resolves, the backend records an `encounter_resolved` runtime event and emits a visual notification containing the encounter name and formatted reward summary.
 - Resolved encounters stay on the encounter screen until the player presses Continue. The resolution panel shows `screen_text` and a formatted reward summary; Continue then performs the authored `next_screen_id` or `pop_on_resolve` navigation.
+- `log` effects append their authored `text` immediately. If `ai.enable_world_gen`, `ai.encounter_log_flavor_enabled`, and AI provider availability all allow it, the backend asynchronously asks `base:encounter_log_flavor` to rewrite that log entry with the resolved actor, target, action result, and stat deltas. This is presentation-only: stats, success/failure, rewards, and outcomes are already resolved before the LLM response is used.
 - Encounter patches support `set`, `add_player_actions`, `remove_player_action_ids`, `add_opponent_actions`, `remove_opponent_action_ids`, `add_outcomes`, and `remove_outcome_ids`.
 - Load validation rejects unsupported effects, unknown real stats in `modify_stat`, unknown local meters in encounter-stat effects, unknown outcomes in `resolve`, missing tag ids on tag effects, malformed outcome action payloads, and invalid `push_screen` targets.
 - The base pack ships three reference encounters: `base:tutorial_brawl`, `base:tutorial_negotiation`, and `base:tutorial_endurance`.

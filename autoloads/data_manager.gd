@@ -1413,7 +1413,7 @@ func _validate_ai_config(ai_config: Dictionary) -> void:
 		elif not has_ai_persona(str(default_persona_id_value)):
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.default_persona_id' references unknown AI persona '%s'." % str(default_persona_id_value))
 
-	for flag_key in ["narration_enabled", "task_flavor_enabled", "lore_enabled"]:
+	for flag_key in ["narration_enabled", "task_flavor_enabled", "lore_enabled", "encounter_log_flavor_enabled"]:
 		if ai_config.has(flag_key) and not (ai_config.get(flag_key, false) is bool):
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.%s' must be a bool." % flag_key)
 

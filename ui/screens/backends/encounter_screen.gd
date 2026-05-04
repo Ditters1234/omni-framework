@@ -33,6 +33,9 @@ func initialize(params: Dictionary = {}) -> void:
 
 
 func _ready() -> void:
+	var on_event_narrated := Callable(self, "_on_event_narrated")
+	if not GameEvents.is_connected("event_narrated", on_event_narrated):
+		GameEvents.event_narrated.connect(_on_event_narrated)
 	_initialize_backend()
 	_refresh_state()
 
@@ -192,6 +195,12 @@ func _on_back_button_pressed() -> void:
 		_navigate_back()
 		return
 	_execute_navigation_action(navigation)
+
+
+func _on_event_narrated(source_signal: String, _source_key: String, _narration: String) -> void:
+	if source_signal != "encounter_log":
+		return
+	_refresh_state()
 
 
 func _navigate_back() -> void:

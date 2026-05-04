@@ -29,6 +29,13 @@
       "tags": ["world_gen", "task_board"]
     },
     {
+      "template_id": "base:encounter_log_flavor",
+      "purpose": "encounter_log_flavor",
+      "prompt_template": "Rewrite this encounter log as one vivid in-world sentence under 22 words. Encounter: {encounter_name}. Actor: {actor_name}. Target: {target_name}. Action: {action_label}. Result: {result}. Mechanical changes: {stat_delta_summary}. Fallback line: {fallback_text}.",
+      "fallback": "{fallback_text}",
+      "tags": ["world_gen", "encounter", "action_log"]
+    },
+    {
       "template_id": "base:entity_lore",
       "purpose": "entity_lore",
       "prompt_template": "Write a two-sentence in-world lore blurb about {display_name}. Description: {description}. Location: {location_name}.",

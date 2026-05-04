@@ -6,6 +6,10 @@ const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_regis
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const ENCOUNTER_RUNTIME := preload("res://systems/encounter_runtime.gd")
 
+const AI_LOG_TEMPLATE_ID := "base:encounter_log_flavor"
+const AI_LOG_SYSTEM_PROMPT := "You rewrite resolved encounter actions for a game log. Preserve the supplied mechanical result and stat changes. Return exactly one short sentence."
+const AI_LOG_MAX_LENGTH := 180
+
 var _params: Dictionary = {}
 var _encounter_id: String = ""
 var _template: Dictionary = {}
@@ -23,6 +27,7 @@ var _status_text: String = ""
 var _player: EntityInstance = null
 var _opponent: EntityInstance = null
 var _rng := RandomNumberGenerator.new()
+var _log_sequence: int = 0
 
 
 static func register_contract() -> void:
@@ -71,6 +76,7 @@ func initialize(params: Dictionary) -> void:
 	_resolved_screen_text = ""
 	_resolved_reward_lines.clear()
 	_status_text = ""
+	_log_sequence = 0
 	_rng.randomize()
 	if _template.is_empty():
 		_status_text = "Encounter '%s' could not be found." % _encounter_id
@@ -182,20 +188,39 @@ func _resolve_opponent_turn() -> void:
 func _resolve_action(role: String, action: Dictionary) -> bool:
 	var user := _player if role == "player" else _opponent
 	var target := _opponent if role == "player" else _player
+	var before_state := _build_ai_state_snapshot()
 	for effect in ENCOUNTER_RUNTIME.read_effects(action.get("cost", [])):
-		if _apply_effect(effect, user, target, action):
+		if _apply_effect(effect, user, target, action, {
+			"role": role,
+			"phase": "cost",
+			"success": false,
+			"before_state": before_state,
+		}):
 			return false
 	var success := ENCOUNTER_RUNTIME.evaluate_action_check(action, _build_context())
 	var effects := ENCOUNTER_RUNTIME.read_effects(action.get("on_success" if success else "on_failure", []))
 	for effect in effects:
-		if _apply_effect(effect, user, target, action):
+		if _apply_effect(effect, user, target, action, {
+			"role": role,
+			"phase": "success" if success else "failure",
+			"success": success,
+			"before_state": before_state,
+		}):
 			break
 	if effects.is_empty():
-		_append_log("%s %s." % [_display_name(user), "succeeds" if success else "fails"])
+		_append_log("%s %s." % [_display_name(user), "succeeds" if success else "fails"], {
+			"role": role,
+			"phase": "success" if success else "failure",
+			"success": success,
+			"before_state": before_state,
+			"action": action.duplicate(true),
+			"user_name": _display_name(user),
+			"target_name": _display_name(target),
+		})
 	return success
 
 
-func _apply_effect(effect: Dictionary, user: EntityInstance, target: EntityInstance, action: Dictionary) -> bool:
+func _apply_effect(effect: Dictionary, user: EntityInstance, target: EntityInstance, action: Dictionary, action_context: Dictionary = {}) -> bool:
 	var effect_type := str(effect.get("effect", "")).strip_edges()
 	match effect_type:
 		"modify_stat":
@@ -207,7 +232,11 @@ func _apply_effect(effect: Dictionary, user: EntityInstance, target: EntityInsta
 		"set_flag":
 			_apply_set_flag(effect)
 		"log":
-			_append_log(_format_log_text(str(effect.get("text", "")), user, target, action))
+			var ai_context := action_context.duplicate(true)
+			ai_context["action"] = action.duplicate(true)
+			ai_context["user_name"] = _display_name(user)
+			ai_context["target_name"] = _display_name(target)
+			_append_log(_format_log_text(str(effect.get("text", "")), user, target, action), ai_context)
 		"apply_tag":
 			_apply_tag(effect, user, target)
 		"remove_tag":
@@ -581,16 +610,156 @@ func _emit_action_resolved(role: String, action: Dictionary, success: bool) -> v
 		})
 
 
-func _append_log(text: String) -> void:
+func _append_log(text: String, ai_context: Dictionary = {}) -> void:
 	var normalized_text := text.strip_edges()
 	if normalized_text.is_empty():
 		return
+	_log_sequence += 1
+	var entry_id := "%s:%d:%d" % [_encounter_id, _round, _log_sequence]
 	_log.append({
+		"entry_id": entry_id,
 		"round": _round,
 		"text": normalized_text,
+		"fallback_text": normalized_text,
+		"ai_pending": not ai_context.is_empty(),
 	})
 	while _log.size() > 50:
 		_log.pop_front()
+	if not ai_context.is_empty():
+		_queue_ai_log_flavor(entry_id, normalized_text, ai_context)
+
+
+func _queue_ai_log_flavor(entry_id: String, fallback_text: String, ai_context: Dictionary) -> void:
+	if not ScriptHookService.can_run_world_gen("encounter_log_flavor_enabled"):
+		_mark_log_entry_ai_done(entry_id)
+		return
+	var ai_template := DataManager.get_ai_template(AI_LOG_TEMPLATE_ID)
+	if ai_template.is_empty():
+		_mark_log_entry_ai_done(entry_id)
+		return
+	var tokens := _build_ai_log_tokens(fallback_text, ai_context)
+	var prompt := _resolve_template_tokens(str(ai_template.get("prompt_template", "")), tokens)
+	if prompt.is_empty():
+		_mark_log_entry_ai_done(entry_id)
+		return
+	_generate_ai_log_flavor_async(entry_id, prompt, fallback_text)
+
+
+func _generate_ai_log_flavor_async(entry_id: String, prompt: String, fallback_text: String) -> void:
+	var response := await AIManager.generate_async(prompt, {
+		"system_prompt": AI_LOG_SYSTEM_PROMPT,
+	})
+	var final_text := _sanitize_ai_log_text(response)
+	if final_text.is_empty():
+		final_text = fallback_text
+	_update_log_entry_text(entry_id, final_text)
+	if GameEvents:
+		GameEvents.event_narrated.emit("encounter_log", entry_id, final_text)
+
+
+func _update_log_entry_text(entry_id: String, text: String) -> void:
+	for index in range(_log.size()):
+		var entry: Dictionary = _log[index]
+		if str(entry.get("entry_id", "")) != entry_id:
+			continue
+		entry["text"] = text
+		entry["ai_pending"] = false
+		_log[index] = entry
+		return
+
+
+func _mark_log_entry_ai_done(entry_id: String) -> void:
+	for index in range(_log.size()):
+		var entry: Dictionary = _log[index]
+		if str(entry.get("entry_id", "")) != entry_id:
+			continue
+		entry["ai_pending"] = false
+		_log[index] = entry
+		return
+
+
+func _build_ai_log_tokens(fallback_text: String, ai_context: Dictionary) -> Dictionary:
+	var action := _read_dictionary(ai_context.get("action", {}))
+	var before_state := _read_dictionary(ai_context.get("before_state", {}))
+	var result := "success" if bool(ai_context.get("success", false)) else "failure"
+	return {
+		"encounter_name": str(_template.get("display_name", _template.get("screen_title", _encounter_id))),
+		"actor_role": str(ai_context.get("role", "")),
+		"actor_name": str(ai_context.get("user_name", "Someone")),
+		"target_name": str(ai_context.get("target_name", "someone")),
+		"action_id": str(action.get("action_id", "")),
+		"action_label": str(action.get("label", action.get("action_id", ""))),
+		"phase": str(ai_context.get("phase", "")),
+		"result": result,
+		"fallback_text": fallback_text,
+		"stat_delta_summary": _build_stat_delta_summary(before_state),
+	}
+
+
+func _build_ai_state_snapshot() -> Dictionary:
+	return {
+		"player_stats": _read_entity_stats(_player),
+		"opponent_stats": _read_entity_stats(_opponent),
+		"encounter_stats": _encounter_stats.duplicate(true),
+	}
+
+
+func _build_stat_delta_summary(before_state: Dictionary) -> String:
+	var parts: Array[String] = []
+	_append_stat_delta_parts(parts, "player", _read_dictionary(before_state.get("player_stats", {})), _read_entity_stats(_player))
+	_append_stat_delta_parts(parts, "opponent", _read_dictionary(before_state.get("opponent_stats", {})), _read_entity_stats(_opponent))
+	_append_stat_delta_parts(parts, "encounter", _read_dictionary(before_state.get("encounter_stats", {})), _encounter_stats)
+	if parts.is_empty():
+		return "no mechanical stat changes"
+	return ", ".join(parts)
+
+
+func _append_stat_delta_parts(parts: Array[String], label: String, before_stats: Dictionary, after_stats: Dictionary) -> void:
+	var keys: Array = before_stats.keys()
+	for after_key_value in after_stats.keys():
+		if not keys.has(after_key_value):
+			keys.append(after_key_value)
+	keys.sort()
+	for key_value in keys:
+		var stat_id := str(key_value)
+		var before_value := float(before_stats.get(key_value, 0.0))
+		var after_value := float(after_stats.get(key_value, 0.0))
+		var delta := after_value - before_value
+		if is_zero_approx(delta):
+			continue
+		parts.append("%s %s %s" % [label, stat_id, _format_signed_number(delta)])
+
+
+func _read_entity_stats(entity: EntityInstance) -> Dictionary:
+	var stats: Dictionary = {}
+	if entity == null:
+		return stats
+	for stat_key_value in entity.stats.keys():
+		stats[str(stat_key_value)] = float(entity.stats.get(stat_key_value, 0.0))
+	return stats
+
+
+func _format_signed_number(value: float) -> String:
+	var abs_value := absf(value)
+	var value_text := str(int(abs_value)) if is_equal_approx(abs_value, float(int(abs_value))) else "%.2f" % abs_value
+	return "+%s" % value_text if value >= 0.0 else "-%s" % value_text
+
+
+func _sanitize_ai_log_text(text: String) -> String:
+	var sanitized := text.strip_edges().replace("\n", " ")
+	while sanitized.contains("  "):
+		sanitized = sanitized.replace("  ", " ")
+	if sanitized.length() > AI_LOG_MAX_LENGTH:
+		sanitized = sanitized.substr(0, AI_LOG_MAX_LENGTH).strip_edges()
+	return sanitized
+
+
+func _resolve_template_tokens(template_text: String, tokens: Dictionary) -> String:
+	var resolved_text := template_text
+	for token_key_value in tokens.keys():
+		var token_key := str(token_key_value)
+		resolved_text = resolved_text.replace("{%s}" % token_key, str(tokens.get(token_key_value, "")))
+	return resolved_text.strip_edges()
 
 
 func _format_log_text(text: String, user: EntityInstance, target: EntityInstance, action: Dictionary) -> String:
