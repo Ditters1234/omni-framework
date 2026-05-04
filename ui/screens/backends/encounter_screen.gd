@@ -3,10 +3,12 @@ extends Control
 const ENCOUNTER_BACKEND := preload("res://ui/screens/backends/encounter_backend.gd")
 const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn")
 const STAT_BAR_SCENE := preload("res://ui/components/stat_bar.tscn")
+const STACKED_LAYOUT_WIDTH := 900.0
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/HeaderRow/TitleLabel
 @onready var _round_label: Label = $MarginContainer/PanelContainer/VBoxContainer/HeaderRow/RoundLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
+@onready var _main_content: GridContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent
 @onready var _player_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/PlayerScroll/PlayerHost
 @onready var _center_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/CenterScroll/CenterHost
 @onready var _opponent_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/OpponentScroll/OpponentHost
@@ -33,6 +35,7 @@ func initialize(params: Dictionary = {}) -> void:
 
 
 func _ready() -> void:
+	_sync_responsive_layout()
 	var on_event_narrated := Callable(self, "_on_event_narrated")
 	if not GameEvents.is_connected("event_narrated", on_event_narrated):
 		GameEvents.event_narrated.connect(_on_event_narrated)
@@ -40,8 +43,19 @@ func _ready() -> void:
 	_refresh_state()
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_sync_responsive_layout()
+
+
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
+
+
+func _sync_responsive_layout() -> void:
+	if not is_node_ready() or _main_content == null:
+		return
+	_main_content.columns = 1 if size.x < STACKED_LAYOUT_WIDTH else 3
 
 
 func _initialize_backend() -> void:

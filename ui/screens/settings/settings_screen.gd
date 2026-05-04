@@ -32,17 +32,21 @@ const RESOLUTION_PRESETS := [
 	Vector2i(1600, 900),
 	Vector2i(1920, 1080),
 ]
+const STACKED_LAYOUT_WIDTH := 720.0
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/TitleLabel
 @onready var _subtitle_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/SubtitleLabel
+@onready var _audio_grid: GridContainer = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid
 @onready var _master_slider: HSlider = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/MasterSlider
 @onready var _master_value_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/MasterValueLabel
 @onready var _music_slider: HSlider = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/MusicSlider
 @onready var _music_value_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/MusicValueLabel
 @onready var _sfx_slider: HSlider = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/SfxSlider
 @onready var _sfx_value_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AudioGrid/SfxValueLabel
+@onready var _display_grid: GridContainer = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid
 @onready var _window_mode_button: OptionButton = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid/WindowModeButton
 @onready var _resolution_button: OptionButton = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/DisplayGrid/ResolutionButton
+@onready var _ai_grid: GridContainer = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid
 @onready var _ai_provider_button: OptionButton = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiProviderButton
 @onready var _ai_endpoint_label: Label = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiEndpointLabel
 @onready var _ai_endpoint_edit: LineEdit = $MarginContainer/PanelContainer/ScrollContainer/VBoxContainer/AiGrid/AiEndpointEdit
@@ -86,14 +90,32 @@ func initialize(_params: Dictionary = {}) -> void:
 
 
 func _ready() -> void:
+	_sync_responsive_layout()
 	_ensure_option_items()
 	_load_settings_from_disk()
 	call_deferred("_grab_default_focus")
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_sync_responsive_layout()
+
+
 func on_route_revealed() -> void:
 	_update_ai_info()
 	call_deferred("_grab_default_focus")
+
+
+func _sync_responsive_layout() -> void:
+	if not is_node_ready():
+		return
+	var stacked := size.x < STACKED_LAYOUT_WIDTH
+	if _audio_grid != null:
+		_audio_grid.columns = 1 if stacked else 3
+	if _display_grid != null:
+		_display_grid.columns = 1 if stacked else 2
+	if _ai_grid != null:
+		_ai_grid.columns = 1 if stacked else 2
 
 
 func _ensure_option_items() -> void:

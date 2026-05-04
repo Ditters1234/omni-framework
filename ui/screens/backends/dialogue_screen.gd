@@ -7,9 +7,11 @@ const AI_MODE_DISABLED := "disabled"
 const AI_MODE_HYBRID := "hybrid"
 const AI_MODE_FREEFORM := "freeform"
 const AI_INPUT_MAX_LENGTH := 500
+const STACKED_LAYOUT_WIDTH := 720.0
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
+@onready var _main_content: GridContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent
 @onready var _portrait_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/PortraitScroll/PortraitHost
 @onready var _speaker_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel/SpeakerLabel
 @onready var _body_label: RichTextLabel = $MarginContainer/PanelContainer/VBoxContainer/MainContent/ConversationScroll/ConversationPanel/BodyLabel
@@ -57,12 +59,17 @@ func initialize(params: Dictionary = {}) -> void:
 		_start_dialogue_if_needed()
 
 func _ready() -> void:
+	_sync_responsive_layout()
 	_create_ai_stream_timer()
 	_load_ai_runtime_settings()
 	_connect_ai_signals()
 	_initialize_backend()
 	_refresh_context()
 	_start_dialogue_if_needed()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_sync_responsive_layout()
 
 func _exit_tree() -> void:
 	_request_token += 1
@@ -75,6 +82,11 @@ func _exit_tree() -> void:
 	if is_instance_valid(_responses_container):
 		_clear_responses()
 	_disconnect_ai_signals()
+
+func _sync_responsive_layout() -> void:
+	if not is_node_ready() or _main_content == null:
+		return
+	_main_content.columns = 1 if size.x < STACKED_LAYOUT_WIDTH else 2
 
 func get_debug_snapshot() -> Dictionary:
 	var snapshot := _last_view_model.duplicate(true)

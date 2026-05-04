@@ -203,6 +203,7 @@ The UI layer includes:
 - `DialogueBackend` now supports authored `.dialogue` trees plus optional `ai_mode` handoff (`hybrid` / `freeform`) using `systems/ai/ai_chat_service.gd` and `GameEvents.ai_token_received`
 - `EncounterBackend` runs data-authored, turn-based encounters from `encounters.json`, using real entity stat mutations plus encounter-local meters, outcome rewards/actions, and optional presentation-only AI flavor for action log entries.
 - `ui/screens/backends/` also includes the world map implementation trio: `world_map_backend.gd`, `world_map_graph.gd`, and `world_map_screen.gd`
+- Dialogue, encounter, world map, and settings screens use responsive container layouts so backend-driven screens remain usable in narrow/mobile-sized viewports.
 - A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts
 - Debug overlay at `ui/debug/dev_debug_overlay.gd`
 - Theme system: `omni_theme.tres` + `theme_applier.gd`

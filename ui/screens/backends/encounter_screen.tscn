@@ -42,15 +42,17 @@ layout_mode = 2
 autowrap_mode = 3
 text = ""
 
-[node name="MainContent" type="HSplitContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="MainContent" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+columns = 3
 
 [node name="PlayerScroll" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+size_flags_stretch_ratio = 0.75
 horizontal_scroll_mode = 0
 
 [node name="PlayerHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/PlayerScroll"]
@@ -63,6 +65,7 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+size_flags_stretch_ratio = 1.25
 horizontal_scroll_mode = 0
 
 [node name="CenterHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/CenterScroll"]
@@ -75,6 +78,7 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+size_flags_stretch_ratio = 0.75
 horizontal_scroll_mode = 0
 
 [node name="OpponentHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/OpponentScroll"]

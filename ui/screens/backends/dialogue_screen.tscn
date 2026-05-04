@@ -34,20 +34,21 @@ layout_mode = 2
 autowrap_mode = 3
 text = ""
 
-[node name="MainContent" type="HSplitContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="MainContent" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+columns = 2
 
 [node name="PortraitScroll" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+size_flags_stretch_ratio = 0.45
 follow_focus = true
 horizontal_scroll_mode = 0
 
 [node name="PortraitHost" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/PortraitScroll"]
-custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -56,6 +57,7 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+size_flags_stretch_ratio = 1.0
 follow_focus = true
 horizontal_scroll_mode = 0
 
