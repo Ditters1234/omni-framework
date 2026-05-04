@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omni-Framework Mod Editor</title>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #222535; --border: #2e3148;
+    --accent: #00d4aa; --accent2: #7c6af7; --danger: #e05c5c; --warn: #e09a2a;
+    --text: #dde1f0; --muted: #7880a0; --input-bg: #161824;
+    --tab-h: 42px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Header */
+  #header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  #header h1 { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: 0.5px; }
+  #header .subtitle { color: var(--muted); font-size: 12px; }
+  #header .spacer { flex: 1; }
+  .btn { padding: 6px 14px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.15s; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #0f1117; border-color: var(--accent); font-weight: 600; }
+  .btn.primary:hover { background: #00f0c5; }
+  .btn.danger { border-color: var(--danger); color: var(--danger); }
+  .btn.danger:hover { background: var(--danger); color: #fff; }
+
+  /* Mod selector bar */
+  #mod-bar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  #mod-bar label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  #mod-select, #mod-bar input { background: var(--input-bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); padding: 4px 8px; font-size: 12px; }
+  #mod-select { min-width: 180px; }
+  #mod-bar input { width: 160px; }
+
+  /* Layout */
+  #main { display: flex; flex: 1; overflow: hidden; }
+
+  /* Left nav */
+  #nav { width: 160px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
+  .nav-section { padding: 10px 8px 4px; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .nav-item { padding: 7px 12px; cursor: pointer; border-left: 2px solid transparent; color: var(--muted); font-size: 12px; transition: all 0.12s; white-space: nowrap; }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--surface2); }
+
+  /* Editor area */
+  #editor { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Section header */
+  #section-header { padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  #section-title { font-size: 14px; font-weight: 600; }
+  #section-mode { display: flex; gap: 4px; margin-left: auto; }
+  .mode-btn { padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; }
+  .mode-btn.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+
+  /* Item list + editor split */
+  #content-area { flex: 1; display: flex; overflow: hidden; }
+  #item-list { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  #item-list-header { padding: 8px 10px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); }
+  #item-list-header span { font-size: 11px; color: var(--muted); flex: 1; }
+  #item-scroll { flex: 1; overflow-y: auto; }
+  .item-row { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+  .item-row:hover { background: var(--surface2); }
+  .item-row.active { background: var(--surface2); border-left: 2px solid var(--accent); }
+  .item-row .item-name { font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-row .item-id { font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-row .del-btn { color: var(--danger); font-size: 14px; opacity: 0; cursor: pointer; flex-shrink: 0; }
+  .item-row:hover .del-btn { opacity: 1; }
+
+  /* Form area */
+  #form-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #form-scroll { flex: 1; overflow-y: auto; padding: 16px; }
+  .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 12px; }
+  .form-section-title { padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); border-radius: 6px 6px 0 0; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+  .form-section-title .toggle { font-size: 10px; margin-left: auto; color: var(--muted); }
+  .form-body { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-body.single { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field.full { grid-column: 1 / -1; }
+  label.field-label { font-size: 11px; color: var(--muted); }
+  label.field-label .req { color: var(--accent); margin-left: 2px; }
+  input, textarea, select { background: var(--input-bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); padding: 5px 8px; font-size: 12px; font-family: inherit; width: 100%; transition: border-color 0.12s; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent2); }
+  textarea { resize: vertical; min-height: 60px; }
+  .hint { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* Tags input */
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 4px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 6px; min-height: 32px; cursor: text; }
+  .tag-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px; font-size: 11px; display: flex; align-items: center; gap: 4px; }
+  .tag-chip .rm { cursor: pointer; color: var(--muted); font-size: 12px; }
+  .tag-chip .rm:hover { color: var(--danger); }
+  .tags-input { border: none; background: transparent; color: var(--text); font-size: 12px; outline: none; min-width: 80px; flex: 1; padding: 1px 2px; }
+
+  /* KV editor */
+  .kv-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .kv-row { display: flex; gap: 6px; align-items: center; }
+  .kv-row input { flex: 1; }
+  .kv-row .rm { color: var(--danger); cursor: pointer; font-size: 16px; flex-shrink: 0; }
+  .add-link { font-size: 11px; color: var(--accent2); cursor: pointer; margin-top: 4px; }
+  .add-link:hover { text-decoration: underline; }
+
+  /* JSON preview panel */
+  #preview-panel { width: 340px; border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  #preview-header { padding: 8px 12px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  #preview-header span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
+  #preview-code { flex: 1; overflow-y: auto; padding: 12px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 11px; line-height: 1.6; white-space: pre; color: #c9d1d9; background: var(--bg); }
+  .json-key { color: #79b8ff; }
+  .json-str { color: #9ecbff; }
+  .json-num { color: #f8c555; }
+  .json-bool { color: #56d364; }
+  .json-null { color: var(--muted); }
+
+  /* Validation bar */
+  #val-bar { padding: 6px 12px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; min-height: 32px; }
+  .val-ok { color: var(--accent); font-size: 11px; }
+  .val-err { color: var(--danger); font-size: 11px; }
+  .val-warn { color: var(--warn); font-size: 11px; }
+
+  /* Export modal */
+  #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+  #modal-overlay.show { display: flex; }
+  #modal { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; width: 700px; max-height: 80vh; display: flex; flex-direction: column; }
+  #modal-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; }
+  #modal-header h2 { font-size: 14px; flex: 1; }
+  #modal-body { flex: 1; overflow-y: auto; padding: 16px; }
+  #modal-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+  .export-file { margin-bottom: 12px; }
+  .export-file h3 { font-size: 12px; color: var(--accent); margin-bottom: 6px; }
+  .export-file pre { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 10px; font-size: 11px; overflow-x: auto; max-height: 200px; overflow-y: auto; color: #c9d1d9; white-space: pre; font-family: 'Cascadia Code', monospace; }
+
+  /* Patch section */
+  .patch-row { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 10px; margin-bottom: 8px; }
+  .patch-row-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .patch-target { flex: 1; }
+
+  /* Empty state */
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--muted); gap: 8px; }
+  .empty-state .icon { font-size: 32px; }
+  .empty-state p { font-size: 13px; }
+
+  /* Manifest tab */
+  .manifest-form { padding: 16px; max-width: 500px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>⬡ Omni-Framework</h1>
+  <span class="subtitle">Mod Editor</span>
+  <div class="spacer"></div>
+  <button class="btn" onclick="importModFiles()" title="Select mod.json + any data/*.json files from an existing mod folder">Load Mod Files</button>
+  <button class="btn" onclick="importProject()" title="Load a previously saved editor project JSON">Load Project</button>
+  <button class="btn" onclick="showExport()">Export All Files</button>
+  <button class="btn primary" onclick="copyCurrentJSON()">Copy Current JSON</button>
+</div>
+
+<div id="mod-bar">
+  <label>Mod:</label>
+  <select id="mod-select" onchange="switchMod(this.value)"></select>
+  <button class="btn" onclick="newMod()">+ New Mod</button>
+  <span style="color:var(--border)">|</span>
+  <label>Author ID:</label>
+  <input id="author-input" placeholder="my_name" oninput="updateAuthor(this.value)" style="width:120px">
+  <label>Mod ID:</label>
+  <input id="modid-input" placeholder="my_mod" oninput="updateModId(this.value)" style="width:120px">
+</div>
+
+<div id="main">
+  <div id="nav">
+    <div class="nav-section">Mod</div>
+    <div class="nav-item" data-section="manifest" onclick="showSection('manifest')">📋 Manifest</div>
+    <div class="nav-section">Data Files</div>
+    <div class="nav-item" data-section="definitions" onclick="showSection('definitions')">🔷 Definitions</div>
+    <div class="nav-item" data-section="parts" onclick="showSection('parts')">🔩 Parts</div>
+    <div class="nav-item" data-section="entities" onclick="showSection('entities')">👤 Entities</div>
+    <div class="nav-item" data-section="locations" onclick="showSection('locations')">📍 Locations</div>
+    <div class="nav-item" data-section="factions" onclick="showSection('factions')">⚑ Factions</div>
+    <div class="nav-item" data-section="tasks" onclick="showSection('tasks')">⏱ Tasks</div>
+    <div class="nav-item" data-section="quests" onclick="showSection('quests')">📜 Quests</div>
+    <div class="nav-item" data-section="recipes" onclick="showSection('recipes')">⚗️ Recipes</div>
+    <div class="nav-item" data-section="encounters" onclick="showSection('encounters')">⚔️ Encounters</div>
+    <div class="nav-item" data-section="achievements" onclick="showSection('achievements')">🏆 Achievements</div>
+    <div class="nav-item" data-section="config" onclick="showSection('config')">⚙️ Config</div>
+    <div class="nav-section">AI</div>
+    <div class="nav-item" data-section="ai_personas" onclick="showSection('ai_personas')">🤖 AI Personas</div>
+    <div class="nav-item" data-section="ai_templates" onclick="showSection('ai_templates')">📝 AI Templates</div>
+    <div class="nav-section">Patches</div>
+    <div class="nav-item" data-section="patches" onclick="showSection('patches')">🩹 Patches</div>
+  </div>
+
+  <div id="editor">
+    <div id="section-header">
+      <span id="section-title">Select a section</span>
+      <div id="section-mode">
+        <button class="mode-btn active" id="mode-form" onclick="setMode('form')">Form</button>
+        <button class="mode-btn" id="mode-raw" onclick="setMode('raw')">Raw JSON</button>
+      </div>
+    </div>
+    <div id="content-area">
+      <div id="item-list"></div>
+      <div id="form-wrap">
+        <div id="form-scroll">
+          <div class="empty-state">
+            <div class="icon">⬡</div>
+            <p>Select a section from the left to begin</p>
+          </div>
+        </div>
+        <div id="val-bar"><span class="val-ok">✓ Ready</span></div>
+      </div>
+      <div id="preview-panel">
+        <div id="preview-header">
+          <span>JSON Preview</span>
+          <button class="btn" style="padding:3px 8px;font-size:10px" onclick="copyCurrentJSON()">Copy</button>
+        </div>
+        <div id="preview-code"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <h2>Export Mod Files</h2>
+      <button class="btn" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-footer">
+      <button class="btn" onclick="closeModal()">Close</button>
+      <button class="btn" onclick="saveProject()" title="Save the full editor state as a single JSON you can reload later">Save Project JSON</button>
+      <button class="btn primary" onclick="downloadAll()">Download All Mod Files</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
+<input type="file" id="import-folder-input" accept=".json" multiple style="display:none" onchange="handleFolderImport(event)">
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+let state = {
+  mods: {},
+  activeMod: null,
+  activeSection: null,
+  activeItemIdx: null,
+  editMode: 'form'
+};
+
+const SECTIONS = ['manifest','definitions','parts','entities','locations','factions','tasks','quests','recipes','encounters','achievements','config','ai_personas','ai_templates','patches'];
+
+function defaultMod(id, author, modid) {
+  return {
+    manifest: { id: id || `${author||'author'}:${modid||'my_mod'}`, name: 'My Mod', version: '1.0.0', schema_version: 1, load_order: 100, enabled: true, dependencies: ['base'] },
+    definitions: { currencies: [], stats: [] },
+    parts: { parts: [], patches: [] },
+    entities: { entities: [], patches: [] },
+    locations: { locations: [], patches: [] },
+    factions: { factions: [], patches: [] },
+    tasks: { task_templates: [], patches: [] },
+    quests: { quests: [], patches: [] },
+    recipes: { recipes: [], patches: [] },
+    encounters: { encounters: [], patches: [] },
+    achievements: { achievements: [], patches: [] },
+    config: {},
+    ai_personas: { ai_personas: [], patches: [] },
+    ai_templates: { ai_templates: [], patches: [] },
+    patches: { parts: [], entities: [], locations: [], factions: [], tasks: [], quests: [], recipes: [], encounters: [], achievements: [], ai_personas: [], ai_templates: [] },
+    _author: author || 'author',
+    _modid: modid || 'my_mod'
+  };
+}
+
+function newMod() {
+  const raw = prompt('Enter mod full ID (e.g. my_name:my_mod):');
+  if (!raw) return;
+  const parts = raw.split(':');
+  const author = parts[0] || 'author';
+  const modid = parts[1] || 'my_mod';
+  const key = raw;
+  state.mods[key] = defaultMod(key, author, modid);
+  state.activeMod = key;
+  rebuildModSelect();
+  document.getElementById('author-input').value = author;
+  document.getElementById('modid-input').value = modid;
+  showSection('manifest');
+}
+
+function switchMod(key) {
+  state.activeMod = key;
+  const mod = state.mods[key];
+  document.getElementById('author-input').value = mod._author || '';
+  document.getElementById('modid-input').value = mod._modid || '';
+  if (state.activeSection) showSection(state.activeSection);
+}
+
+function updateAuthor(v) { if (state.activeMod) state.mods[state.activeMod]._author = v; }
+function updateModId(v) { if (state.activeMod) state.mods[state.activeMod]._modid = v; }
+
+function rebuildModSelect() {
+  const sel = document.getElementById('mod-select');
+  sel.innerHTML = '';
+  Object.keys(state.mods).forEach(k => {
+    const o = document.createElement('option');
+    o.value = k; o.textContent = k;
+    if (k === state.activeMod) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+// ─── Section routing ──────────────────────────────────────────────────────────
+function showSection(sec) {
+  if (!state.activeMod) { alert('Create or select a mod first.'); return; }
+  state.activeSection = sec;
+  state.activeItemIdx = null;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.section === sec));
+  document.getElementById('section-title').textContent = secLabel(sec);
+  const mod = state.mods[state.activeMod];
+  renderSection(sec, mod);
+}
+
+function secLabel(s) {
+  const map = { manifest:'Manifest', definitions:'Definitions', parts:'Parts', entities:'Entities', locations:'Locations', factions:'Factions', tasks:'Tasks', quests:'Quests', recipes:'Recipes', encounters:'Encounters', achievements:'Achievements', config:'Config', ai_personas:'AI Personas', ai_templates:'AI Templates', patches:'Patches (Cross-File)' };
+  return map[s] || s;
+}
+
+function setMode(m) {
+  state.editMode = m;
+  document.getElementById('mode-form').classList.toggle('active', m === 'form');
+  document.getElementById('mode-raw').classList.toggle('active', m === 'raw');
+  if (state.activeSection) showSection(state.activeSection);
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function ns() {
+  const mod = state.mods[state.activeMod];
+  return `${mod._author}:${mod._modid}`;
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2,8);
+}
+
+function makeId(name, prefix) {
+  const slug = (name||'item').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+  return `${prefix||ns()}:${slug}`;
+}
+
+// ─── JSON syntax highlighting ─────────────────────────────────────────────────
+function highlight(json) {
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      if (/^"/.test(m)) return /:$/.test(m) ? `<span class="json-key">${m}</span>` : `<span class="json-str">${m}</span>`;
+      if (/true|false/.test(m)) return `<span class="json-bool">${m}</span>`;
+      if (/null/.test(m)) return `<span class="json-null">${m}</span>`;
+      return `<span class="json-num">${m}</span>`;
+    });
+}
+
+function updatePreview(obj) {
+  const json = JSON.stringify(obj, null, 2);
+  document.getElementById('preview-code').innerHTML = highlight(json);
+}
+
+function copyCurrentJSON() {
+  const code = document.getElementById('preview-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+function setVal(msg, type='ok') {
+  const bar = document.getElementById('val-bar');
+  const cls = type === 'ok' ? 'val-ok' : type === 'warn' ? 'val-warn' : 'val-err';
+  bar.innerHTML = `<span class="${cls}">${type==='ok'?'✓':type==='warn'?'⚠':'✗'} ${msg}</span>`;
+}
+
+// ─── Tags widget ──────────────────────────────────────────────────────────────
+function renderTagsWidget(containerId, tags, onChange) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  (tags||[]).forEach((t,i) => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${t}<span class="rm" onclick="removeTag('${containerId}',${i})">×</span>`;
+    wrap.appendChild(chip);
+  });
+  const inp = document.createElement('input');
+  inp.className = 'tags-input';
+  inp.placeholder = 'Add tag, press Enter';
+  inp.onkeydown = e => {
+    if ((e.key === 'Enter' || e.key === ',') && inp.value.trim()) {
+      e.preventDefault();
+      tags.push(inp.value.trim());
+      inp.value = '';
+      onChange(tags);
+      renderTagsWidget(containerId, tags, onChange);
+    }
+    if (e.key === 'Backspace' && !inp.value && tags.length) {
+      tags.pop();
+      onChange(tags);
+      renderTagsWidget(containerId, tags, onChange);
+    }
+  };
+  wrap.appendChild(inp);
+  wrap.onclick = () => inp.focus();
+}
+
+function removeTag(containerId, idx) {
+  // handled via re-render; find the tags array by containerId convention
+  // This is called from inline HTML — handled per-section via data attribute
+}
+
+// ─── KV editor ───────────────────────────────────────────────────────────────
+function renderKV(containerId, obj, onChange, keyPlaceholder='key', valPlaceholder='value') {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'kv-wrap';
+  Object.entries(obj||{}).forEach(([k,v]) => {
+    const row = document.createElement('div');
+    row.className = 'kv-row';
+    row.innerHTML = `
+      <input value="${k}" placeholder="${keyPlaceholder}" onchange="kvChange('${containerId}','${k}',this.value,null)">
+      <input value="${v}" placeholder="${valPlaceholder}" onchange="kvChange('${containerId}','${k}',null,this.value)" type="${typeof v==='number'?'number':'text'}">
+      <span class="rm" onclick="kvRemove('${containerId}','${k}')">×</span>`;
+    div.appendChild(row);
+  });
+  const addLink = document.createElement('span');
+  addLink.className = 'add-link';
+  addLink.textContent = '+ Add entry';
+  addLink.onclick = () => {
+    const newKey = `key_${uid()}`;
+    obj[newKey] = 0;
+    onChange(obj);
+    renderKV(containerId, obj, onChange, keyPlaceholder, valPlaceholder);
+  };
+  div.appendChild(addLink);
+  wrap.appendChild(div);
+}
+
+// Global KV mutation helpers (need access to current item context)
+window._kvContexts = {};
+
+function kvChange(cid, oldKey, newKey, newVal) {
+  const ctx = window._kvContexts[cid];
+  if (!ctx) return;
+  const obj = ctx.get();
+  if (newKey !== null && newKey !== oldKey) {
+    const val = obj[oldKey];
+    delete obj[oldKey];
+    obj[newKey] = val;
+  }
+  if (newVal !== null) {
+    const k = newKey !== null ? newKey : oldKey;
+    obj[k] = isNaN(newVal) ? newVal : Number(newVal);
+  }
+  ctx.set(obj);
+}
+
+function kvRemove(cid, key) {
+  const ctx = window._kvContexts[cid];
+  if (!ctx) return;
+  const obj = ctx.get();
+  delete obj[key];
+  ctx.set(obj);
+  renderKV(cid, obj, ctx.set, ctx.kp, ctx.vp);
+}
+
+// ─── MANIFEST ─────────────────────────────────────────────────────────────────
+function renderSection(sec, mod) {
+  if (state.editMode === 'raw') { renderRaw(sec, mod); return; }
+  switch(sec) {
+    case 'manifest': renderManifest(mod); break;
+    case 'definitions': renderDefinitions(mod); break;
+    case 'parts': renderItemSection(mod, 'parts', 'parts', partForm, partDefault); break;
+    case 'entities': renderItemSection(mod, 'entities', 'entities', entityForm, entityDefault); break;
+    case 'locations': renderItemSection(mod, 'locations', 'locations', locationForm, locationDefault); break;
+    case 'factions': renderItemSection(mod, 'factions', 'factions', factionForm, factionDefault); break;
+    case 'tasks': renderItemSection(mod, 'tasks', 'task_templates', taskForm, taskDefault); break;
+    case 'quests': renderItemSection(mod, 'quests', 'quests', questForm, questDefault); break;
+    case 'recipes': renderItemSection(mod, 'recipes', 'recipes', recipeForm, recipeDefault); break;
+    case 'encounters': renderItemSection(mod, 'encounters', 'encounters', encounterForm, encounterDefault); break;
+    case 'achievements': renderItemSection(mod, 'achievements', 'achievements', achievementForm, achievementDefault); break;
+    case 'config': renderConfig(mod); break;
+    case 'ai_personas': renderItemSection(mod, 'ai_personas', 'ai_personas', personaForm, personaDefault); break;
+    case 'ai_templates': renderItemSection(mod, 'ai_templates', 'ai_templates', aiTemplateForm, aiTemplateDefault); break;
+    case 'patches': renderPatches(mod); break;
+    default: renderRaw(sec, mod);
+  }
+}
+
+function renderRaw(sec, mod) {
+  const data = sec === 'manifest' ? mod.manifest : mod[sec];
+  const fs = document.getElementById('form-scroll');
+  const il = document.getElementById('item-list');
+  il.style.display = 'none';
+  fs.innerHTML = `<div style="padding:8px 0 6px;color:var(--muted);font-size:11px">Raw JSON editor for ${sec}. Edit below and click Apply.</div>
+    <textarea id="raw-editor" style="width:100%;height:calc(100vh - 200px);font-family:monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:#c9d1d9;padding:10px">${JSON.stringify(data,null,2)}</textarea>
+    <div style="margin-top:10px"><button class="btn primary" onclick="applyRaw('${sec}')">Apply</button></div>`;
+  updatePreview(data);
+}
+
+function applyRaw(sec) {
+  try {
+    const raw = document.getElementById('raw-editor').value;
+    const parsed = JSON.parse(raw);
+    const mod = state.mods[state.activeMod];
+    if (sec === 'manifest') mod.manifest = parsed;
+    else mod[sec] = parsed;
+    setVal('Applied successfully');
+    updatePreview(parsed);
+  } catch(e) {
+    setVal('Invalid JSON: ' + e.message, 'err');
+  }
+}
+
+// ─── Manifest ─────────────────────────────────────────────────────────────────
+function renderManifest(mod) {
+  const m = mod.manifest;
+  const il = document.getElementById('item-list');
+  il.style.display = 'none';
+  const fs = document.getElementById('form-scroll');
+  fs.innerHTML = `
+  <div class="manifest-form">
+  <div class="form-section">
+    <div class="form-section-title">Manifest Fields</div>
+    <div class="form-body single">
+      ${fld('mod-m-id','ID','text',m.id,'The full mod id, e.g. author:mod_name',true)}
+      ${fld('mod-m-name','Display Name','text',m.name,'Human-readable name',true)}
+      ${fld('mod-m-version','Version','text',m.version,'Semantic version, e.g. 1.0.0',true)}
+      ${fld('mod-m-order','Load Order','number',m.load_order,'Lower = loads first. Base is 0.',true)}
+      ${fld('mod-m-schema','Schema Version','number',m.schema_version||1)}
+      ${fld('mod-m-deps','Dependencies','text',(m.dependencies||[]).join(','),'Comma-separated mod ids (e.g. base)')}
+      <div class="field">
+        <label class="field-label">Enabled</label>
+        <select id="mod-m-enabled"><option value="true" ${m.enabled!==false?'selected':''}>true</option><option value="false" ${m.enabled===false?'selected':''}>false</option></select>
+      </div>
+      ${fld('mod-m-desc','Description','text',m.description||'')}
+    </div>
+  </div>
+  <button class="btn primary" onclick="saveManifest()">Save Manifest</button>
+  </div>`;
+  updatePreview(m);
+}
+
+function saveManifest() {
+  const mod = state.mods[state.activeMod];
+  mod.manifest.id = v('mod-m-id');
+  mod.manifest.name = v('mod-m-name');
+  mod.manifest.version = v('mod-m-version');
+  mod.manifest.load_order = parseInt(v('mod-m-order'))||100;
+  mod.manifest.schema_version = parseInt(v('mod-m-schema'))||1;
+  mod.manifest.enabled = v('mod-m-enabled') === 'true';
+  mod.manifest.description = v('mod-m-desc');
+  const deps = v('mod-m-deps').split(',').map(s=>s.trim()).filter(Boolean);
+  mod.manifest.dependencies = deps;
+  updatePreview(mod.manifest);
+  setVal('Manifest saved');
+  rebuildModSelect();
+}
+
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+function fld(id, label, type, value, hint='', required=false) {
+  const reqMark = required ? '<span class="req">*</span>' : '';
+  if (type === 'textarea') return `<div class="field full"><label class="field-label">${label}${reqMark}</label><textarea id="${id}">${value||''}</textarea>${hint?`<span class="hint">${hint}</span>`:''}</div>`;
+  return `<div class="field"><label class="field-label">${label}${reqMark}</label><input id="${id}" type="${type}" value="${escAttr(value)}" placeholder="${hint}"><${hint?`span class="hint">${hint}</span`:''}></div>`.replace('<></div>','</div>');
+}
+
+function escAttr(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ─── Generic item section (list + form) ───────────────────────────────────────
+function renderItemSection(mod, secKey, arrayKey, formFn, defaultFn) {
+  const il = document.getElementById('item-list');
+  il.style.display = 'flex';
+  // Ensure inner structure exists (may have been wiped by non-item sections)
+  if (!il.querySelector('#item-list-header')) initItemListHTML();
+  const items = mod[secKey][arrayKey] || [];
+  const header = il.querySelector('#item-list-header span');
+  header.textContent = `${items.length} item${items.length!==1?'s':''}`;
+  const scroll = il.querySelector('#item-scroll');
+  scroll.innerHTML = '';
+  items.forEach((item,i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row' + (i === state.activeItemIdx ? ' active' : '');
+    const name = item.display_name || item.name || item.id || item.entity_id || item.location_id || item.faction_id || item.template_id || item.quest_id || item.recipe_id || item.achievement_id || item.persona_id || `Item ${i+1}`;
+    const idStr = item.id || item.entity_id || item.location_id || item.faction_id || item.template_id || item.quest_id || item.recipe_id || item.achievement_id || item.persona_id || '';
+    row.innerHTML = `<div style="flex:1;min-width:0"><div class="item-name">${name}</div><div class="item-id">${idStr}</div></div><span class="del-btn" onclick="deleteItem('${secKey}','${arrayKey}',${i},event)">×</span>`;
+    row.onclick = (e) => { if (!e.target.classList.contains('del-btn')) { state.activeItemIdx = i; renderItemSection(mod, secKey, arrayKey, formFn, defaultFn); } };
+    scroll.appendChild(row);
+  });
+  // Add button — always rebuild to ensure correct secKey/arrayKey bindings
+  const oldAddBtn = il.querySelector('.add-item-btn');
+  if (oldAddBtn) oldAddBtn.remove();
+  const addBtn = document.createElement('div');
+  addBtn.className = 'add-item-btn';
+  addBtn.style.cssText = 'padding:8px 10px;border-top:1px solid var(--border);flex-shrink:0';
+  addBtn.innerHTML = `<button class="btn" style="width:100%">+ Add Item</button>`;
+  addBtn.querySelector('button').onclick = () => addItem(secKey, arrayKey);
+  il.appendChild(addBtn);
+
+  const fs = document.getElementById('form-scroll');
+  if (state.activeItemIdx !== null && items[state.activeItemIdx]) {
+    const item = items[state.activeItemIdx];
+    fs.innerHTML = formFn(item, state.activeItemIdx, secKey, arrayKey);
+    updatePreview(item);
+    window.initFormWidgets(item, secKey, arrayKey);
+    setVal(`Editing item ${state.activeItemIdx + 1} of ${items.length}`);
+  } else {
+    fs.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Select an item or click + Add Item</p></div>`;
+    updatePreview(mod[secKey]);
+    setVal(`${items.length} items in this section`);
+  }
+}
+
+function addItem(secKey, arrayKey) {
+  const mod = state.mods[state.activeMod];
+  const defaults = { parts: partDefault, entities: entityDefault, locations: locationDefault, factions: factionDefault, tasks: taskDefault, quests: questDefault, recipes: recipeDefault, encounters: encounterDefault, achievements: achievementDefault, ai_personas: personaDefault, ai_templates: aiTemplateDefault };
+  const defFn = defaults[secKey] || (() => ({}));
+  if (!mod[secKey][arrayKey]) mod[secKey][arrayKey] = [];
+  mod[secKey][arrayKey].push(defFn());
+  state.activeItemIdx = mod[secKey][arrayKey].length - 1;
+  const forms = { parts: partForm, entities: entityForm, locations: locationForm, factions: factionForm, tasks: taskForm, quests: questForm, recipes: recipeForm, encounters: encounterForm, achievements: achievementForm, ai_personas: personaForm, ai_templates: aiTemplateForm };
+  renderItemSection(mod, secKey, arrayKey, forms[secKey], defFn);
+}
+
+function deleteItem(secKey, arrayKey, idx, e) {
+  e.stopPropagation();
+  if (!confirm('Delete this item?')) return;
+  const mod = state.mods[state.activeMod];
+  mod[secKey][arrayKey].splice(idx, 1);
+  if (state.activeItemIdx >= mod[secKey][arrayKey].length) state.activeItemIdx = null;
+  const forms = { parts: partForm, entities: entityForm, locations: locationForm, factions: factionForm, tasks: taskForm, quests: questForm, recipes: recipeForm, encounters: encounterForm, achievements: achievementForm, ai_personas: personaForm, ai_templates: aiTemplateForm };
+  const defaults = { parts: partDefault, entities: entityDefault, locations: locationDefault, factions: factionDefault, tasks: taskDefault, quests: questDefault, recipes: recipeDefault, encounters: encounterDefault, achievements: achievementDefault, ai_personas: personaDefault, ai_templates: aiTemplateDefault };
+  renderItemSection(mod, secKey, arrayKey, forms[secKey], defaults[secKey]);
+}
+
+function saveCurrentItem(secKey, arrayKey, getDataFn) {
+  const mod = state.mods[state.activeMod];
+  const item = getDataFn();
+  mod[secKey][arrayKey][state.activeItemIdx] = item;
+  const forms = { parts: partForm, entities: entityForm, locations: locationForm, factions: factionForm, tasks: taskForm, quests: questForm, recipes: recipeForm, encounters: encounterForm, achievements: achievementForm, ai_personas: personaForm, ai_templates: aiTemplateForm };
+  const defaults = { parts: partDefault, entities: entityDefault, locations: locationDefault, factions: factionDefault, tasks: taskDefault, quests: questDefault, recipes: recipeDefault, encounters: encounterDefault, achievements: achievementDefault, ai_personas: personaDefault, ai_templates: aiTemplateDefault };
+  renderItemSection(mod, secKey, arrayKey, forms[secKey], defaults[secKey]);
+  setVal('Saved ✓');
+  updatePreview(item);
+}
+
+// ─── PARTS ────────────────────────────────────────────────────────────────────
+function partDefault() {
+  return { id: `${ns()}:new_part`, display_name: 'New Part', description: '', tags: [], stats: {}, price: { credits: 0 }, equippable: false };
+}
+
+function partForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('p-id','ID','text',item.id,'author:mod:part_name',true)}
+    ${fld('p-name','Display Name','text',item.display_name,'',true)}
+    ${fld2('p-desc','Description','textarea',item.description)}
+    <div class="field">
+      <label class="field-label">Tags</label>
+      <div class="tags-wrap" id="p-tags-wrap"></div>
+    </div>
+    <div class="field">
+      <label class="field-label">Equippable</label>
+      <select id="p-equip"><option value="false" ${!item.equippable?'selected':''}>false</option><option value="true" ${item.equippable?'selected':''}>true</option></select>
+    </div>
+    ${fld('p-sprite','Sprite Path','text',item.sprite||'')}
+    ${fld('p-script','Script Path','text',item.script_path||'')}
+    ${fld('p-equip-sound','Equip Sound','text',item.equip_sound||'')}
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Stats & Price</div><div class="form-body single">
+    <div class="field"><label class="field-label">Stats (key:value pairs)</label><div id="p-stats-kv"></div></div>
+    <div class="field"><label class="field-label">Price (currency:amount)</label><div id="p-price-kv"></div></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Required Tags</div><div class="form-body single">
+    <div class="field"><label class="field-label">Required Tags (must be on other equipped parts)</label><div class="tags-wrap" id="p-reqtags-wrap"></div></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="savePart()">Save Part</button></div>`;
+}
+
+function fld2(id, label, type, value) {
+  return `<div class="field full"><label class="field-label">${label}</label><textarea id="${id}">${value||''}</textarea></div>`;
+}
+
+function initFormWidgets(item, secKey, arrayKey) {
+  if (secKey === 'parts') {
+    const tags = [...(item.tags||[])];
+    const reqTags = [...(item.required_tags||[])];
+    window._partTags = tags;
+    window._partReqTags = reqTags;
+    renderTagsWidget('p-tags-wrap', tags, t => { window._partTags = t; });
+    renderTagsWidget('p-reqtags-wrap', reqTags, t => { window._partReqTags = t; });
+    const stats = Object.assign({}, item.stats||{});
+    window._partStats = stats;
+    window._kvContexts['p-stats-kv'] = { get: ()=>window._partStats, set: (o)=>{ window._partStats=o; }, kp:'stat id', vp:'value' };
+    renderKV('p-stats-kv', stats, o=>{ window._partStats=o; }, 'stat id', 'value');
+    const price = Object.assign({}, item.price||{});
+    window._partPrice = price;
+    window._kvContexts['p-price-kv'] = { get: ()=>window._partPrice, set: (o)=>{ window._partPrice=o; renderKV('p-price-kv',o,n=>{ window._partPrice=n; },'currency','amount'); } };
+    renderKV('p-price-kv', price, o=>{ window._partPrice=o; }, 'currency', 'amount');
+  }
+  if (secKey === 'entities') initEntityWidgets(item);
+  if (secKey === 'locations') initLocationWidgets(item);
+  if (secKey === 'factions') initFactionWidgets(item);
+  if (secKey === 'ai_personas') initPersonaWidgets(item);
+}
+
+function savePart() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.parts.parts[state.activeItemIdx];
+  item.id = v('p-id');
+  item.display_name = v('p-name');
+  item.description = v('p-desc');
+  item.tags = [...(window._partTags||[])];
+  item.required_tags = [...(window._partReqTags||[])];
+  item.equippable = v('p-equip') === 'true';
+  item.stats = Object.assign({}, window._partStats||{});
+  item.price = Object.assign({}, window._partPrice||{});
+  if (v('p-sprite')) item.sprite = v('p-sprite'); else delete item.sprite;
+  if (v('p-script')) item.script_path = v('p-script'); else delete item.script_path;
+  if (v('p-equip-sound')) item.equip_sound = v('p-equip-sound'); else delete item.equip_sound;
+  renderItemSection(mod, 'parts', 'parts', partForm, partDefault);
+  setVal('Part saved ✓');
+  updatePreview(item);
+}
+
+// ─── ENTITIES ─────────────────────────────────────────────────────────────────
+function entityDefault() {
+  return { entity_id: `${ns()}:new_entity`, display_name: 'New Entity', description: '', location_id: '', currencies: {}, stats: {}, flags: {}, inventory: [], interactions: [] };
+}
+
+function entityForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('e-id','Entity ID','text',item.entity_id,'author:mod:entity_name',true)}
+    ${fld('e-name','Display Name','text',item.display_name,'',true)}
+    ${fld2('e-desc','Description','textarea',item.description)}
+    ${fld('e-loc','Location ID','text',item.location_id||'')}
+    ${fld('e-portrait','Portrait Path','text',item.portrait||'')}
+    ${fld('e-persona','AI Persona ID','text',item.ai_persona_id||'')}
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Stats & Currencies</div><div class="form-body single">
+    <div class="field"><label class="field-label">Stats</label><div id="e-stats-kv"></div></div>
+    <div class="field"><label class="field-label">Currencies</label><div id="e-curr-kv"></div></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Flags</div><div class="form-body single">
+    <div class="field"><label class="field-label">Flags (key:bool/value pairs)</label><div id="e-flags-kv"></div></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Inventory (instances)</div><div class="form-body single">
+    <div class="field full"><label class="field-label hint">Comma-separated: instance_id|template_id pairs, one per line</label>
+    <textarea id="e-inv" style="min-height:80px">${(item.inventory||[]).map(i=>`${i.instance_id}|${i.template_id}`).join('\n')}</textarea></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Interactions</div><div class="form-body single">
+    <div id="e-interactions-list"></div>
+    <span class="add-link" onclick="addEntityInteraction()">+ Add Interaction</span>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveEntity()">Save Entity</button></div>`;
+}
+
+function initEntityWidgets(item) {
+  window._entityStats = Object.assign({},item.stats||{});
+  window._entityCurr = Object.assign({},item.currencies||{});
+  window._entityFlags = Object.assign({},item.flags||{});
+  window._entityInteractions = JSON.parse(JSON.stringify(item.interactions||[]));
+  window._kvContexts['e-stats-kv'] = { get:()=>window._entityStats, set:(o)=>{window._entityStats=o; renderKV('e-stats-kv',o,n=>{window._entityStats=n;});} };
+  window._kvContexts['e-curr-kv'] = { get:()=>window._entityCurr, set:(o)=>{window._entityCurr=o; renderKV('e-curr-kv',o,n=>{window._entityCurr=n;});} };
+  window._kvContexts['e-flags-kv'] = { get:()=>window._entityFlags, set:(o)=>{window._entityFlags=o; renderKV('e-flags-kv',o,n=>{window._entityFlags=n;});} };
+  renderKV('e-stats-kv', window._entityStats, o=>{window._entityStats=o;}, 'stat', 'value');
+  renderKV('e-curr-kv', window._entityCurr, o=>{window._entityCurr=o;}, 'currency', 'amount');
+  renderKV('e-flags-kv', window._entityFlags, o=>{window._entityFlags=o;}, 'flag_id', 'value');
+  renderEntityInteractions();
+}
+
+function renderEntityInteractions() {
+  const list = document.getElementById('e-interactions-list');
+  if (!list) return;
+  const interactions = window._entityInteractions || [];
+  list.innerHTML = interactions.map((inter,i) => `
+    <div class="patch-row">
+      <div class="patch-row-header">
+        <span style="font-size:11px;color:var(--accent2)">Interaction ${i+1}</span>
+        <button class="btn danger" style="padding:2px 8px;font-size:10px" onclick="removeEntityInteraction(${i})">Remove</button>
+      </div>
+      <div class="form-body" style="grid-template-columns:1fr 1fr;gap:8px">
+        ${inlineField(`ei-tabid-${i}`, 'tab_id', inter.tab_id||'')}
+        ${inlineField(`ei-label-${i}`, 'label (required)', inter.label||'')}
+        ${inlineField(`ei-backend-${i}`, 'backend_class', inter.backend_class||'', 'select', ['ExchangeBackend','TaskProviderBackend','DialogueBackend','ChallengeBackend','CatalogListBackend','EntitySheetBackend','AssemblyEditorBackend','CraftingBackend','EncounterBackend','ListBackend','ActiveQuestLogBackend','FactionReputationBackend','AchievementListBackend','EventLogBackend','WorldMapBackend'])}
+        ${inlineField(`ei-extra-${i}`, 'Extra params (JSON)', JSON.stringify(interactionExtra(inter))||'')}
+      </div>
+    </div>`).join('');
+}
+
+function interactionExtra(inter) {
+  const base = ['tab_id','label','backend_class'];
+  const extra = {};
+  Object.entries(inter).forEach(([k,v])=>{ if (!base.includes(k)) extra[k]=v; });
+  return extra;
+}
+
+function inlineField(id, label, value, type='text', options=[]) {
+  if (type === 'select') {
+    const opts = options.map(o=>`<option value="${o}" ${o===value?'selected':''}>${o}</option>`).join('');
+    return `<div class="field"><label class="field-label">${label}</label><select id="${id}">${opts}</select></div>`;
+  }
+  return `<div class="field"><label class="field-label">${label}</label><input id="${id}" type="text" value="${escAttr(value)}"></div>`;
+}
+
+function addEntityInteraction() {
+  window._entityInteractions = window._entityInteractions || [];
+  window._entityInteractions.push({ tab_id:`tab_${uid()}`, label:'Action', backend_class:'EntitySheetBackend' });
+  renderEntityInteractions();
+}
+
+function removeEntityInteraction(i) {
+  window._entityInteractions.splice(i,1);
+  renderEntityInteractions();
+}
+
+function saveEntity() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.entities.entities[state.activeItemIdx];
+  item.entity_id = v('e-id');
+  item.display_name = v('e-name');
+  item.description = v('e-desc');
+  item.location_id = v('e-loc');
+  item.stats = Object.assign({},window._entityStats||{});
+  item.currencies = Object.assign({},window._entityCurr||{});
+  item.flags = Object.assign({},window._entityFlags||{});
+  if (v('e-portrait')) item.portrait = v('e-portrait'); else delete item.portrait;
+  if (v('e-persona')) item.ai_persona_id = v('e-persona'); else delete item.ai_persona_id;
+  // inventory
+  const invLines = v('e-inv').trim().split('\n').filter(Boolean);
+  item.inventory = invLines.map(l => { const [iid,tid] = l.split('|'); return { instance_id:(iid||'').trim(), template_id:(tid||'').trim() }; }).filter(i=>i.instance_id&&i.template_id);
+  // interactions
+  const interactions = (window._entityInteractions||[]).map((inter,i) => {
+    const ti = v(`ei-tabid-${i}`);
+    const la = v(`ei-label-${i}`);
+    const bc = v(`ei-backend-${i}`);
+    let extra = {};
+    try { extra = JSON.parse(v(`ei-extra-${i}`)||'{}'); } catch(e) {}
+    return Object.assign({ tab_id:ti, label:la, backend_class:bc }, extra);
+  });
+  item.interactions = interactions;
+  renderItemSection(mod,'entities','entities',entityForm,entityDefault);
+  setVal('Entity saved ✓'); updatePreview(item);
+}
+
+// ─── LOCATIONS ────────────────────────────────────────────────────────────────
+function locationDefault() {
+  return { location_id:`${ns()}:new_location`, display_name:'New Location', description:'', connections:{}, screens:[], entities_present:[] };
+}
+
+function locationForm(item) {
+  const screensJson = JSON.stringify(item.screens||[], null, 2);
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('l-id','Location ID','text',item.location_id,'author:mod:location_name',true)}
+    ${fld('l-name','Display Name','text',item.display_name,'',true)}
+    ${fld2('l-desc','Description','textarea',item.description)}
+    ${fld('l-faction','Faction ID','text',item.faction_id||'')}
+    ${fld('l-locked-msg','Locked Message','text',item.locked_message||'')}
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Connections (location_id: travel_cost)</div><div class="form-body single">
+    <div class="field"><div id="l-conn-kv"></div></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Entities Present</div><div class="form-body single">
+    <div class="field"><label class="field-label">Entity IDs (one per line)</label>
+    <textarea id="l-entities" style="min-height:60px">${(item.entities_present||[]).join('\n')}</textarea></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Screens (raw JSON array)</div><div class="form-body single">
+    <div class="field full"><textarea id="l-screens" style="min-height:120px">${screensJson}</textarea>
+    <span class="hint">Each screen: tab_id, display_name (not label!), backend_class, plus backend params</span></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveLocation()">Save Location</button></div>`;
+}
+
+function initLocationWidgets(item) {
+  window._locConn = Object.assign({},item.connections||{});
+  window._kvContexts['l-conn-kv'] = { get:()=>window._locConn, set:(o)=>{window._locConn=o; renderKV('l-conn-kv',o,n=>{window._locConn=n;},'location_id','travel_cost');} };
+  renderKV('l-conn-kv', window._locConn, o=>{window._locConn=o;}, 'location_id', 'travel_cost');
+}
+
+function saveLocation() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.locations.locations[state.activeItemIdx];
+  item.location_id = v('l-id');
+  item.display_name = v('l-name');
+  item.description = v('l-desc');
+  item.connections = Object.assign({},window._locConn||{});
+  // convert connection values to numbers
+  Object.keys(item.connections).forEach(k=>{ item.connections[k]=Number(item.connections[k])||1; });
+  item.entities_present = v('l-entities').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  if (v('l-faction')) item.faction_id = v('l-faction'); else delete item.faction_id;
+  if (v('l-locked-msg')) item.locked_message = v('l-locked-msg'); else delete item.locked_message;
+  try { item.screens = JSON.parse(v('l-screens')||'[]'); } catch(e) { setVal('Screens JSON invalid: '+e.message,'err'); return; }
+  renderItemSection(mod,'locations','locations',locationForm,locationDefault);
+  setVal('Location saved ✓'); updatePreview(item);
+}
+
+// ─── FACTIONS ─────────────────────────────────────────────────────────────────
+function factionDefault() {
+  return { faction_id:`${ns()}:new_faction`, display_name:'New Faction', description:'', faction_color:'#ffffff', territory:[], roster:[], reputation_thresholds:{ allied:100, friendly:25, neutral:0, hostile:-25 }, quest_pool:[] };
+}
+
+function factionForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('f-id','Faction ID','text',item.faction_id,'',true)}
+    ${fld('f-name','Display Name','text',item.display_name,'',true)}
+    ${fld2('f-desc','Description','textarea',item.description)}
+    ${fld('f-color','Faction Color','text',item.faction_color||'#ffffff','Hex color, e.g. #00d4aa')}
+    ${fld('f-emblem','Emblem Path','text',item.emblem_path||'')}
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Reputation Thresholds</div><div class="form-body single">
+    <div class="field"><div id="f-rep-kv"></div></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Territory, Roster, Quest Pool</div><div class="form-body single">
+    <div class="field"><label class="field-label">Territory (location IDs, one per line)</label><textarea id="f-territory" style="min-height:60px">${(item.territory||[]).join('\n')}</textarea></div>
+    <div class="field"><label class="field-label">Roster (entity IDs, one per line)</label><textarea id="f-roster" style="min-height:60px">${(item.roster||[]).join('\n')}</textarea></div>
+    <div class="field"><label class="field-label">Quest Pool (quest IDs, one per line)</label><textarea id="f-quests" style="min-height:60px">${(item.quest_pool||[]).join('\n')}</textarea></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveFaction()">Save Faction</button></div>`;
+}
+
+function initFactionWidgets(item) {
+  window._facRep = Object.assign({},item.reputation_thresholds||{});
+  window._kvContexts['f-rep-kv'] = { get:()=>window._facRep, set:(o)=>{window._facRep=o; renderKV('f-rep-kv',o,n=>{window._facRep=n;},'tier','value');} };
+  renderKV('f-rep-kv', window._facRep, o=>{window._facRep=o;}, 'tier', 'value');
+}
+
+function saveFaction() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.factions.factions[state.activeItemIdx];
+  item.faction_id = v('f-id');
+  item.display_name = v('f-name');
+  item.description = v('f-desc');
+  item.faction_color = v('f-color');
+  if (v('f-emblem')) item.emblem_path = v('f-emblem'); else delete item.emblem_path;
+  const rep = Object.assign({},window._facRep||{});
+  Object.keys(rep).forEach(k=>{ rep[k]=Number(rep[k])||0; });
+  item.reputation_thresholds = rep;
+  item.territory = v('f-territory').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  item.roster = v('f-roster').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  item.quest_pool = v('f-quests').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  renderItemSection(mod,'factions','factions',factionForm,factionDefault);
+  setVal('Faction saved ✓'); updatePreview(item);
+}
+
+// ─── TASKS ────────────────────────────────────────────────────────────────────
+function taskDefault() {
+  return { template_id:`${ns()}:new_task`, type:'WAIT', duration:4, reward:{}, description:'', repeatable:true };
+}
+
+function taskForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('t-id','Template ID','text',item.template_id,'',true)}
+    ${inlineField('t-type','Type',item.type||'WAIT','select',['WAIT','DELIVER','TRAVEL','BUILD','FIGHT','SURVIVE','CRAFT'])}
+    ${fld('t-duration','Duration (ticks)','number',item.duration||'')}
+    ${fld('t-travel-cost','Travel Cost (ticks)','number',item.travel_cost||'')}
+    ${fld('t-target','Target Location ID','text',item.target||'')}
+    ${fld('t-difficulty','Difficulty','number',item.difficulty||1)}
+    ${fld2('t-desc','Description','textarea',item.description)}
+    <div class="field"><label class="field-label">Repeatable</label><select id="t-repeat"><option value="true" ${item.repeatable?'selected':''}>true</option><option value="false" ${!item.repeatable?'selected':''}>false</option></select></div>
+    ${fld('t-sound','Complete Sound','text',item.complete_sound||'')}
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Reward</div><div class="form-body single">
+    <div class="field"><label class="field-label">Currencies (key:amount)</label><div id="t-rew-kv"></div></div>
+    <div class="field"><label class="field-label">Reputation (faction_id:amount, one per line)</label><textarea id="t-rep-raw" style="min-height:60px">${Object.entries(item.reward?.reputation||{}).map(([k,v])=>`${k}:${v}`).join('\n')}</textarea></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveTask()">Save Task</button></div>`;
+}
+
+function initTaskWidgets(item) {
+  window._taskRew = Object.assign({}, ...(Object.entries(item.reward||{}).filter(([k])=>k!=='reputation').map(([k,v])=>({[k]:v}))));
+  window._kvContexts['t-rew-kv'] = { get:()=>window._taskRew, set:(o)=>{window._taskRew=o; renderKV('t-rew-kv',o,n=>{window._taskRew=n;},'currency','amount');} };
+  renderKV('t-rew-kv', window._taskRew, o=>{window._taskRew=o;}, 'currency', 'amount');
+}
+
+function saveTask() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.tasks.task_templates[state.activeItemIdx];
+  item.template_id = v('t-id');
+  item.type = v('t-type');
+  item.description = v('t-desc');
+  item.repeatable = v('t-repeat') === 'true';
+  if (v('t-duration')) item.duration = parseInt(v('t-duration')); else delete item.duration;
+  if (v('t-travel-cost')) item.travel_cost = parseInt(v('t-travel-cost')); else delete item.travel_cost;
+  if (v('t-target')) item.target = v('t-target'); else delete item.target;
+  if (v('t-difficulty')) item.difficulty = parseInt(v('t-difficulty')); else delete item.difficulty;
+  if (v('t-sound')) item.complete_sound = v('t-sound'); else delete item.complete_sound;
+  const rew = Object.assign({},window._taskRew||{});
+  Object.keys(rew).forEach(k=>{ rew[k]=Number(rew[k])||0; });
+  const repRaw = v('t-rep-raw').trim().split('\n').filter(Boolean);
+  const rep = {};
+  repRaw.forEach(l=>{ const [k,val]=l.split(':'); if(k&&val) rep[k.trim()]=Number(val.trim())||0; });
+  if (Object.keys(rep).length) rew.reputation = rep;
+  item.reward = rew;
+  renderItemSection(mod,'tasks','task_templates',taskForm,taskDefault);
+  setVal('Task saved ✓'); updatePreview(item);
+}
+
+// Extend initFormWidgets with additional section handlers
+const _initFormWidgetsBase = initFormWidgets;
+window.initFormWidgets = function(item, secKey, arrayKey) {
+  _initFormWidgetsBase(item, secKey, arrayKey);
+  if (secKey === 'tasks') initTaskWidgets(item);
+  if (secKey === 'quests') initQuestWidgets(item);
+  if (secKey === 'recipes') initRecipeWidgets(item);
+  if (secKey === 'ai_templates') initAITemplateWidgets(item);
+};
+
+// ─── QUESTS ───────────────────────────────────────────────────────────────────
+function questDefault() {
+  return { quest_id:`${ns()}:new_quest`, display_name:'New Quest', description:'', stages:[], reward:{}, repeatable:false };
+}
+
+function questForm(item) {
+  const stagesJson = JSON.stringify(item.stages||[], null, 2);
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('q-id','Quest ID','text',item.quest_id,'',true)}
+    ${fld('q-name','Display Name','text',item.display_name,'',true)}
+    ${fld2('q-desc','Description','textarea',item.description)}
+    <div class="field"><label class="field-label">Repeatable</label><select id="q-repeat"><option value="false" ${!item.repeatable?'selected':''}>false</option><option value="true" ${item.repeatable?'selected':''}>true</option></select></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Reward</div><div class="form-body single">
+    <div class="field"><label class="field-label">Currencies (key:amount)</label><div id="q-rew-kv"></div></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Stages (raw JSON array)</div><div class="form-body single">
+    <div class="field full"><textarea id="q-stages" style="min-height:140px">${stagesJson}</textarea>
+    <span class="hint">Each stage: {description, objectives:[{type, ...}]}</span></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveQuest()">Save Quest</button></div>`;
+}
+
+function initQuestWidgets(item) {
+  window._questRew = Object.assign({},item.reward||{});
+  window._kvContexts['q-rew-kv'] = { get:()=>window._questRew, set:(o)=>{window._questRew=o; renderKV('q-rew-kv',o,n=>{window._questRew=n;},'currency','amount');} };
+  renderKV('q-rew-kv', window._questRew, o=>{window._questRew=o;}, 'currency', 'amount');
+}
+
+function saveQuest() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.quests.quests[state.activeItemIdx];
+  item.quest_id = v('q-id');
+  item.display_name = v('q-name');
+  item.description = v('q-desc');
+  item.repeatable = v('q-repeat') === 'true';
+  const rew = Object.assign({},window._questRew||{});
+  Object.keys(rew).forEach(k=>{ rew[k]=Number(rew[k])||0; });
+  item.reward = rew;
+  try { item.stages = JSON.parse(v('q-stages')||'[]'); } catch(e) { setVal('Stages JSON invalid: '+e.message,'err'); return; }
+  renderItemSection(mod,'quests','quests',questForm,questDefault);
+  setVal('Quest saved ✓'); updatePreview(item);
+}
+
+// ─── RECIPES ──────────────────────────────────────────────────────────────────
+function recipeDefault() {
+  return { recipe_id:`${ns()}:new_recipe`, display_name:'New Recipe', description:'', output_template_id:'', output_count:1, inputs:[], craft_time_ticks:0, discovery:'always', tags:[] };
+}
+
+function recipeForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('r-id','Recipe ID','text',item.recipe_id,'',true)}
+    ${fld('r-name','Display Name','text',item.display_name,'',true)}
+    ${fld2('r-desc','Description','textarea',item.description)}
+    ${fld('r-output','Output Template ID','text',item.output_template_id,'',true)}
+    ${fld('r-count','Output Count','number',item.output_count||1)}
+    ${fld('r-time','Craft Time (ticks)','number',item.craft_time_ticks||0,'0 = instant')}
+    ${inlineField('r-discovery','Discovery','always','select',['always','learned_on_flag','auto_on_ingredient_owned'])}
+    <div class="field"><label class="field-label">Tags</label><div class="tags-wrap" id="r-tags-wrap"></div></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Inputs (template_id:count, one per line)</div><div class="form-body single">
+    <textarea id="r-inputs" style="min-height:80px">${(item.inputs||[]).map(i=>`${i.template_id}:${i.count||1}`).join('\n')}</textarea>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Requirements</div><div class="form-body single">
+    <div class="field"><label class="field-label">Required Stations (one per line)</label><textarea id="r-stations" style="min-height:50px">${(item.required_stations||[]).join('\n')}</textarea></div>
+    <div class="field"><label class="field-label">Required Stats (stat:value)</label><div id="r-req-stats-kv"></div></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveRecipe()">Save Recipe</button></div>`;
+}
+
+function initRecipeWidgets(item) {
+  window._recipeTags = [...(item.tags||[])];
+  renderTagsWidget('r-tags-wrap', window._recipeTags, t=>{window._recipeTags=t;});
+  window._recipeReqStats = Object.assign({},item.required_stats||{});
+  window._kvContexts['r-req-stats-kv'] = { get:()=>window._recipeReqStats, set:(o)=>{window._recipeReqStats=o; renderKV('r-req-stats-kv',o,n=>{window._recipeReqStats=n;},'stat','value');} };
+  renderKV('r-req-stats-kv', window._recipeReqStats, o=>{window._recipeReqStats=o;}, 'stat', 'value');
+  // Also set discovery select properly
+  const sel = document.getElementById('r-discovery');
+  if (sel) sel.value = item.discovery || 'always';
+}
+
+function saveRecipe() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.recipes.recipes[state.activeItemIdx];
+  item.recipe_id = v('r-id');
+  item.display_name = v('r-name');
+  item.description = v('r-desc');
+  item.output_template_id = v('r-output');
+  item.output_count = parseInt(v('r-count'))||1;
+  item.craft_time_ticks = parseInt(v('r-time'))||0;
+  item.discovery = v('r-discovery');
+  item.tags = [...(window._recipeTags||[])];
+  item.required_stations = v('r-stations').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  const rsRaw = Object.assign({},window._recipeReqStats||{});
+  Object.keys(rsRaw).forEach(k=>{ rsRaw[k]=Number(rsRaw[k])||0; });
+  item.required_stats = rsRaw;
+  const inputLines = v('r-inputs').trim().split('\n').filter(Boolean);
+  item.inputs = inputLines.map(l=>{ const[tid,cnt]=l.split(':'); return {template_id:(tid||'').trim(),count:parseInt(cnt)||1}; }).filter(i=>i.template_id);
+  renderItemSection(mod,'recipes','recipes',recipeForm,recipeDefault);
+  setVal('Recipe saved ✓'); updatePreview(item);
+}
+
+// ─── ENCOUNTERS ───────────────────────────────────────────────────────────────
+function encounterDefault() {
+  return { encounter_id:`${ns()}:new_encounter`, display_name:'New Encounter', participants:{ player:{entity_id:'player'}, opponent:{entity_id:''} }, actions:{ player:[], opponent:[] }, resolution:{ max_rounds:8, max_rounds_outcome:'fled', cancel_outcome:'fled', outcomes:[] } };
+}
+
+function encounterForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('en-id','Encounter ID','text',item.encounter_id,'',true)}
+    ${fld('en-name','Display Name','text',item.display_name,'',true)}
+    ${fld('en-title','Screen Title','text',item.screen_title||'')}
+    ${fld('en-opponent','Opponent Entity ID','text',(item.participants?.opponent?.entity_id)||'')}
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Resolution</div><div class="form-body">
+    ${fld('en-maxr','Max Rounds','number',item.resolution?.max_rounds||8)}
+    ${fld('en-maxout','Max Rounds Outcome','text',item.resolution?.max_rounds_outcome||'fled')}
+    ${fld('en-cancel','Cancel Outcome','text',item.resolution?.cancel_outcome||'fled')}
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Full JSON (advanced)</div><div class="form-body single">
+    <div class="field full"><textarea id="en-raw" style="min-height:200px">${JSON.stringify(item,null,2)}</textarea>
+    <span class="hint">Edit full encounter JSON directly. Click Save to parse and apply.</span></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveEncounter()">Save Encounter</button></div>`;
+}
+
+function saveEncounter() {
+  const mod = state.mods[state.activeMod];
+  try {
+    const parsed = JSON.parse(v('en-raw'));
+    mod.encounters.encounters[state.activeItemIdx] = parsed;
+    renderItemSection(mod,'encounters','encounters',encounterForm,encounterDefault);
+    setVal('Encounter saved ✓'); updatePreview(parsed);
+  } catch(e) { setVal('JSON invalid: '+e.message,'err'); }
+}
+
+// ─── ACHIEVEMENTS ─────────────────────────────────────────────────────────────
+function achievementDefault() {
+  return { achievement_id:`${ns()}:new_achievement`, display_name:'New Achievement', description:'', stat_name:'', requirement:1 };
+}
+
+function achievementForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('a-id','Achievement ID','text',item.achievement_id,'',true)}
+    ${fld('a-name','Display Name','text',item.display_name,'',true)}
+    ${fld2('a-desc','Description','textarea',item.description)}
+    ${fld('a-stat','Stat Name','text',item.stat_name,'The tracked stat this unlocks on')}
+    ${fld('a-req','Requirement','number',item.requirement||1,'Stat value needed to unlock')}
+    <div class="field"><label class="field-label">Hidden</label><select id="a-hidden"><option value="false" ${!item.hidden?'selected':''}>false</option><option value="true" ${item.hidden?'selected':''}>true</option></select></div>
+    ${fld('a-icon','Icon Path','text',item.icon||'')}
+    ${fld('a-sound','Unlock Sound','text',item.unlock_sound||'')}
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveAchievement()">Save Achievement</button></div>`;
+}
+
+function saveAchievement() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.achievements.achievements[state.activeItemIdx];
+  item.achievement_id = v('a-id');
+  item.display_name = v('a-name');
+  item.description = v('a-desc');
+  item.stat_name = v('a-stat');
+  item.requirement = parseInt(v('a-req'))||1;
+  item.hidden = v('a-hidden') === 'true';
+  if (v('a-icon')) item.icon = v('a-icon'); else delete item.icon;
+  if (v('a-sound')) item.unlock_sound = v('a-sound'); else delete item.unlock_sound;
+  renderItemSection(mod,'achievements','achievements',achievementForm,achievementDefault);
+  setVal('Achievement saved ✓'); updatePreview(item);
+}
+
+// ─── DEFINITIONS ──────────────────────────────────────────────────────────────
+function renderDefinitions(mod) {
+  const il = document.getElementById('item-list');
+  il.style.display = 'none';
+  const defs = mod.definitions;
+  const fs = document.getElementById('form-scroll');
+  fs.innerHTML = `
+  <div style="max-width:600px">
+  <div class="form-section"><div class="form-section-title">Currencies</div><div class="form-body single">
+    <div class="field"><label class="field-label">Currency IDs (one per line)</label>
+    <textarea id="def-currencies" style="min-height:60px">${(defs.currencies||[]).join('\n')}</textarea></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Stats (raw JSON array)</div><div class="form-body single">
+    <div class="field full"><textarea id="def-stats" style="min-height:200px">${JSON.stringify(defs.stats||[],null,2)}</textarea>
+    <span class="hint">Each stat: {id, kind:"flat"|"resource"|"capacity", default_value, ui_group, ...}</span></div>
+  </div></div>
+  <button class="btn primary" onclick="saveDefinitions()">Save Definitions</button>
+  </div>`;
+  updatePreview(defs);
+}
+
+function saveDefinitions() {
+  const mod = state.mods[state.activeMod];
+  mod.definitions.currencies = v('def-currencies').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  try { mod.definitions.stats = JSON.parse(v('def-stats')||'[]'); } catch(e) { setVal('Stats JSON invalid: '+e.message,'err'); return; }
+  updatePreview(mod.definitions);
+  setVal('Definitions saved ✓');
+}
+
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+function renderConfig(mod) {
+  const il = document.getElementById('item-list');
+  il.style.display = 'none';
+  const cfg = mod.config;
+  const fs = document.getElementById('form-scroll');
+  fs.innerHTML = `
+  <div style="max-width:600px">
+  <div class="form-section"><div class="form-section-title">Game Config</div><div class="form-body single">
+    ${fld('cfg-start-player','game.starting_player_id','text',(cfg.game||{}).starting_player_id||'','Required: must reference a valid entity id')}
+    ${fld('cfg-start-loc','game.starting_location','text',(cfg.game||{}).starting_location||'')}
+    ${fld('cfg-tpd','game.ticks_per_day','number',(cfg.game||{}).ticks_per_day||24)}
+    ${fld('cfg-tph','game.ticks_per_hour','number',(cfg.game||{}).ticks_per_hour||0)}
+    ${fld('cfg-title','game.title','text',(cfg.game||{}).title||'')}
+    ${fld('cfg-tagline','game.tagline','text',(cfg.game||{}).tagline||'')}
+    ${fld('cfg-disc-locs','game.starting_discovered_locations (comma-separated)','text',((cfg.game||{}).starting_discovered_locations||[]).join(','))}
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Full Config (raw JSON)</div><div class="form-body single">
+    <textarea id="cfg-raw" style="min-height:180px">${JSON.stringify(cfg,null,2)}</textarea>
+    <span class="hint">Full deep-merged config. Simple fields above override this on save.</span>
+  </div></div>
+  <button class="btn primary" onclick="saveConfig()">Save Config</button>
+  </div>`;
+  updatePreview(cfg);
+}
+
+function saveConfig() {
+  const mod = state.mods[state.activeMod];
+  try {
+    let cfg = JSON.parse(v('cfg-raw')||'{}');
+    if (!cfg.game) cfg.game = {};
+    if (v('cfg-start-player')) cfg.game.starting_player_id = v('cfg-start-player');
+    if (v('cfg-start-loc')) cfg.game.starting_location = v('cfg-start-loc');
+    if (v('cfg-tpd')) cfg.game.ticks_per_day = parseInt(v('cfg-tpd'))||24;
+    if (v('cfg-tph')) cfg.game.ticks_per_hour = parseInt(v('cfg-tph'))||0;
+    if (v('cfg-title')) cfg.game.title = v('cfg-title');
+    if (v('cfg-tagline')) cfg.game.tagline = v('cfg-tagline');
+    const discLocs = v('cfg-disc-locs').split(',').map(s=>s.trim()).filter(Boolean);
+    if (discLocs.length) cfg.game.starting_discovered_locations = discLocs;
+    mod.config = cfg;
+    updatePreview(cfg);
+    setVal('Config saved ✓');
+  } catch(e) { setVal('JSON invalid: '+e.message,'err'); }
+}
+
+// ─── AI PERSONAS ──────────────────────────────────────────────────────────────
+function personaDefault() {
+  return { persona_id:`${ns()}:new_persona`, display_name:'New Persona', system_prompt_template:'You are {display_name}. {description}', personality_traits:[], speech_style:'', knowledge_scope:[], forbidden_topics:[], fallback_lines:[], tags:[] };
+}
+
+function personaForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('ap-id','Persona ID','text',item.persona_id,'',true)}
+    ${fld('ap-name','Display Name','text',item.display_name,'',true)}
+    ${fld2('ap-prompt','System Prompt Template','textarea',item.system_prompt_template)}
+    ${fld2('ap-speech','Speech Style','textarea',item.speech_style||'')}
+    <div class="field"><label class="field-label">Personality Traits</label><div class="tags-wrap" id="ap-traits-wrap"></div></div>
+    <div class="field"><label class="field-label">Tags</label><div class="tags-wrap" id="ap-tags-wrap"></div></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Knowledge & Constraints</div><div class="form-body single">
+    <div class="field"><label class="field-label">Knowledge Scope (one per line)</label><textarea id="ap-scope" style="min-height:50px">${(item.knowledge_scope||[]).join('\n')}</textarea></div>
+    <div class="field"><label class="field-label">Forbidden Topics (one per line)</label><textarea id="ap-forbidden" style="min-height:50px">${(item.forbidden_topics||[]).join('\n')}</textarea></div>
+    <div class="field"><label class="field-label">Fallback Lines (one per line)</label><textarea id="ap-fallback" style="min-height:60px">${(item.fallback_lines||[]).join('\n')}</textarea></div>
+  </div></div>
+  <div class="form-section"><div class="form-section-title">Response Constraints</div><div class="form-body">
+    ${fld('ap-maxsent','Max Sentences','number',(item.response_constraints||{}).max_sentences||'')}
+    ${fld('ap-tone','Tone','text',(item.response_constraints||{}).tone||'')}
+    <div class="field"><label class="field-label">Always In Character</label><select id="ap-aic"><option value="true" ${(item.response_constraints||{}).always_in_character!==false?'selected':''}>true</option><option value="false">false</option></select></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="savePersona()">Save Persona</button></div>`;
+}
+
+function initPersonaWidgets(item) {
+  window._personaTraits = [...(item.personality_traits||[])];
+  window._personaTags = [...(item.tags||[])];
+  renderTagsWidget('ap-traits-wrap', window._personaTraits, t=>{window._personaTraits=t;});
+  renderTagsWidget('ap-tags-wrap', window._personaTags, t=>{window._personaTags=t;});
+}
+
+function savePersona() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.ai_personas.ai_personas[state.activeItemIdx];
+  item.persona_id = v('ap-id');
+  item.display_name = v('ap-name');
+  item.system_prompt_template = v('ap-prompt');
+  item.speech_style = v('ap-speech');
+  item.personality_traits = [...(window._personaTraits||[])];
+  item.tags = [...(window._personaTags||[])];
+  item.knowledge_scope = v('ap-scope').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  item.forbidden_topics = v('ap-forbidden').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  item.fallback_lines = v('ap-fallback').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  const rc = {};
+  if (v('ap-maxsent')) rc.max_sentences = parseInt(v('ap-maxsent'));
+  if (v('ap-tone')) rc.tone = v('ap-tone');
+  rc.always_in_character = v('ap-aic') === 'true';
+  if (Object.keys(rc).length) item.response_constraints = rc;
+  renderItemSection(mod,'ai_personas','ai_personas',personaForm,personaDefault);
+  setVal('Persona saved ✓'); updatePreview(item);
+}
+
+// ─── AI TEMPLATES ─────────────────────────────────────────────────────────────
+function aiTemplateDefault() {
+  return { template_id:`${ns()}:new_template`, purpose:'task_description', prompt_template:'', fallback:'', tags:[] };
+}
+
+function aiTemplateForm(item) {
+  return `
+  <div class="form-section"><div class="form-section-title">Core</div><div class="form-body">
+    ${fld('at-id','Template ID','text',item.template_id,'',true)}
+    ${fld('at-purpose','Purpose','text',item.purpose,'e.g. task_description, npc_greeting',true)}
+    ${fld2('at-prompt','Prompt Template','textarea',item.prompt_template)}
+    ${fld2('at-fallback','Fallback','textarea',item.fallback||'')}
+    <div class="field"><label class="field-label">Tags</label><div class="tags-wrap" id="at-tags-wrap"></div></div>
+  </div></div>
+  <div style="padding:10px 0"><button class="btn primary" onclick="saveAITemplate()">Save AI Template</button></div>`;
+}
+
+function initAITemplateWidgets(item) {
+  window._aiTemplateTags = [...(item.tags||[])];
+  renderTagsWidget('at-tags-wrap', window._aiTemplateTags, t=>{window._aiTemplateTags=t;});
+}
+
+function saveAITemplate() {
+  const mod = state.mods[state.activeMod];
+  const item = mod.ai_templates.ai_templates[state.activeItemIdx];
+  item.template_id = v('at-id');
+  item.purpose = v('at-purpose');
+  item.prompt_template = v('at-prompt');
+  item.fallback = v('at-fallback');
+  item.tags = [...(window._aiTemplateTags||[])];
+  renderItemSection(mod,'ai_templates','ai_templates',aiTemplateForm,aiTemplateDefault);
+  setVal('AI Template saved ✓'); updatePreview(item);
+}
+
+// ─── PATCHES ──────────────────────────────────────────────────────────────────
+function renderPatches(mod) {
+  const il = document.getElementById('item-list');
+  il.style.display = 'none';
+  const fs = document.getElementById('form-scroll');
+  const patchFiles = ['parts','entities','locations','factions','tasks','quests','recipes','encounters','achievements','ai_personas','ai_templates'];
+  let html = `<div style="max-width:700px">
+  <p style="color:var(--muted);font-size:11px;margin-bottom:12px">Patches run in phase 2 — after all additions are loaded. They let you modify any content from any mod.</p>`;
+  patchFiles.forEach(pf => {
+    const patches = (mod[pf]||{}).patches || [];
+    html += `<div class="form-section">
+      <div class="form-section-title" onclick="toggleSection('patch-${pf}')">${pf}.json patches <span class="toggle" id="patch-${pf}-toggle">▼</span></div>
+      <div id="patch-${pf}" class="form-body single">
+        <div class="field full"><textarea id="patch-raw-${pf}" style="min-height:100px">${JSON.stringify(patches,null,2)}</textarea>
+        <span class="hint">Array of patch objects: {target:"id", set:{...}, add_tags:[...], ...}</span></div>
+        <button class="btn" style="margin-top:6px" onclick="savePatch('${pf}')">Save ${pf} patches</button>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  fs.innerHTML = html;
+  updatePreview(Object.fromEntries(patchFiles.map(pf=>[[pf],(mod[pf]||{}).patches||[]])));
+}
+
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  const tog = document.getElementById(id+'-toggle');
+  if (el) { el.style.display = el.style.display === 'none' ? '' : 'none'; }
+  if (tog) tog.textContent = el.style.display === 'none' ? '▶' : '▼';
+}
+
+function savePatch(pf) {
+  const mod = state.mods[state.activeMod];
+  try {
+    const patches = JSON.parse(v(`patch-raw-${pf}`)||'[]');
+    if (!mod[pf]) mod[pf] = {};
+    mod[pf].patches = patches;
+    setVal(`${pf} patches saved ✓`);
+  } catch(e) { setVal('JSON invalid: '+e.message,'err'); }
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
+function buildExportFiles(mod) {
+  const files = {};
+  files['mod.json'] = JSON.stringify(mod.manifest, null, 2);
+  const dataFiles = {
+    'definitions.json': mod.definitions,
+    'parts.json': cleanFile(mod.parts, 'parts'),
+    'entities.json': cleanFile(mod.entities, 'entities'),
+    'locations.json': cleanFile(mod.locations, 'locations'),
+    'factions.json': cleanFile(mod.factions, 'factions'),
+    'tasks.json': cleanFile(mod.tasks, 'task_templates'),
+    'quests.json': cleanFile(mod.quests, 'quests'),
+    'recipes.json': cleanFile(mod.recipes, 'recipes'),
+    'encounters.json': cleanFile(mod.encounters, 'encounters'),
+    'achievements.json': cleanFile(mod.achievements, 'achievements'),
+    'config.json': mod.config,
+    'ai_personas.json': cleanFile(mod.ai_personas, 'ai_personas'),
+    'ai_templates.json': cleanFile(mod.ai_templates, 'ai_templates'),
+  };
+  Object.entries(dataFiles).forEach(([fname, data]) => {
+    const isEmpty = checkEmpty(data, fname);
+    if (!isEmpty) files[`data/${fname}`] = JSON.stringify(data, null, 2);
+  });
+  return files;
+}
+
+function cleanFile(obj, arrayKey) {
+  const result = {};
+  if (obj[arrayKey] && obj[arrayKey].length) result[arrayKey] = obj[arrayKey];
+  if (obj.patches && obj.patches.length) result.patches = obj.patches;
+  return result;
+}
+
+function checkEmpty(data, fname) {
+  if (fname === 'config.json') return Object.keys(data||{}).length === 0;
+  if (fname === 'definitions.json') return !(data.currencies?.length) && !(data.stats?.length);
+  const keys = Object.keys(data||{});
+  if (!keys.length) return true;
+  return keys.every(k => !data[k] || (Array.isArray(data[k]) && !data[k].length));
+}
+
+function showExport() {
+  if (!state.activeMod) { alert('No mod selected.'); return; }
+  const mod = state.mods[state.activeMod];
+  const files = buildExportFiles(mod);
+  const body = document.getElementById('modal-body');
+  body.innerHTML = Object.entries(files).map(([name, content]) => `
+    <div class="export-file">
+      <h3>${name}</h3>
+      <pre>${content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+    </div>`).join('');
+  window._exportFiles = files;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+function saveProject() {
+  if (!state.activeMod) return;
+  const mod = state.mods[state.activeMod];
+  const blob = new Blob([JSON.stringify(mod, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  const safeName = (mod.manifest?.id || 'mod').replace(/:/g, '_');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${safeName}_editor_project.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setVal('Project saved ✓');
+}
+
+function downloadAll() {
+  if (!window._exportFiles) return;
+  const modId = (state.mods[state.activeMod]?.manifest?.id || 'mod').replace(/:/g,'_');
+  Object.entries(window._exportFiles).forEach(([fname, content]) => {
+    const blob = new Blob([content], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${modId}__${fname.replace('/','_')}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+}
+
+// ─── IMPORT ───────────────────────────────────────────────────────────────────
+
+// Load Mod Files: select mod.json + any data/*.json files together
+function importModFiles() { document.getElementById('import-folder-input').click(); }
+
+// Load Project: load a previously saved editor project JSON
+function importProject() { document.getElementById('import-input').click(); }
+
+// Maps filename → which section/key it belongs to
+const FILE_MAP = {
+  'mod.json':          { section: 'manifest',     key: null },
+  'definitions.json':  { section: 'definitions',  key: null },
+  'parts.json':        { section: 'parts',         key: 'parts' },
+  'entities.json':     { section: 'entities',      key: 'entities' },
+  'locations.json':    { section: 'locations',     key: 'locations' },
+  'factions.json':     { section: 'factions',      key: 'factions' },
+  'tasks.json':        { section: 'tasks',         key: 'task_templates' },
+  'quests.json':       { section: 'quests',        key: 'quests' },
+  'recipes.json':      { section: 'recipes',       key: 'recipes' },
+  'encounters.json':   { section: 'encounters',    key: 'encounters' },
+  'achievements.json': { section: 'achievements',  key: 'achievements' },
+  'config.json':       { section: 'config',        key: null },
+  'ai_personas.json':  { section: 'ai_personas',   key: 'ai_personas' },
+  'ai_templates.json': { section: 'ai_templates',  key: 'ai_templates' },
+};
+
+function handleFolderImport(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  // Read all files as promises
+  const reads = files.map(f => new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try { res({ name: f.name, data: JSON.parse(ev.target.result) }); }
+      catch(err) { rej(`${f.name}: ${err.message}`); }
+    };
+    reader.onerror = () => rej(`Failed to read ${f.name}`);
+    reader.readAsText(f);
+  }));
+
+  Promise.all(reads).then(results => {
+    // Find mod.json to get the mod id
+    const manifestFile = results.find(r => r.name === 'mod.json');
+    const manifest = manifestFile?.data;
+    const modId = manifest?.id || `imported_${uid()}`;
+    const [author, modid] = modId.includes(':') ? modId.split(':') : [modId, 'mod'];
+
+    const mod = defaultMod(modId, author, modid);
+
+    results.forEach(({ name, data }) => {
+      const mapping = FILE_MAP[name];
+      if (!mapping) return; // skip unknown files
+
+      if (name === 'mod.json') {
+        mod.manifest = data;
+        return;
+      }
+      if (name === 'config.json') {
+        mod.config = data;
+        return;
+      }
+      if (name === 'definitions.json') {
+        mod.definitions = data;
+        return;
+      }
+
+      // Data files with additions + patches arrays
+      const { section, key } = mapping;
+      if (!mod[section]) mod[section] = {};
+      // Load additions array
+      if (key && data[key]) mod[section][key] = data[key];
+      // Load patches array
+      if (data.patches) mod[section].patches = data.patches;
+    });
+
+    // Register and switch to the mod
+    state.mods[modId] = mod;
+    state.activeMod = modId;
+    rebuildModSelect();
+    document.getElementById('author-input').value = author;
+    document.getElementById('modid-input').value = modid || 'mod';
+    showSection('manifest');
+
+    const loaded = results.map(r => r.name).join(', ');
+    setVal(`Loaded ${results.length} file(s): ${loaded}`);
+  }).catch(err => {
+    console.error('Import error:', err);
+    setVal('Import error: ' + (err?.message || err), 'err');
+  });
+
+  e.target.value = '';
+}
+
+// Load a full editor project JSON (saved via "Save Project" or previously exported)
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const key = data.manifest?.id || data.id || `imported_${uid()}`;
+      if (data.manifest || data._author) {
+        state.mods[key] = Object.assign(defaultMod(key), data);
+        state.activeMod = key;
+        const mod = state.mods[key];
+        rebuildModSelect();
+        document.getElementById('author-input').value = mod._author || '';
+        document.getElementById('modid-input').value = mod._modid || '';
+        showSection('manifest');
+        setVal('Project loaded ✓');
+      } else {
+        setVal('Not a project file. Use "Load Mod Files" to load individual .json files.', 'warn');
+      }
+    } catch(err) { setVal('Load failed: '+err.message,'err'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function initItemListHTML() {
+  const il = document.getElementById('item-list');
+  il.innerHTML = `
+    <div id="item-list-header">
+      <span>0 items</span>
+    </div>
+    <div id="item-scroll"></div>`;
+}
+
+function init() {
+  initItemListHTML();
+  // Create a default mod to start with
+  const key = 'author:my_mod';
+  state.mods[key] = defaultMod(key, 'author', 'my_mod');
+  state.activeMod = key;
+  rebuildModSelect();
+  document.getElementById('author-input').value = 'author';
+  document.getElementById('modid-input').value = 'my_mod';
+}
+init();
+</script>
+</body>
+</html>
