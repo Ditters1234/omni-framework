@@ -286,4 +286,21 @@ func _complete_active_quest(quest_id: String, template: Dictionary) -> void:
 	if not complete_sound.is_empty():
 		AudioManager.play_sfx(complete_sound)
 	GameEvents.quest_completed.emit(quest_id)
+	_emit_quest_completion_feedback(quest_id, template)
 	ScriptHookService.invoke_world_event_narration("quest_completed", [quest_id])
+
+
+func _emit_quest_completion_feedback(quest_id: String, template: Dictionary) -> void:
+	var display_name := str(template.get("display_name", template.get("title", quest_id)))
+	var reward_value: Variant = template.get("reward", {})
+	var reward_summary := RewardService.build_reward_summary(reward_value, "No rewards")
+	var message := "Quest complete: %s" % display_name
+	if not reward_summary.is_empty():
+		message = "%s | Rewards: %s" % [message, reward_summary]
+	GameState.record_event("quest_completed", {
+		"quest_id": quest_id,
+		"display_name": display_name,
+		"reward_summary": reward_summary,
+		"description": message,
+	})
+	GameEvents.ui_notification_requested.emit(message, OmniConstants.NOTIFICATION_LEVEL_INFO)

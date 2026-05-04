@@ -100,6 +100,8 @@ func _render_center(view_model: Dictionary) -> void:
 				var stat_bar: Control = stat_bar_value
 				_center_host.add_child(stat_bar)
 				stat_bar.call("render", stat_line_value)
+	if bool(view_model.get("resolved", false)):
+		_render_resolution_summary(view_model)
 	var log_title := Label.new()
 	log_title.text = "Log"
 	_center_host.add_child(log_title)
@@ -116,6 +118,37 @@ func _render_center(view_model: Dictionary) -> void:
 			line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			line.text = "[%d] %s" % [int(entry.get("round", 0)), str(entry.get("text", ""))]
 			_center_host.add_child(line)
+
+
+func _render_resolution_summary(view_model: Dictionary) -> void:
+	var outcome_title := Label.new()
+	outcome_title.text = "Outcome"
+	_center_host.add_child(outcome_title)
+	var outcome_text := Label.new()
+	outcome_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	outcome_text.text = str(view_model.get("resolved_screen_text", view_model.get("status_text", "Encounter resolved.")))
+	_center_host.add_child(outcome_text)
+
+	var reward_title := Label.new()
+	reward_title.text = "Rewards"
+	_center_host.add_child(reward_title)
+	var reward_lines_value: Variant = view_model.get("reward_lines", [])
+	var reward_lines: Array = []
+	if reward_lines_value is Array:
+		reward_lines = reward_lines_value
+	if reward_lines.is_empty():
+		var empty_reward_label := Label.new()
+		empty_reward_label.text = "None"
+		_center_host.add_child(empty_reward_label)
+		return
+	for reward_line_value in reward_lines:
+		var reward_line := str(reward_line_value)
+		if reward_line.is_empty():
+			continue
+		var line := Label.new()
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.text = reward_line
+		_center_host.add_child(line)
 
 
 func _render_actions(actions_value: Variant) -> void:

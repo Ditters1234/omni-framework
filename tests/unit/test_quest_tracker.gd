@@ -99,6 +99,30 @@ func test_quest_completion_applies_reward() -> void:
 	assert_eq(player.get_currency("credits"), credits_before + 50.0)
 
 
+func test_quest_completion_notifies_with_reward_summary() -> void:
+	assert_true(GameState.start_quest(TEST_QUEST_ID))
+	watch_signals(GameEvents)
+
+	GameState.travel_to("base:field")
+
+	assert_signal_emitted(GameEvents, "ui_notification_requested")
+	var notification_params: Array = get_signal_parameters(GameEvents, "ui_notification_requested")
+	assert_eq(str(notification_params[0]), "Quest complete: Fixture Quest | Rewards: Credits +50")
+	assert_eq(str(notification_params[1]), OmniConstants.NOTIFICATION_LEVEL_INFO)
+	var history := GameState.event_history
+	assert_gt(history.size(), 0)
+	var latest_value: Variant = history[history.size() - 1]
+	assert_true(latest_value is Dictionary)
+	if latest_value is Dictionary:
+		var latest: Dictionary = latest_value
+		assert_eq(str(latest.get("event_type", "")), "quest_completed")
+		var payload_value: Variant = latest.get("payload", {})
+		assert_true(payload_value is Dictionary)
+		if payload_value is Dictionary:
+			var payload: Dictionary = payload_value
+			assert_eq(str(payload.get("reward_summary", "")), "Credits +50")
+
+
 func test_manual_complete_moves_quest_to_completed() -> void:
 	assert_true(GameState.start_quest(TEST_QUEST_ID))
 	watch_signals(GameEvents)

@@ -18,6 +18,7 @@ var _opponent_tags: Dictionary = {}
 var _log: Array[Dictionary] = []
 var _resolved_outcome_id: String = ""
 var _resolved_screen_text: String = ""
+var _resolved_reward_lines: Array[String] = []
 var _status_text: String = ""
 var _player: EntityInstance = null
 var _opponent: EntityInstance = null
@@ -68,6 +69,7 @@ func initialize(params: Dictionary) -> void:
 	_log.clear()
 	_resolved_outcome_id = ""
 	_resolved_screen_text = ""
+	_resolved_reward_lines.clear()
 	_status_text = ""
 	_rng.randomize()
 	if _template.is_empty():
@@ -109,13 +111,15 @@ func build_view_model() -> Dictionary:
 		"cancel_label": str(_params.get("cancel_label", "Back")),
 		"resolved": is_resolved(),
 		"resolved_outcome_id": _resolved_outcome_id,
+		"resolved_screen_text": _resolved_screen_text,
+		"reward_lines": _resolved_reward_lines.duplicate(),
 		"continue_label": "Continue",
 	}
 
 
 func select_action(action_id: String) -> Dictionary:
 	if is_resolved():
-		return _navigation_for_resolved()
+		return {}
 	if _player == null or _opponent == null:
 		_status_text = "Encounter participants could not be resolved."
 		return {}
@@ -131,11 +135,11 @@ func select_action(action_id: String) -> Dictionary:
 	_emit_action_resolved("player", action, success)
 	var navigation := _evaluate_resolution(false)
 	if not navigation.is_empty() or is_resolved():
-		return navigation
+		return {}
 	_resolve_opponent_turn()
 	navigation = _evaluate_resolution(true)
 	if not navigation.is_empty() or is_resolved():
-		return navigation
+		return {}
 	_decrement_tags()
 	_advance_round()
 	return {}
@@ -143,10 +147,11 @@ func select_action(action_id: String) -> Dictionary:
 
 func cancel() -> Dictionary:
 	if is_resolved():
-		return _navigation_for_resolved()
+		return {}
 	var cancel_outcome := str(_get_resolution().get("cancel_outcome", _template.get("cancel_outcome", ""))).strip_edges()
 	if not cancel_outcome.is_empty():
-		return _resolve(cancel_outcome, "cancel")
+		_resolve(cancel_outcome, "cancel")
+		return {}
 	return {"type": "pop"}
 
 
@@ -293,7 +298,7 @@ func _apply_remove_tag(effect: Dictionary, user: EntityInstance, fallback_target
 
 func _evaluate_resolution(include_max_rounds: bool = true) -> Dictionary:
 	if is_resolved():
-		return _navigation_for_resolved()
+		return {}
 	var outcome := _find_matching_outcome()
 	if not outcome.is_empty():
 		return _resolve(str(outcome.get("outcome_id", "")), "automatic")
@@ -317,12 +322,13 @@ func _find_matching_outcome() -> Dictionary:
 
 func _resolve(outcome_id: String, reason: String) -> Dictionary:
 	if is_resolved():
-		return _navigation_for_resolved()
+		return {}
 	var outcome := _get_outcome(outcome_id)
 	if outcome.is_empty():
 		_status_text = "Encounter outcome '%s' could not be found." % outcome_id
 		return {}
 	var reward_value: Variant = outcome.get("reward", {})
+	_resolved_reward_lines = RewardService.build_reward_lines(reward_value)
 	if reward_value is Dictionary and _player != null:
 		RewardService.apply_reward(_player, reward_value)
 	var action_payload_value: Variant = outcome.get("action_payload", null)
@@ -344,7 +350,7 @@ func _resolve(outcome_id: String, reason: String) -> Dictionary:
 	var sound_ref := str(outcome.get("sound", _params.get("default_sound", _template.get("default_sound", ""))))
 	if not sound_ref.is_empty():
 		AudioManager.play_sfx(sound_ref)
-	return _navigation_for_resolved()
+	return {}
 
 
 func _navigation_for_resolved() -> Dictionary:

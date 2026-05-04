@@ -21,7 +21,8 @@
           "display_name": "Job Board",
           "description": "Review your active contracts.",
           "backend_class": "ActiveQuestLogBackend",
-          "screen_title": "Active Contracts"
+          "screen_title": "Active Contracts",
+          "include_completed": true
         },
         {
           "tab_id": "apt_achievements",
@@ -118,7 +119,8 @@
           "display_name": "Active Contracts",
           "description": "Review your active contract status.",
           "backend_class": "ActiveQuestLogBackend",
-          "screen_title": "Active Contracts"
+          "screen_title": "Active Contracts",
+          "include_completed": true
         }
       ],
       "entities_present": ["base:npc_fixer"]

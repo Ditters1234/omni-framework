@@ -98,15 +98,10 @@ func _format_stage_label(current_stage_value: Variant) -> String:
 
 func _format_rewards(rewards_value: Variant) -> String:
 	if rewards_value is Dictionary:
-		var rewards: Dictionary = rewards_value
-		if rewards.is_empty():
+		var reward_summary := RewardService.build_reward_summary(rewards_value, "")
+		if reward_summary.is_empty():
 			return ""
-		var parts: Array[String] = []
-		var keys: Array = rewards.keys()
-		keys.sort()
-		for key_value in keys:
-			parts.append("%s: %s" % [BACKEND_HELPERS.humanize_id(str(key_value)), str(rewards.get(key_value, ""))])
-		return "Rewards: %s" % ", ".join(parts)
+		return "Rewards: %s" % reward_summary
 	if rewards_value == null:
 		return ""
 	var rewards_text := str(rewards_value)

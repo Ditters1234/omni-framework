@@ -192,7 +192,7 @@ func test_remaining_component_library_renders_sample_view_models() -> void:
 	assert_eq(badge_name.text, "Test Faction")
 	assert_eq(badge_rep.text, "Friendly (+25)")
 	assert_eq(quest_title.text, "First Gig")
-	assert_eq(quest_rewards.text, "Rewards: Gold: 1000")
+	assert_eq(quest_rewards.text, "Rewards: Gold +1000")
 	assert_eq(recipe_output.text, "Output: Iron Sword Part x1")
 	assert_eq(popup_message.text, "Quest updated.")
 	assert_true(notification_popup.visible)

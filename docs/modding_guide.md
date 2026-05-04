@@ -1114,6 +1114,7 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
 - `resolve` stops later effects in the same action list. Put any final `log` effect before the `resolve` effect.
 - `apply_tag` writes an encounter-local tag to `player` or `opponent`; `duration_rounds` defaults to `1` and decrements after a full unresolved round. `has_encounter_tag` checks these tags from action availability or checks.
 - Outcome `reward` is applied through `RewardService`; outcome `action_payload` is dispatched through `ActionDispatcher`.
+- Resolved encounters stay on the encounter screen until the player presses Continue. The resolution panel shows `screen_text` and a formatted reward summary; Continue then performs the authored `next_screen_id` or `pop_on_resolve` navigation.
 - Encounter patches support `set`, `add_player_actions`, `remove_player_action_ids`, `add_opponent_actions`, `remove_opponent_action_ids`, `add_outcomes`, and `remove_outcome_ids`.
 - Load validation rejects unsupported effects, unknown real stats in `modify_stat`, unknown local meters in encounter-stat effects, unknown outcomes in `resolve`, missing tag ids on tag effects, malformed outcome action payloads, and invalid `push_screen` targets.
 - The base pack ships three reference encounters: `base:tutorial_brawl`, `base:tutorial_negotiation`, and `base:tutorial_endurance`.
@@ -1338,6 +1339,8 @@ Quest objectives are evaluated by `ConditionEvaluator`. Each objective in the `o
 Objectives also support logic blocks for compound conditions: `AND` (array, all must pass), `OR` (array, any must pass), `NOT` (single condition, must fail). These can be nested.
 
 Legacy dict-key conditions (without `"type"`) are also supported for backward compatibility — see `ConditionEvaluator` source for details.
+
+When a quest completes, `QuestTracker` applies the quest-level `reward`, records a runtime completion entry, and emits a `ui_notification_requested` toast containing the quest name and formatted reward summary. Quest log screens can set `include_completed: true` to keep completed quest cards available for later reward review.
 
 ---
 
@@ -1641,6 +1644,7 @@ No required params. Common useful optional fields:
 - `screen_title`
 - `screen_description`
 - `cancel_label`
+- `include_completed`
 
 #### `FactionReputationBackend`
 No required params. Common useful optional fields:
