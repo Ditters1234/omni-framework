@@ -65,6 +65,39 @@ func test_nobodywho_provider_reports_missing_model_without_stub_error() -> void:
 	assert_eq(str(provider_debug.get("model_path", "")), "user://missing_nobodywho_model.gguf")
 
 
+func test_nobodywho_provider_accepts_documented_remote_model_paths() -> void:
+	AIManager.initialize(_make_settings({
+		APP_SETTINGS.AI_ENABLED: true,
+		APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_NOBODYWHO,
+		APP_SETTINGS.AI_MODEL_PATH: "huggingface:NobodyWho/Qwen_Qwen3-0.6B-GGUF/Qwen_Qwen3-0.6B-Q4_K_M.gguf",
+	}))
+
+	assert_eq(AIManager.get_provider_type(), AIManager.PROVIDER_NOBODYWHO)
+	var snapshot := AIManager.get_debug_snapshot()
+	var last_error := str(snapshot.get("last_error", ""))
+	if last_error.contains("GDExtension"):
+		assert_push_warning("NobodyWhoProvider: NobodyWho GDExtension classes are not available")
+	assert_false(AIManager.is_available())
+	assert_false(last_error.contains("model_path does not exist"))
+
+	var provider_debug_value: Variant = snapshot.get("provider_debug", {})
+	assert_true(provider_debug_value is Dictionary)
+	var provider_debug: Dictionary = provider_debug_value
+	assert_eq(str(provider_debug.get("model_path", "")), "huggingface:NobodyWho/Qwen_Qwen3-0.6B-GGUF/Qwen_Qwen3-0.6B-Q4_K_M.gguf")
+
+
+func test_nobodywho_model_path_normalization_preserves_supported_path_forms() -> void:
+	var provider := NobodyWhoProvider.new()
+
+	assert_eq(provider._normalize_model_path("models/local.gguf"), "res://models/local.gguf")
+	assert_eq(provider._normalize_model_path("res://models/local.gguf"), "res://models/local.gguf")
+	assert_eq(provider._normalize_model_path("user://models/local.gguf"), "user://models/local.gguf")
+	assert_eq(provider._normalize_model_path("hf://owner/repo/model.gguf"), "hf://owner/repo/model.gguf")
+	assert_eq(provider._normalize_model_path("https://example.com/model.gguf"), "https://example.com/model.gguf")
+	assert_eq(provider._normalize_model_path("huggingface:owner/repo/model.gguf"), "huggingface:owner/repo/model.gguf")
+	provider.free()
+
+
 func _make_settings(ai_overrides: Dictionary) -> Dictionary:
 	var settings := APP_SETTINGS.get_default_settings()
 	var ai_settings := APP_SETTINGS.get_ai_settings(settings)

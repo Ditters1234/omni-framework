@@ -29,6 +29,7 @@ var _model_node: Node = null
 var _chat_node: Node = null
 var _is_ready: bool = false
 var _is_generating: bool = false
+var _worker_started: bool = false
 var _last_error: String = ""
 var _pending_response: String = ""
 var _stream_chunk_callback: Callable = Callable()
@@ -134,7 +135,7 @@ func _load_model() -> void:
 		_last_error = "NobodyWhoProvider: NobodyWho GDExtension classes are not available."
 		push_warning(_last_error)
 		return
-	if not FileAccess.file_exists(_model_path):
+	if not _is_remote_model_path(_model_path) and not FileAccess.file_exists(_model_path):
 		_is_ready = false
 		_last_error = "NobodyWhoProvider: model_path does not exist: %s" % _model_path
 		push_warning(_last_error)
@@ -193,7 +194,7 @@ func _run_inference(prompt: String, context: Dictionary, chunk_callback: Callabl
 	_stream_chunk_callback = chunk_callback
 	_streamed_chunk_count = 0
 	_is_generating = true
-	_apply_context(context)
+	await _apply_context(context)
 
 	var tree := get_tree()
 	if tree != null:
@@ -242,6 +243,12 @@ func _configure_chat_node() -> void:
 		_chat_node.connect("response_updated", Callable(self, "_on_response_updated"))
 	if not _chat_node.is_connected("response_finished", Callable(self, "_on_response_finished")):
 		_chat_node.connect("response_finished", Callable(self, "_on_response_finished"))
+	if _chat_node.has_signal("worker_started"):
+		if not _chat_node.is_connected("worker_started", Callable(self, "_on_worker_started")):
+			_chat_node.connect("worker_started", Callable(self, "_on_worker_started"))
+	if _chat_node.has_signal("worker_failed"):
+		if not _chat_node.is_connected("worker_failed", Callable(self, "_on_worker_failed")):
+			_chat_node.connect("worker_failed", Callable(self, "_on_worker_failed"))
 	if _chat_node.has_method("start_worker"):
 		_chat_node.call("start_worker")
 
@@ -264,7 +271,7 @@ func _apply_context(context: Dictionary) -> void:
 		var history: Array = history_value
 		var untyped_history: Array = []
 		untyped_history.append_array(history)
-		_chat_node.call("set_chat_history", untyped_history.duplicate(true))
+		await _chat_node.call("set_chat_history", untyped_history.duplicate(true))
 
 
 func _on_response_updated(new_token: String) -> void:
@@ -282,6 +289,22 @@ func _on_response_finished(response: String) -> void:
 	generation_completed.emit()
 
 
+func _on_worker_started() -> void:
+	_worker_started = true
+	if _last_error.begins_with("NobodyWhoProvider: worker failed"):
+		_last_error = ""
+	_is_ready = true
+
+
+func _on_worker_failed(error_text: String) -> void:
+	_worker_started = false
+	_is_ready = false
+	_last_error = "NobodyWhoProvider: worker failed: %s" % error_text
+	push_warning(_last_error)
+	if _is_generating:
+		generation_completed.emit()
+
+
 func _on_generation_timeout() -> void:
 	if not _is_generating:
 		return
@@ -294,6 +317,7 @@ func _on_generation_timeout() -> void:
 func _teardown_nodes() -> void:
 	_is_generating = false
 	_is_ready = false
+	_worker_started = false
 	_pending_response = ""
 	_stream_chunk_callback = Callable()
 	if _chat_node != null:
@@ -310,9 +334,17 @@ func _teardown_nodes() -> void:
 
 func _normalize_model_path(raw_path: String) -> String:
 	var normalized_path := raw_path.strip_edges().replace("\\", "/")
-	if normalized_path.is_empty() or normalized_path.contains("://") or normalized_path.is_absolute_path():
+	if normalized_path.is_empty() or normalized_path.contains("://") or normalized_path.is_absolute_path() or normalized_path.begins_with("huggingface:"):
 		return normalized_path
 	return "res://%s" % normalized_path
+
+
+func _is_remote_model_path(model_path: String) -> bool:
+	var normalized_path := model_path.strip_edges().to_lower()
+	return normalized_path.begins_with("huggingface:") \
+		or normalized_path.begins_with("hf://") \
+		or normalized_path.begins_with("http://") \
+		or normalized_path.begins_with("https://")
 
 
 func _normalize_positive_int(value: Variant, fallback: int) -> int:

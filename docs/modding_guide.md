@@ -534,6 +534,8 @@ Persona JSON does not control provider selection or connection details. The engi
 
 Those settings live in `user://settings.cfg`, not in mod data.
 
+NobodyWho model paths may be local (`res://`, `user://`, absolute filesystem paths) or remote references supported by the addon (`huggingface:`, `hf://`, `http://`, `https://`). Local paths are checked by the engine before use; remote references are handed to NobodyWho so the addon can download and cache the model.
+
 `ai.enable_world_gen` is also the master gate for optional AI-flavored encounter log lines. When disabled or unavailable, encounter logs use the authored JSON fallback text.
 
 ### Current patch format
