@@ -1038,6 +1038,11 @@ func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary) -> 
 			var participant_value: Variant = participants.get(role, {})
 			if not participant_value is Dictionary:
 				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' participants.%s must be an object." % [encounter_id, role])
+				continue
+			var participant: Dictionary = participant_value
+			var entity_lookup := str(participant.get("entity_id", "player" if role == "player" else "")).strip_edges()
+			if not _encounter_participant_lookup_exists(entity_lookup):
+				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' participants.%s references unknown entity '%s'." % [encounter_id, role, entity_lookup])
 
 	var encounter_stats_value: Variant = encounter.get("encounter_stats", {})
 	if encounter_stats_value is Dictionary:
@@ -1072,6 +1077,15 @@ func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary) -> 
 			_validate_encounter_action_list(encounter_id, role, actions.get(role, []), outcome_ids, stat_ids, encounter_stat_ids)
 	else:
 		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' actions must be an object." % encounter_id)
+
+	var strategy_value: Variant = encounter.get("opponent_strategy", {})
+	if strategy_value is Dictionary:
+		var strategy: Dictionary = strategy_value
+		var strategy_kind := str(strategy.get("kind", "weighted_random")).strip_edges()
+		if not strategy_kind.is_empty() and strategy_kind != "weighted_random":
+			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' opponent_strategy.kind has unsupported value '%s'." % [encounter_id, strategy_kind])
+	elif encounter.has("opponent_strategy"):
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' opponent_strategy must be an object." % encounter_id)
 
 
 func _validate_encounter_action_list(encounter_id: String, role: String, value: Variant, outcome_ids: Dictionary, stat_ids: Dictionary, encounter_stat_ids: Dictionary) -> void:
@@ -1160,6 +1174,15 @@ func _validate_encounter_effects(encounter_id: String, label: String, value: Var
 				var tag_id := str(effect.get("tag", effect.get("tag_id", ""))).strip_edges()
 				if tag_id.is_empty():
 					_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' %s[%d] must declare a tag." % [encounter_id, label, index])
+
+
+func _encounter_participant_lookup_exists(lookup_id: String) -> bool:
+	if lookup_id.is_empty() or lookup_id == "player":
+		return true
+	var entity_id := lookup_id
+	if entity_id.begins_with("entity:"):
+		entity_id = entity_id.trim_prefix("entity:")
+	return has_entity(entity_id)
 
 
 func _validate_recipe_shape(recipe: Dictionary) -> void:

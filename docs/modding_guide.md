@@ -1105,9 +1105,10 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
 ### Important current details
 
 - Required fields are `encounter_id`, `participants`, `actions`, and `resolution`.
-- `participants.player` and `participants.opponent` are the v1 fixed roles. `entity_id` accepts `"player"`, `"entity:<id>"`, or a raw entity id.
+- `participants.player` and `participants.opponent` are the v1 fixed roles. `entity_id` accepts `"player"`, `"entity:<id>"`, or a raw entity id. Template participant ids must reference known entity templates; launch-time payload overrides may still point at runtime entity ids.
 - Launch payloads may override participants with `player_entity_id`, `opponent_entity_id`, or `participant_overrides`.
 - Player actions are shown as buttons. Opponent actions are selected by weighted random among available actions.
+- `opponent_strategy` currently supports `{ "kind": "weighted_random" }` only. Omit the field for the same behavior.
 - `availability` and `check` use `ConditionEvaluator`; encounter contexts add `encounter:player`, `encounter:opponent`, `encounter_stat_check`, and `has_encounter_tag`.
 - Supported effects are `modify_stat`, `modify_encounter_stat`, `set_encounter_stat`, `set_flag`, `log`, `resolve`, `apply_tag`, and `remove_tag`.
 - `resolve` stops later effects in the same action list. Put any final `log` effect before the `resolve` effect.
@@ -1115,6 +1116,7 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
 - Outcome `reward` is applied through `RewardService`; outcome `action_payload` is dispatched through `ActionDispatcher`.
 - Encounter patches support `set`, `add_player_actions`, `remove_player_action_ids`, `add_opponent_actions`, `remove_opponent_action_ids`, `add_outcomes`, and `remove_outcome_ids`.
 - Load validation rejects unsupported effects, unknown real stats in `modify_stat`, unknown local meters in encounter-stat effects, unknown outcomes in `resolve`, missing tag ids on tag effects, malformed outcome action payloads, and invalid `push_screen` targets.
+- The base pack ships three reference encounters: `base:tutorial_brawl`, `base:tutorial_negotiation`, and `base:tutorial_endurance`.
 
 > **Note on `reward` shape:** outcome `reward` is a flat dict keyed by currency stat id, e.g. `{ "credits": 25 }`. Do not nest it under a `"currency"` key — that is not a recognised field.
 

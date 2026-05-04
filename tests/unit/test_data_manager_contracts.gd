@@ -234,6 +234,10 @@ func test_validate_loaded_content_reports_encounter_contract_failures() -> void:
 		{"id": "health", "kind": "resource", "paired_capacity_id": "health_max"},
 		{"id": "health_max", "kind": "capacity", "paired_base_id": "health"}
 	]
+	DataManager.entities["base:player"] = {
+		"entity_id": "base:player",
+		"display_name": "Player",
+	}
 	DataManager.encounters["base:bad_encounter"] = {
 		"encounter_id": "base:bad_encounter",
 		"participants": {
@@ -262,7 +266,8 @@ func test_validate_loaded_content_reports_encounter_contract_failures() -> void:
 				{"outcome_id": "done", "action_payload": {"type": "push_screen", "screen_id": "missing_screen"}}
 			],
 			"cancel_outcome": "missing_cancel"
-		}
+		},
+		"opponent_strategy": {"kind": "scripted"}
 	}
 
 	var issues := DataManager.validate_loaded_content()
@@ -274,6 +279,8 @@ func test_validate_loaded_content_reports_encounter_contract_failures() -> void:
 	assert_true(_messages_contain(issue_messages, "must declare a tag"))
 	assert_true(_messages_contain(issue_messages, "cancel_outcome references unknown outcome 'missing_cancel'"))
 	assert_true(_messages_contain(issue_messages, "screen_id references unknown routed screen 'missing_screen'"))
+	assert_true(_messages_contain(issue_messages, "participants.opponent references unknown entity 'base:opponent'"))
+	assert_true(_messages_contain(issue_messages, "opponent_strategy.kind has unsupported value 'scripted'"))
 
 
 func test_validate_loaded_content_reports_unknown_ai_persona_references() -> void:

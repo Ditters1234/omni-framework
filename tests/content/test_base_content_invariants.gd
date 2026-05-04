@@ -149,3 +149,33 @@ func test_base_ships_the_timed_recipe_craft_task_shell() -> void:
 	assert_eq(str(craft_task.get("type", "")), "CRAFT")
 	assert_eq(int(craft_task.get("duration", 0)), 1)
 	assert_true(bool(craft_task.get("repeatable", false)))
+
+
+func test_base_ships_reference_encounters_and_launch_interactions() -> void:
+	var expected_encounter_ids := [
+		"base:tutorial_brawl",
+		"base:tutorial_negotiation",
+		"base:tutorial_endurance",
+	]
+	for encounter_id in expected_encounter_ids:
+		var encounter := DataManager.get_encounter(encounter_id)
+		assert_false(encounter.is_empty(), "Missing reference encounter '%s'" % encounter_id)
+
+	assert_true(_entity_has_encounter_interaction("base:training_drone", "base:tutorial_brawl"))
+	assert_true(_entity_has_encounter_interaction("base:training_drone", "base:tutorial_endurance"))
+	assert_true(_entity_has_encounter_interaction("base:npc_theta", "base:tutorial_negotiation"))
+
+
+func _entity_has_encounter_interaction(entity_id: String, encounter_id: String) -> bool:
+	var entity := DataManager.get_entity(entity_id)
+	var interactions_value: Variant = entity.get("interactions", [])
+	if not interactions_value is Array:
+		return false
+	var interactions: Array = interactions_value
+	for interaction_value in interactions:
+		if not interaction_value is Dictionary:
+			continue
+		var interaction: Dictionary = interaction_value
+		if str(interaction.get("backend_class", "")) == "EncounterBackend" and str(interaction.get("encounter_id", "")) == encounter_id:
+			return true
+	return false

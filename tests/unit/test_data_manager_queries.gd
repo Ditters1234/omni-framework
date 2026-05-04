@@ -57,6 +57,22 @@ func before_each() -> void:
 		"prompt_template": "Narrate {event_name}.",
 		"tags": ["event_log"]
 	}
+	DataManager.encounters["base:training_brawl"] = {
+		"encounter_id": "base:training_brawl",
+		"display_name": "Training Brawl",
+		"tags": ["tutorial", "combat"],
+		"participants": {},
+		"actions": {},
+		"resolution": {},
+	}
+	DataManager.encounters["base:market_negotiation"] = {
+		"encounter_id": "base:market_negotiation",
+		"display_name": "Market Negotiation",
+		"tags": ["tutorial", "negotiation"],
+		"participants": {},
+		"actions": {},
+		"resolution": {},
+	}
 
 
 func test_query_parts_filters_by_tags_and_returns_copies() -> void:
@@ -116,3 +132,15 @@ func test_query_ai_templates_filters_by_purpose_and_returns_copies() -> void:
 
 	results[0]["prompt_template"] = "Mutated"
 	assert_eq(str(DataManager.ai_templates["base:task_flavor"].get("prompt_template", "")), "Describe {display_name}.")
+
+
+func test_query_encounters_filters_by_tags_and_returns_copies() -> void:
+	var results := DataManager.query_encounters({
+		"tags": ["tutorial", "combat"]
+	})
+
+	assert_eq(results.size(), 1)
+	assert_eq(str(results[0].get("encounter_id", "")), "base:training_brawl")
+
+	results[0]["display_name"] = "Mutated"
+	assert_eq(str(DataManager.encounters["base:training_brawl"].get("display_name", "")), "Training Brawl")

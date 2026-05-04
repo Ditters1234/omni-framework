@@ -180,7 +180,7 @@ Rules:
 ### Encounters
 
 - Required: `encounter_id`, `participants`, `actions`, `resolution`
-- `participants.player` and `participants.opponent` must be objects in v1.
+- `participants.player` and `participants.opponent` must be objects in v1. Their `entity_id` values must be `"player"` or reference known entity templates, either as raw ids or `entity:<id>`.
 - `actions.player` and `actions.opponent` must be arrays of action objects with non-empty `action_id` values.
 - Action IDs must be unique per role.
 - `cost`, `on_success`, and `on_failure` must be arrays when present.
@@ -192,6 +192,7 @@ Rules:
 - Outcome `action_payload` must be an object when present and follows normal `ActionDispatcher` payload validation.
 - `max_rounds_outcome` and `cancel_outcome` must reference declared outcomes when present.
 - Encounter-local stats may share names with real stats, but this should stay intentional because the runtime keeps them in a separate context namespace.
+- `opponent_strategy` must be an object when present. The only supported production kind is `weighted_random`; advanced strategy kinds are reserved for later work.
 
 ### Achievements
 
