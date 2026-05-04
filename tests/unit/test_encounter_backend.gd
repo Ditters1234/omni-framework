@@ -141,9 +141,17 @@ func test_ai_encounter_log_flavor_holds_fallback_and_serializes_requests() -> vo
 
 	backend.select_action("double_log")
 	var pending_view := backend.build_view_model()
+	assert_true(bool(pending_view.get("resolving_action", false)))
 	assert_true(_log_line_exists(pending_view, "Resolving action..."))
 	assert_false(_log_line_exists(pending_view, "First authored fallback."))
 	assert_false(_log_line_exists(pending_view, "Second authored fallback."))
+	assert_false(_action_available(pending_view, "wait"))
+
+	backend.select_action("wait")
+	var blocked_view := backend.build_view_model()
+	assert_true(bool(blocked_view.get("resolving_action", false)))
+	assert_eq(str(blocked_view.get("status_text", "")), "Action is still resolving.")
+	assert_false(_log_line_exists(blocked_view, "The test opponent lashes out."))
 
 	var saw_global_queue := false
 	var provider_request_count := 0
@@ -165,6 +173,8 @@ func test_ai_encounter_log_flavor_holds_fallback_and_serializes_requests() -> vo
 	for _frame_index in range(10):
 		await get_tree().process_frame
 	var resolved_view := backend.build_view_model()
+	assert_false(bool(resolved_view.get("resolving_action", true)))
+	assert_true(_action_available(resolved_view, "wait"))
 	assert_true(_log_line_exists(resolved_view, "A generated action line arrives."))
 
 

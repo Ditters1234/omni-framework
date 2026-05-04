@@ -121,6 +121,7 @@ func build_view_model() -> Dictionary:
 		"status_text": _build_status_text(),
 		"cancel_label": str(_params.get("cancel_label", "Back")),
 		"resolved": is_resolved(),
+		"resolving_action": is_resolving_action(),
 		"resolved_outcome_id": _resolved_outcome_id,
 		"resolved_screen_text": _resolved_screen_text,
 		"reward_lines": _resolved_reward_lines.duplicate(),
@@ -130,6 +131,9 @@ func build_view_model() -> Dictionary:
 
 func select_action(action_id: String) -> Dictionary:
 	if is_resolved():
+		return {}
+	if is_resolving_action():
+		_status_text = "Action is still resolving."
 		return {}
 	if _player == null or _opponent == null:
 		_status_text = "Encounter participants could not be resolved."
@@ -174,6 +178,10 @@ func continue_after_resolution() -> Dictionary:
 
 func is_resolved() -> bool:
 	return not _resolved_outcome_id.is_empty()
+
+
+func is_resolving_action() -> bool:
+	return _ai_log_generation_active or not _ai_log_queue.is_empty() or _has_pending_ai_log_entries()
 
 
 func get_resolved_outcome_id() -> String:
@@ -450,15 +458,21 @@ func _decrement_tag_map(tag_map: Dictionary) -> void:
 func _build_player_action_models() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var context := _build_context()
+	var resolving_action := is_resolving_action()
 	for action in _get_actions_for_role("player"):
 		var action_id := str(action.get("action_id", ""))
 		var available := ENCOUNTER_RUNTIME.is_action_available(action, context)
+		var tooltip := ""
+		if resolving_action:
+			tooltip = "Current action is still resolving."
+		elif not available:
+			tooltip = "Requirements are not currently met."
 		result.append({
 			"action_id": action_id,
 			"label": str(action.get("label", BACKEND_HELPERS.humanize_id(action_id))),
 			"description": str(action.get("description", "")),
-			"available": available and not is_resolved(),
-			"tooltip": "" if available else "Requirements are not currently met.",
+			"available": available and not is_resolved() and not resolving_action,
+			"tooltip": tooltip,
 		})
 	return result
 
@@ -705,6 +719,16 @@ func _update_log_entry_text(entry_id: String, text: String) -> void:
 		entry["ai_pending"] = false
 		_log[index] = entry
 		return
+
+
+func _has_pending_ai_log_entries() -> bool:
+	for entry_value in _log:
+		if not entry_value is Dictionary:
+			continue
+		var entry: Dictionary = entry_value
+		if bool(entry.get("ai_pending", false)):
+			return true
+	return false
 
 
 func _mark_log_entry_ai_done(entry_id: String) -> void:
