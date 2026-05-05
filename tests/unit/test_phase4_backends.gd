@@ -300,6 +300,95 @@ func test_task_provider_backend_lists_faction_contracts_and_accepts_selected_que
 	assert_true(GameState.active_quests.has("base:test_contract"))
 
 
+func test_task_provider_backend_can_assign_and_dispatch_owned_entity() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	DataManager.tasks["base:test_assignment_travel"] = {
+		"template_id": "base:test_assignment_travel",
+		"display_name": "Travel",
+		"type": "TRAVEL",
+		"duration": 1,
+		"repeatable": true,
+	}
+	DataManager.factions["base:test_faction"] = {
+		"faction_id": "base:test_faction",
+		"display_name": "Test Faction",
+		"quest_pool": ["base:test_dispatch_contract"],
+	}
+	DataManager.quests["base:test_dispatch_contract"] = {
+		"quest_id": "base:test_dispatch_contract",
+		"display_name": "Field Delivery",
+		"description": "Send an assigned entity to the field.",
+		"stages": [
+			{
+				"description": "Reach the field.",
+				"objectives": [
+					{
+						"type": "reach_location",
+						"entity_id": "quest:assignee",
+						"location_id": TEST_FIXTURE_WORLD.connected_location_id(),
+					}
+				]
+			}
+		],
+		"reward": {"credits": 5},
+		"repeatable": true,
+	}
+	var drone_template := {
+		"entity_id": "base:test_dispatch_drone",
+		"display_name": "Dispatch Drone",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"stats": {},
+	}
+	DataManager.entities["base:test_dispatch_drone"] = drone_template.duplicate(true)
+	GameState.commit_entity_instance(EntityInstance.from_template(drone_template), "base:test_dispatch_drone")
+	player.owned_entity_ids = ["base:test_dispatch_drone"]
+	GameEvents.clear_event_history()
+
+	var backend: RefCounted = TASK_PROVIDER_BACKEND.new()
+	backend.initialize({
+		"faction_id": "base:test_faction",
+		"assignee_entity_id": "base:test_dispatch_drone",
+		"owner_entity_id": "player",
+		"assignment_task_template_id": "base:test_assignment_travel",
+		"auto_dispatch_first_reach_location": true,
+		"return_to_owned_entities": true,
+	})
+
+	var view_model: Dictionary = backend.build_view_model()
+	assert_eq(str(view_model.get("confirm_label", "")), "Assign and Dispatch")
+
+	var action: Dictionary = backend.confirm()
+
+	assert_true(GameState.active_quests.has("base:test_dispatch_contract"))
+	assert_eq(GameState.active_tasks.size(), 1)
+	if not GameState.active_tasks.is_empty():
+		var task_value: Variant = GameState.active_tasks.values()[0]
+		assert_true(task_value is Dictionary)
+		if task_value is Dictionary:
+			var task: Dictionary = task_value
+			assert_eq(str(task.get("entity_id", "")), "base:test_dispatch_drone")
+			assert_eq(str(task.get("target", "")), TEST_FIXTURE_WORLD.connected_location_id())
+	assert_eq(str(action.get("screen_id", "")), "owned_entities")
+	var action_params_value: Variant = action.get("params", {})
+	assert_true(action_params_value is Dictionary)
+	if action_params_value is Dictionary:
+		var action_params: Dictionary = action_params_value
+		assert_eq(str(action_params.get("selected_entity_id", "")), "base:test_dispatch_drone")
+		assert_eq(str(action_params.get("suggested_location_id", "")), TEST_FIXTURE_WORLD.connected_location_id())
+	var notifications := GameEvents.get_event_history(0, "ui", "ui_notification_requested")
+	assert_eq(notifications.size(), 1)
+	if not notifications.is_empty():
+		var notification: Dictionary = notifications[0]
+		var args_value: Variant = notification.get("args", [])
+		assert_true(args_value is Array)
+		if args_value is Array:
+			var args: Array = args_value
+			assert_eq(str(args[0]), "Accepted Field Delivery and sent Dispatch Drone to Fixture Field.")
+
+
 func test_task_provider_backend_hides_contract_active_under_runtime_id() -> void:
 	DataManager.factions["base:test_faction"] = {
 		"faction_id": "base:test_faction",

@@ -23,6 +23,10 @@ static func register_contract() -> void:
 			"cancel_label",
 			"empty_label",
 			"accept_sound",
+			"owner_entity_id",
+			"assignment_task_template_id",
+			"auto_dispatch_first_reach_location",
+			"return_to_owned_entities",
 		],
 		"field_types": {
 			"faction_id": TYPE_STRING,
@@ -35,6 +39,10 @@ static func register_contract() -> void:
 			"cancel_label": TYPE_STRING,
 			"empty_label": TYPE_STRING,
 			"accept_sound": TYPE_STRING,
+			"owner_entity_id": TYPE_STRING,
+			"assignment_task_template_id": TYPE_STRING,
+			"auto_dispatch_first_reach_location": TYPE_BOOL,
+			"return_to_owned_entities": TYPE_BOOL,
 		},
 	})
 
@@ -54,18 +62,20 @@ func build_view_model() -> Dictionary:
 	var description := str(_params.get("screen_description", "Browse faction jobs and accept one into the active task queue."))
 	var summary := str(_params.get("screen_summary", "Faction contracts come directly from the configured faction quest_pool."))
 	var empty_label := str(_params.get("empty_label", "This faction does not currently offer any tasks."))
+	var assignment_context := _build_assignment_context(selected_row)
 	return {
 		"title": title,
 		"description": description,
-		"summary": summary,
+		"summary": _build_summary_text(summary, assignment_context),
 		"portrait": _build_provider_portrait(faction_id),
 		"rows": tasks,
 		"selected_task": _read_dictionary(selected_row.get("quest_card_view_model", {})),
 		"status_text": _build_status_text(tasks, selected_row, empty_label),
-		"confirm_label": str(_params.get("confirm_label", "Accept Selected")),
+		"confirm_label": _build_confirm_label(assignment_context),
 		"cancel_label": str(_params.get("cancel_label", "Back")),
 		"empty_label": empty_label,
 		"confirm_enabled": not selected_row.is_empty(),
+		"assignment_context": assignment_context,
 	}
 
 
@@ -80,10 +90,11 @@ func confirm() -> Dictionary:
 		_status_text = "Select a contract before accepting it."
 		return {}
 	var assignee_lookup := str(_params.get("assignee_entity_id", "player"))
+	var owner_lookup := str(_params.get("owner_entity_id", "player"))
 	if not GameState.start_quest(quest_id, {
 		"assignee_entity_id": assignee_lookup,
-		"owner_entity_id": "player",
-		"reward_recipient_entity_id": "player",
+		"owner_entity_id": owner_lookup,
+		"reward_recipient_entity_id": owner_lookup,
 	}):
 		_status_text = "That contract could not be accepted right now."
 		return {}
@@ -91,9 +102,14 @@ func confirm() -> Dictionary:
 	if not accept_sound.is_empty():
 		AudioManager.play_sfx(accept_sound)
 	var quest_template := DataManager.get_quest(quest_id)
-	_status_text = "Accepted %s." % str(quest_template.get("display_name", quest_id))
+	var quest_label := str(quest_template.get("display_name", quest_id))
+	var target_location_id := _resolve_first_reach_location(quest_template)
+	var dispatch_result := _maybe_dispatch_assignee(assignee_lookup, target_location_id)
+	_status_text = _build_accept_status(quest_label, dispatch_result)
+	if GameEvents:
+		GameEvents.ui_notification_requested.emit(_status_text, "info")
 	_selected_template_id = ""
-	return {}
+	return _build_post_confirm_action(assignee_lookup, target_location_id, dispatch_result)
 
 
 func _build_task_rows(faction_id: String) -> Array[Dictionary]:
@@ -122,6 +138,7 @@ func _build_task_rows(faction_id: String) -> Array[Dictionary]:
 			"template_id": quest_id,
 			"display_name": str(quest_template.get("display_name", quest_template.get("title", quest_id))),
 			"detail_text": str(quest_template.get("description", "")),
+			"first_reach_location_id": _resolve_first_reach_location(quest_template),
 			"ai_flavor_text": ai_flavor_text,
 			"selected": quest_id == _selected_template_id,
 			"quest_card_view_model": quest_card_view_model,
@@ -234,7 +251,164 @@ func _build_status_text(rows: Array[Dictionary], selected_row: Dictionary, empty
 		return empty_label
 	if selected_row.is_empty():
 		return "Select a task to inspect its details."
+	var assignment_context := _build_assignment_context(selected_row)
+	var assignee_name := str(assignment_context.get("assignee_name", ""))
+	var destination_name := str(assignment_context.get("destination_name", ""))
+	if not assignee_name.is_empty() and not destination_name.is_empty() and bool(_params.get("auto_dispatch_first_reach_location", false)):
+		return "Ready to assign %s and dispatch %s to %s." % [
+			str(selected_row.get("display_name", "the selected task")),
+			assignee_name,
+			destination_name,
+		]
 	return "Ready to accept %s." % str(selected_row.get("display_name", "the selected task"))
+
+
+func _build_assignment_context(selected_row: Dictionary) -> Dictionary:
+	var assignee_lookup := str(_params.get("assignee_entity_id", "player"))
+	var assignee: EntityInstance = BACKEND_HELPERS.resolve_entity_lookup(assignee_lookup)
+	var assignee_entity_id := assignee_lookup
+	var assignee_name := ""
+	if assignee != null:
+		assignee_entity_id = assignee.entity_id
+		assignee_name = BACKEND_HELPERS.get_entity_display_name(assignee, assignee_lookup)
+	var target_location_id := str(selected_row.get("first_reach_location_id", ""))
+	return {
+		"assignee_entity_id": assignee_entity_id,
+		"assignee_name": assignee_name,
+		"target_location_id": target_location_id,
+		"destination_name": _get_location_display_name(target_location_id),
+		"auto_dispatch": bool(_params.get("auto_dispatch_first_reach_location", false)),
+	}
+
+
+func _build_summary_text(base_summary: String, assignment_context: Dictionary) -> String:
+	var assignee_name := str(assignment_context.get("assignee_name", ""))
+	if assignee_name.is_empty():
+		return base_summary
+	var destination_name := str(assignment_context.get("destination_name", ""))
+	if destination_name.is_empty():
+		return "%s\nAssignee: %s." % [base_summary, assignee_name]
+	return "%s\nAssignee: %s. First objective: %s." % [base_summary, assignee_name, destination_name]
+
+
+func _build_confirm_label(assignment_context: Dictionary) -> String:
+	var configured_label := str(_params.get("confirm_label", "")).strip_edges()
+	if not configured_label.is_empty():
+		return configured_label
+	if bool(assignment_context.get("auto_dispatch", false)) and not str(assignment_context.get("destination_name", "")).is_empty():
+		return "Assign and Dispatch"
+	return "Accept Selected"
+
+
+func _maybe_dispatch_assignee(assignee_lookup: String, target_location_id: String) -> Dictionary:
+	if not bool(_params.get("auto_dispatch_first_reach_location", false)):
+		return {"status": "skipped"}
+	if target_location_id.is_empty():
+		return {"status": "missing_target"}
+	var assignee := BACKEND_HELPERS.resolve_entity_lookup(assignee_lookup)
+	if assignee == null:
+		return {"status": "missing_assignee"}
+	if assignee.location_id == target_location_id:
+		return {
+			"status": "already_there",
+			"assignee_name": BACKEND_HELPERS.get_entity_display_name(assignee, assignee.entity_id),
+			"destination_name": _get_location_display_name(target_location_id),
+		}
+	var route_cost := LocationGraph.get_route_travel_cost(assignee.location_id, target_location_id)
+	if route_cost < 0:
+		return {
+			"status": "unreachable",
+			"assignee_name": BACKEND_HELPERS.get_entity_display_name(assignee, assignee.entity_id),
+			"destination_name": _get_location_display_name(target_location_id),
+		}
+	var assignment_task_id := str(_params.get("assignment_task_template_id", "base:goto_location"))
+	if not DataManager.has_task(assignment_task_id):
+		return {"status": "missing_task", "task_id": assignment_task_id}
+	_abandon_active_tasks_for_entity(assignee.entity_id)
+	var runtime_id := TimeKeeper.accept_task(assignment_task_id, {
+		"entity_id": assignee.entity_id,
+		"target": target_location_id,
+		"task_type": "TRAVEL",
+		"duration": maxi(route_cost, 1),
+		"allow_duplicate": true,
+	})
+	if runtime_id.is_empty():
+		return {"status": "failed"}
+	return {
+		"status": "dispatched",
+		"runtime_id": runtime_id,
+		"assignee_name": BACKEND_HELPERS.get_entity_display_name(assignee, assignee.entity_id),
+		"destination_name": _get_location_display_name(target_location_id),
+	}
+
+
+func _build_accept_status(quest_label: String, dispatch_result: Dictionary) -> String:
+	var dispatch_status := str(dispatch_result.get("status", "skipped"))
+	var assignee_name := str(dispatch_result.get("assignee_name", ""))
+	var destination_name := str(dispatch_result.get("destination_name", ""))
+	match dispatch_status:
+		"dispatched":
+			return "Accepted %s and sent %s to %s." % [quest_label, assignee_name, destination_name]
+		"already_there":
+			return "Accepted %s. %s is already at %s." % [quest_label, assignee_name, destination_name]
+		"unreachable":
+			return "Accepted %s, but %s cannot reach %s." % [quest_label, assignee_name, destination_name]
+		"missing_target":
+			return "Accepted %s. This contract has no reach-location objective to dispatch." % quest_label
+		"missing_task":
+			return "Accepted %s, but assignment task '%s' is missing." % [quest_label, str(dispatch_result.get("task_id", ""))]
+		"missing_assignee", "failed":
+			return "Accepted %s, but dispatch could not start." % quest_label
+	return "Accepted %s." % quest_label
+
+
+func _build_post_confirm_action(assignee_lookup: String, target_location_id: String, _dispatch_result: Dictionary) -> Dictionary:
+	if not bool(_params.get("return_to_owned_entities", false)):
+		return {}
+	var params := {
+		"owner_entity_id": str(_params.get("owner_entity_id", "player")),
+		"selected_entity_id": _resolve_entity_id_for_params(assignee_lookup),
+		"assignment_task_template_id": str(_params.get("assignment_task_template_id", "base:goto_location")),
+		"assignment_faction_id": str(_params.get("faction_id", "")),
+		"assignment_provider_entity_id": str(_params.get("provider_entity_id", "")),
+		"suggested_location_id": target_location_id,
+		"initial_status_text": _status_text,
+	}
+	return {
+		"type": "push",
+		"screen_id": "owned_entities",
+		"params": params,
+	}
+
+
+func _resolve_entity_id_for_params(lookup_id: String) -> String:
+	var entity := BACKEND_HELPERS.resolve_entity_lookup(lookup_id)
+	if entity != null:
+		return entity.entity_id
+	if lookup_id.begins_with("entity:"):
+		return lookup_id.trim_prefix("entity:")
+	return lookup_id
+
+
+func _abandon_active_tasks_for_entity(entity_id: String) -> void:
+	var runtime_ids: Array[String] = []
+	for runtime_id_value in GameState.active_tasks.keys():
+		var runtime_id := str(runtime_id_value)
+		var task_value: Variant = GameState.active_tasks.get(runtime_id_value, {})
+		if not task_value is Dictionary:
+			continue
+		var task: Dictionary = task_value
+		if str(task.get("entity_id", "")) == entity_id:
+			runtime_ids.append(runtime_id)
+	for runtime_id in runtime_ids:
+		TimeKeeper.abandon_task(runtime_id)
+
+
+func _get_location_display_name(location_id: String) -> String:
+	if location_id.is_empty():
+		return ""
+	var location := DataManager.get_location(location_id)
+	return str(location.get("display_name", BACKEND_HELPERS.humanize_id(location_id)))
 
 
 func _read_dictionary(value: Variant) -> Dictionary:

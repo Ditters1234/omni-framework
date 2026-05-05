@@ -9,6 +9,7 @@ const DEFAULT_ASSIGNMENT_TASK_ID := "base:goto_location"
 var _params: Dictionary = {}
 var _selected_entity_id: String = ""
 var _status_text: String = ""
+var _suggested_location_id: String = ""
 
 
 static func register_contract() -> void:
@@ -25,6 +26,9 @@ static func register_contract() -> void:
 			"assignment_provider_entity_id",
 			"show_discovered_locations_only",
 			"replace_existing_task",
+			"selected_entity_id",
+			"suggested_location_id",
+			"initial_status_text",
 		],
 		"field_types": {
 			"owner_entity_id": TYPE_STRING,
@@ -37,14 +41,18 @@ static func register_contract() -> void:
 			"assignment_provider_entity_id": TYPE_STRING,
 			"show_discovered_locations_only": TYPE_BOOL,
 			"replace_existing_task": TYPE_BOOL,
+			"selected_entity_id": TYPE_STRING,
+			"suggested_location_id": TYPE_STRING,
+			"initial_status_text": TYPE_STRING,
 		},
 	})
 
 
 func initialize(params: Dictionary) -> void:
 	_params = params.duplicate(true)
-	_selected_entity_id = ""
-	_status_text = ""
+	_selected_entity_id = _get_string_param(_params, "selected_entity_id", "")
+	_suggested_location_id = _get_string_param(_params, "suggested_location_id", "")
+	_status_text = _get_string_param(_params, "initial_status_text", "")
 
 
 func build_view_model() -> Dictionary:
@@ -66,13 +74,17 @@ func build_view_model() -> Dictionary:
 		"has_selection": not selected_row.is_empty(),
 		"can_assign_contract": not _get_string_param(_params, "assignment_faction_id", "").is_empty() and not selected_row.is_empty(),
 		"has_assignable_destination": _has_enabled_location(locations),
+		"suggested_location_id": _suggested_location_id,
+		"assignment_task_template_id": _get_string_param(_params, "assignment_task_template_id", DEFAULT_ASSIGNMENT_TASK_ID),
 		"assignment_faction_id": _get_string_param(_params, "assignment_faction_id", ""),
 		"assignment_provider_entity_id": _get_string_param(_params, "assignment_provider_entity_id", ""),
+		"owner_entity_id": _get_string_param(_params, "owner_entity_id", "player"),
 	}
 
 
 func select_entity(entity_id: String) -> void:
 	_selected_entity_id = entity_id
+	_suggested_location_id = ""
 	_status_text = ""
 
 
@@ -195,6 +207,7 @@ func _build_location_rows(owner: EntityInstance, selected_row: Dictionary) -> Ar
 			"route_cost": route_cost,
 			"enabled": route_cost >= 0 and selected_location_id != location_id,
 			"is_current": selected_location_id == location_id,
+			"is_suggested": not _suggested_location_id.is_empty() and location_id == _suggested_location_id,
 		})
 	return rows
 

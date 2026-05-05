@@ -82,9 +82,13 @@ func _refresh_state() -> void:
 	_status_label.text = str(view_model.get("status_text", ""))
 	_back_button.text = str(view_model.get("cancel_label", "Back"))
 	var has_selection := bool(view_model.get("has_selection", false))
+	var suggested_location_id := str(view_model.get("suggested_location_id", ""))
 	_inspect_button.disabled = not has_selection
 	_manage_equipment_button.disabled = not has_selection
 	_assign_location_button.disabled = not has_selection
+	_assign_location_button.text = "Send"
+	if not suggested_location_id.is_empty():
+		_assign_location_button.text = "Send to Objective"
 	_recall_button.disabled = not has_selection
 	_assign_contract_button.disabled = not bool(view_model.get("can_assign_contract", false))
 	_render_rows(_read_dictionary_array(view_model.get("rows", [])), str(view_model.get("empty_label", "No owned entities are available.")))
@@ -130,6 +134,7 @@ func _render_selected(row: Dictionary) -> void:
 func _render_locations(rows: Array[Dictionary]) -> void:
 	_destination_button.clear()
 	var selected_index := 0
+	var found_suggested := false
 	if rows.is_empty():
 		_destination_button.add_item("No destinations", 0)
 		_destination_button.set_item_metadata(0, "")
@@ -141,6 +146,8 @@ func _render_locations(rows: Array[Dictionary]) -> void:
 		var label := str(row.get("display_name", "Location"))
 		if bool(row.get("is_current", false)):
 			label = "%s (current)" % label
+		elif bool(row.get("is_suggested", false)):
+			label = "%s (objective)" % label
 		elif int(row.get("route_cost", -1)) >= 0:
 			label = "%s (%s ticks)" % [label, str(int(row.get("route_cost", 0)))]
 		else:
@@ -148,8 +155,12 @@ func _render_locations(rows: Array[Dictionary]) -> void:
 		_destination_button.add_item(label, index)
 		_destination_button.set_item_metadata(index, str(row.get("location_id", "")))
 		_destination_button.set_item_disabled(index, not bool(row.get("enabled", false)))
-		if index == 0 or (bool(row.get("enabled", false)) and selected_index == 0):
+		if bool(row.get("is_suggested", false)) and bool(row.get("enabled", false)):
 			selected_index = index
+			found_suggested = true
+		if index == 0 or (bool(row.get("enabled", false)) and selected_index == 0):
+			if not found_suggested:
+				selected_index = index
 	_destination_button.select(selected_index)
 
 
@@ -214,8 +225,12 @@ func _on_assign_contract_button_pressed() -> void:
 	var params := {
 		"faction_id": faction_id,
 		"assignee_entity_id": entity_id,
+		"owner_entity_id": str(_last_view_model.get("owner_entity_id", "player")),
+		"assignment_task_template_id": str(_last_view_model.get("assignment_task_template_id", "base:goto_location")),
+		"auto_dispatch_first_reach_location": true,
+		"return_to_owned_entities": true,
 		"screen_title": "Assign Contract",
-		"screen_description": "Pick a contract for the selected owned entity.",
+		"screen_description": "Pick a contract for the selected owned entity. Reach-location contracts can dispatch immediately.",
 		"cancel_label": "Back",
 	}
 	var provider_entity_id := str(_last_view_model.get("assignment_provider_entity_id", ""))

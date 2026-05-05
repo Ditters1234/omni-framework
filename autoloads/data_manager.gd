@@ -1800,12 +1800,18 @@ func _validate_backend_reference_fields(entry_id: String, file_path: String, pay
 		return
 	var payload: Dictionary = payload_value
 	var backend_class := str(payload.get("backend_class", ""))
-	if backend_class != "OwnedEntitiesBackend":
-		return
-	_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "owner_entity_id")
-	_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "assignment_provider_entity_id")
-	_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_task_template_id", "task")
-	_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_faction_id", "faction")
+	match backend_class:
+		"OwnedEntitiesBackend":
+			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "owner_entity_id")
+			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "assignment_provider_entity_id")
+			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_task_template_id", "task")
+			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_faction_id", "faction")
+		"TaskProviderBackend":
+			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "provider_entity_id")
+			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "assignee_entity_id")
+			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "owner_entity_id")
+			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "faction_id", "faction")
+			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_task_template_id", "task")
 
 
 func _validate_backend_entity_lookup(entry_id: String, file_path: String, payload: Dictionary, field_path: String, field_name: String) -> void:

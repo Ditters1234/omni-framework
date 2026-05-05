@@ -442,6 +442,14 @@ func test_validate_loaded_content_reports_owned_entities_backend_reference_issue
 				"assignment_task_template_id": "base:missing_task",
 				"assignment_faction_id": "base:missing_faction",
 			},
+			{
+				"backend_class": "TaskProviderBackend",
+				"faction_id": "base:missing_task_faction",
+				"provider_entity_id": "base:missing_task_provider",
+				"assignee_entity_id": "base:missing_assignee",
+				"owner_entity_id": "base:missing_task_owner",
+				"assignment_task_template_id": "base:missing_assignment_task",
+			},
 		],
 	}
 
@@ -452,6 +460,11 @@ func test_validate_loaded_content_reports_owned_entities_backend_reference_issue
 	assert_true(_messages_contain(issue_messages, "screens[0].assignment_provider_entity_id references unknown entity 'base:missing_provider'"))
 	assert_true(_messages_contain(issue_messages, "screens[0].assignment_task_template_id references unknown task 'base:missing_task'"))
 	assert_true(_messages_contain(issue_messages, "screens[0].assignment_faction_id references unknown faction 'base:missing_faction'"))
+	assert_true(_messages_contain(issue_messages, "screens[1].provider_entity_id references unknown entity 'base:missing_task_provider'"))
+	assert_true(_messages_contain(issue_messages, "screens[1].assignee_entity_id references unknown entity 'base:missing_assignee'"))
+	assert_true(_messages_contain(issue_messages, "screens[1].owner_entity_id references unknown entity 'base:missing_task_owner'"))
+	assert_true(_messages_contain(issue_messages, "screens[1].faction_id references unknown faction 'base:missing_task_faction'"))
+	assert_true(_messages_contain(issue_messages, "screens[1].assignment_task_template_id references unknown task 'base:missing_assignment_task'"))
 
 
 func test_validate_loaded_content_reports_unknown_push_screen_targets() -> void:
