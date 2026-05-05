@@ -29,6 +29,8 @@ static func apply_patch(patch: Array) -> void:
 		DataManager._apply_set_operations(entry, patch_entry)
 		if patch_entry.has("set_reward"):
 			entry["reward"] = patch_entry.get("set_reward", {}).duplicate(true)
+		if patch_entry.has("set_completion_actions"):
+			entry["completion_actions"] = patch_entry.get("set_completion_actions", []).duplicate(true)
 		DataManager.tasks[target] = entry
 
 

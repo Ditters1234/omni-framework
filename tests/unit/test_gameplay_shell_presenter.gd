@@ -77,3 +77,31 @@ func test_build_view_model_with_session_exposes_player_location_and_time_control
 	var location: Dictionary = location_value
 	assert_true(str(location.get("id", "")).length() > 0)
 	assert_true(str(location.get("title_text", "")).length() > 0)
+
+
+func test_time_button_specs_accept_data_authored_task_buttons() -> void:
+	DataManager.config["ui"]["time_advance_buttons"] = [
+		{
+			"label": "Rest",
+			"ticks": 4,
+			"task_template_id": "base:downtime",
+			"entity_id": "player",
+			"status_text": "Rested."
+		}
+	]
+
+	var specs_value: Variant = _presenter.call("get_time_button_specs")
+	assert_true(specs_value is Array)
+	if not specs_value is Array:
+		return
+	var specs: Array = specs_value
+	assert_eq(specs.size(), 1)
+	var spec_value: Variant = specs[0]
+	assert_true(spec_value is Dictionary)
+	if not spec_value is Dictionary:
+		return
+	var spec: Dictionary = spec_value
+	assert_eq(str(spec.get("label", "")), "Rest")
+	assert_eq(int(spec.get("ticks", 0)), 4)
+	assert_eq(str(spec.get("task_template_id", "")), "base:downtime")
+	assert_eq(str(spec.get("status_text", "")), "Rested.")

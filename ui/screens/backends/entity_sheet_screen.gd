@@ -21,6 +21,7 @@ const INVENTORY_STACKED_WIDTH := 760.0
 @onready var _summary_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Overview/OverviewBox/SummaryLabel
 @onready var _overview_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Overview/OverviewBox/OverviewRows
 @onready var _stat_sheet_host: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Stats/StatsBox/StatSheetHost
+@onready var _status_effect_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Status/StatusBox/StatusEffectRows
 @onready var _currency_section_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox/CurrencySectionLabel
 @onready var _currency_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox/CurrencyRows
 @onready var _equipped_section_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox/EquippedSectionLabel
@@ -139,6 +140,7 @@ func _refresh_state() -> void:
 	_render_portrait(_read_dictionary(view_model.get("portrait", {})))
 	_render_stat_sheet(_read_dictionary(view_model.get("stat_sheet", {})))
 	_render_overview_section(view_model)
+	_render_status_effect_section(view_model)
 	_render_currency_section(view_model)
 	_render_equipped_section(view_model)
 	_render_inventory_section(view_model)
@@ -183,11 +185,21 @@ func _render_overview_section(view_model: Dictionary) -> void:
 	rows.append({"display_name": "Equipped Parts", "stat_summary": str(view_model.get("equipped_rows", []).size())})
 	rows.append({"display_name": "Loose Inventory Items", "stat_summary": str(_count_inventory_row_instances(visible_inventory_rows))})
 	rows.append({"display_name": "Loose Inventory Stacks", "stat_summary": str(visible_inventory_rows.size())})
+	rows.append({"display_name": "Active Effects", "stat_summary": str(view_model.get("status_effect_rows", []).size())})
 	rows.append({"display_name": "Active Quests", "stat_summary": str(GameState.active_quests.size())})
 	rows.append({"display_name": "Completed Quests", "stat_summary": str(GameState.completed_quests.size())})
 	rows.append({"display_name": "Unlocked Achievements", "stat_summary": str(GameState.unlocked_achievements.size())})
 	rows.append({"display_name": "Discovered Recipes", "stat_summary": str(GameState.discovered_recipes.size())})
 	_render_text_rows(_overview_rows, rows, "No character summary is available.", "")
+
+
+func _render_status_effect_section(view_model: Dictionary) -> void:
+	var show_status_effects := bool(view_model.get("show_status_effects", true))
+	_status_effect_rows.visible = show_status_effects
+	if not show_status_effects:
+		return
+	var rows := _read_dictionary_array(view_model.get("status_effect_rows", []))
+	_render_text_rows(_status_effect_rows, rows, str(view_model.get("status_effect_empty_label", "No active status effects.")), "")
 
 
 func _render_currency_section(view_model: Dictionary) -> void:
@@ -715,6 +727,18 @@ func _connect_runtime_signals() -> void:
 	var location_callback := Callable(self, "_on_location_changed")
 	if GameEvents.has_signal("location_changed") and not GameEvents.is_connected("location_changed", location_callback):
 		GameEvents.location_changed.connect(_on_location_changed)
+	var status_applied_callback := Callable(self, "_on_status_effect_state_changed")
+	if GameEvents.has_signal("status_effect_applied") and not GameEvents.is_connected("status_effect_applied", status_applied_callback):
+		GameEvents.status_effect_applied.connect(_on_status_effect_state_changed)
+	var status_ticked_callback := Callable(self, "_on_status_effect_state_changed")
+	if GameEvents.has_signal("status_effect_ticked") and not GameEvents.is_connected("status_effect_ticked", status_ticked_callback):
+		GameEvents.status_effect_ticked.connect(_on_status_effect_state_changed)
+	var status_expired_callback := Callable(self, "_on_status_effect_state_changed")
+	if GameEvents.has_signal("status_effect_expired") and not GameEvents.is_connected("status_effect_expired", status_expired_callback):
+		GameEvents.status_effect_expired.connect(_on_status_effect_state_changed)
+	var status_removed_callback := Callable(self, "_on_status_effect_state_changed")
+	if GameEvents.has_signal("status_effect_removed") and not GameEvents.is_connected("status_effect_removed", status_removed_callback):
+		GameEvents.status_effect_removed.connect(_on_status_effect_state_changed)
 
 
 func _connect_inventory_controls() -> void:
@@ -921,6 +945,10 @@ func _on_runtime_state_changed(_value: Variant = null) -> void:
 
 
 func _on_location_changed(_old_id: String, _new_id: String) -> void:
+	_refresh_state()
+
+
+func _on_status_effect_state_changed(_entity_id: String, _status_effect_id: String, _runtime_id: String) -> void:
 	_refresh_state()
 
 

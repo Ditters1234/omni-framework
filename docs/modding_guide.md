@@ -873,6 +873,9 @@ Tasks are time-based operations that entities perform. They are the low-level wo
       "type": "TRAVEL",
       "target": "my_name:my_mod:back_alley",
       "travel_cost": 2,
+      "completion_actions": [
+        { "type": "apply_status_effect", "status_effect_id": "my_name:my_mod:field_repair" }
+      ],
       "reward": {},
       "description": "Move the assigned entity to the clinic.",
       "difficulty": 1,
@@ -913,6 +916,7 @@ Use:
 - `travel_cost` for travel-based tasks
 - `duration` for pure timed waits/crafting
 - `reward` only for low-level system payouts. Player-visible contract rewards should usually live on the quest/contract that the task helps complete.
+- `completion_actions` or `on_complete` for low-level task side effects. The runner injects the assigned `entity_id`, `task_runtime_id`, and `task_template_id` when omitted. This is the preferred path for generic rest/recovery loops: a time button or interaction starts a `WAIT` task, time advances, and the task applies a status effect or stat recovery through normal `ActionDispatcher` actions.
 
 ---
 
@@ -1516,7 +1520,7 @@ Common fields:
 - `game.starting_discovered_locations` must be an array of valid location ids when provided; include any connected locations that should be available in the first travel view
 - Starting currencies are set on the player entity template in `entities.json`, not in `config.json`. To change starting money, patch the player entity's `currencies` field.
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when provided
-- `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)` when provided, such as `"1 hour"` or `"1 day"`
+- `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)`, or objects with `label` plus `ticks`/`time`. Object entries may include `task_template_id`, `entity_id`, `completion_actions`, `reward`, and `status_text`; the base `"Rest"` button starts `base:downtime`, advances four ticks, and lets that task apply recovery through data-authored completion actions.
 - The current base content also defines `game.new_game_flow`, which means the startup flow can be configured through data instead of hardcoding it all in scripts
 
 Task routines are configured through `config.json` under the `task_routines` key (or nested under `routines.task_routines`). See Section 11.1 for the full schema. Mods can add their own routines through their own `config.json`, and multiple mods' routines will all be active simultaneously since config is deep-merged.
@@ -1663,10 +1667,12 @@ No required params. Common useful optional fields:
 - `show_currencies`
 - `show_equipped`
 - `show_inventory`
+- `show_status_effects`
 - `show_reputation`
 - `inventory_limit`
+- `status_effect_empty_label`
 
-The current entity sheet exposes stats, currency balances, equipped parts, inventory summaries, faction standing, data-authored inventory use actions, direct equip for loose inventory parts, discard actions for loose inventory, and handoff into equipment management. Direct equip is still data-driven: the backend derives compatible and recommended slots from the target entity's `provides_sockets`, part `tags`, and `required_tags`; no slot ids or item categories are hardcoded by the UI.
+The current entity sheet exposes stats, active status effects, currency balances, equipped parts, inventory summaries, faction standing, data-authored inventory use actions, direct equip for loose inventory parts, discard actions for loose inventory, and handoff into equipment management. Status effect rows are derived from `GameState.active_status_effects` and the referenced `status_effects.json` templates, including display names, descriptions, remaining duration, stacks, tags, and data-authored stat modifiers. Direct equip is still data-driven: the backend derives compatible and recommended slots from the target entity's `provides_sockets`, part `tags`, and `required_tags`; no slot ids or item categories are hardcoded by the UI.
 
 #### `OwnedEntitiesBackend`
 No required params. Common useful optional fields:
@@ -1818,7 +1824,7 @@ Actions are side-effect operations dispatched from quest stages, task rewards, c
 | `remove_status_effect` | `status_effect_id` (or `effect_id`), optional `entity_id`, optional `expire` | Removes an active effect; `expire: true` also runs `on_expire` |
 | `modify_reputation` / `add_reputation` / `remove_reputation` | `faction_id`, `amount`, optional `entity_id` | |
 | `travel` | `location_id` | Moves the player |
-| `start_task` | `task_template_id` (or `template_id`), optional `entity_id` | |
+| `start_task` | `task_template_id` (or `template_id`), optional `entity_id`, `duration`, `queue_if_busy`, `allow_duplicate`, `completion_actions`, `reward` | Starts a low-level entity task and forwards extra fields into task params |
 | `start_quest` | `quest_id` | |
 | `unlock_location` | `location_id`, optional `entity_id` | Adds to discovered locations |
 | `spawn_entity` | `template_id` (or `entity_template_id`), optional `location_id` | Instantiates a new entity |

@@ -20,11 +20,13 @@ static func register_contract() -> void:
 			"show_currencies",
 			"show_equipped",
 			"show_inventory",
+			"show_status_effects",
 			"show_reputation",
 			"inventory_limit",
 			"currency_empty_label",
 			"equipped_empty_label",
 			"inventory_empty_label",
+			"status_effect_empty_label",
 			"reputation_empty_label",
 		],
 		"field_types": {
@@ -36,11 +38,13 @@ static func register_contract() -> void:
 			"show_currencies": TYPE_BOOL,
 			"show_equipped": TYPE_BOOL,
 			"show_inventory": TYPE_BOOL,
+			"show_status_effects": TYPE_BOOL,
 			"show_reputation": TYPE_BOOL,
 			"inventory_limit": TYPE_INT,
 			"currency_empty_label": TYPE_STRING,
 			"equipped_empty_label": TYPE_STRING,
 			"inventory_empty_label": TYPE_STRING,
+			"status_effect_empty_label": TYPE_STRING,
 			"reputation_empty_label": TYPE_STRING,
 		},
 	})
@@ -61,6 +65,7 @@ func build_view_model() -> Dictionary:
 	var show_currencies := _get_bool_param(_params, "show_currencies", true)
 	var show_equipped := _get_bool_param(_params, "show_equipped", true)
 	var show_inventory := _get_bool_param(_params, "show_inventory", true)
+	var show_status_effects := _get_bool_param(_params, "show_status_effects", true)
 	var show_reputation := _get_bool_param(_params, "show_reputation", true)
 
 	if target_entity == null:
@@ -72,10 +77,12 @@ func build_view_model() -> Dictionary:
 			"currency_rows": [],
 			"equipped_rows": [],
 			"inventory_rows": [],
+			"status_effect_rows": [],
 			"reputation_rows": [],
 			"show_currencies": show_currencies,
 			"show_equipped": show_equipped,
 			"show_inventory": show_inventory,
+			"show_status_effects": show_status_effects,
 			"show_reputation": show_reputation,
 			"status_text": "The entity sheet target could not be resolved.",
 			"summary_text": "",
@@ -85,6 +92,7 @@ func build_view_model() -> Dictionary:
 			"currency_empty_label": _get_empty_label("currency_empty_label", "No currencies are recorded."),
 			"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
 			"inventory_empty_label": _get_empty_label("inventory_empty_label", "Inventory is empty."),
+			"status_effect_empty_label": _get_empty_label("status_effect_empty_label", "No active status effects."),
 			"reputation_empty_label": _get_empty_label("reputation_empty_label", "No faction standing is recorded."),
 			"inventory_overflow_count": 0,
 			"inventory_total_instances": 0,
@@ -97,6 +105,7 @@ func build_view_model() -> Dictionary:
 	var equipped_rows := _build_equipped_rows(target_entity)
 	var inventory_result := _build_inventory_result(target_entity)
 	var inventory_rows := _read_dictionary_rows(inventory_result.get("rows", []))
+	var status_effect_rows := _build_status_effect_rows(target_entity)
 	var reputation_rows := _build_reputation_rows(target_entity)
 	var entity_template := BACKEND_HELPERS.get_entity_template(target_entity)
 	var ai_lore_template_id := str(entity_template.get("entity_id", ""))
@@ -111,19 +120,22 @@ func build_view_model() -> Dictionary:
 		"currency_rows": currency_rows,
 		"equipped_rows": equipped_rows,
 		"inventory_rows": inventory_rows,
+		"status_effect_rows": status_effect_rows,
 		"reputation_rows": reputation_rows,
 		"show_currencies": show_currencies,
 		"show_equipped": show_equipped,
 		"show_inventory": show_inventory,
+		"show_status_effects": show_status_effects,
 		"show_reputation": show_reputation,
 		"ai_lore": ai_lore,
 		"ai_lore_template_id": ai_lore_template_id,
-		"status_text": _build_status_text(target_entity, equipped_rows, inventory_result),
-		"summary_text": _build_summary_text(target_entity, equipped_rows, inventory_result),
+		"status_text": _build_status_text(target_entity, equipped_rows, inventory_result, status_effect_rows),
+		"summary_text": _build_summary_text(target_entity, equipped_rows, inventory_result, status_effect_rows),
 		"cancel_label": _get_string_param(_params, "cancel_label", "Back"),
 		"currency_empty_label": _get_empty_label("currency_empty_label", "No currencies are recorded."),
 		"equipped_empty_label": _get_empty_label("equipped_empty_label", "No parts are equipped."),
 		"inventory_empty_label": _get_empty_label("inventory_empty_label", "Inventory is empty."),
+		"status_effect_empty_label": _get_empty_label("status_effect_empty_label", "No active status effects."),
 		"reputation_empty_label": _get_empty_label("reputation_empty_label", "No faction standing is recorded."),
 		"inventory_overflow_count": int(inventory_result.get("overflow_count", 0)),
 		"inventory_total_instances": int(inventory_result.get("total_instances", 0)),
@@ -275,6 +287,44 @@ func _build_reputation_rows(entity: EntityInstance) -> Array[Dictionary]:
 	return rows
 
 
+func _build_status_effect_rows(entity: EntityInstance) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if entity == null:
+		return rows
+	var effects := GameState.get_status_effects_for_entity(entity.entity_id)
+	for effect in effects:
+		var status_effect_id := str(effect.get("status_effect_id", ""))
+		if status_effect_id.is_empty():
+			continue
+		var template := DataManager.get_status_effect(status_effect_id)
+		var display_name := str(template.get("display_name", BACKEND_HELPERS.humanize_id(status_effect_id)))
+		var remaining_ticks := int(effect.get("remaining_ticks", 0))
+		var duration := int(effect.get("duration", remaining_ticks))
+		var stacks := maxi(int(effect.get("stacks", 1)), 1)
+		var stat_summary := _build_status_effect_stat_summary(template, stacks)
+		var timing_summary := _build_status_effect_timing_summary(remaining_ticks, duration, stacks)
+		var summary_parts: Array[String] = []
+		if not timing_summary.is_empty():
+			summary_parts.append(timing_summary)
+		if not stat_summary.is_empty():
+			summary_parts.append(stat_summary)
+		rows.append({
+			"runtime_id": str(effect.get("runtime_id", "")),
+			"status_effect_id": status_effect_id,
+			"display_name": display_name,
+			"description": str(template.get("description", "")),
+			"tags": _read_string_array(template.get("tags", [])),
+			"remaining_ticks": remaining_ticks,
+			"duration": duration,
+			"stacks": stacks,
+			"stat_summary": "\n".join(summary_parts),
+		})
+	var sort_callable := func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
+	rows.sort_custom(sort_callable)
+	return rows
+
+
 func _build_socket_label_map(entity: EntityInstance) -> Dictionary:
 	var labels: Dictionary = {}
 	if entity == null:
@@ -371,6 +421,41 @@ func _build_part_stat_summary(template: Dictionary, overrides: Dictionary) -> St
 	return ", ".join(parts)
 
 
+func _build_status_effect_stat_summary(template: Dictionary, stacks: int) -> String:
+	var modifiers_value: Variant = template.get("stat_modifiers", {})
+	if not modifiers_value is Dictionary:
+		return ""
+	var modifiers: Dictionary = modifiers_value
+	if modifiers.is_empty():
+		return ""
+	var modifier_keys: Array = modifiers.keys()
+	modifier_keys.sort()
+	var parts: Array[String] = []
+	for modifier_key_value in modifier_keys:
+		var stat_id := str(modifier_key_value)
+		if stat_id.is_empty():
+			continue
+		var amount := _read_float(modifiers.get(modifier_key_value, 0.0)) * float(maxi(stacks, 1))
+		if absf(amount) < 0.001:
+			continue
+		var amount_text := "%+.0f" % amount if absf(amount - roundf(amount)) < 0.001 else "%+.2f" % amount
+		parts.append("%s %s" % [BACKEND_HELPERS.humanize_id(stat_id), amount_text])
+	if parts.is_empty():
+		return ""
+	return "Modifiers: %s" % ", ".join(parts)
+
+
+func _build_status_effect_timing_summary(remaining_ticks: int, duration: int, stacks: int) -> String:
+	var parts: Array[String] = []
+	if remaining_ticks > 0:
+		parts.append("%s tick%s remaining" % [str(remaining_ticks), "" if remaining_ticks == 1 else "s"])
+	if duration > 0:
+		parts.append("%s tick%s total" % [str(duration), "" if duration == 1 else "s"])
+	if stacks > 1:
+		parts.append("%sx stacks" % str(stacks))
+	return ", ".join(parts)
+
+
 func _build_part_instance_summary(template: Dictionary, part: PartInstance) -> String:
 	var lines: Array[String] = []
 	lines.append(_build_part_stat_summary(template, part.stat_overrides))
@@ -415,25 +500,27 @@ func _build_custom_field_label_map(template: Dictionary) -> Dictionary:
 	return labels
 
 
-func _build_summary_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_result: Dictionary) -> String:
+func _build_summary_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_result: Dictionary, status_effect_rows: Array[Dictionary]) -> String:
 	var location_label := BACKEND_HELPERS.humanize_id(entity.location_id)
 	if not entity.location_id.is_empty():
 		var location := DataManager.get_location(entity.location_id)
 		location_label = str(location.get("display_name", location_label))
-	return "%s currency balances, %s equipped, %s inventory stacks shown of %s total, location: %s." % [
+	return "%s currency balances, %s equipped, %s active effects, %s inventory stacks shown of %s total, location: %s." % [
 		str(entity.currencies.size()),
 		str(equipped_rows.size()),
+		str(status_effect_rows.size()),
 		str(int(inventory_result.get("shown_stacks", 0))),
 		str(int(inventory_result.get("total_stacks", 0))),
 		location_label if not location_label.is_empty() else "Unknown",
 	]
 
 
-func _build_status_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_result: Dictionary) -> String:
-	return "%s has %s currency balances, %s equipped parts, %s inventory items, and %s inventory stacks." % [
+func _build_status_text(entity: EntityInstance, equipped_rows: Array[Dictionary], inventory_result: Dictionary, status_effect_rows: Array[Dictionary]) -> String:
+	return "%s has %s currency balances, %s equipped parts, %s active effects, %s inventory items, and %s inventory stacks." % [
 		BACKEND_HELPERS.get_entity_display_name(entity, entity.entity_id),
 		str(entity.currencies.size()),
 		str(equipped_rows.size()),
+		str(status_effect_rows.size()),
 		str(int(inventory_result.get("total_instances", 0))),
 		str(int(inventory_result.get("total_stacks", 0))),
 	]

@@ -220,9 +220,13 @@ static func _action_start_task(action: Dictionary) -> void:
 		push_warning("ActionDispatcher: start_task references missing task template '%s'." % template_id)
 		return
 	var params: Dictionary = {}
-	var entity_id := str(action.get("entity_id", "player"))
-	if not entity_id.is_empty():
-		params["entity_id"] = entity_id
+	for key_value in action.keys():
+		var key := str(key_value)
+		if key == "type" or key == "task_template_id" or key == "template_id":
+			continue
+		params[key] = action.get(key_value)
+	if not params.has("entity_id"):
+		params["entity_id"] = "player"
 	TimeKeeper.accept_task(template_id, params)
 
 

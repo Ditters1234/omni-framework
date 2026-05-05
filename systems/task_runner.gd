@@ -65,6 +65,7 @@ func accept_task(template_id: String, params: Dictionary = {}) -> String:
 		"queued_order": Time.get_ticks_usec() if should_queue else -1,
 		"duration_locked": duration_locked,
 		"reward": _duplicate_dict(params.get("reward", template.get("reward", {}))),
+		"completion_actions": _duplicate_array(params.get("completion_actions", template.get("completion_actions", template.get("on_complete", [])))),
 		"complete_sound": str(params.get("complete_sound", template.get("complete_sound", ""))),
 	}
 	var source_quest_runtime_id := str(params.get("source_quest_runtime_id", ""))
@@ -93,6 +94,7 @@ func complete_task(runtime_id: String) -> bool:
 	if entity == null:
 		return false
 	_apply_completion_state(task_instance, entity)
+	_apply_completion_actions(task_instance, entity)
 	_apply_reward(task_instance, entity)
 	_apply_hook(task_instance, "on_task_complete")
 	GameState.active_tasks.erase(runtime_id)
@@ -264,6 +266,25 @@ func _apply_reward(task_instance: Dictionary, entity: EntityInstance) -> void:
 	RewardService.apply_reward(entity, reward_data)
 
 
+func _apply_completion_actions(task_instance: Dictionary, entity: EntityInstance) -> void:
+	var actions_value: Variant = task_instance.get("completion_actions", [])
+	if not actions_value is Array:
+		return
+	var actions: Array = actions_value
+	for action_value in actions:
+		if not action_value is Dictionary:
+			continue
+		var action: Dictionary = action_value
+		var payload := action.duplicate(true)
+		if not payload.has("entity_id"):
+			payload["entity_id"] = entity.entity_id
+		if not payload.has("task_runtime_id"):
+			payload["task_runtime_id"] = str(task_instance.get("runtime_id", ""))
+		if not payload.has("task_template_id"):
+			payload["task_template_id"] = str(task_instance.get("template_id", ""))
+		ActionDispatcher.dispatch(payload)
+
+
 func _apply_completion_state(task_instance: Dictionary, entity: EntityInstance) -> void:
 	var task_type := str(task_instance.get("type", TASK_TYPE_WAIT))
 	var target := str(task_instance.get("target", ""))
@@ -329,6 +350,13 @@ func _duplicate_dict(value: Variant) -> Dictionary:
 		var dict_value: Dictionary = value
 		return dict_value.duplicate(true)
 	return {}
+
+
+func _duplicate_array(value: Variant) -> Array:
+	if value is Array:
+		var array_value: Array = value
+		return array_value.duplicate(true)
+	return []
 
 
 func _resolve_entity(entity_id: String) -> EntityInstance:

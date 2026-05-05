@@ -387,6 +387,62 @@ func test_entity_sheet_direct_equip_button_commits_selected_inventory_part() -> 
 	assert_null(updated_player.get_inventory_part("engine_ui_spare_hair"))
 
 
+func test_entity_sheet_surfaces_active_status_effects() -> void:
+	DataManager.status_effects["base:fixture_focus"] = {
+		"status_effect_id": "base:fixture_focus",
+		"display_name": "Fixture Focus",
+		"description": "A fixture status effect shown on the entity sheet.",
+		"duration": 5,
+		"max_stacks": 3,
+		"stat_modifiers": {"power": 2},
+		"tags": ["buff"]
+	}
+	GameState.new_game()
+	var runtime_id := GameState.apply_status_effect("base:fixture_focus", "player", {"stacks": 2, "duration": 5})
+	assert_false(runtime_id.is_empty())
+
+	var screen_scene := load(ENTITY_SHEET_SCENE_PATH) as PackedScene
+	assert_not_null(screen_scene)
+	if screen_scene == null:
+		return
+	var screen_value: Variant = screen_scene.instantiate()
+	assert_true(screen_value is Control)
+	if not screen_value is Control:
+		return
+	var screen: Control = screen_value
+	_spawned_nodes.append(screen)
+	assert_not_null(_test_viewport)
+	if _test_viewport == null:
+		return
+	_test_viewport.add_child(screen)
+	screen.call("initialize", {"target_entity_id": "player"})
+	await get_tree().process_frame
+
+	var snapshot_value: Variant = screen.call("get_debug_snapshot")
+	assert_true(snapshot_value is Dictionary)
+	if not snapshot_value is Dictionary:
+		return
+	var snapshot: Dictionary = snapshot_value
+	var status_rows := _read_dictionary_array(snapshot.get("status_effect_rows", []))
+	assert_eq(status_rows.size(), 1)
+	var row: Dictionary = status_rows[0]
+	assert_eq(str(row.get("display_name", "")), "Fixture Focus")
+	assert_eq(int(row.get("remaining_ticks", 0)), 5)
+	assert_eq(int(row.get("stacks", 0)), 2)
+	assert_true(str(row.get("stat_summary", "")).contains("Power +4"))
+
+	var status_effect_rows := screen.get_node("MarginContainer/PanelContainer/VBoxContainer/TabContainer/Status/StatusBox/StatusEffectRows") as VBoxContainer
+	assert_not_null(status_effect_rows)
+	if status_effect_rows == null:
+		return
+	assert_gt(status_effect_rows.get_child_count(), 0)
+	var first_label := status_effect_rows.get_child(0) as Label
+	assert_not_null(first_label)
+	if first_label != null:
+		assert_true(first_label.text.contains("Fixture Focus"))
+		assert_true(first_label.text.contains("5 ticks remaining"))
+
+
 func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)

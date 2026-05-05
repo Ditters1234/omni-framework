@@ -128,6 +128,36 @@ func test_start_quest_action_begins_quest() -> void:
 	assert_signal_emitted(GameEvents, "quest_started")
 
 
+func test_start_task_action_forwards_duration_and_completion_actions() -> void:
+	DataManager.status_effects["base:action_recovery"] = {
+		"status_effect_id": "base:action_recovery",
+		"display_name": "Action Recovery",
+		"duration": 2
+	}
+	DataManager.tasks["base:action_rest"] = {
+		"template_id": "base:action_rest",
+		"display_name": "Action Rest",
+		"type": "WAIT",
+		"duration": 5,
+		"repeatable": true,
+		"completion_actions": [
+			{"type": "apply_status_effect", "status_effect_id": "base:action_recovery"}
+		]
+	}
+
+	ActionDispatcher.dispatch({
+		"type": "start_task",
+		"task_template_id": "base:action_rest",
+		"duration": 1,
+		"allow_duplicate": true
+	})
+	assert_eq(GameState.active_tasks.size(), 1)
+	TimeKeeper.advance_tick()
+
+	assert_eq(GameState.active_tasks.size(), 0)
+	assert_eq(GameState.active_status_effects.size(), 1)
+
+
 func test_unlock_achievement_action_unlocks() -> void:
 	DataManager.achievements["base:action_ach"] = {
 		"achievement_id": "base:action_ach",

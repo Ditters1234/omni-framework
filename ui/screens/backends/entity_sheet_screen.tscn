@@ -82,6 +82,21 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="Status" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="StatusBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Status"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusEffectRows" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Status/StatusBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="Equipment" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
 layout_mode = 2
 size_flags_horizontal = 3

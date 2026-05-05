@@ -157,7 +157,7 @@ Rules:
 - `game.starting_location` must reference a known location when present.
 - `game.starting_discovered_locations` must be an array of known location ids when present.
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when present.
-- `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)` when present.
+- `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)`, or objects with a non-empty `label` plus `ticks` or a parseable `time` label. Object entries may reference a known `task_template_id` and may include `completion_actions` validated as normal action payloads.
 - `task_routines` must be an array of routine objects when present. Each routine must declare `entity_id` and `entries`. Each entry must declare a tick field (`tick`, `at_tick`, or `tick_into_day`) and a task template field (`task_template_id` or `template_id`). Referenced entity ids and task template ids must exist.
 
 ### Factions
@@ -242,7 +242,7 @@ Minimum required contracts:
 - `ChallengeBackend`: `required_stat`, `required_value`
 - `CatalogListBackend`: `data_source`, `action_payload`
 - `EncounterBackend`: `encounter_id`; optional `ai_log_template_id` is cross-checked against AI templates
-- `EntitySheetBackend`: no required fields; optional params are type-checked at load time
+- `EntitySheetBackend`: no required fields; optional params are type-checked at load time, including the `show_status_effects` display flag
 - `OwnedEntitiesBackend`: no required fields; optional params are type-checked at load time; optional entity/task/faction/stat reference fields are cross-checked against registries; `initial_filter`, `initial_sort`, and `assignment_start_mode` are validated against supported roster/dispatch controls
 - `ActiveQuestLogBackend`: no required fields; optional params are type-checked at load time
 - `FactionReputationBackend`: no required fields; optional params are type-checked at load time

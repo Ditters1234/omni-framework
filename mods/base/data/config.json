@@ -55,7 +55,14 @@
     },
     "time_advance_buttons": [
       "1 hour",
-      "4 hours",
+      {
+        "label": "Rest",
+        "ticks": 4,
+        "task_template_id": "base:downtime",
+        "entity_id": "player",
+        "allow_duplicate": true,
+        "status_text": "Rested and recovered."
+      },
       "1 day"
     ],
     "strings": {

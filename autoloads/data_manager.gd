@@ -254,7 +254,7 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		var tasks_data: Dictionary = tasks_data_value
 		var task_patches: Array = _get_array_field(tasks_data, "patches", mod_id, tasks_path, LOAD_PHASE_PATCHES)
 		_validate_patch_targets(task_patches, tasks, "tasks", mod_id, tasks_path, LOAD_PHASE_PATCHES)
-		_validate_patch_operations(task_patches, ["target", "set", "set_reward"], "tasks", mod_id, tasks_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(task_patches, ["target", "set", "set_reward", "set_completion_actions"], "tasks", mod_id, tasks_path, LOAD_PHASE_PATCHES)
 		TaskRegistry.apply_patch(task_patches)
 
 	var recipes_path := mod_data_path.path_join(OmniConstants.DATA_RECIPES)
@@ -986,6 +986,12 @@ func _validate_template_schemas() -> void:
 		_validate_string_array_elements(entity_id, OmniConstants.DATA_ENTITIES, "owned_entity_ids", entity.get("owned_entity_ids", []))
 		_validate_unique_object_ids(entity_id, OmniConstants.DATA_ENTITIES, "provides_sockets", entity.get("provides_sockets", []))
 
+	for task_value in tasks.values():
+		if not task_value is Dictionary:
+			continue
+		var task: Dictionary = task_value
+		_validate_task_schema(task)
+
 	for recipe_value in recipes.values():
 		if not recipe_value is Dictionary:
 			continue
@@ -1528,14 +1534,53 @@ func _validate_time_advance_buttons(ui_config: Dictionary) -> void:
 	var buttons: Array = buttons_value
 	for index in range(buttons.size()):
 		var button_value: Variant = buttons[index]
-		if not button_value is String:
-			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must be a string." % index)
+		if button_value is String:
+			_validate_time_advance_label_entry(index, str(button_value))
 			continue
-		var label := str(button_value).strip_edges()
-		if label.is_empty():
-			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must be a non-empty string." % index)
-		elif not _is_time_advance_label(label):
-			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must end with tick(s), hour(s), or day(s)." % index)
+		if button_value is Dictionary:
+			var button_config: Dictionary = button_value
+			_validate_time_advance_object_entry(index, button_config)
+			continue
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must be a string or object." % index)
+
+
+func _validate_time_advance_label_entry(index: int, raw_label: String) -> void:
+	var label := raw_label.strip_edges()
+	if label.is_empty():
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must be a non-empty string." % index)
+	elif not _is_time_advance_label(label):
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ui.time_advance_buttons[%d]' must end with tick(s), hour(s), or day(s)." % index)
+
+
+func _validate_time_advance_object_entry(index: int, button_config: Dictionary) -> void:
+	var field_path := "ui.time_advance_buttons[%d]" % index
+	var label_value: Variant = button_config.get("label", "")
+	if not label_value is String or str(label_value).strip_edges().is_empty():
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.label' must be a non-empty string." % field_path)
+	if button_config.has("ticks") and (not _is_integral_number(button_config.get("ticks", 0)) or int(button_config.get("ticks", 0)) < 1):
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.ticks' must be an integer greater than or equal to 1." % field_path)
+	elif not button_config.has("ticks"):
+		var time_value := str(button_config.get("time", label_value)).strip_edges()
+		if time_value.is_empty() or not _is_time_advance_label(time_value):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must provide ticks or a time label ending with tick(s), hour(s), or day(s)." % field_path)
+	if button_config.has("task_template_id"):
+		var task_id := str(button_config.get("task_template_id", "")).strip_edges()
+		if task_id.is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.task_template_id' must be a non-empty string." % field_path)
+		elif not has_task(task_id):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.task_template_id' references unknown task '%s'." % [field_path, task_id])
+	if button_config.has("completion_actions"):
+		var actions_value: Variant = button_config.get("completion_actions", [])
+		if not actions_value is Array:
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.completion_actions' must be an array." % field_path)
+			return
+		var actions: Array = actions_value
+		for action_index in range(actions.size()):
+			var action_value: Variant = actions[action_index]
+			if not action_value is Dictionary:
+				_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.completion_actions[%d]' must be an object." % [field_path, action_index])
+				continue
+			_validate_action_payload("base", OmniConstants.DATA_CONFIG, action_value, "%s.completion_actions[%d]" % [field_path, action_index])
 
 
 func _validate_ai_config(ai_config: Dictionary) -> void:
@@ -1895,6 +1940,28 @@ func _validate_status_effect_schema(status_effect: Dictionary, stat_ids: Diction
 	_validate_status_effect_actions(effect_id, status_effect, "on_apply")
 	_validate_status_effect_actions(effect_id, status_effect, "on_tick")
 	_validate_status_effect_actions(effect_id, status_effect, "on_expire")
+
+
+func _validate_task_schema(task: Dictionary) -> void:
+	var task_id := str(task.get("template_id", ""))
+	_validate_task_actions(task_id, task, "completion_actions")
+	_validate_task_actions(task_id, task, "on_complete")
+
+
+func _validate_task_actions(task_id: String, task: Dictionary, field_name: String) -> void:
+	if not task.has(field_name):
+		return
+	var actions_value: Variant = task.get(field_name, [])
+	if not actions_value is Array:
+		_record_issue(task_id, OmniConstants.DATA_TASKS, LOAD_PHASE_VALIDATION, "Task '%s' %s must be an array." % [task_id, field_name])
+		return
+	var actions: Array = actions_value
+	for index in range(actions.size()):
+		var action_value: Variant = actions[index]
+		if not action_value is Dictionary:
+			_record_issue(task_id, OmniConstants.DATA_TASKS, LOAD_PHASE_VALIDATION, "Task '%s' %s[%d] must be an object." % [task_id, field_name, index])
+			continue
+		_validate_action_payload(task_id, OmniConstants.DATA_TASKS, action_value, "%s[%d]" % [field_name, index])
 
 
 func _validate_positive_int_field(entry_id: String, file_path: String, payload: Dictionary, field_name: String) -> void:

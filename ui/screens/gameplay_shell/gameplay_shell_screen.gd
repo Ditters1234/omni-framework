@@ -324,9 +324,39 @@ func _rebuild_time_buttons(specs: Array[Dictionary] = []) -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var tick_count := int(spec.get("ticks", 1))
 		button.pressed.connect(func() -> void:
-			_advance_time_by_ticks(tick_count, str(spec.get("label", "Advance")))
+			_advance_time_from_spec(spec, tick_count)
 		)
 		_time_buttons_container.add_child(button)
+
+
+func _advance_time_from_spec(spec: Dictionary, tick_count: int) -> void:
+	var task_template_id := str(spec.get("task_template_id", "")).strip_edges()
+	if not task_template_id.is_empty():
+		var task_params := _build_time_button_task_params(spec)
+		var runtime_id := TimeKeeper.accept_task(task_template_id, task_params)
+		if runtime_id.is_empty():
+			_status_message = "Could not start %s." % str(spec.get("label", "task"))
+			_refresh()
+			return
+	_advance_time_by_ticks(tick_count, str(spec.get("label", "Advance")))
+	var status_text := str(spec.get("status_text", "")).strip_edges()
+	if not status_text.is_empty():
+		_status_message = status_text
+	_refresh()
+
+
+func _build_time_button_task_params(spec: Dictionary) -> Dictionary:
+	var params := {
+		"entity_id": str(spec.get("entity_id", "player")),
+		"duration": int(spec.get("ticks", 1)),
+		"remaining_ticks": int(spec.get("ticks", 1)),
+		"allow_duplicate": bool(spec.get("allow_duplicate", true)),
+		"queue_if_busy": bool(spec.get("queue_if_busy", false)),
+	}
+	for optional_key in ["completion_actions", "reward"]:
+		if spec.has(optional_key):
+			params[optional_key] = spec.get(optional_key)
+	return params
 
 
 func _advance_time_by_ticks(tick_count: int, label: String) -> void:

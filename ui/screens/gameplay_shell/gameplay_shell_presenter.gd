@@ -48,7 +48,12 @@ func get_time_button_specs() -> Array[Dictionary]:
 	if configured_value is Array:
 		var configured_buttons: Array = configured_value
 		for button_value in configured_buttons:
-			var spec := _parse_time_advance_spec(str(button_value))
+			var spec: Dictionary = {}
+			if button_value is Dictionary:
+				var button_config: Dictionary = button_value
+				spec = _parse_time_advance_button_config(button_config)
+			else:
+				spec = _parse_time_advance_spec(str(button_value))
 			if spec.is_empty():
 				continue
 			specs.append(spec)
@@ -172,6 +177,27 @@ func _parse_time_advance_spec(label: String) -> Dictionary:
 			return {"label": normalized.capitalize(), "ticks": quantity * TimeKeeper.get_ticks_per_day()}
 		_:
 			return {}
+
+
+func _parse_time_advance_button_config(config: Dictionary) -> Dictionary:
+	var label := str(config.get("label", "")).strip_edges()
+	if label.is_empty():
+		return {}
+	var ticks := int(config.get("ticks", 0))
+	if ticks <= 0:
+		var spec := _parse_time_advance_spec(str(config.get("time", label)))
+		ticks = int(spec.get("ticks", 0))
+	if ticks <= 0:
+		return {}
+	var result := {
+		"label": label,
+		"ticks": ticks,
+	}
+	for optional_key in ["task_template_id", "entity_id", "queue_if_busy", "allow_duplicate", "completion_actions", "reward", "status_text"]:
+		if config.has(optional_key):
+			result[optional_key] = config.get(optional_key)
+	return result
+
 
 func _get_ticks_per_hour() -> int:
 	var configured_value: Variant = DataManager.get_config_value("game.ticks_per_hour", 0)

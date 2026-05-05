@@ -8,6 +8,13 @@
       "reward": {
         "credits": 20
       },
+      "completion_actions": [
+        {
+          "type": "apply_status_effect",
+          "status_effect_id": "base:field_repair",
+          "duration": 3
+        }
+      ],
       "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
       "description": "Lay low for a while. Sometimes the best move is no move.",
       "difficulty": 0,
