@@ -80,6 +80,15 @@ const SCREEN_CASES := [
 		},
 	},
 	{
+		"scene_path": UI_ROUTE_CATALOG.OWNED_ENTITIES_SCENE,
+		"params": {
+			"owner_entity_id": "player",
+			"assignment_task_template_id": "base:screen_smoke_travel",
+			"assignment_faction_id": "base:screen_smoke_faction",
+			"screen_title": "Smoke Owned Entities",
+		},
+	},
+	{
 		"scene_path": UI_ROUTE_CATALOG.QUEST_LOG_SCENE,
 		"params": {
 			"screen_title": "Smoke Quest Log",
@@ -191,6 +200,24 @@ func _seed_backend_screen_runtime() -> void:
 	}
 	DataManager.entities["base:screen_smoke_vendor"] = vendor_template.duplicate(true)
 	GameState.commit_entity_instance(EntityInstance.from_template(vendor_template), "base:screen_smoke_vendor")
+	var drone_template := {
+		"entity_id": "base:screen_smoke_drone",
+		"display_name": "Smoke Drone",
+		"description": "Owned entity for backend smoke tests.",
+		"location_id": GameState.current_location_id,
+		"stats": {"power": 1, "health": 20, "health_max": 20},
+		"inventory": [],
+	}
+	DataManager.entities["base:screen_smoke_drone"] = drone_template.duplicate(true)
+	GameState.commit_entity_instance(EntityInstance.from_template(drone_template), "base:screen_smoke_drone")
+	player.owned_entity_ids = ["base:screen_smoke_drone"]
+	DataManager.tasks["base:screen_smoke_travel"] = {
+		"template_id": "base:screen_smoke_travel",
+		"display_name": "Travel",
+		"type": "TRAVEL",
+		"duration": 1,
+		"repeatable": true,
+	}
 	DataManager.factions["base:screen_smoke_faction"] = {
 		"faction_id": "base:screen_smoke_faction",
 		"display_name": "Smoke Faction",

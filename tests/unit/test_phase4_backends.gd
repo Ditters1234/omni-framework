@@ -9,6 +9,7 @@ const CHALLENGE_BACKEND := preload("res://ui/screens/backends/challenge_backend.
 const TASK_PROVIDER_BACKEND := preload("res://ui/screens/backends/task_provider_backend.gd")
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
 const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_backend.gd")
+const OWNED_ENTITIES_BACKEND := preload("res://ui/screens/backends/owned_entities_backend.gd")
 const CRAFTING_BACKEND := preload("res://ui/screens/backends/crafting_backend.gd")
 const WORLD_MAP_BACKEND := preload("res://ui/screens/backends/world_map_backend.gd")
 const ENCOUNTER_BACKEND := preload("res://ui/screens/backends/encounter_backend.gd")
@@ -31,6 +32,7 @@ func test_mod_loader_registers_phase4_backend_contracts() -> void:
 	assert_true(registered_backend_classes.has("CraftingBackend"))
 	assert_true(registered_backend_classes.has("DialogueBackend"))
 	assert_true(registered_backend_classes.has("EntitySheetBackend"))
+	assert_true(registered_backend_classes.has("OwnedEntitiesBackend"))
 	assert_true(registered_backend_classes.has("ActiveQuestLogBackend"))
 	assert_true(registered_backend_classes.has("FactionReputationBackend"))
 	assert_true(registered_backend_classes.has("AchievementListBackend"))
@@ -417,6 +419,64 @@ func test_world_map_backend_uses_total_route_cost_for_multi_hop_travel() -> void
 		assert_eq(str(result.get("status", "")), "ok")
 	assert_eq(GameState.current_location_id, "base:outpost")
 	assert_eq(GameState.current_tick, tick_before + 3)
+
+
+func test_owned_entities_backend_lists_owned_entities_and_assigns_travel_task() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	DataManager.tasks["base:test_travel_assignment"] = {
+		"template_id": "base:test_travel_assignment",
+		"display_name": "Travel",
+		"type": "TRAVEL",
+		"duration": 1,
+		"repeatable": true,
+	}
+	var drone_template := {
+		"entity_id": "base:test_drone",
+		"display_name": "Test Drone",
+		"description": "Fixture owned entity.",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"stats": {"power": 1, "health": 20, "health_max": 20},
+		"inventory": [],
+	}
+	DataManager.entities["base:test_drone"] = drone_template.duplicate(true)
+	var drone := EntityInstance.from_template(drone_template)
+	GameState.commit_entity_instance(drone, "base:test_drone")
+	player.owned_entity_ids = ["base:test_drone"]
+
+	var backend: RefCounted = OWNED_ENTITIES_BACKEND.new()
+	backend.initialize({
+		"owner_entity_id": "player",
+		"assignment_task_template_id": "base:test_travel_assignment",
+	})
+
+	var view_model: Dictionary = backend.build_view_model()
+	var rows_value: Variant = view_model.get("rows", [])
+	var locations_value: Variant = view_model.get("locations", [])
+
+	assert_true(rows_value is Array)
+	assert_true(locations_value is Array)
+	if rows_value is Array:
+		var rows: Array = rows_value
+		assert_eq(rows.size(), 1)
+		if rows.size() > 0 and rows[0] is Dictionary:
+			var row: Dictionary = rows[0]
+			assert_eq(str(row.get("entity_id", "")), "base:test_drone")
+
+	backend.assign_selected_to_location(TEST_FIXTURE_WORLD.connected_location_id())
+
+	assert_eq(GameState.active_tasks.size(), 1)
+	if GameState.active_tasks.is_empty():
+		return
+	var active_task_value: Variant = GameState.active_tasks.values()[0]
+	assert_true(active_task_value is Dictionary)
+	if active_task_value is Dictionary:
+		var active_task: Dictionary = active_task_value
+		assert_eq(str(active_task.get("entity_id", "")), "base:test_drone")
+		assert_eq(str(active_task.get("target", "")), TEST_FIXTURE_WORLD.connected_location_id())
+		assert_eq(str(active_task.get("type", "")), "TRAVEL")
 
 
 func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() -> void:

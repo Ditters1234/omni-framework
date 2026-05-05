@@ -18,6 +18,7 @@ const SCREEN_CATALOG_LIST := "catalog_list"
 const SCREEN_CRAFTING := "crafting"
 const SCREEN_DIALOGUE := "dialogue"
 const SCREEN_ENTITY_SHEET := "entity_sheet"
+const SCREEN_OWNED_ENTITIES := "owned_entities"
 const SCREEN_QUEST_LOG := "quest_log"
 const SCREEN_FACTION_REP := "faction_rep"
 const SCREEN_ACHIEVEMENT_LIST := "achievement_list"
@@ -40,6 +41,7 @@ const CATALOG_LIST_SCENE := "res://ui/screens/backends/catalog_list_screen.tscn"
 const CRAFTING_SCENE := "res://ui/screens/backends/crafting_screen.tscn"
 const DIALOGUE_SCENE := "res://ui/screens/backends/dialogue_screen.tscn"
 const ENTITY_SHEET_SCENE := "res://ui/screens/backends/entity_sheet_screen.tscn"
+const OWNED_ENTITIES_SCENE := "res://ui/screens/backends/owned_entities_screen.tscn"
 const QUEST_LOG_SCENE := "res://ui/screens/backends/active_quest_log_screen.tscn"
 const FACTION_REP_SCENE := "res://ui/screens/backends/faction_reputation_screen.tscn"
 const ACHIEVEMENT_LIST_SCENE := "res://ui/screens/backends/achievement_list_screen.tscn"
@@ -64,6 +66,7 @@ const ENGINE_SCREEN_IDS := [
 	SCREEN_CRAFTING,
 	SCREEN_DIALOGUE,
 	SCREEN_ENTITY_SHEET,
+	SCREEN_OWNED_ENTITIES,
 	SCREEN_QUEST_LOG,
 	SCREEN_FACTION_REP,
 	SCREEN_ACHIEVEMENT_LIST,
@@ -82,6 +85,7 @@ const BACKEND_SCREEN_MAP := {
 	"CraftingBackend": "crafting",
 	"DialogueBackend": "dialogue",
 	"EntitySheetBackend": "entity_sheet",
+	"OwnedEntitiesBackend": "owned_entities",
 	"ActiveQuestLogBackend": "quest_log",
 	"FactionReputationBackend": "faction_rep",
 	"AchievementListBackend": "achievement_list",
@@ -107,6 +111,7 @@ const RUNTIME_SCREEN_REGISTRY := {
 	SCREEN_CRAFTING: CRAFTING_SCENE,
 	SCREEN_DIALOGUE: DIALOGUE_SCENE,
 	SCREEN_ENTITY_SHEET: ENTITY_SHEET_SCENE,
+	SCREEN_OWNED_ENTITIES: OWNED_ENTITIES_SCENE,
 	SCREEN_QUEST_LOG: QUEST_LOG_SCENE,
 	SCREEN_FACTION_REP: FACTION_REP_SCENE,
 	SCREEN_ACHIEVEMENT_LIST: ACHIEVEMENT_LIST_SCENE,

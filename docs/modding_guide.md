@@ -436,7 +436,7 @@ Inventory entries may also include `custom_values` to override template-declared
 
 Entity-facing UI such as `EntityPortrait` can render optional portrait/emblem art from `portrait`, `portrait_id`, or `sprite` when those fields are present.
 
-`owned_entity_ids` now round-trips through `EntityInstance` runtime/save serialization even though the base UI does not currently render a dedicated ownership view.
+`owned_entity_ids` round-trips through `EntityInstance` runtime/save serialization and can be surfaced through `OwnedEntitiesBackend`. Owned entities are normal runtime entities; tasks move or operate on the assigned entity, while quests/contracts remain the player-facing objective and reward layer.
 
 `ai_persona_id` is optional. When present, it must reference a valid persona from `ai_personas.json`. On its own it does not turn on AI dialogue yet; it only binds authored persona data to the entity for AI-aware systems to consume.
 
@@ -1493,6 +1493,7 @@ The current loader registers these backend classes:
 - `DialogueBackend`
 - `EncounterBackend`
 - `EntitySheetBackend`
+- `OwnedEntitiesBackend`
 - `ActiveQuestLogBackend`
 - `FactionReputationBackend`
 - `AchievementListBackend`
@@ -1618,7 +1619,21 @@ No required params. Common useful optional fields:
 - `show_reputation`
 - `inventory_limit`
 
-The current entity sheet is read-only and exposes stats, currency balances, equipped parts, inventory summaries, and faction standing.
+The current entity sheet exposes stats, currency balances, equipped parts, inventory summaries, faction standing, data-authored inventory use actions, discard actions for loose inventory, and handoff into equipment management.
+
+#### `OwnedEntitiesBackend`
+No required params. Common useful optional fields:
+- `owner_entity_id` - defaults to `"player"`
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+- `empty_label`
+- `assignment_task_template_id` - defaults to `"base:goto_location"`
+- `assignment_faction_id` - enables the Assign Contract handoff to `TaskProviderBackend`
+- `assignment_provider_entity_id`
+- `show_discovered_locations_only` - defaults to `true`
+
+This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, and contract-assignment handoffs. Location dispatch starts a low-level `TRAVEL` task for the selected entity. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start.
 
 #### `AssemblyEditorBackend`
 No required params, but common useful ones are:

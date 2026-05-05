@@ -17,6 +17,17 @@
           "screen_title": "Personal Status"
         },
         {
+          "tab_id": "apt_owned_entities",
+          "display_name": "Owned Entities",
+          "description": "Inspect and assign owned drones, companions, and other controlled entities.",
+          "backend_class": "OwnedEntitiesBackend",
+          "owner_entity_id": "player",
+          "assignment_task_template_id": "base:goto_location",
+          "assignment_faction_id": "base:threshold_syndicate",
+          "assignment_provider_entity_id": "base:npc_fixer",
+          "screen_title": "Owned Entities"
+        },
+        {
           "tab_id": "apt_quests",
           "display_name": "Job Board",
           "description": "Review your active contracts.",

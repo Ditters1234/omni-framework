@@ -166,6 +166,8 @@ ui/
 │   │   ├── encounter_screen.gd / .tscn
 │   │   ├── entity_sheet_backend.gd
 │   │   ├── entity_sheet_screen.gd / .tscn
+│   │   ├── owned_entities_backend.gd
+│   │   ├── owned_entities_screen.gd / .tscn
 │   │   ├── event_log_backend.gd
 │   │   ├── event_log_screen.gd / .tscn
 │   │   ├── exchange_backend.gd
@@ -199,10 +201,11 @@ The UI layer includes:
 
 - A root entry scene at `ui/main.tscn` and accompanying controller (`main.gd`)
 - A route catalog (`ui_route_catalog.gd`) — the shared catalog for `backend_class → screen_id` mapping and the runtime `screen_id → scene_path` registry
-- **15 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting complete, Phase 7 world map initial pass, encounter v1 complete): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EncounterBackend`, `EntitySheetBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`, `WorldMapBackend`
+- **16 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting complete, Phase 7 world map initial pass, encounter v1 complete, owned-entity assignment initial pass): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EncounterBackend`, `EntitySheetBackend`, `OwnedEntitiesBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`, `WorldMapBackend`
 - `DialogueBackend` now supports authored `.dialogue` trees plus optional `ai_mode` handoff (`hybrid` / `freeform`) using `systems/ai/ai_chat_service.gd` and `GameEvents.ai_token_received`
 - `EncounterBackend` runs data-authored, turn-based encounters from `encounters.json`, using real entity stat mutations plus encounter-local meters, outcome rewards/actions, and optional presentation-only AI flavor for action log entries.
 - `EntitySheetBackend` powers the character menu, including stats, equipment, quests, reputation, progress, activity, a searchable/filterable inventory browser, data-authored usable inventory items, discard actions for loose inventory, and equipment handoff.
+- `OwnedEntitiesBackend` powers owner/companion management: it lists `owned_entity_ids`, shows current location and active task state, can send an entity to a known location through a `TRAVEL` task, can recall it to the owner, and can hand off to entity inspection, equipment management, or contract assignment.
 - `ui/screens/backends/` also includes the world map implementation trio: `world_map_backend.gd`, `world_map_graph.gd`, and `world_map_screen.gd`
 - Dialogue, encounter, world map, and settings screens use responsive container layouts so backend-driven screens remain usable in narrow/mobile-sized viewports.
 - A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts

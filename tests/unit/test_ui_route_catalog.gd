@@ -30,6 +30,7 @@ func test_backend_screen_ids_map_to_known_routes() -> void:
 		"CraftingBackend",
 		"DialogueBackend",
 		"EntitySheetBackend",
+		"OwnedEntitiesBackend",
 		"ActiveQuestLogBackend",
 		"FactionReputationBackend",
 		"AchievementListBackend",

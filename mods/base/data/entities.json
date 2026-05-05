@@ -27,6 +27,9 @@
         "base:apartment",
         "base:market_row"
       ],
+      "owned_entity_ids": [
+        "base:utility_drone"
+      ],
       "provides_sockets": [
         {
           "id": "head",
@@ -125,6 +128,44 @@
         "hands": "p_hands_001",
         "feet": "p_feet_001"
       }
+    },
+    {
+      "entity_id": "base:utility_drone",
+      "display_name": "Utility Drone",
+      "description": "A compact field drone registered to the operative. It can travel independently, carry small parts, and take simple contract assignments.",
+      "portrait": "res://mods/base/assets/chip.png",
+      "location_id": "base:apartment",
+      "currencies": {},
+      "stats": {
+        "power": 1,
+        "armor": 1,
+        "health": 60,
+        "health_max": 60,
+        "stamina": 40,
+        "stamina_max": 40
+      },
+      "flags": {},
+      "provides_sockets": [
+        {
+          "id": "utility",
+          "accepted_tags": [
+            "arm_mod",
+            "weapon"
+          ],
+          "label": "Utility Mount"
+        }
+      ],
+      "inventory": [
+        {
+          "instance_id": "drone_chip_001",
+          "template_id": "base:salvage_chip"
+        },
+        {
+          "instance_id": "drone_grip_001",
+          "template_id": "base:diagnostic_grip"
+        }
+      ],
+      "assembly_socket_map": {}
     },
     {
       "entity_id": "base:training_drone",
