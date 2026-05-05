@@ -1127,18 +1127,19 @@ Encounters are data-authored, turn-based scenes loaded through `EncounterRegistr
 - Required fields are `encounter_id`, `participants`, `actions`, and `resolution`.
 - `participants.player` and `participants.opponent` are the v1 fixed roles. `entity_id` accepts `"player"`, `"entity:<id>"`, or a raw entity id. Template participant ids must reference known entity templates; launch-time payload overrides may still point at runtime entity ids.
 - Launch payloads may override participants with `player_entity_id`, `opponent_entity_id`, or `participant_overrides`.
+- Encounter mechanics do not require hardcoded stats such as `health`, `stamina`, or `credits`. Any real stat touched by `modify_stat` must exist in the active mod stack's definitions, while encounter-only progress meters should be declared in `encounter_stats` and referenced through `modify_encounter_stat`, `set_encounter_stat`, or `encounter_stat_check`.
 - Player actions are shown as buttons. Opponent actions are selected by weighted random among available actions.
 - `opponent_strategy` currently supports `{ "kind": "weighted_random" }` only. Omit the field for the same behavior.
 - `availability` and `check` use `ConditionEvaluator`; encounter contexts add `encounter:player`, `encounter:opponent`, `encounter_stat_check`, and `has_encounter_tag`.
 - Supported effects are `modify_stat`, `modify_encounter_stat`, `set_encounter_stat`, `set_flag`, `log`, `resolve`, `apply_tag`, and `remove_tag`.
 - `resolve` stops later effects in the same action list. Put any final `log` effect before the `resolve` effect.
 - `apply_tag` writes an encounter-local tag to `player` or `opponent`; `duration_rounds` defaults to `1` and decrements after a full unresolved round. `has_encounter_tag` checks these tags from action availability or checks.
-- Outcome `reward` is applied through `RewardService`; outcome `action_payload` is dispatched through `ActionDispatcher`.
+- Outcome `reward` is applied through `RewardService`; reward currency keys, item ids, and reputation faction ids are validated against the active mod stack. Outcome `action_payload` and `actions` are dispatched through `ActionDispatcher`. Use `action_payload` for one action or `actions` for an ordered list.
 - When an encounter resolves, the backend records an `encounter_resolved` runtime event and emits a visual notification containing the encounter name and formatted reward summary.
 - Resolved encounters stay on the encounter screen until the player presses Continue. The resolution panel shows `screen_text` and a formatted reward summary; Continue then performs the authored `next_screen_id` or `pop_on_resolve` navigation.
-- `log` effects append authored fallback text immediately when AI flavor is disabled or unavailable. If `ai.enable_world_gen`, `ai.encounter_log_flavor_enabled`, and AI provider availability all allow it, the row first shows a pending line while the backend asks `base:encounter_log_flavor` to rewrite that log entry with the resolved actor, target, action result, and stat deltas. These calls use `AIManager`'s global queue, so they cannot overlap with dialogue, lore, narration, task flavor, behavior-tree, or other encounter AI requests. While any AI-flavored encounter log row is pending, player action buttons are unavailable and direct action requests are rejected. This is presentation-only for mechanics: stats, success/failure, rewards, and outcomes are already resolved before the LLM response is used.
+- `log` effects append authored fallback text immediately when AI flavor is disabled or unavailable. If `ai.enable_world_gen`, `ai.encounter_log_flavor_enabled`, and AI provider availability all allow it, the row first shows a pending line while the backend asks an AI template to rewrite that log entry with the resolved actor, target, action result, and stat deltas. The default template id is `base:encounter_log_flavor`, but total-conversion mods can set `ai_log_template_id` on the encounter template, and launch payloads can override it per route. These calls use `AIManager`'s global queue, so they cannot overlap with dialogue, lore, narration, task flavor, behavior-tree, or other encounter AI requests. While any AI-flavored encounter log row is pending, player action buttons are unavailable and direct action requests are rejected. This is presentation-only for mechanics: stats, success/failure, rewards, and outcomes are already resolved before the LLM response is used.
 - Encounter patches support `set`, `add_player_actions`, `remove_player_action_ids`, `add_opponent_actions`, `remove_opponent_action_ids`, `add_outcomes`, and `remove_outcome_ids`.
-- Load validation rejects unsupported effects, unknown real stats in `modify_stat`, unknown local meters in encounter-stat effects, unknown outcomes in `resolve`, missing tag ids on tag effects, malformed outcome action payloads, and invalid `push_screen` targets.
+- Load validation rejects unsupported effects, unknown real stats in `modify_stat`, unknown local meters in encounter-stat effects, unknown outcomes in `resolve`, missing tag ids on tag effects, malformed rewards and outcome action payloads, missing AI log templates, and invalid `push_screen` targets.
 - The base pack ships three reference encounters: `base:tutorial_brawl`, `base:tutorial_negotiation`, and `base:tutorial_endurance`.
 
 > **Note on `reward` shape:** outcome `reward` is a flat dict keyed by currency stat id, e.g. `{ "credits": 25 }`. Do not nest it under a `"currency"` key — that is not a recognised field.
@@ -1296,7 +1297,7 @@ Put any `log` effect **before** the `resolve` effect; `resolve` stops further ef
 }
 ```
 
-Setting `cancel_outcome` to the same `outcome_id` means the Back button also routes through the authored outcome, so any `reward` or `action_payload` on the fled outcome applies whether the player presses Flee or Back. If you want Back to exit silently without firing the outcome, omit `cancel_outcome`.
+Setting `cancel_outcome` to the same `outcome_id` means the Back button also routes through the authored outcome, so any `reward`, `action_payload`, or `actions` on the fled outcome applies whether the player presses Flee or Back. If you want Back to exit silently without firing the outcome, omit `cancel_outcome`.
 
 ---
 
@@ -1605,8 +1606,9 @@ Useful optional fields:
 - `next_screen_params`
 - `pop_on_resolve`
 - `default_sound`
+- `ai_log_template_id`
 
-Most encounter behavior lives in the referenced `encounters.json` template. The backend payload is mainly for launch context, participant overrides, and navigation overrides.
+Most encounter behavior lives in the referenced `encounters.json` template. The backend payload is mainly for launch context, participant overrides, navigation overrides, and optional route-specific AI log template overrides.
 
 #### `EntitySheetBackend`
 No required params. Common useful optional fields:

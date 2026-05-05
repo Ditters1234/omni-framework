@@ -6,7 +6,7 @@ const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_regis
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const ENCOUNTER_RUNTIME := preload("res://systems/encounter_runtime.gd")
 
-const AI_LOG_TEMPLATE_ID := "base:encounter_log_flavor"
+const DEFAULT_AI_LOG_TEMPLATE_ID := "base:encounter_log_flavor"
 const AI_LOG_SYSTEM_PROMPT := "You rewrite resolved encounter actions for a game log. Preserve the supplied mechanical result and stat changes. Return exactly one short sentence."
 const AI_LOG_MAX_LENGTH := 180
 const AI_LOG_PENDING_TEXT := "Resolving action..."
@@ -47,6 +47,7 @@ static func register_contract() -> void:
 			"next_screen_params",
 			"pop_on_resolve",
 			"default_sound",
+			"ai_log_template_id",
 		],
 		"field_types": {
 			"encounter_id": TYPE_STRING,
@@ -60,6 +61,7 @@ static func register_contract() -> void:
 			"next_screen_params": TYPE_DICTIONARY,
 			"pop_on_resolve": TYPE_BOOL,
 			"default_sound": TYPE_STRING,
+			"ai_log_template_id": TYPE_STRING,
 		},
 	})
 
@@ -378,6 +380,10 @@ func _resolve(outcome_id: String, reason: String) -> Dictionary:
 		var action_payload: Dictionary = action_payload_value
 		if not action_payload.is_empty():
 			ActionDispatcher.dispatch(action_payload)
+	var actions_value: Variant = outcome.get("actions", null)
+	if actions_value is Array:
+		var actions: Array = actions_value
+		ActionDispatcher.dispatch_all(actions)
 	_resolved_outcome_id = outcome_id
 	_resolved_screen_text = str(outcome.get("screen_text", "Encounter resolved."))
 	_status_text = _resolved_screen_text
@@ -655,7 +661,10 @@ func _build_ai_log_request(entry_id: String, fallback_text: String, ai_context: 
 		return {}
 	if not ScriptHookService.can_run_world_gen("encounter_log_flavor_enabled"):
 		return {}
-	var ai_template := DataManager.get_ai_template(AI_LOG_TEMPLATE_ID)
+	var ai_log_template_id := _get_ai_log_template_id()
+	if ai_log_template_id.is_empty():
+		return {}
+	var ai_template := DataManager.get_ai_template(ai_log_template_id)
 	if ai_template.is_empty():
 		return {}
 	var tokens := _build_ai_log_tokens(fallback_text, ai_context)
@@ -667,6 +676,15 @@ func _build_ai_log_request(entry_id: String, fallback_text: String, ai_context: 
 		"prompt": prompt,
 		"fallback_text": fallback_text,
 	}
+
+
+func _get_ai_log_template_id() -> String:
+	var param_template_value: Variant = _params.get("ai_log_template_id", "")
+	var param_template_id := str(param_template_value).strip_edges()
+	if not param_template_id.is_empty():
+		return param_template_id
+	var template_value: Variant = _template.get("ai_log_template_id", DEFAULT_AI_LOG_TEMPLATE_ID)
+	return str(template_value).strip_edges()
 
 
 func _enqueue_ai_log_request(ai_request: Dictionary) -> void:

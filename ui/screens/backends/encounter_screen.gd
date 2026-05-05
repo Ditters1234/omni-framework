@@ -43,6 +43,12 @@ func _ready() -> void:
 	_refresh_state()
 
 
+func _exit_tree() -> void:
+	var on_event_narrated := Callable(self, "_on_event_narrated")
+	if GameEvents.is_connected("event_narrated", on_event_narrated):
+		GameEvents.event_narrated.disconnect(_on_event_narrated)
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_sync_responsive_layout()

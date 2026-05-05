@@ -957,7 +957,7 @@ func _validate_template_schemas() -> void:
 		if not encounter_value is Dictionary:
 			continue
 		var encounter: Dictionary = encounter_value
-		_validate_encounter_schema(encounter, stat_ids)
+		_validate_encounter_schema(encounter, stat_ids, currency_ids)
 
 	for persona_value in ai_personas.values():
 		if not persona_value is Dictionary:
@@ -1027,8 +1027,70 @@ func _validate_currency_map(entry_id: String, file_path: String, field_path: Str
 		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown currency '%s'." % [entry_id, field_path, currency_id])
 
 
-func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary) -> void:
+func _validate_reward_payload(entry_id: String, file_path: String, field_path: String, value: Variant, currency_ids: Dictionary) -> void:
+	if value == null:
+		return
+	if not value is Dictionary:
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s must be an object." % [entry_id, field_path])
+		return
+	var reward: Dictionary = value
+	for reward_key_value in reward.keys():
+		var reward_key := str(reward_key_value)
+		var reward_value: Variant = reward.get(reward_key_value, null)
+		match reward_key:
+			"items":
+				_validate_reward_items(entry_id, file_path, "%s.items" % field_path, reward_value)
+			"flags":
+				if not reward_value is Dictionary:
+					_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s.flags must be an object." % [entry_id, field_path])
+			"reputation":
+				_validate_reward_reputation(entry_id, file_path, "%s.reputation" % field_path, reward_value)
+			_:
+				if not currency_ids.has(reward_key):
+					_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown currency '%s'." % [entry_id, field_path, reward_key])
+				elif not reward_value is int and not reward_value is float:
+					_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s.%s must be numeric." % [entry_id, field_path, reward_key])
+
+
+func _validate_reward_items(entry_id: String, file_path: String, field_path: String, value: Variant) -> void:
+	if not value is Array:
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s must be an array." % [entry_id, field_path])
+		return
+	var item_entries: Array = value
+	for index in range(item_entries.size()):
+		var item_value: Variant = item_entries[index]
+		var template_id := ""
+		if item_value is String:
+			template_id = str(item_value).strip_edges()
+		elif item_value is Dictionary:
+			var item_entry: Dictionary = item_value
+			template_id = str(item_entry.get("template_id", item_entry.get("part_id", ""))).strip_edges()
+		else:
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s[%d] must be a part id string or object." % [entry_id, field_path, index])
+			continue
+		if template_id.is_empty() or not has_part(template_id):
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s[%d] references unknown part '%s'." % [entry_id, field_path, index, template_id])
+
+
+func _validate_reward_reputation(entry_id: String, file_path: String, field_path: String, value: Variant) -> void:
+	if not value is Dictionary:
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s must be an object." % [entry_id, field_path])
+		return
+	var reputation: Dictionary = value
+	for faction_id_value in reputation.keys():
+		var faction_id := str(faction_id_value).strip_edges()
+		var amount_value: Variant = reputation.get(faction_id_value, null)
+		if faction_id.is_empty() or not has_faction(faction_id):
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown faction '%s'." % [entry_id, field_path, faction_id])
+		elif not amount_value is int and not amount_value is float:
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s.%s must be numeric." % [entry_id, field_path, faction_id])
+
+
+func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary, currency_ids: Dictionary) -> void:
 	var encounter_id := str(encounter.get("encounter_id", ""))
+	var ai_log_template_id := str(encounter.get("ai_log_template_id", "")).strip_edges()
+	if not ai_log_template_id.is_empty() and not has_ai_template(ai_log_template_id):
+		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' ai_log_template_id references unknown AI template '%s'." % [encounter_id, ai_log_template_id])
 	var encounter_stat_ids: Dictionary = {}
 	var participants_value: Variant = encounter.get("participants", {})
 	if not participants_value is Dictionary:
@@ -1068,7 +1130,7 @@ func _validate_encounter_schema(encounter: Dictionary, stat_ids: Dictionary) -> 
 		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' resolution must be an object." % encounter_id)
 	else:
 		var resolution: Dictionary = resolution_value
-		outcome_ids = _validate_encounter_outcomes(encounter_id, resolution.get("outcomes", []))
+		outcome_ids = _validate_encounter_outcomes(encounter_id, resolution.get("outcomes", []), currency_ids)
 		for field_name in ["max_rounds_outcome", "cancel_outcome"]:
 			var outcome_id := str(resolution.get(field_name, encounter.get(field_name, "")))
 			if not outcome_id.is_empty() and not outcome_ids.has(outcome_id):
@@ -1118,7 +1180,7 @@ func _validate_encounter_action_list(encounter_id: String, role: String, value: 
 				_validate_encounter_effects(encounter_id, "action '%s' %s" % [action_id, effect_field], action.get(effect_field, []), outcome_ids, stat_ids, encounter_stat_ids)
 
 
-func _validate_encounter_outcomes(encounter_id: String, value: Variant) -> Dictionary:
+func _validate_encounter_outcomes(encounter_id: String, value: Variant, currency_ids: Dictionary) -> Dictionary:
 	var outcome_ids: Dictionary = {}
 	if not value is Array:
 		_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' resolution.outcomes must be an array." % encounter_id)
@@ -1137,12 +1199,26 @@ func _validate_encounter_outcomes(encounter_id: String, value: Variant) -> Dicti
 		if outcome_ids.has(outcome_id):
 			_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' has duplicate outcome_id '%s'." % [encounter_id, outcome_id])
 		outcome_ids[outcome_id] = true
+		_validate_reward_payload(encounter_id, OmniConstants.DATA_ENCOUNTERS, "resolution.outcomes.%s.reward" % outcome_id, outcome.get("reward", null), currency_ids)
 		var action_payload_value: Variant = outcome.get("action_payload", null)
 		if action_payload_value != null:
 			if not action_payload_value is Dictionary:
 				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' outcome '%s' action_payload must be an object." % [encounter_id, outcome_id])
 			else:
 				_validate_action_payload(encounter_id, OmniConstants.DATA_ENCOUNTERS, action_payload_value, "resolution.outcomes.%s.action_payload" % outcome_id)
+		var actions_value: Variant = outcome.get("actions", null)
+		if actions_value != null:
+			if not actions_value is Array:
+				_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "Encounter '%s' outcome '%s' actions must be an array." % [encounter_id, outcome_id])
+			else:
+				var actions: Array = actions_value
+				for action_index in range(actions.size()):
+					var action_value: Variant = actions[action_index]
+					var action_path := "resolution.outcomes.%s.actions[%d]" % [outcome_id, action_index]
+					if not action_value is Dictionary:
+						_record_issue(encounter_id, OmniConstants.DATA_ENCOUNTERS, LOAD_PHASE_VALIDATION, "%s must be an object." % action_path)
+						continue
+					_validate_action_payload(encounter_id, OmniConstants.DATA_ENCOUNTERS, action_value, action_path)
 	return outcome_ids
 
 
@@ -1801,6 +1877,9 @@ func _validate_backend_reference_fields(entry_id: String, file_path: String, pay
 	var payload: Dictionary = payload_value
 	var backend_class := str(payload.get("backend_class", ""))
 	match backend_class:
+		"EncounterBackend":
+			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "encounter_id", "encounter")
+			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "ai_log_template_id", "ai_template")
 		"OwnedEntitiesBackend":
 			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "owner_entity_id")
 			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "assignment_provider_entity_id")
@@ -1840,12 +1919,17 @@ func _validate_backend_registry_reference(entry_id: String, file_path: String, p
 		return
 	var exists := false
 	match registry_kind:
+		"encounter":
+			exists = has_encounter(reference_id)
+		"ai_template":
+			exists = has_ai_template(reference_id)
 		"task":
 			exists = has_task(reference_id)
 		"faction":
 			exists = has_faction(reference_id)
 	if not exists:
-		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown %s '%s'." % [field_path, field_name, registry_kind, reference_id])
+		var registry_label := "AI template" if registry_kind == "ai_template" else registry_kind
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown %s '%s'." % [field_path, field_name, registry_label, reference_id])
 
 
 func _compose_field_path(field_path: String, field_name: String) -> String:

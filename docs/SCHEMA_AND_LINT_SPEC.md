@@ -184,6 +184,7 @@ Rules:
 
 - Required: `encounter_id`, `participants`, `actions`, `resolution`
 - `participants.player` and `participants.opponent` must be objects in v1. Their `entity_id` values must be `"player"` or reference known entity templates, either as raw ids or `entity:<id>`.
+- Encounter mechanics must not assume fixed stat or currency ids. `modify_stat` references are validated against the active stat definitions, and encounter-only meters must be declared under `encounter_stats`.
 - `actions.player` and `actions.opponent` must be arrays of action objects with non-empty `action_id` values.
 - Action IDs must be unique per role.
 - `cost`, `on_success`, and `on_failure` must be arrays when present.
@@ -192,11 +193,12 @@ Rules:
 - `resolve` must reference a declared outcome.
 - `apply_tag` and `remove_tag` must declare a non-empty `tag` or `tag_id`.
 - `resolution.outcomes` must be an array of objects with unique, non-empty `outcome_id` values.
-- Outcome `action_payload` must be an object when present and follows normal `ActionDispatcher` payload validation.
+- Outcome `reward` must be an object when present. Currency keys must exist in definitions, `items` must reference known part templates, and `reputation` keys must reference known factions.
+- Outcome `action_payload` must be an object when present and follows normal `ActionDispatcher` payload validation. Outcome `actions` must be an array of normal `ActionDispatcher` action objects when present.
 - `max_rounds_outcome` and `cancel_outcome` must reference declared outcomes when present.
 - Encounter-local stats may share names with real stats, but this should stay intentional because the runtime keeps them in a separate context namespace.
 - `opponent_strategy` must be an object when present. The only supported production kind is `weighted_random`; advanced strategy kinds are reserved for later work.
-- Optional AI encounter log flavor uses `ai.encounter_log_flavor_enabled` plus the `base:encounter_log_flavor` AI template. This text is presentation-only and must not affect encounter mechanics. When AI flavor is active, authored log text is retained as fallback and only displayed if generation fails; requests use `AIManager`'s global queue to avoid provider concurrency failures. While one or more encounter log rows are waiting on AI text, player actions are disabled until the pending line resolves or falls back.
+- Optional AI encounter log flavor uses `ai.encounter_log_flavor_enabled` plus an AI template. The default template id is `base:encounter_log_flavor`, but encounter templates and `EncounterBackend` payloads may provide `ai_log_template_id`; non-empty values must reference known AI templates. This text is presentation-only and must not affect encounter mechanics. When AI flavor is active, authored log text is retained as fallback and only displayed if generation fails; requests use `AIManager`'s global queue to avoid provider concurrency failures. While one or more encounter log rows are waiting on AI text, player actions are disabled until the pending line resolves or falls back.
 
 ### Achievements
 
@@ -230,7 +232,7 @@ Minimum required contracts:
 - `DialogueBackend`: `dialogue_resource`
 - `ChallengeBackend`: `required_stat`, `required_value`
 - `CatalogListBackend`: `data_source`, `action_payload`
-- `EncounterBackend`: `encounter_id`
+- `EncounterBackend`: `encounter_id`; optional `ai_log_template_id` is cross-checked against AI templates
 - `EntitySheetBackend`: no required fields; optional params are type-checked at load time
 - `OwnedEntitiesBackend`: no required fields; optional params are type-checked at load time; optional entity/task/faction reference fields are cross-checked against registries
 - `ActiveQuestLogBackend`: no required fields; optional params are type-checked at load time

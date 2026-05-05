@@ -97,6 +97,40 @@ func test_encounter_completion_notifies_and_records_reward_summary() -> void:
 			assert_eq(str(payload.get("reward_summary", "")), "Credits +5")
 
 
+func test_encounter_outcome_dispatches_action_list() -> void:
+	var encounter := DataManager.get_encounter("base:test_encounter")
+	var resolution_value: Variant = encounter.get("resolution", {})
+	assert_true(resolution_value is Dictionary)
+	if not resolution_value is Dictionary:
+		return
+	var resolution: Dictionary = resolution_value
+	var outcomes_value: Variant = resolution.get("outcomes", [])
+	assert_true(outcomes_value is Array)
+	if not outcomes_value is Array:
+		return
+	var outcomes: Array = outcomes_value
+	for index in range(outcomes.size()):
+		if not outcomes[index] is Dictionary:
+			continue
+		var outcome: Dictionary = outcomes[index]
+		if str(outcome.get("outcome_id", "")) != "victory":
+			continue
+		outcome["actions"] = [
+			{"type": "set_flag", "flag_id": "encounter_action_list_dispatched", "value": true}
+		]
+		outcomes[index] = outcome
+	resolution["outcomes"] = outcomes
+	encounter["resolution"] = resolution
+	DataManager.encounters["base:action_list_encounter"] = encounter
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:action_list_encounter"})
+
+	backend.select_action("finish")
+
+	assert_eq(backend.get_resolved_outcome_id(), "victory")
+	assert_eq(GameState.get_flag("encounter_action_list_dispatched", false), true)
+
+
 func test_ai_encounter_log_flavor_updates_log_without_changing_mechanics() -> void:
 	_configure_saved_ai_settings(true)
 	AIManager.clear_provider_script_overrides()
@@ -121,6 +155,45 @@ func test_ai_encounter_log_flavor_updates_log_without_changing_mechanics() -> vo
 	var view_model := backend.build_view_model()
 	assert_true(_log_line_exists(view_model, "The test opponent buckles as the finishing blow lands."))
 	assert_true(_reward_line_exists(view_model, "Credits +5"))
+
+
+func test_ai_encounter_log_flavor_uses_data_authored_template_id() -> void:
+	_configure_saved_ai_settings(true)
+	AIManager.clear_provider_script_overrides()
+	AIManager.set_provider_script_override(AIManager.PROVIDER_OPENAI_COMPATIBLE, FAKE_PROVIDER_SCRIPT_PATH)
+	AIManager.initialize({
+		APP_SETTINGS.SECTION_AI: {
+			APP_SETTINGS.AI_ENABLED: true,
+			APP_SETTINGS.AI_PROVIDER: AIManager.PROVIDER_OPENAI_COMPATIBLE,
+			"response": "The custom template line resolves.",
+		}
+	})
+	ScriptHookService.invalidate_world_gen_settings_cache()
+	DataManager.ai_templates["base:custom_encounter_log"] = {
+		"template_id": "base:custom_encounter_log",
+		"purpose": "encounter_log_flavor",
+		"prompt_template": "CUSTOM ENCOUNTER TEMPLATE: {fallback_text}",
+	}
+	var encounter := DataManager.get_encounter("base:test_encounter")
+	encounter["ai_log_template_id"] = "base:custom_encounter_log"
+	DataManager.encounters["base:custom_ai_log_encounter"] = encounter
+	var backend: OmniEncounterBackend = ENCOUNTER_BACKEND.new()
+	backend.initialize({"encounter_id": "base:custom_ai_log_encounter"})
+
+	backend.select_action("finish")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var debug_snapshot := AIManager.get_debug_snapshot()
+	var provider_debug_value: Variant = debug_snapshot.get("provider_debug", {})
+	assert_true(provider_debug_value is Dictionary)
+	if provider_debug_value is Dictionary:
+		var provider_debug: Dictionary = provider_debug_value
+		var context_value: Variant = provider_debug.get("last_context", {})
+		assert_true(context_value is Dictionary)
+		if context_value is Dictionary:
+			var context: Dictionary = context_value
+			assert_true(str(context.get("prompt", "")).contains("CUSTOM ENCOUNTER TEMPLATE"))
 
 
 func test_ai_encounter_log_flavor_holds_fallback_and_serializes_requests() -> void:

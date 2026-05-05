@@ -242,6 +242,7 @@ func test_validate_loaded_content_reports_encounter_contract_failures() -> void:
 	}
 	DataManager.encounters["base:bad_encounter"] = {
 		"encounter_id": "base:bad_encounter",
+		"ai_log_template_id": "base:missing_encounter_log_template",
 		"participants": {
 			"player": {"entity_id": "player"},
 			"opponent": {"entity_id": "base:opponent"},
@@ -265,7 +266,19 @@ func test_validate_loaded_content_reports_encounter_contract_failures() -> void:
 		},
 		"resolution": {
 			"outcomes": [
-				{"outcome_id": "done", "action_payload": {"type": "push_screen", "screen_id": "missing_screen"}}
+				{
+					"outcome_id": "done",
+					"reward": {
+						"ghost_currency": 5,
+						"items": ["base:missing_part"],
+						"reputation": {"base:missing_faction": 2}
+					},
+					"action_payload": {"type": "push_screen", "screen_id": "missing_screen"},
+					"actions": [
+						{"type": "push_screen", "screen_id": "missing_followup"},
+						"not_an_action"
+					]
+				}
 			],
 			"cancel_outcome": "missing_cancel"
 		},
@@ -281,8 +294,14 @@ func test_validate_loaded_content_reports_encounter_contract_failures() -> void:
 	assert_true(_messages_contain(issue_messages, "must declare a tag"))
 	assert_true(_messages_contain(issue_messages, "cancel_outcome references unknown outcome 'missing_cancel'"))
 	assert_true(_messages_contain(issue_messages, "screen_id references unknown routed screen 'missing_screen'"))
+	assert_true(_messages_contain(issue_messages, "screen_id references unknown routed screen 'missing_followup'"))
+	assert_true(_messages_contain(issue_messages, "resolution.outcomes.done.actions[1] must be an object."))
+	assert_true(_messages_contain(issue_messages, "resolution.outcomes.done.reward references unknown currency 'ghost_currency'"))
+	assert_true(_messages_contain(issue_messages, "resolution.outcomes.done.reward.items[0] references unknown part 'base:missing_part'"))
+	assert_true(_messages_contain(issue_messages, "resolution.outcomes.done.reward.reputation references unknown faction 'base:missing_faction'"))
 	assert_true(_messages_contain(issue_messages, "participants.opponent references unknown entity 'base:opponent'"))
 	assert_true(_messages_contain(issue_messages, "opponent_strategy.kind has unsupported value 'scripted'"))
+	assert_true(_messages_contain(issue_messages, "ai_log_template_id references unknown AI template 'base:missing_encounter_log_template'"))
 
 
 func test_validate_loaded_content_reports_unknown_ai_persona_references() -> void:
@@ -419,6 +438,11 @@ func test_validate_loaded_content_reports_unknown_backend_classes_and_contract_t
 			{
 				"backend_class": "UnknownBackend",
 			},
+			{
+				"backend_class": "EncounterBackend",
+				"encounter_id": "base:missing_encounter",
+				"ai_log_template_id": "base:missing_encounter_log",
+			},
 		],
 	}
 
@@ -427,6 +451,8 @@ func test_validate_loaded_content_reports_unknown_backend_classes_and_contract_t
 
 	assert_true(_messages_contain(issue_messages, "screens[0].target_entity_id"))
 	assert_true(_messages_contain(issue_messages, "Unknown backend_class 'UnknownBackend'"))
+	assert_true(_messages_contain(issue_messages, "screens[2].encounter_id references unknown encounter 'base:missing_encounter'"))
+	assert_true(_messages_contain(issue_messages, "screens[2].ai_log_template_id references unknown AI template 'base:missing_encounter_log'"))
 
 
 func test_validate_loaded_content_reports_owned_entities_backend_reference_issues() -> void:
