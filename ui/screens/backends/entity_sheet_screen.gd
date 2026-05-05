@@ -6,6 +6,12 @@ const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn
 const STAT_SHEET_SCENE := preload("res://ui/components/stat_sheet.tscn")
 const FACTION_BADGE_SCENE := preload("res://ui/components/faction_badge.tscn")
 const QUEST_CARD_SCENE := preload("res://ui/components/quest_card.tscn")
+const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
+const INVENTORY_CATEGORY_ALL := "__all"
+const INVENTORY_SORT_NAME := "name"
+const INVENTORY_SORT_COUNT := "count"
+const INVENTORY_SORT_CATEGORY := "category"
+const INVENTORY_STACKED_WIDTH := 760.0
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -18,8 +24,18 @@ const QUEST_CARD_SCENE := preload("res://ui/components/quest_card.tscn")
 @onready var _currency_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox/CurrencyRows
 @onready var _equipped_section_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox/EquippedSectionLabel
 @onready var _equipped_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Equipment/EquipmentBox/EquippedRows
+@onready var _inventory_content: GridContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent
+@onready var _inventory_search_edit: LineEdit = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryToolbar/InventorySearchEdit
+@onready var _inventory_category_button: OptionButton = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryToolbar/InventoryCategoryButton
+@onready var _inventory_sort_button: OptionButton = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryToolbar/InventorySortButton
+@onready var _inventory_include_equipped_toggle: CheckButton = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryToolbar/InventoryIncludeEquippedToggle
 @onready var _inventory_summary_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventorySummaryLabel
-@onready var _inventory_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryRows
+@onready var _inventory_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryListPanel/InventoryRows
+@onready var _inventory_detail_title: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/InventoryDetailTitle
+@onready var _inventory_detail_meta: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/InventoryDetailMeta
+@onready var _inventory_detail_description: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/InventoryDetailDescription
+@onready var _inventory_detail_stats: RichTextLabel = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/InventoryDetailStats
+@onready var _open_assembly_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/OpenAssemblyButton
 @onready var _quest_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Quests/QuestRows
 @onready var _reputation_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Reputation/ReputationRows
 @onready var _progress_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Progress/ProgressRows
@@ -38,6 +54,11 @@ var _last_view_model: Dictionary = {}
 var _opened_from_gameplay_shell: bool = false
 var _ai_lore_template_id: String = ""
 var _last_tab_index: int = 0
+var _inventory_search_text: String = ""
+var _inventory_category_filter: String = INVENTORY_CATEGORY_ALL
+var _inventory_sort_mode: String = INVENTORY_SORT_NAME
+var _inventory_include_equipped: bool = false
+var _selected_inventory_key: String = ""
 
 
 func initialize(params: Dictionary = {}) -> void:
@@ -51,10 +72,17 @@ func initialize(params: Dictionary = {}) -> void:
 
 func _ready() -> void:
 	_connect_runtime_signals()
+	_connect_inventory_controls()
+	_sync_responsive_layout()
 	_initialize_backend()
 	_refresh_state()
 	call_deferred("_normalize_for_shell_host")
 	call_deferred("_grab_default_focus")
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_sync_responsive_layout()
 
 
 func _normalize_for_shell_host() -> void:
@@ -63,6 +91,12 @@ func _normalize_for_shell_host() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	custom_minimum_size = Vector2.ZERO
+
+
+func _sync_responsive_layout() -> void:
+	if not is_node_ready() or _inventory_content == null:
+		return
+	_inventory_content.columns = 1 if size.x < INVENTORY_STACKED_WIDTH else 2
 
 
 func get_debug_snapshot() -> Dictionary:
@@ -177,16 +211,230 @@ func _render_inventory_section(view_model: Dictionary) -> void:
 	_inventory_rows.visible = show_inventory
 	if not show_inventory:
 		return
-	var rows := _build_visible_inventory_rows(view_model)
-	_inventory_summary_label.text = "%s unequipped inventory items across %s stacks." % [
-		str(_count_inventory_row_instances(rows)),
-		str(rows.size()),
+	var rows := _build_inventory_browser_rows(view_model)
+	_sync_inventory_filter_options(rows)
+	var filtered_rows := _filter_inventory_rows(rows)
+	_sort_inventory_rows(filtered_rows)
+	_sync_selected_inventory_key(filtered_rows)
+	var loose_rows := _build_visible_inventory_rows(view_model)
+	_inventory_summary_label.text = "%s carried items, %s loose stacks, %s shown." % [
+		str(_count_inventory_row_instances(loose_rows)),
+		str(loose_rows.size()),
+		str(filtered_rows.size()),
 	]
 	var empty_label := str(view_model.get("inventory_empty_label", "Inventory is empty."))
 	var overflow_count := int(view_model.get("inventory_overflow_count", 0))
-	_render_text_rows(_inventory_rows, rows, empty_label, "")
+	_render_inventory_rows(filtered_rows, empty_label)
+	_render_inventory_detail(filtered_rows)
 	if overflow_count > 0:
 		_add_wrapped_label(_inventory_rows, "+ %s more inventory stacks may be hidden by the inventory display limit." % str(overflow_count))
+
+
+func _build_inventory_browser_rows(view_model: Dictionary) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for row in _build_visible_inventory_rows(view_model):
+		var inventory_row := row.duplicate(true)
+		inventory_row["source_label"] = "Inventory"
+		inventory_row["selection_key"] = "inventory:%s" % str(inventory_row.get("template_id", ""))
+		inventory_row["is_equipped"] = false
+		rows.append(inventory_row)
+	if not _inventory_include_equipped:
+		return rows
+	for row in _read_dictionary_array(view_model.get("equipped_rows", [])):
+		var equipped_row := row.duplicate(true)
+		var slot_label := str(equipped_row.get("slot_label", "Equipped"))
+		var instance_id := str(equipped_row.get("instance_id", ""))
+		equipped_row["source_label"] = "Equipped: %s" % slot_label
+		equipped_row["selection_key"] = "equipped:%s:%s" % [slot_label, instance_id]
+		equipped_row["is_equipped"] = true
+		rows.append(equipped_row)
+	return rows
+
+
+func _sync_inventory_filter_options(rows: Array[Dictionary]) -> void:
+	if _inventory_sort_button.item_count == 0:
+		_inventory_sort_button.add_item("Name", 0)
+		_inventory_sort_button.set_item_metadata(0, INVENTORY_SORT_NAME)
+		_inventory_sort_button.add_item("Count", 1)
+		_inventory_sort_button.set_item_metadata(1, INVENTORY_SORT_COUNT)
+		_inventory_sort_button.add_item("Category", 2)
+		_inventory_sort_button.set_item_metadata(2, INVENTORY_SORT_CATEGORY)
+		_inventory_sort_button.select(0)
+
+	var categories: Array[String] = []
+	for row in rows:
+		for tag in _read_string_array(row.get("tags", [])):
+			if categories.has(tag):
+				continue
+			categories.append(tag)
+	categories.sort()
+
+	var selected_category := _inventory_category_filter
+	_inventory_category_button.clear()
+	_inventory_category_button.add_item("All categories", 0)
+	_inventory_category_button.set_item_metadata(0, INVENTORY_CATEGORY_ALL)
+	var selected_index := 0
+	for index in range(categories.size()):
+		var category := categories[index]
+		var item_index := index + 1
+		_inventory_category_button.add_item(_humanize_id(category), item_index)
+		_inventory_category_button.set_item_metadata(item_index, category)
+		if category == selected_category:
+			selected_index = item_index
+	if selected_category != INVENTORY_CATEGORY_ALL and selected_index == 0:
+		_inventory_category_filter = INVENTORY_CATEGORY_ALL
+	_inventory_category_button.select(selected_index)
+
+
+func _filter_inventory_rows(rows: Array[Dictionary]) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var query := _inventory_search_text.strip_edges().to_lower()
+	for row in rows:
+		if _inventory_category_filter != INVENTORY_CATEGORY_ALL:
+			var tags := _read_string_array(row.get("tags", []))
+			if not tags.has(_inventory_category_filter):
+				continue
+		if not query.is_empty() and not _inventory_row_matches_query(row, query):
+			continue
+		results.append(row.duplicate(true))
+	return results
+
+
+func _inventory_row_matches_query(row: Dictionary, query: String) -> bool:
+	var haystack := "%s %s %s %s" % [
+		str(row.get("display_name", "")),
+		str(row.get("template_id", "")),
+		str(row.get("description", "")),
+		", ".join(_read_string_array(row.get("tags", []))),
+	]
+	return haystack.to_lower().contains(query)
+
+
+func _sort_inventory_rows(rows: Array[Dictionary]) -> void:
+	match _inventory_sort_mode:
+		INVENTORY_SORT_COUNT:
+			rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				var count_a := int(a.get("count", 1))
+				var count_b := int(b.get("count", 1))
+				if count_a != count_b:
+					return count_a > count_b
+				return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
+			)
+		INVENTORY_SORT_CATEGORY:
+			rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				var category_a := _read_primary_category(a)
+				var category_b := _read_primary_category(b)
+				if category_a != category_b:
+					return category_a.naturalnocasecmp_to(category_b) < 0
+				return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
+			)
+		_:
+			rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
+			)
+
+
+func _sync_selected_inventory_key(rows: Array[Dictionary]) -> void:
+	if rows.is_empty():
+		_selected_inventory_key = ""
+		return
+	for row in rows:
+		if str(row.get("selection_key", "")) == _selected_inventory_key:
+			return
+	_selected_inventory_key = str(rows[0].get("selection_key", ""))
+
+
+func _render_inventory_rows(rows: Array[Dictionary], empty_label: String) -> void:
+	_clear_children(_inventory_rows)
+	if rows.is_empty():
+		_add_wrapped_label(_inventory_rows, empty_label)
+		return
+	for row in rows:
+		var button := Button.new()
+		button.focus_mode = Control.FOCUS_ALL
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.text = _build_inventory_button_text(row)
+		var selection_key := str(row.get("selection_key", ""))
+		button.disabled = selection_key == _selected_inventory_key
+		button.pressed.connect(_on_inventory_row_selected.bind(selection_key))
+		_inventory_rows.add_child(button)
+
+
+func _build_inventory_button_text(row: Dictionary) -> String:
+	var title := str(row.get("display_name", row.get("template_id", "Unknown")))
+	var count := int(row.get("count", 1))
+	if count > 1:
+		title = "%s x%s" % [title, str(count)]
+	var source_label := str(row.get("source_label", "Inventory"))
+	var category := _read_primary_category(row)
+	if category.is_empty():
+		return "%s  |  %s" % [title, source_label]
+	return "%s  |  %s  |  %s" % [title, _humanize_id(category), source_label]
+
+
+func _render_inventory_detail(rows: Array[Dictionary]) -> void:
+	var selected := _find_inventory_row(rows, _selected_inventory_key)
+	if selected.is_empty():
+		_inventory_detail_title.text = "Select an item"
+		_inventory_detail_meta.text = ""
+		_inventory_detail_description.text = "Use search, category, and sort controls to inspect carried parts."
+		_inventory_detail_stats.text = ""
+		_open_assembly_button.visible = _is_player_sheet()
+		return
+	var display_name := str(selected.get("display_name", selected.get("template_id", "Unknown")))
+	var count := int(selected.get("count", 1))
+	_inventory_detail_title.text = "%s%s" % [display_name, " x%s" % str(count) if count > 1 else ""]
+	_inventory_detail_meta.text = _build_inventory_detail_meta(selected)
+	_inventory_detail_description.text = str(selected.get("description", "No description is available."))
+	_inventory_detail_stats.text = _build_inventory_detail_stats(selected)
+	_open_assembly_button.visible = _is_player_sheet()
+
+
+func _find_inventory_row(rows: Array[Dictionary], selection_key: String) -> Dictionary:
+	for row in rows:
+		if str(row.get("selection_key", "")) == selection_key:
+			return row.duplicate(true)
+	return {}
+
+
+func _build_inventory_detail_meta(row: Dictionary) -> String:
+	var parts: Array[String] = []
+	parts.append(str(row.get("source_label", "Inventory")))
+	var template_id := str(row.get("template_id", ""))
+	if not template_id.is_empty():
+		parts.append(template_id)
+	var tags := _read_string_array(row.get("tags", []))
+	if not tags.is_empty():
+		var labels: Array[String] = []
+		for tag in tags:
+			labels.append(_humanize_id(tag))
+		parts.append(", ".join(labels))
+	return " | ".join(parts)
+
+
+func _build_inventory_detail_stats(row: Dictionary) -> String:
+	var lines: Array[String] = []
+	var stat_summary := str(row.get("stat_summary", ""))
+	if not stat_summary.is_empty():
+		lines.append(stat_summary)
+	var custom_summary := str(row.get("custom_summary", ""))
+	if not custom_summary.is_empty():
+		lines.append(custom_summary)
+	var instance_ids := _read_string_array(row.get("instance_ids", []))
+	if not instance_ids.is_empty():
+		lines.append("Instances: %s" % ", ".join(instance_ids))
+	if lines.is_empty():
+		lines.append("No stat modifiers.")
+	return "\n".join(lines)
+
+
+func _read_primary_category(row: Dictionary) -> String:
+	var tags := _read_string_array(row.get("tags", []))
+	if tags.is_empty():
+		return ""
+	return tags[0]
 
 
 func _render_quest_section() -> void:
@@ -370,6 +618,41 @@ func _read_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+func _read_string_array(value: Variant) -> Array[String]:
+	var results: Array[String] = []
+	if not value is Array:
+		return results
+	var values: Array = value
+	for item in values:
+		var text := str(item)
+		if text.is_empty():
+			continue
+		results.append(text)
+	return results
+
+
+func _humanize_id(value: String) -> String:
+	var text := value
+	if text.contains(":"):
+		text = text.get_slice(":", text.get_slice_count(":") - 1)
+	text = text.replace("_", " ").replace("-", " ").strip_edges()
+	if text.is_empty():
+		return ""
+	var words := text.split(" ", false)
+	var labels: Array[String] = []
+	for word in words:
+		labels.append(word.capitalize())
+	return " ".join(labels)
+
+
+func _is_player_sheet() -> bool:
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return false
+	var target_entity_id := str(_last_view_model.get("target_entity_id", ""))
+	return target_entity_id == player.entity_id or target_entity_id == "player"
+
+
 func _connect_runtime_signals() -> void:
 	if GameEvents == null:
 		return
@@ -385,6 +668,73 @@ func _connect_runtime_signals() -> void:
 	var location_callback := Callable(self, "_on_location_changed")
 	if GameEvents.has_signal("location_changed") and not GameEvents.is_connected("location_changed", location_callback):
 		GameEvents.location_changed.connect(_on_location_changed)
+
+
+func _connect_inventory_controls() -> void:
+	if _inventory_search_edit != null:
+		var search_callback := Callable(self, "_on_inventory_search_changed")
+		if not _inventory_search_edit.is_connected("text_changed", search_callback):
+			_inventory_search_edit.text_changed.connect(_on_inventory_search_changed)
+	if _inventory_category_button != null:
+		var category_callback := Callable(self, "_on_inventory_category_selected")
+		if not _inventory_category_button.is_connected("item_selected", category_callback):
+			_inventory_category_button.item_selected.connect(_on_inventory_category_selected)
+	if _inventory_sort_button != null:
+		var sort_callback := Callable(self, "_on_inventory_sort_selected")
+		if not _inventory_sort_button.is_connected("item_selected", sort_callback):
+			_inventory_sort_button.item_selected.connect(_on_inventory_sort_selected)
+	if _inventory_include_equipped_toggle != null:
+		var include_callback := Callable(self, "_on_inventory_include_equipped_toggled")
+		if not _inventory_include_equipped_toggle.is_connected("toggled", include_callback):
+			_inventory_include_equipped_toggle.toggled.connect(_on_inventory_include_equipped_toggled)
+	if _open_assembly_button != null:
+		var assembly_callback := Callable(self, "_on_open_assembly_button_pressed")
+		if not _open_assembly_button.is_connected("pressed", assembly_callback):
+			_open_assembly_button.pressed.connect(_on_open_assembly_button_pressed)
+
+
+func _on_inventory_search_changed(new_text: String) -> void:
+	_inventory_search_text = new_text
+	_refresh_state()
+
+
+func _on_inventory_category_selected(index: int) -> void:
+	var metadata: Variant = _inventory_category_button.get_item_metadata(index)
+	_inventory_category_filter = str(metadata) if metadata != null else INVENTORY_CATEGORY_ALL
+	_refresh_state()
+
+
+func _on_inventory_sort_selected(index: int) -> void:
+	var metadata: Variant = _inventory_sort_button.get_item_metadata(index)
+	_inventory_sort_mode = str(metadata) if metadata != null else INVENTORY_SORT_NAME
+	_refresh_state()
+
+
+func _on_inventory_include_equipped_toggled(button_pressed: bool) -> void:
+	_inventory_include_equipped = button_pressed
+	_refresh_state()
+
+
+func _on_inventory_row_selected(selection_key: String) -> void:
+	_selected_inventory_key = selection_key
+	_refresh_state()
+
+
+func _on_open_assembly_button_pressed() -> void:
+	var params := {
+		"target_entity_id": "player",
+		"budget_entity_id": "player",
+		"budget_currency_id": "credits",
+		"option_source_entity_id": "player",
+		"screen_title": "Manage Equipment",
+		"screen_description": "Equip carried parts and preview stat changes before committing.",
+		"cancel_label": "Back",
+		"confirm_label": "Apply",
+		"pop_on_confirm": true,
+	}
+	if _opened_from_gameplay_shell and UIRouter.open_in_gameplay_shell(SCREEN_ASSEMBLY_EDITOR, params):
+		return
+	UIRouter.push(SCREEN_ASSEMBLY_EDITOR, params)
 
 
 func _on_runtime_state_changed(_value: Variant = null) -> void:

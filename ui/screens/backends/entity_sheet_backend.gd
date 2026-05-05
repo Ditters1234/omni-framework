@@ -90,6 +90,7 @@ func build_view_model() -> Dictionary:
 			"inventory_total_instances": 0,
 			"inventory_total_stacks": 0,
 			"inventory_shown_stacks": 0,
+			"target_entity_id": "",
 		}
 
 	var currency_rows := _build_currency_rows(target_entity)
@@ -128,6 +129,7 @@ func build_view_model() -> Dictionary:
 		"inventory_total_instances": int(inventory_result.get("total_instances", 0)),
 		"inventory_total_stacks": int(inventory_result.get("total_stacks", 0)),
 		"inventory_shown_stacks": int(inventory_result.get("shown_stacks", 0)),
+		"target_entity_id": target_entity.entity_id,
 	}
 
 
@@ -152,9 +154,15 @@ func _build_equipped_rows(entity: EntityInstance) -> Array[Dictionary]:
 			"slot_label": str(socket_labels.get(slot_id, BACKEND_HELPERS.humanize_id(slot_id))),
 			"template_id": part.template_id,
 			"instance_id": part.instance_id,
+			"instance_ids": [part.instance_id],
+			"count": 1,
+			"is_equipped": true,
+			"template": template.duplicate(true),
+			"tags": _read_string_array(template.get("tags", [])),
 			"display_name": str(template.get("display_name", part.template_id)),
 			"description": str(template.get("description", "")),
 			"stat_summary": _build_part_instance_summary(template, part),
+			"custom_summary": _build_part_custom_summary(template, part.custom_values),
 		})
 	return rows
 
@@ -202,11 +210,19 @@ func _build_inventory_result(entity: EntityInstance) -> Dictionary:
 			entry = entry_value
 		var count := int(entry.get("count", 0)) + 1
 		var template := part.get_template()
+		var instance_ids := _read_string_array(entry.get("instance_ids", []))
+		if not part.instance_id.is_empty():
+			instance_ids.append(part.instance_id)
 		entry["template_id"] = part.template_id
+		entry["instance_ids"] = instance_ids
+		entry["template"] = template.duplicate(true)
+		entry["tags"] = _read_string_array(template.get("tags", []))
 		entry["display_name"] = str(template.get("display_name", part.template_id))
 		entry["description"] = str(template.get("description", ""))
 		entry["count"] = count
 		entry["stat_summary"] = _build_part_stat_summary(template, {})
+		entry["custom_summary"] = _build_inventory_custom_summary(template, entry.get("instance_ids", []), entity)
+		entry["is_equipped"] = false
 		grouped[part.template_id] = entry
 
 	var grouped_values: Array = grouped.values()
@@ -380,8 +396,22 @@ func _build_status_text(entity: EntityInstance, equipped_rows: Array[Dictionary]
 	]
 
 
+func _build_inventory_custom_summary(template: Dictionary, instance_ids_value: Variant, entity: EntityInstance) -> String:
+	var instance_ids := _read_string_array(instance_ids_value)
+	if instance_ids.is_empty():
+		return ""
+	for instance_id in instance_ids:
+		var part := entity.get_inventory_part(instance_id)
+		if part == null:
+			continue
+		var summary := _build_part_custom_summary(template, part.custom_values)
+		if not summary.is_empty():
+			return summary
+	return ""
+
+
 func _read_inventory_limit() -> int:
-	return _get_int_param(_params, "inventory_limit", 12, 0)
+	return _get_int_param(_params, "inventory_limit", 0, 0)
 
 
 func _get_empty_label(field_name: String, default_value: String) -> String:
@@ -405,6 +435,19 @@ func _read_dictionary_rows(value: Variant) -> Array[Dictionary]:
 		var entry: Dictionary = entry_value
 		rows.append(entry.duplicate(true))
 	return rows
+
+
+func _read_string_array(value: Variant) -> Array[String]:
+	var results: Array[String] = []
+	if not value is Array:
+		return results
+	var values: Array = value
+	for item in values:
+		var text := str(item)
+		if text.is_empty():
+			continue
+		results.append(text)
+	return results
 
 
 func _format_currency_amount(symbol: String, amount: float) -> String:
