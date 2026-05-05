@@ -1695,6 +1695,8 @@ func _validate_action_fields(entry_id: String, file_path: String, payload_value:
 func _validate_part_use_payload(part_id: String, part: Dictionary) -> void:
 	if part.has("consume_on_use") and not (part.get("consume_on_use", false) is bool):
 		_record_issue(part_id, OmniConstants.DATA_PARTS, LOAD_PHASE_VALIDATION, "Part '%s' field 'consume_on_use' must be a bool." % part_id)
+	if part.has("use_label") and str(part.get("use_label", "")).strip_edges().is_empty():
+		_record_issue(part_id, OmniConstants.DATA_PARTS, LOAD_PHASE_VALIDATION, "Part '%s' field 'use_label' must be a non-empty string." % part_id)
 	var use_actions_value: Variant = part.get("use_actions", [])
 	if part.has("use_actions"):
 		if not use_actions_value is Array:

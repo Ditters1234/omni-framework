@@ -126,6 +126,7 @@ Rules:
 - `custom_fields[].id` must be unique within the part.
 - `consume_on_use`, when present, must be a bool.
 - `use_actions`, when present, must be an array of normal `ActionDispatcher` action objects. `use_action_payload` may be used as a single-action object.
+- `use_label`, when present, should be a non-empty string used by the character menu's item action button.
 - `script_path` must point to a script under the owning mod.
 
 ### Entities

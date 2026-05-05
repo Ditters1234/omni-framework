@@ -209,6 +209,11 @@ layout_mode = 2
 focus_mode = 2
 text = "Use Item"
 
+[node name="DiscardItemButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox"]
+layout_mode = 2
+focus_mode = 2
+text = "Discard Item"
+
 [node name="Quests" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer"]
 layout_mode = 2
 size_flags_horizontal = 3

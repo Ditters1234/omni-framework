@@ -275,12 +275,13 @@ Parts are the core content building blocks. They can represent equipment, module
 - `script_path`
 - `use_actions`
 - `consume_on_use`
+- `use_label`
 
 `sprite` can point directly at imported image assets such as `.png` files inside your mod's `assets/` folder.
 
 `equip_sound` can point at a one-shot audio resource such as a `.wav` or `.ogg`. When a committed assembly change equips that part into a slot, the engine plays that sound through `AudioManager.play_sfx()`.
 
-`use_actions` turns an inventory part into a usable item from the character menu. It is an array of normal `ActionDispatcher` action dictionaries. When the player presses **Use Item**, the screen injects `entity_id: "player"`, the selected `instance_id`, `template_id`, and `part_id` when those fields are not already present. Set `consume_on_use: true` for single-use items such as medkits. `use_action_payload` is also accepted as a legacy/single-action shorthand.
+`use_actions` turns an inventory part into a usable item from the character menu. It is an array of normal `ActionDispatcher` action dictionaries. When the player presses **Use Item**, the screen injects `entity_id: "player"`, the selected `instance_id`, `template_id`, and `part_id` when those fields are not already present. Set `consume_on_use: true` for single-use items such as medkits. `use_label` can rename the button, and `use_action_payload` is also accepted as a legacy/single-action shorthand.
 
 ```json
 {

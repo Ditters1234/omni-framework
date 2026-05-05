@@ -642,6 +642,7 @@
         "consumable",
         "medical"
       ],
+      "use_label": "Use Medkit",
       "use_actions": [
         {
           "type": "modify_stat",

@@ -37,6 +37,7 @@ const INVENTORY_STACKED_WIDTH := 760.0
 @onready var _inventory_detail_stats: RichTextLabel = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/InventoryDetailStats
 @onready var _open_assembly_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/OpenAssemblyButton
 @onready var _use_item_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/UseItemButton
+@onready var _discard_item_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/DiscardItemButton
 @onready var _quest_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Quests/QuestRows
 @onready var _reputation_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Reputation/ReputationRows
 @onready var _progress_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Progress/ProgressRows
@@ -385,7 +386,9 @@ func _render_inventory_detail(rows: Array[Dictionary]) -> void:
 		_inventory_detail_description.text = "Use search, category, and sort controls to inspect carried parts."
 		_inventory_detail_stats.text = ""
 		_open_assembly_button.visible = _is_player_sheet()
+		_use_item_button.text = "Use Item"
 		_use_item_button.visible = false
+		_discard_item_button.visible = false
 		return
 	var display_name := str(selected.get("display_name", selected.get("template_id", "Unknown")))
 	var count := int(selected.get("count", 1))
@@ -394,8 +397,12 @@ func _render_inventory_detail(rows: Array[Dictionary]) -> void:
 	_inventory_detail_description.text = str(selected.get("description", "No description is available."))
 	_inventory_detail_stats.text = _build_inventory_detail_stats(selected)
 	_open_assembly_button.visible = _is_player_sheet()
+	var template := _read_dictionary(selected.get("template", {}))
+	_use_item_button.text = str(template.get("use_label", "Use Item"))
 	_use_item_button.visible = _is_player_sheet()
 	_use_item_button.disabled = not _can_use_inventory_row(selected)
+	_discard_item_button.visible = _is_player_sheet()
+	_discard_item_button.disabled = not _can_discard_inventory_row(selected)
 
 
 func _find_inventory_row(rows: Array[Dictionary], selection_key: String) -> Dictionary:
@@ -707,6 +714,10 @@ func _connect_inventory_controls() -> void:
 		var use_callback := Callable(self, "_on_use_item_button_pressed")
 		if not _use_item_button.is_connected("pressed", use_callback):
 			_use_item_button.pressed.connect(_on_use_item_button_pressed)
+	if _discard_item_button != null:
+		var discard_callback := Callable(self, "_on_discard_item_button_pressed")
+		if not _discard_item_button.is_connected("pressed", discard_callback):
+			_discard_item_button.pressed.connect(_on_discard_item_button_pressed)
 
 
 func _on_inventory_search_changed(new_text: String) -> void:
@@ -783,11 +794,33 @@ func _on_use_item_button_pressed() -> void:
 	_refresh_state()
 
 
+func _on_discard_item_button_pressed() -> void:
+	var row := _find_inventory_row(_last_inventory_rows, _selected_inventory_key)
+	if row.is_empty() or not _can_discard_inventory_row(row):
+		return
+	var display_name := str(row.get("display_name", "item"))
+	var instance_id := _read_first_instance_id(row)
+	ActionDispatcher.dispatch({
+		"type": "consume",
+		"entity_id": "player",
+		"instance_id": instance_id,
+		"template_id": str(row.get("template_id", "")),
+	})
+	GameEvents.ui_notification_requested.emit("Discarded %s." % display_name, "info")
+	_refresh_state()
+
+
 func _can_use_inventory_row(row: Dictionary) -> bool:
 	if bool(row.get("is_equipped", false)):
 		return false
 	var template := _read_dictionary(row.get("template", {}))
 	return not _read_use_actions(template).is_empty()
+
+
+func _can_discard_inventory_row(row: Dictionary) -> bool:
+	if bool(row.get("is_equipped", false)):
+		return false
+	return not _read_first_instance_id(row).is_empty() or not str(row.get("template_id", "")).is_empty()
 
 
 func _read_use_actions(template: Dictionary) -> Array[Dictionary]:
