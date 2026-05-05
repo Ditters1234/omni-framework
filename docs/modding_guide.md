@@ -916,7 +916,45 @@ Use:
 
 ---
 
-## 11.1 Task routines (NPC schedules)
+## 11.1 `status_effects.json`
+
+Status effects are data-authored timed runtime modifiers. They can represent buffs, debuffs, recovery-over-time, fatigue, shields, damage-over-time, or any other temporary entity state without hardcoded genre names.
+
+```json
+{
+  "status_effects": [
+    {
+      "status_effect_id": "my_name:my_mod:field_repair",
+      "display_name": "Field Repair",
+      "description": "Repairs health over a few ticks.",
+      "duration": 3,
+      "tick_interval": 1,
+      "max_stacks": 1,
+      "stack_mode": "refresh",
+      "stat_modifiers": {},
+      "tags": ["recovery"],
+      "on_tick": [
+        { "type": "modify_stat", "stat": "health", "delta": 2 }
+      ]
+    }
+  ]
+}
+```
+
+Supported fields:
+- `status_effect_id` and `display_name` are required.
+- `duration` is measured in ticks and defaults to 1.
+- `tick_interval` controls how often `on_tick` actions fire; default 1.
+- `max_stacks` defaults to 1.
+- `stack_mode` is `refresh`, `replace`, `add_duration`, or `stack`.
+- `stat_modifiers` is a dictionary of additive effective-stat modifiers multiplied by stack count.
+- `on_apply`, `on_tick`, and `on_expire` are arrays of normal `ActionDispatcher` action dictionaries. The runner injects `entity_id`, `status_effect_id`, `status_effect_runtime_id`, and `stacks` when omitted.
+
+Runtime instances live in `GameState.active_status_effects` and persist through saves. `StatManager.compute_effective_stats()` includes active status-effect modifiers alongside equipped part modifiers.
+
+---
+
+## 11.2 Task routines (NPC schedules)
 
 `TaskRoutineRunner` starts task templates at configured in-game ticks. Use it for daily NPC schedules — wandering merchants, guards rotating posts, couriers making deliveries, or any entity that should move on a clock.
 
@@ -1776,6 +1814,8 @@ Actions are side-effect operations dispatched from quest stages, task rewards, c
 | `remove_part` / `consume` | `instance_id` or `part_id` (or `template_id`), optional `entity_id` | Removes one instance |
 | `set_flag` | `flag_id` (or `key`), `value`, optional `entity_id` (default `"global"`) | |
 | `modify_stat` | `stat`, `delta`, optional `entity_id` | |
+| `apply_status_effect` | `status_effect_id` (or `effect_id`), optional `entity_id`, `duration`, `stacks` | Starts or refreshes a `status_effects.json` template |
+| `remove_status_effect` | `status_effect_id` (or `effect_id`), optional `entity_id`, optional `expire` | Removes an active effect; `expire: true` also runs `on_expire` |
 | `modify_reputation` / `add_reputation` / `remove_reputation` | `faction_id`, `amount`, optional `entity_id` | |
 | `travel` | `location_id` | Moves the player |
 | `start_task` | `task_template_id` (or `template_id`), optional `entity_id` | |

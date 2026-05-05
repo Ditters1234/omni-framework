@@ -10,6 +10,7 @@ const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_regis
 const AI_PERSONA_REGISTRY := preload("res://systems/loaders/ai_persona_registry.gd")
 const AI_TEMPLATE_REGISTRY := preload("res://systems/loaders/ai_template_registry.gd")
 const ENCOUNTER_REGISTRY := preload("res://systems/loaders/encounter_registry.gd")
+const STATUS_EFFECT_REGISTRY := preload("res://systems/loaders/status_effect_registry.gd")
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const LOAD_PHASE_IDLE := "idle"
 const LOAD_PHASE_ADDITIONS := "additions"
@@ -33,6 +34,7 @@ var factions: Dictionary = {}          # faction_id → faction template
 var quests: Dictionary = {}            # quest_id → quest template
 var tasks: Dictionary = {}             # template_id → task template
 var recipes: Dictionary = {}           # recipe_id → recipe template
+var status_effects: Dictionary = {}    # status_effect_id → status effect template
 var encounters: Dictionary = {}        # encounter_id -> encounter template
 var achievements: Dictionary = {}      # achievement_id → achievement template
 var ai_personas: Dictionary = {}       # persona_id â†’ AI persona template
@@ -128,6 +130,14 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 		var recipe_entries: Array = _get_array_field(recipes_data, "recipes", mod_id, recipes_path, LOAD_PHASE_ADDITIONS)
 		recipe_entries = _filter_valid_additions(recipe_entries, recipes, "recipes", "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"], mod_id, recipes_path, LOAD_PHASE_ADDITIONS)
 		RecipeRegistry.load_additions(recipe_entries)
+
+	var status_effects_path := mod_data_path.path_join(OmniConstants.DATA_STATUS_EFFECTS)
+	var status_effects_data_value: Variant = _load_json_document(mod_id, status_effects_path, LOAD_PHASE_ADDITIONS)
+	if status_effects_data_value is Dictionary:
+		var status_effects_data: Dictionary = status_effects_data_value
+		var status_effect_entries: Array = _get_array_field(status_effects_data, "status_effects", mod_id, status_effects_path, LOAD_PHASE_ADDITIONS)
+		status_effect_entries = _filter_valid_additions(status_effect_entries, status_effects, "status_effects", "status_effect_id", ["status_effect_id", "display_name"], mod_id, status_effects_path, LOAD_PHASE_ADDITIONS)
+		STATUS_EFFECT_REGISTRY.load_additions(status_effect_entries)
 
 	var encounters_path := mod_data_path.path_join(OmniConstants.DATA_ENCOUNTERS)
 	var encounters_data_value: Variant = _load_json_document(mod_id, encounters_path, LOAD_PHASE_ADDITIONS)
@@ -256,6 +266,15 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		_validate_patch_operations(recipe_patches, ["target", "set", "add_tags", "remove_tags"], "recipes", mod_id, recipes_path, LOAD_PHASE_PATCHES)
 		RecipeRegistry.apply_patch(recipe_patches)
 
+	var status_effects_path := mod_data_path.path_join(OmniConstants.DATA_STATUS_EFFECTS)
+	var status_effects_data_value: Variant = _load_json_document(mod_id, status_effects_path, LOAD_PHASE_PATCHES)
+	if status_effects_data_value is Dictionary:
+		var status_effects_data: Dictionary = status_effects_data_value
+		var status_effect_patches: Array = _get_array_field(status_effects_data, "patches", mod_id, status_effects_path, LOAD_PHASE_PATCHES)
+		_validate_patch_targets(status_effect_patches, status_effects, "status_effects", mod_id, status_effects_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(status_effect_patches, ["target", "set", "add_tags", "remove_tags"], "status_effects", mod_id, status_effects_path, LOAD_PHASE_PATCHES)
+		STATUS_EFFECT_REGISTRY.apply_patch(status_effect_patches)
+
 	var encounters_path := mod_data_path.path_join(OmniConstants.DATA_ENCOUNTERS)
 	var encounters_data_value: Variant = _load_json_document(mod_id, encounters_path, LOAD_PHASE_PATCHES)
 	if encounters_data_value is Dictionary:
@@ -334,6 +353,10 @@ func get_recipe(recipe_id: String) -> Dictionary:
 	return _duplicate_dictionary(recipes.get(recipe_id, {}))
 
 
+func get_status_effect(effect_id: String) -> Dictionary:
+	return _duplicate_dictionary(status_effects.get(effect_id, {}))
+
+
 func get_encounter(encounter_id: String) -> Dictionary:
 	return _duplicate_dictionary(encounters.get(encounter_id, {}))
 
@@ -380,6 +403,10 @@ func has_task(template_id: String) -> bool:
 
 func has_recipe(recipe_id: String) -> bool:
 	return recipes.has(recipe_id)
+
+
+func has_status_effect(effect_id: String) -> bool:
+	return status_effects.has(effect_id)
 
 
 func has_encounter(encounter_id: String) -> bool:
@@ -491,6 +518,25 @@ func query_recipes_by_tag(tag: String) -> Array[Dictionary]:
 	return query_recipes({"tags": [tag]})
 
 
+func query_status_effects(filters: Dictionary = {}) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var tag_filters := _variant_to_string_array(filters.get("tags", []))
+	var template_ids := _variant_to_string_array(filters.get("template_ids", filters.get("status_effect_ids", [])))
+	for effect_id_value in status_effects.keys():
+		var effect_id := str(effect_id_value)
+		if not template_ids.is_empty() and not template_ids.has(effect_id):
+			continue
+		var effect_value: Variant = status_effects.get(effect_id_value, {})
+		if not effect_value is Dictionary:
+			continue
+		var effect: Dictionary = effect_value
+		var effect_tags := _variant_to_string_array(effect.get("tags", []))
+		if not _contains_all_strings(effect_tags, tag_filters):
+			continue
+		results.append(effect.duplicate(true))
+	return results
+
+
 func query_encounters(filters: Dictionary = {}) -> Array[Dictionary]:
 	var results: Array[Dictionary] = []
 	var encounter_ids := _variant_to_string_array(filters.get("encounter_ids", filters.get("template_ids", [])))
@@ -562,6 +608,7 @@ func get_registry_counts() -> Dictionary:
 		"quests": quests.size(),
 		"tasks": tasks.size(),
 		"recipes": recipes.size(),
+		"status_effects": status_effects.size(),
 		"encounters": encounters.size(),
 		"achievements": achievements.size(),
 		"ai_personas": ai_personas.size(),
@@ -910,6 +957,7 @@ func _validate_template_schemas() -> void:
 	_validate_registry_required_fields(quests, OmniConstants.DATA_QUESTS, "quest_id", ["quest_id", "display_name", "stages"])
 	_validate_registry_required_fields(tasks, OmniConstants.DATA_TASKS, "template_id", ["template_id", "type"])
 	_validate_registry_required_fields(recipes, OmniConstants.DATA_RECIPES, "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"])
+	_validate_registry_required_fields(status_effects, OmniConstants.DATA_STATUS_EFFECTS, "status_effect_id", ["status_effect_id", "display_name"])
 	_validate_registry_required_fields(encounters, OmniConstants.DATA_ENCOUNTERS, "encounter_id", ["encounter_id", "participants", "actions", "resolution"])
 	_validate_registry_required_fields(achievements, OmniConstants.DATA_ACHIEVEMENTS, "achievement_id", ["achievement_id", "display_name", "stat_name", "requirement"])
 	_validate_registry_required_fields(ai_personas, OmniConstants.DATA_AI_PERSONAS, "persona_id", ["persona_id", "display_name", "system_prompt_template"])
@@ -958,6 +1006,12 @@ func _validate_template_schemas() -> void:
 			continue
 		var encounter: Dictionary = encounter_value
 		_validate_encounter_schema(encounter, stat_ids, currency_ids)
+
+	for status_effect_value in status_effects.values():
+		if not status_effect_value is Dictionary:
+			continue
+		var status_effect: Dictionary = status_effect_value
+		_validate_status_effect_schema(status_effect, stat_ids)
 
 	for persona_value in ai_personas.values():
 		if not persona_value is Dictionary:
@@ -1826,6 +1880,50 @@ func _validate_part_use_payload(part_id: String, part: Dictionary) -> void:
 			_validate_action_payload(part_id, OmniConstants.DATA_PARTS, use_action_payload_value, "use_action_payload")
 
 
+func _validate_status_effect_schema(status_effect: Dictionary, stat_ids: Dictionary) -> void:
+	var effect_id := str(status_effect.get("status_effect_id", ""))
+	_validate_stat_map(effect_id, OmniConstants.DATA_STATUS_EFFECTS, "stat_modifiers", status_effect.get("stat_modifiers", {}), stat_ids)
+	_validate_array_field(effect_id, OmniConstants.DATA_STATUS_EFFECTS, "tags", status_effect)
+	_validate_string_array_elements(effect_id, OmniConstants.DATA_STATUS_EFFECTS, "tags", status_effect.get("tags", []))
+	_validate_positive_int_field(effect_id, OmniConstants.DATA_STATUS_EFFECTS, status_effect, "duration")
+	_validate_positive_int_field(effect_id, OmniConstants.DATA_STATUS_EFFECTS, status_effect, "tick_interval")
+	_validate_positive_int_field(effect_id, OmniConstants.DATA_STATUS_EFFECTS, status_effect, "max_stacks")
+	if status_effect.has("stack_mode"):
+		var stack_mode := str(status_effect.get("stack_mode", "refresh"))
+		if not ["refresh", "replace", "add_duration", "stack"].has(stack_mode):
+			_record_issue(effect_id, OmniConstants.DATA_STATUS_EFFECTS, LOAD_PHASE_VALIDATION, "Status effect '%s' stack_mode has unsupported value '%s'." % [effect_id, stack_mode])
+	_validate_status_effect_actions(effect_id, status_effect, "on_apply")
+	_validate_status_effect_actions(effect_id, status_effect, "on_tick")
+	_validate_status_effect_actions(effect_id, status_effect, "on_expire")
+
+
+func _validate_positive_int_field(entry_id: String, file_path: String, payload: Dictionary, field_name: String) -> void:
+	if not payload.has(field_name):
+		return
+	var value: Variant = payload.get(field_name, 0)
+	if not value is int and not value is float:
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s must be a positive integer." % [entry_id, field_name])
+		return
+	if int(value) < 1:
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s must be at least 1." % [entry_id, field_name])
+
+
+func _validate_status_effect_actions(effect_id: String, status_effect: Dictionary, field_name: String) -> void:
+	var actions_value: Variant = status_effect.get(field_name, [])
+	if not status_effect.has(field_name):
+		return
+	if not actions_value is Array:
+		_record_issue(effect_id, OmniConstants.DATA_STATUS_EFFECTS, LOAD_PHASE_VALIDATION, "Status effect '%s' field '%s' must be an array." % [effect_id, field_name])
+		return
+	var actions: Array = actions_value
+	for index in range(actions.size()):
+		var action_value: Variant = actions[index]
+		if not action_value is Dictionary:
+			_record_issue(effect_id, OmniConstants.DATA_STATUS_EFFECTS, LOAD_PHASE_VALIDATION, "Status effect '%s' %s[%d] must be an object." % [effect_id, field_name, index])
+			continue
+		_validate_action_payload(effect_id, OmniConstants.DATA_STATUS_EFFECTS, action_value, "%s[%d]" % [field_name, index])
+
+
 func _validate_action_payload(entry_id: String, file_path: String, action_value: Variant, field_path: String) -> void:
 	if not action_value is Dictionary:
 		return
@@ -1834,6 +1932,17 @@ func _validate_action_payload(entry_id: String, file_path: String, action_value:
 	if action_type.is_empty():
 		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.type must be a non-empty string." % field_path)
 		return
+
+	if action_type == "apply_status_effect":
+		var effect_id := str(action.get("status_effect_id", action.get("effect_id", "")))
+		if effect_id.is_empty():
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.status_effect_id must be a non-empty string." % field_path)
+		elif not has_status_effect(effect_id):
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.status_effect_id references unknown status effect '%s'." % [field_path, effect_id])
+	elif action_type == "remove_status_effect":
+		var remove_effect_id := str(action.get("status_effect_id", action.get("effect_id", "")))
+		if remove_effect_id.is_empty():
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.status_effect_id must be a non-empty string." % field_path)
 
 	if action_type != "push_screen":
 		return
@@ -2029,6 +2138,7 @@ func clear_all() -> void:
 	quests.clear()
 	tasks.clear()
 	recipes.clear()
+	status_effects.clear()
 	encounters.clear()
 	achievements.clear()
 	ai_personas.clear()

@@ -102,8 +102,9 @@ systems/
 └── transaction_service.gd
 ```
 
-`systems/loaders/` also includes `ai_persona_registry.gd`, `ai_template_registry.gd`, and `encounter_registry.gd`, which load `ai_personas.json`, `ai_templates.json`, and `encounters.json` into `DataManager`.
+`systems/loaders/` also includes `ai_persona_registry.gd`, `ai_template_registry.gd`, `encounter_registry.gd`, and `status_effect_registry.gd`, which load `ai_personas.json`, `ai_templates.json`, `encounters.json`, and `status_effects.json` into `DataManager`.
 `systems/encounter_runtime.gd` provides encounter condition context, weighted opponent action selection, encounter-local stat clamping, and JSON-native effect delta math.
+`systems/status_effect_runner.gd` advances data-authored timed status effects stored in `GameState.active_status_effects`, applying stat modifiers and dispatching lifecycle actions on apply, tick, and expiration.
 `systems/ai/` now also includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies ahead of the dialogue-layer UI work.
 `systems/ai/` also now includes `bt_action_ai_query.gd` and `bt_condition_ai_check.gd`, two LimboAI custom tasks for AI-driven behavior-tree decisions, plus `bt_ai_utils.gd`, the shared prompt-token and response-parser helper those tasks use.
 `script_hook_service.gd` now also owns the Phase 6 world-generation bridge: it resolves config-declared global AI hook paths, caches generated task flavor text, and dispatches event narration requests after quest, travel, and day-advance events are recorded.
@@ -115,6 +116,7 @@ All of the following service scripts are fully implemented and should not be omi
 - `location_access_service.gd`
 - `reward_service.gd`
 - `script_hook_service.gd`
+- `status_effect_runner.gd`
 - `task_routine_runner.gd`
 - `transaction_service.gd`
 

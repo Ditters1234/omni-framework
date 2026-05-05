@@ -73,6 +73,11 @@ func before_each() -> void:
 		"actions": {},
 		"resolution": {},
 	}
+	DataManager.status_effects["base:test_status"] = {
+		"status_effect_id": "base:test_status",
+		"display_name": "Test Status",
+		"tags": ["buff", "mental"],
+	}
 
 
 func test_query_parts_filters_by_tags_and_returns_copies() -> void:
@@ -144,3 +149,13 @@ func test_query_encounters_filters_by_tags_and_returns_copies() -> void:
 
 	results[0]["display_name"] = "Mutated"
 	assert_eq(str(DataManager.encounters["base:training_brawl"].get("display_name", "")), "Training Brawl")
+
+
+func test_query_status_effects_filters_by_tags_and_returns_copies() -> void:
+	var results := DataManager.query_status_effects({"tags": ["buff"]})
+
+	assert_eq(results.size(), 1)
+	assert_eq(str(results[0].get("status_effect_id", "")), "base:test_status")
+
+	results[0]["display_name"] = "Mutated"
+	assert_eq(str(DataManager.status_effects["base:test_status"].get("display_name", "")), "Test Status")

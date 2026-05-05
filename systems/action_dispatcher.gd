@@ -31,6 +31,8 @@ static func dispatch(action: Dictionary) -> void:
 		"remove_part", "consume": _action_remove_part(action)
 		"set_flag":         _action_set_flag(action)
 		"modify_stat":      _action_modify_stat(action)
+		"apply_status_effect": _action_apply_status_effect(action)
+		"remove_status_effect": _action_remove_status_effect(action)
 		"travel":           _action_travel(action)
 		"start_task":       _action_start_task(action)
 		"start_quest":      _action_start_quest(action)
@@ -175,6 +177,30 @@ static func _action_modify_stat(action: Dictionary) -> void:
 		return
 
 	entity.modify_stat(stat_id, float(action.get("delta", 0)))
+
+
+static func _action_apply_status_effect(action: Dictionary) -> void:
+	var effect_id := str(action.get("status_effect_id", action.get("effect_id", ""))).strip_edges()
+	if effect_id.is_empty() or not DataManager.has_status_effect(effect_id):
+		push_warning("ActionDispatcher: apply_status_effect references missing status effect '%s'." % effect_id)
+		return
+	var entity_id := str(action.get("entity_id", "player"))
+	var params: Dictionary = {}
+	for key_value in action.keys():
+		var key := str(key_value)
+		if ["type", "entity_id", "status_effect_id", "effect_id"].has(key):
+			continue
+		params[key] = action.get(key_value)
+	GameState.apply_status_effect(effect_id, entity_id, params)
+
+
+static func _action_remove_status_effect(action: Dictionary) -> void:
+	var effect_id := str(action.get("status_effect_id", action.get("effect_id", ""))).strip_edges()
+	if effect_id.is_empty():
+		push_warning("ActionDispatcher: remove_status_effect requires status_effect_id/effect_id.")
+		return
+	var entity_id := str(action.get("entity_id", "player"))
+	GameState.remove_status_effect(effect_id, entity_id, bool(action.get("expire", false)))
 
 
 static func _action_travel(action: Dictionary) -> void:

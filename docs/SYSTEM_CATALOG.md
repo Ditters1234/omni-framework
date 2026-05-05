@@ -50,7 +50,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
-| `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, `learn_recipe`, `modify_reputation`, etc. See [`modding_guide.md`](modding_guide.md) for schema. |
+| `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, `apply_status_effect`, `learn_recipe`, `modify_reputation`, etc. See [`modding_guide.md`](modding_guide.md) for schema. |
 | `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic. See [`modding_guide.md`](modding_guide.md) for syntax. |
 | `StatManager` | `StatManager` | `systems/stat_manager.gd` | DataManager | Calculates stat modifiers, applies stat changes, enforces clamping rules. See [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md). |
 | `EncounterRuntime` | `EncounterRuntime` | `systems/encounter_runtime.gd` | ConditionEvaluator | Stateless encounter helper for weighted opponent action selection, encounter condition context, local-stat clamping, and JSON-native effect delta math. |
@@ -66,6 +66,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 |---|---|---|---|---|
 | `QuestTracker` | `QuestTracker` | `systems/quest_tracker.gd` | GameState, DataManager | Quest HSM built on LimboAI. Drives quest stages, objectives, and completion. |
 | `TaskRunner` | `TaskRunner` | `systems/task_runner.gd` | GameState, DataManager | Tick-driven task execution, queued task promotion, and completion checking. |
+| `StatusEffectRunner` | `StatusEffectRunner` | `systems/status_effect_runner.gd` | GameState, DataManager | Tick-driven status effect application, stacking, per-tick actions, stat modifiers, and expiration. |
 | `TaskRoutineRunner` | `OmniTaskRoutineRunner` | `systems/task_routine_runner.gd` | GameState, DataManager, TaskRunner | Starts task templates from daily time windows for scheduled NPC/entity movement. Autoload singleton. |
 | `LocationAccessService` | `LocationAccessService` | `systems/location_access_service.gd` | DataManager, ConditionEvaluator | Shared travel/entry gate checks using `entry_condition` and `entry_conditions` on locations. |
 | `ScriptHookLoader` | `ScriptHookLoader` | `systems/script_hook_loader.gd` | ModLoader | Loads and caches GDScript mod hooks for lifecycle callbacks. |
@@ -93,6 +94,7 @@ These systems parse JSON templates and populate in-memory registries. All are in
 | `QuestRegistry` | `QuestRegistry` | `systems/loaders/quest_registry.gd` | `quests.json` | `quest_id` | Quest templates with branching objectives and rewards. |
 | `TaskRegistry` | `TaskRegistry` | `systems/loaders/task_registry.gd` | `tasks.json` | `template_id` | Repeatable tasks issued by factions; includes difficulty, reward, objectives. |
 | `RecipeRegistry` | `RecipeRegistry` | `systems/loaders/recipe_registry.gd` | `recipes.json` | `recipe_id` | Crafting recipes that consume inventory parts and produce part templates. |
+| `StatusEffectRegistry` | `StatusEffectRegistry` | `systems/loaders/status_effect_registry.gd` | `status_effects.json` | `status_effect_id` | Timed buffs/debuffs with data-authored stat modifiers and lifecycle actions. |
 | `EncounterRegistry` | `EncounterRegistry` | `systems/loaders/encounter_registry.gd` | `encounters.json` | `encounter_id` | Turn-based encounter templates with participants, player/opponent actions, encounter-local stats, and resolution outcomes. |
 | `AchievementRegistry` | `AchievementRegistry` | `systems/loaders/achievement_registry.gd` | `achievements.json` | `achievement_id` | Achievements with unlock conditions and rewards. |
 | `ConfigLoader` | — | `systems/loaders/config_loader.gd` | `config.json` | — (deep-merged) | Engine-owned gameplay/UI defaults from mod data. AI provider ownership is intentionally excluded and lives in `AppSettings`. |

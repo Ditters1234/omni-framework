@@ -1,0 +1,37 @@
+{
+  "status_effects": [
+    {
+      "status_effect_id": "base:field_repair",
+      "display_name": "Field Repair",
+      "description": "A short generic recovery-over-time effect used as a reference template for timed status effects.",
+      "duration": 3,
+      "tick_interval": 1,
+      "max_stacks": 1,
+      "stack_mode": "refresh",
+      "tags": [
+        "recovery"
+      ],
+      "on_tick": [
+        {
+          "type": "modify_stat",
+          "stat": "health",
+          "delta": 2
+        }
+      ]
+    },
+    {
+      "status_effect_id": "base:focused",
+      "display_name": "Focused",
+      "description": "A short generic buff that demonstrates data-authored stat modifiers.",
+      "duration": 4,
+      "max_stacks": 2,
+      "stack_mode": "stack",
+      "stat_modifiers": {
+        "power": 1
+      },
+      "tags": [
+        "buff"
+      ]
+    }
+  ]
+}

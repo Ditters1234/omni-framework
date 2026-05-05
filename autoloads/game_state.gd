@@ -6,6 +6,8 @@ extends Node
 
 class_name OmniGameState
 
+const STATUS_EFFECT_RUNNER := preload("res://systems/status_effect_runner.gd")
+
 # ---------------------------------------------------------------------------
 # Runtime state
 # ---------------------------------------------------------------------------
@@ -31,6 +33,9 @@ var active_quests: Dictionary = {}
 ## Active task instances: { runtime_id → task_instance_dict }
 var active_tasks: Dictionary = {}
 
+## Active status effect instances: { runtime_id → status_effect_instance_dict }
+var active_status_effects: Dictionary = {}
+
 ## Completed quest ids.
 var completed_quests: Array[String] = []
 
@@ -54,6 +59,7 @@ var runtime_state_buckets: Dictionary = {}
 
 const EVENT_HISTORY_LIMIT := 200
 var _quest_tracker: QuestTracker = null
+var _status_effect_runner: Node = null
 
 # ---------------------------------------------------------------------------
 # Boot
@@ -62,6 +68,8 @@ var _quest_tracker: QuestTracker = null
 func _ready() -> void:
 	_quest_tracker = QuestTracker.new()
 	add_child(_quest_tracker)
+	_status_effect_runner = STATUS_EFFECT_RUNNER.new()
+	add_child(_status_effect_runner)
 
 
 # ---------------------------------------------------------------------------
@@ -110,6 +118,7 @@ func reset() -> void:
 	current_day = 1
 	active_quests.clear()
 	active_tasks.clear()
+	active_status_effects.clear()
 	completed_quests.clear()
 	completed_task_templates.clear()
 	unlocked_achievements.clear()
@@ -364,6 +373,33 @@ func fail_quest(quest_id: String) -> void:
 	_quest_tracker.fail_quest(quest_id)
 
 
+func apply_status_effect(effect_id: String, entity_id: String = "player", params: Dictionary = {}) -> String:
+	if _status_effect_runner == null:
+		return ""
+	return str(_status_effect_runner.call("apply_status_effect", effect_id, entity_id, params))
+
+
+func remove_status_effect(effect_id: String, entity_id: String = "player", expire: bool = false) -> int:
+	if _status_effect_runner == null:
+		return 0
+	return int(_status_effect_runner.call("remove_status_effect", effect_id, entity_id, expire))
+
+
+func get_status_effects_for_entity(entity_id: String) -> Array[Dictionary]:
+	if _status_effect_runner == null:
+		return []
+	var effects_value: Variant = _status_effect_runner.call("get_effects_for_entity", entity_id)
+	if effects_value is Array:
+		var effects: Array = effects_value
+		var results: Array[Dictionary] = []
+		for effect_value in effects:
+			if effect_value is Dictionary:
+				var effect: Dictionary = effect_value
+				results.append(effect.duplicate(true))
+		return results
+	return []
+
+
 # ---------------------------------------------------------------------------
 # Serialization (called by SaveManager)
 # ---------------------------------------------------------------------------
@@ -387,6 +423,7 @@ func to_dict() -> Dictionary:
 		"current_day": current_day,
 		"active_quests": active_quests.duplicate(true),
 		"active_tasks": active_tasks.duplicate(true),
+		"active_status_effects": active_status_effects.duplicate(true),
 		"completed_quests": completed_quests.duplicate(),
 		"completed_task_templates": completed_task_templates.duplicate(),
 		"unlocked_achievements": unlocked_achievements.duplicate(),
@@ -412,6 +449,9 @@ func from_dict(data: Dictionary) -> void:
 	var active_tasks_data: Variant = data.get("active_tasks", {})
 	if active_tasks_data is Dictionary:
 		active_tasks = active_tasks_data.duplicate(true)
+	var active_status_effects_data: Variant = data.get("active_status_effects", {})
+	if active_status_effects_data is Dictionary:
+		active_status_effects = active_status_effects_data.duplicate(true)
 	completed_quests = _to_string_array(data.get("completed_quests", []))
 	completed_task_templates = _to_string_array(data.get("completed_task_templates", []))
 	unlocked_achievements = _to_string_array(data.get("unlocked_achievements", []))
@@ -501,6 +541,15 @@ func validate_runtime_state() -> Array[String]:
 		var template_id := str(task_instance.get("template_id", ""))
 		if not template_id.is_empty() and TaskRegistry.get_task(template_id).is_empty():
 			issues.append("Active task '%s' references missing template '%s'." % [runtime_id, template_id])
+	for runtime_id_value in active_status_effects.keys():
+		var effect_runtime_id := str(runtime_id_value)
+		var effect_data: Variant = active_status_effects.get(runtime_id_value, {})
+		if not effect_data is Dictionary:
+			continue
+		var effect_instance: Dictionary = effect_data
+		var effect_id := str(effect_instance.get("status_effect_id", ""))
+		if not effect_id.is_empty() and not DataManager.has_status_effect(effect_id):
+			issues.append("Active status effect '%s' references missing template '%s'." % [effect_runtime_id, effect_id])
 	_validate_persistent_runtime_buckets(issues)
 	return issues
 

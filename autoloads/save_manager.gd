@@ -23,6 +23,7 @@ const REQUIRED_GAME_STATE_FIELDS := [
 	"current_day",
 	"active_quests",
 	"active_tasks",
+	"active_status_effects",
 	"completed_quests",
 	"completed_task_templates",
 	"unlocked_achievements",

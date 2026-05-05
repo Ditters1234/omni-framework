@@ -44,6 +44,16 @@ func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
 	GameState.remember_ai_lore("audit:lore", {"text": "remember me", "score": 7})
 	GameState.record_event("audit_event", {"value": 42})
 	GameState.set_runtime_state("audit_bucket", "audit_key", {"nested": ["a", "b", "c"]})
+	DataManager.status_effects["audit:status"] = {
+		"status_effect_id": "audit:status",
+		"display_name": "Audit Status",
+	}
+	GameState.active_status_effects["audit_status"] = {
+		"runtime_id": "audit_status",
+		"status_effect_id": "audit:status",
+		"entity_id": "test:player",
+		"remaining_ticks": 2,
+	}
 
 	var before := GameState.to_dict()
 	SaveManager.save_game(SLOT)
@@ -56,6 +66,7 @@ func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
 	assert_eq(float(after.get("achievement_stats", {}).get("audit_counter", 0.0)), 3.0)
 	assert_eq(after.get("ai_lore_cache", {}).get("audit:lore", {}).get("text", ""), "remember me")
 	assert_eq(after.get("runtime_state_buckets", {}).get("audit_bucket", {}).get("audit_key", {}).get("nested", []), ["a", "b", "c"])
+	assert_eq(after.get("active_status_effects", {}).get("audit_status", {}).get("remaining_ticks", 0), 2)
 	assert_gt(after.get("event_history", []).size(), 0)
 	assert_eq(after.get("current_location_id", ""), before.get("current_location_id", ""))
 

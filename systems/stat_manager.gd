@@ -18,6 +18,7 @@ static func compute_effective_stats(entity: EntityInstance) -> Dictionary:
 		var mods: Dictionary = template.get("stats", template.get("stat_modifiers", {}))
 		for key in mods:
 			result[key] = result.get(key, 0.0) + float(mods[key])
+	_apply_status_effect_modifiers(entity, result)
 	# Clamp all base stats to their capacity
 	for key in result.keys():
 		if key.ends_with(OmniConstants.CAPACITY_SUFFIX):
@@ -26,6 +27,28 @@ static func compute_effective_stats(entity: EntityInstance) -> Dictionary:
 		if result.has(cap_key):
 			result[key] = clamp(result[key], OmniConstants.STAT_MIN, result[cap_key])
 	return result
+
+
+static func _apply_status_effect_modifiers(entity: EntityInstance, result: Dictionary) -> void:
+	if entity == null or GameState == null:
+		return
+	for effect_value in GameState.active_status_effects.values():
+		if not effect_value is Dictionary:
+			continue
+		var effect_instance: Dictionary = effect_value
+		if str(effect_instance.get("entity_id", "")) != entity.entity_id:
+			continue
+		var template := DataManager.get_status_effect(str(effect_instance.get("status_effect_id", "")))
+		var modifiers_value: Variant = template.get("stat_modifiers", {})
+		if not modifiers_value is Dictionary:
+			continue
+		var modifiers: Dictionary = modifiers_value
+		var stacks := maxi(int(effect_instance.get("stacks", 1)), 1)
+		for stat_key_value in modifiers.keys():
+			var stat_key := str(stat_key_value)
+			if stat_key.is_empty():
+				continue
+			result[stat_key] = float(result.get(stat_key, 0.0)) + (float(modifiers.get(stat_key_value, 0.0)) * float(stacks))
 
 
 ## Clamps all base stats in an entity to their current capacity stats.

@@ -166,6 +166,14 @@ func test_base_ships_reference_encounters_and_launch_interactions() -> void:
 	assert_true(_entity_has_encounter_interaction("base:npc_theta", "base:tutorial_negotiation"))
 
 
+func test_base_ships_reference_status_effects() -> void:
+	var repair_effect := DataManager.get_status_effect("base:field_repair")
+	assert_false(repair_effect.is_empty())
+	var focused_effect := DataManager.get_status_effect("base:focused")
+	assert_false(focused_effect.is_empty())
+	assert_true(DataManager.has_status_effect("base:focused"))
+
+
 func _entity_has_encounter_interaction(entity_id: String, encounter_id: String) -> bool:
 	var entity := DataManager.get_entity(entity_id)
 	var interactions_value: Variant = entity.get("interactions", [])

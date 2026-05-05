@@ -180,6 +180,15 @@ Rules:
 - `target` must exist when the task type requires it.
 - Reward references and currencies must validate.
 
+### Status Effects
+
+- Required: `status_effect_id`, `display_name`
+- `duration`, `tick_interval`, and `max_stacks` must be positive integers when present.
+- `stack_mode` must be `refresh`, `replace`, `add_duration`, or `stack`.
+- `stat_modifiers` keys must reference known stat definitions.
+- `tags` must be an array of non-empty strings when present.
+- `on_apply`, `on_tick`, and `on_expire` must be arrays of normal `ActionDispatcher` action objects when present.
+
 ### Encounters
 
 - Required: `encounter_id`, `participants`, `actions`, `resolution`

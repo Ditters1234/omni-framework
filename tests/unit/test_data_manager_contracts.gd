@@ -120,6 +120,37 @@ func test_register_additions_loads_ai_personas_and_apply_patches_updates_tags() 
 		assert_false(tags.has("merchant"))
 
 
+func test_register_additions_loads_status_effects_and_apply_patches_updates_tags() -> void:
+	DataManager.definitions["stats"] = [{"id": "power", "kind": "flat"}]
+	var data_path := _write_data_file(
+		"status_effects",
+		OmniConstants.DATA_STATUS_EFFECTS,
+		"{\"status_effects\": [{\"status_effect_id\": \"base:test_focus\", \"display_name\": \"Test Focus\", \"duration\": 2, \"stat_modifiers\": {\"power\": 1}, \"tags\": [\"buff\"]}]}"
+	)
+
+	var issues := DataManager.register_additions("test:status_effects", data_path)
+
+	assert_eq(issues.size(), 0)
+	assert_eq(str(DataManager.get_status_effect("base:test_focus").get("display_name", "")), "Test Focus")
+
+	var patch_data_path := _write_data_file(
+		"status_effect_patch",
+		OmniConstants.DATA_STATUS_EFFECTS,
+		"{\"patches\": [{\"target\": \"base:test_focus\", \"add_tags\": [\"mental\"], \"remove_tags\": [\"buff\"]}]}"
+	)
+
+	var patch_issues := DataManager.apply_patches("test:status_effect_patch", patch_data_path)
+	var effect := DataManager.get_status_effect("base:test_focus")
+	var tags_value: Variant = effect.get("tags", [])
+
+	assert_eq(patch_issues.size(), 0)
+	assert_true(tags_value is Array)
+	if tags_value is Array:
+		var tags: Array = tags_value
+		assert_true(tags.has("mental"))
+		assert_false(tags.has("buff"))
+
+
 func test_register_additions_loads_ai_templates_and_apply_patches_updates_tags() -> void:
 	var data_path := _write_data_file(
 		"ai_templates",

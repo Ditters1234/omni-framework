@@ -72,6 +72,7 @@ Compatibility note:
 - Inventory and assembly state
 - Quest progress
 - Task progress
+- Active timed status effects
 - Achievement runtime progress
 - Player location
 - World discovery state
