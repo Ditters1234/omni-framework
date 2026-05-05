@@ -36,6 +36,7 @@ const INVENTORY_STACKED_WIDTH := 760.0
 @onready var _inventory_detail_description: Label = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/InventoryDetailDescription
 @onready var _inventory_detail_stats: RichTextLabel = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/InventoryDetailStats
 @onready var _open_assembly_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/OpenAssemblyButton
+@onready var _use_item_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/UseItemButton
 @onready var _quest_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Quests/QuestRows
 @onready var _reputation_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Reputation/ReputationRows
 @onready var _progress_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Progress/ProgressRows
@@ -59,6 +60,7 @@ var _inventory_category_filter: String = INVENTORY_CATEGORY_ALL
 var _inventory_sort_mode: String = INVENTORY_SORT_NAME
 var _inventory_include_equipped: bool = false
 var _selected_inventory_key: String = ""
+var _last_inventory_rows: Array[Dictionary] = []
 
 
 func initialize(params: Dictionary = {}) -> void:
@@ -216,6 +218,7 @@ func _render_inventory_section(view_model: Dictionary) -> void:
 	var filtered_rows := _filter_inventory_rows(rows)
 	_sort_inventory_rows(filtered_rows)
 	_sync_selected_inventory_key(filtered_rows)
+	_last_inventory_rows = _duplicate_dictionary_array(filtered_rows)
 	var loose_rows := _build_visible_inventory_rows(view_model)
 	_inventory_summary_label.text = "%s carried items, %s loose stacks, %s shown." % [
 		str(_count_inventory_row_instances(loose_rows)),
@@ -382,6 +385,7 @@ func _render_inventory_detail(rows: Array[Dictionary]) -> void:
 		_inventory_detail_description.text = "Use search, category, and sort controls to inspect carried parts."
 		_inventory_detail_stats.text = ""
 		_open_assembly_button.visible = _is_player_sheet()
+		_use_item_button.visible = false
 		return
 	var display_name := str(selected.get("display_name", selected.get("template_id", "Unknown")))
 	var count := int(selected.get("count", 1))
@@ -390,6 +394,8 @@ func _render_inventory_detail(rows: Array[Dictionary]) -> void:
 	_inventory_detail_description.text = str(selected.get("description", "No description is available."))
 	_inventory_detail_stats.text = _build_inventory_detail_stats(selected)
 	_open_assembly_button.visible = _is_player_sheet()
+	_use_item_button.visible = _is_player_sheet()
+	_use_item_button.disabled = not _can_use_inventory_row(selected)
 
 
 func _find_inventory_row(rows: Array[Dictionary], selection_key: String) -> Dictionary:
@@ -527,6 +533,12 @@ func _build_visible_inventory_rows(view_model: Dictionary) -> Array[Dictionary]:
 
 		var adjusted_row := row.duplicate(true)
 		adjusted_row["count"] = remaining_count
+		var instance_ids := _read_string_array(adjusted_row.get("instance_ids", []))
+		if instance_ids.size() > remaining_count:
+			var visible_instance_ids: Array[String] = []
+			for index in range(remaining_count):
+				visible_instance_ids.append(instance_ids[index])
+			adjusted_row["instance_ids"] = visible_instance_ids
 		visible_rows.append(adjusted_row)
 	return visible_rows
 
@@ -691,6 +703,10 @@ func _connect_inventory_controls() -> void:
 		var assembly_callback := Callable(self, "_on_open_assembly_button_pressed")
 		if not _open_assembly_button.is_connected("pressed", assembly_callback):
 			_open_assembly_button.pressed.connect(_on_open_assembly_button_pressed)
+	if _use_item_button != null:
+		var use_callback := Callable(self, "_on_use_item_button_pressed")
+		if not _use_item_button.is_connected("pressed", use_callback):
+			_use_item_button.pressed.connect(_on_use_item_button_pressed)
 
 
 func _on_inventory_search_changed(new_text: String) -> void:
@@ -735,6 +751,74 @@ func _on_open_assembly_button_pressed() -> void:
 	if _opened_from_gameplay_shell and UIRouter.open_in_gameplay_shell(SCREEN_ASSEMBLY_EDITOR, params):
 		return
 	UIRouter.push(SCREEN_ASSEMBLY_EDITOR, params)
+
+
+func _on_use_item_button_pressed() -> void:
+	var row := _find_inventory_row(_last_inventory_rows, _selected_inventory_key)
+	if row.is_empty() or not _can_use_inventory_row(row):
+		return
+	var display_name := str(row.get("display_name", "item"))
+	var template := _read_dictionary(row.get("template", {}))
+	var instance_id := _read_first_instance_id(row)
+	var actions := _read_use_actions(template)
+	for action in actions:
+		var action_payload := action.duplicate(true)
+		if not action_payload.has("entity_id"):
+			action_payload["entity_id"] = "player"
+		if not action_payload.has("instance_id") and not instance_id.is_empty():
+			action_payload["instance_id"] = instance_id
+		if not action_payload.has("template_id"):
+			action_payload["template_id"] = str(row.get("template_id", ""))
+		if not action_payload.has("part_id"):
+			action_payload["part_id"] = str(row.get("template_id", ""))
+		ActionDispatcher.dispatch(action_payload)
+	if bool(template.get("consume_on_use", false)):
+		ActionDispatcher.dispatch({
+			"type": "consume",
+			"entity_id": "player",
+			"instance_id": instance_id,
+			"template_id": str(row.get("template_id", "")),
+		})
+	GameEvents.ui_notification_requested.emit("Used %s." % display_name, "info")
+	_refresh_state()
+
+
+func _can_use_inventory_row(row: Dictionary) -> bool:
+	if bool(row.get("is_equipped", false)):
+		return false
+	var template := _read_dictionary(row.get("template", {}))
+	return not _read_use_actions(template).is_empty()
+
+
+func _read_use_actions(template: Dictionary) -> Array[Dictionary]:
+	var actions: Array[Dictionary] = []
+	var actions_value: Variant = template.get("use_actions", [])
+	if actions_value is Array:
+		var raw_actions: Array = actions_value
+		for action_value in raw_actions:
+			if action_value is Dictionary:
+				var action: Dictionary = action_value
+				actions.append(action.duplicate(true))
+	var action_payload_value: Variant = template.get("use_action_payload", {})
+	if action_payload_value is Dictionary:
+		var action_payload: Dictionary = action_payload_value
+		if not action_payload.is_empty():
+			actions.append(action_payload.duplicate(true))
+	return actions
+
+
+func _read_first_instance_id(row: Dictionary) -> String:
+	var instance_ids := _read_string_array(row.get("instance_ids", []))
+	if not instance_ids.is_empty():
+		return instance_ids[0]
+	return str(row.get("instance_id", ""))
+
+
+func _duplicate_dictionary_array(rows: Array[Dictionary]) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	for row in rows:
+		results.append(row.duplicate(true))
+	return results
 
 
 func _on_runtime_state_changed(_value: Variant = null) -> void:

@@ -925,6 +925,7 @@ func _validate_template_schemas() -> void:
 		_validate_currency_map(part_id, OmniConstants.DATA_PARTS, "price", part.get("price", {}), currency_ids)
 		_validate_unique_object_ids(part_id, OmniConstants.DATA_PARTS, "provides_sockets", part.get("provides_sockets", []))
 		_validate_unique_object_ids(part_id, OmniConstants.DATA_PARTS, "custom_fields", part.get("custom_fields", []))
+		_validate_part_use_payload(part_id, part)
 
 	for entity_value in entities.values():
 		if not entity_value is Dictionary:
@@ -1689,6 +1690,29 @@ func _validate_action_fields(entry_id: String, file_path: String, payload_value:
 				_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s must be an object." % indexed_field_path)
 				continue
 			_validate_action_payload(entry_id, file_path, action_value, indexed_field_path)
+
+
+func _validate_part_use_payload(part_id: String, part: Dictionary) -> void:
+	if part.has("consume_on_use") and not (part.get("consume_on_use", false) is bool):
+		_record_issue(part_id, OmniConstants.DATA_PARTS, LOAD_PHASE_VALIDATION, "Part '%s' field 'consume_on_use' must be a bool." % part_id)
+	var use_actions_value: Variant = part.get("use_actions", [])
+	if part.has("use_actions"):
+		if not use_actions_value is Array:
+			_record_issue(part_id, OmniConstants.DATA_PARTS, LOAD_PHASE_VALIDATION, "Part '%s' field 'use_actions' must be an array." % part_id)
+		else:
+			var use_actions: Array = use_actions_value
+			for index in range(use_actions.size()):
+				var action_value: Variant = use_actions[index]
+				if not action_value is Dictionary:
+					_record_issue(part_id, OmniConstants.DATA_PARTS, LOAD_PHASE_VALIDATION, "Part '%s' use_actions[%d] must be an object." % [part_id, index])
+					continue
+				_validate_action_payload(part_id, OmniConstants.DATA_PARTS, action_value, "use_actions[%d]" % index)
+	var use_action_payload_value: Variant = part.get("use_action_payload", {})
+	if part.has("use_action_payload"):
+		if not use_action_payload_value is Dictionary:
+			_record_issue(part_id, OmniConstants.DATA_PARTS, LOAD_PHASE_VALIDATION, "Part '%s' field 'use_action_payload' must be an object." % part_id)
+		else:
+			_validate_action_payload(part_id, OmniConstants.DATA_PARTS, use_action_payload_value, "use_action_payload")
 
 
 func _validate_action_payload(entry_id: String, file_path: String, action_value: Variant, field_path: String) -> void:

@@ -628,6 +628,7 @@
     {
       "description": "Single-use trauma sealant. Restores health on consumption.",
       "display_name": "Field Medkit",
+      "consume_on_use": true,
       "equippable": false,
       "id": "base:field_medkit",
       "price": {
@@ -640,6 +641,13 @@
       "tags": [
         "consumable",
         "medical"
+      ],
+      "use_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "health",
+          "delta": 35
+        }
       ]
     },
     {

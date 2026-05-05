@@ -124,6 +124,8 @@ Rules:
 - `price` currencies must exist in definitions.
 - `provides_sockets[].id` must be unique within the part.
 - `custom_fields[].id` must be unique within the part.
+- `consume_on_use`, when present, must be a bool.
+- `use_actions`, when present, must be an array of normal `ActionDispatcher` action objects. `use_action_payload` may be used as a single-action object.
 - `script_path` must point to a script under the owning mod.
 
 ### Entities

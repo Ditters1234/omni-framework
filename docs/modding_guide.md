@@ -273,10 +273,28 @@ Parts are the core content building blocks. They can represent equipment, module
 - `sprite`
 - `equip_sound`
 - `script_path`
+- `use_actions`
+- `consume_on_use`
 
 `sprite` can point directly at imported image assets such as `.png` files inside your mod's `assets/` folder.
 
 `equip_sound` can point at a one-shot audio resource such as a `.wav` or `.ogg`. When a committed assembly change equips that part into a slot, the engine plays that sound through `AudioManager.play_sfx()`.
+
+`use_actions` turns an inventory part into a usable item from the character menu. It is an array of normal `ActionDispatcher` action dictionaries. When the player presses **Use Item**, the screen injects `entity_id: "player"`, the selected `instance_id`, `template_id`, and `part_id` when those fields are not already present. Set `consume_on_use: true` for single-use items such as medkits. `use_action_payload` is also accepted as a legacy/single-action shorthand.
+
+```json
+{
+  "id": "my_name:my_mod:health_potion",
+  "display_name": "Health Potion",
+  "description": "Restores 25 health.",
+  "tags": ["consumable", "medical"],
+  "equippable": false,
+  "consume_on_use": true,
+  "use_actions": [
+    { "type": "modify_stat", "stat": "health", "delta": 25 }
+  ]
+}
+```
 
 `required_tags` lists tags that must be present on other currently equipped parts for this part to remain equipped. If a required provider is removed, the engine automatically unequips dependent parts and returns them to inventory. For example, arms can require `torso`, hands can require `arms`, and an implant can require `head`.
 
