@@ -19,6 +19,7 @@ var _refreshing_quests: Dictionary = {}
 func _ready() -> void:
 	GameEvents.tick_advanced.connect(_on_tick)
 	GameEvents.location_changed.connect(_on_location_changed)
+	GameEvents.task_completed.connect(_on_task_completed)
 	GameEvents.part_acquired.connect(_on_inventory_changed)
 	GameEvents.part_removed.connect(_on_inventory_changed)
 	GameEvents.entity_stat_changed.connect(_on_entity_state_changed)
@@ -54,6 +55,7 @@ func start_quest(quest_id: String, params: Dictionary = {}) -> bool:
 		ScriptHookService.invoke_template_hook(template, "on_quest_start", [quest_instance.duplicate(true)])
 	GameEvents.quest_started.emit(quest_id)
 	_refresh_quest(runtime_id)
+	_dispatch_current_stage_assignment_if_needed(runtime_id)
 	return true
 
 
@@ -99,6 +101,7 @@ func advance_quest(quest_id: String, transition: String) -> void:
 		_complete_active_quest(runtime_id, template)
 		return
 	GameEvents.quest_stage_advanced.emit(str(quest_instance.get("quest_id", quest_id)), next_stage_index)
+	_dispatch_current_stage_assignment_if_needed(runtime_id)
 	# Do NOT call _refresh_quest here — _apply_stage_completion may have already
 	# triggered an auto-advance via event listeners, and calling it again would
 	# double-fire rewards for any stages whose objectives are already met.
@@ -170,7 +173,7 @@ func _create_quest_instance(template: Dictionary, runtime_id: String, params: Di
 	var assignee_entity_id := _resolve_entity_id(str(params.get("assignee_entity_id", params.get("entity_id", template.get("assignee_entity_id", "player")))), "player")
 	var owner_entity_id := _resolve_entity_id(str(params.get("owner_entity_id", template.get("owner_entity_id", "player"))), "player")
 	var reward_recipient_entity_id := _resolve_entity_id(str(params.get("reward_recipient_entity_id", template.get("reward_recipient_entity_id", owner_entity_id))), owner_entity_id)
-	GameState.active_quests[runtime_id] = {
+	var quest_instance := {
 		"runtime_id": runtime_id,
 		"quest_id": quest_id,
 		"stage_index": 0,
@@ -180,6 +183,10 @@ func _create_quest_instance(template: Dictionary, runtime_id: String, params: Di
 		"started_day": GameState.current_day,
 		"started_tick": GameState.current_tick,
 	}
+	if bool(params.get("auto_dispatch_first_reach_location", false)):
+		quest_instance["auto_dispatch_first_reach_location"] = true
+		quest_instance["assignment_task_template_id"] = str(params.get("assignment_task_template_id", "base:goto_location"))
+	GameState.active_quests[runtime_id] = quest_instance
 
 
 func _on_tick(_tick: int) -> void:
@@ -187,6 +194,10 @@ func _on_tick(_tick: int) -> void:
 
 
 func _on_location_changed(_old_id: String, _new_id: String) -> void:
+	_refresh_active_quests()
+
+
+func _on_task_completed(_task_id: String, _entity_id: String) -> void:
 	_refresh_active_quests()
 
 
@@ -266,6 +277,7 @@ func _refresh_quest_inner(runtime_id: String) -> void:
 		quest_instance["stage_index"] = next_stage_index
 		GameState.active_quests[runtime_id] = quest_instance
 		GameEvents.quest_stage_advanced.emit(quest_id, next_stage_index)
+		_dispatch_current_stage_assignment_if_needed(runtime_id)
 
 
 func _is_stage_complete(stage: Dictionary, quest_instance: Dictionary) -> bool:
@@ -296,6 +308,145 @@ func _apply_stage_completion(stage: Dictionary, quest_instance: Dictionary) -> v
 	if actions_data is Array:
 		var actions: Array = actions_data
 		ActionDispatcher.dispatch_all(actions)
+
+
+func _dispatch_current_stage_assignment_if_needed(runtime_id: String) -> void:
+	if not GameState.active_quests.has(runtime_id):
+		return
+	var quest_instance_data: Variant = GameState.active_quests.get(runtime_id, {})
+	if not quest_instance_data is Dictionary:
+		return
+	var quest_instance: Dictionary = quest_instance_data
+	if not bool(quest_instance.get("auto_dispatch_first_reach_location", false)):
+		return
+	var quest_id := str(quest_instance.get("quest_id", runtime_id))
+	var template := DataManager.get_quest(quest_id)
+	if template.is_empty():
+		return
+	var stages_data: Variant = template.get("stages", [])
+	if not stages_data is Array:
+		return
+	var stages: Array = stages_data
+	var stage_index := int(quest_instance.get("stage_index", 0))
+	if stage_index < 0 or stage_index >= stages.size():
+		return
+	var stage_data: Variant = stages[stage_index]
+	if not stage_data is Dictionary:
+		return
+	var assignee_entity := _resolve_quest_entity(quest_instance, "assignee")
+	if assignee_entity == null:
+		_record_assignment_dispatch_status(runtime_id, "missing_assignee", "", "")
+		return
+	var stage: Dictionary = stage_data
+	var target_location_id := _resolve_stage_reach_location_for_assignee(stage, quest_instance, assignee_entity)
+	if target_location_id.is_empty():
+		_record_assignment_dispatch_status(runtime_id, "missing_target", assignee_entity.entity_id, "")
+		return
+	if _has_active_assignment_task(runtime_id, assignee_entity.entity_id, target_location_id):
+		return
+	if assignee_entity.location_id == target_location_id:
+		_record_assignment_dispatch_status(runtime_id, "already_there", assignee_entity.entity_id, target_location_id)
+		return
+	var route_cost := LocationGraph.get_route_travel_cost(assignee_entity.location_id, target_location_id)
+	if route_cost < 0:
+		_record_assignment_dispatch_status(runtime_id, "unreachable", assignee_entity.entity_id, target_location_id)
+		return
+	var assignment_task_id := str(quest_instance.get("assignment_task_template_id", "base:goto_location"))
+	if not DataManager.has_task(assignment_task_id):
+		_record_assignment_dispatch_status(runtime_id, "missing_task", assignee_entity.entity_id, target_location_id, assignment_task_id)
+		return
+	_abandon_active_tasks_for_entity(assignee_entity.entity_id)
+	var task_runtime_id := TimeKeeper.accept_task(assignment_task_id, {
+		"entity_id": assignee_entity.entity_id,
+		"target": target_location_id,
+		"task_type": "TRAVEL",
+		"duration": maxi(route_cost, 1),
+		"allow_duplicate": true,
+		"source_quest_runtime_id": runtime_id,
+		"source_quest_id": quest_id,
+	})
+	if task_runtime_id.is_empty():
+		_record_assignment_dispatch_status(runtime_id, "failed", assignee_entity.entity_id, target_location_id)
+		return
+	_record_assignment_dispatch_status(runtime_id, "dispatched", assignee_entity.entity_id, target_location_id, "", task_runtime_id)
+
+
+func _resolve_stage_reach_location_for_assignee(stage: Dictionary, quest_instance: Dictionary, assignee_entity: EntityInstance) -> String:
+	var objectives_data: Variant = stage.get("objectives", [])
+	if not objectives_data is Array:
+		return ""
+	var objectives: Array = objectives_data
+	for objective_data in objectives:
+		if not objective_data is Dictionary:
+			continue
+		var objective: Dictionary = objective_data
+		if str(objective.get("type", "")) != "reach_location":
+			continue
+		var objective_entity_lookup := str(objective.get("entity_id", "player"))
+		if not _objective_targets_assignee(objective_entity_lookup, quest_instance, assignee_entity):
+			continue
+		return str(objective.get("location_id", objective.get("location", "")))
+	return ""
+
+
+func _objective_targets_assignee(entity_lookup: String, quest_instance: Dictionary, assignee_entity: EntityInstance) -> bool:
+	if assignee_entity == null:
+		return false
+	if entity_lookup == "quest:assignee":
+		return true
+	var resolved_entity := _resolve_objective_entity(entity_lookup, quest_instance)
+	return resolved_entity != null and resolved_entity.entity_id == assignee_entity.entity_id
+
+
+func _resolve_objective_entity(entity_lookup: String, quest_instance: Dictionary) -> EntityInstance:
+	if entity_lookup.is_empty() or entity_lookup == "player":
+		return GameState.player as EntityInstance
+	if entity_lookup.begins_with("quest:"):
+		return _resolve_quest_entity(quest_instance, entity_lookup.trim_prefix("quest:"))
+	return GameState.get_entity_instance(entity_lookup)
+
+
+func _has_active_assignment_task(runtime_id: String, entity_id: String, target_location_id: String) -> bool:
+	for task_value in GameState.active_tasks.values():
+		if not task_value is Dictionary:
+			continue
+		var task: Dictionary = task_value
+		if str(task.get("source_quest_runtime_id", "")) != runtime_id:
+			continue
+		if str(task.get("entity_id", "")) != entity_id:
+			continue
+		if str(task.get("target", "")) == target_location_id:
+			return true
+	return false
+
+
+func _abandon_active_tasks_for_entity(entity_id: String) -> void:
+	var runtime_ids: Array[String] = []
+	for runtime_id_value in GameState.active_tasks.keys():
+		var runtime_id := str(runtime_id_value)
+		var task_value: Variant = GameState.active_tasks.get(runtime_id_value, {})
+		if not task_value is Dictionary:
+			continue
+		var task: Dictionary = task_value
+		if str(task.get("entity_id", "")) == entity_id:
+			runtime_ids.append(runtime_id)
+	for task_runtime_id in runtime_ids:
+		TimeKeeper.abandon_task(task_runtime_id)
+
+
+func _record_assignment_dispatch_status(runtime_id: String, status: String, assignee_entity_id: String, target_location_id: String, task_id: String = "", task_runtime_id: String = "") -> void:
+	if not GameState.active_quests.has(runtime_id):
+		return
+	var quest_instance_data: Variant = GameState.active_quests.get(runtime_id, {})
+	if not quest_instance_data is Dictionary:
+		return
+	var quest_instance: Dictionary = quest_instance_data
+	quest_instance["assignment_last_dispatch_status"] = status
+	quest_instance["assignment_last_assignee_entity_id"] = assignee_entity_id
+	quest_instance["assignment_last_target_location_id"] = target_location_id
+	quest_instance["assignment_last_task_template_id"] = task_id
+	quest_instance["assignment_last_task_runtime_id"] = task_runtime_id
+	GameState.active_quests[runtime_id] = quest_instance
 
 
 func _complete_active_quest(runtime_id: String, template: Dictionary) -> void:

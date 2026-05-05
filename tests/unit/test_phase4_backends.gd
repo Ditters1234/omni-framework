@@ -389,6 +389,113 @@ func test_task_provider_backend_can_assign_and_dispatch_owned_entity() -> void:
 			assert_eq(str(args[0]), "Accepted Field Delivery and sent Dispatch Drone to Fixture Field.")
 
 
+func test_assigned_owned_entity_continues_through_multi_stage_reach_location_quest() -> void:
+	var depot_location_id := "base:test_depot"
+	var field_location: Variant = DataManager.locations.get(TEST_FIXTURE_WORLD.connected_location_id(), {})
+	assert_true(field_location is Dictionary)
+	if field_location is Dictionary:
+		var field: Dictionary = field_location
+		var field_connections_value: Variant = field.get("connections", {})
+		if field_connections_value is Dictionary:
+			var field_connections: Dictionary = field_connections_value
+			field_connections[depot_location_id] = 1
+			field["connections"] = field_connections
+			DataManager.locations[TEST_FIXTURE_WORLD.connected_location_id()] = field
+	DataManager.locations[depot_location_id] = {
+		"location_id": depot_location_id,
+		"display_name": "Fixture Depot",
+		"description": "A second delivery stop.",
+		"connections": {
+			TEST_FIXTURE_WORLD.connected_location_id(): 1,
+		},
+		"screens": [],
+	}
+	DataManager.tasks["base:test_assignment_travel"] = {
+		"template_id": "base:test_assignment_travel",
+		"display_name": "Travel",
+		"type": "TRAVEL",
+		"duration": 1,
+		"repeatable": true,
+	}
+	DataManager.factions["base:test_faction"] = {
+		"faction_id": "base:test_faction",
+		"display_name": "Test Faction",
+		"quest_pool": ["base:test_multi_stop_contract"],
+	}
+	DataManager.quests["base:test_multi_stop_contract"] = {
+		"quest_id": "base:test_multi_stop_contract",
+		"display_name": "Multi Stop Delivery",
+		"description": "Send an assigned entity through two stops.",
+		"stages": [
+			{
+				"description": "Reach the field.",
+				"objectives": [
+					{
+						"type": "reach_location",
+						"entity_id": "quest:assignee",
+						"location_id": TEST_FIXTURE_WORLD.connected_location_id(),
+					}
+				],
+			},
+			{
+				"description": "Reach the depot.",
+				"objectives": [
+					{
+						"type": "reach_location",
+						"entity_id": "quest:assignee",
+						"location_id": depot_location_id,
+					}
+				],
+			},
+		],
+		"reward": {"credits": 7},
+		"repeatable": true,
+	}
+	var drone_template := {
+		"entity_id": "base:test_multi_stop_drone",
+		"display_name": "Route Drone",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"stats": {},
+	}
+	DataManager.entities["base:test_multi_stop_drone"] = drone_template.duplicate(true)
+	GameState.commit_entity_instance(EntityInstance.from_template(drone_template), "base:test_multi_stop_drone")
+
+	var backend: RefCounted = TASK_PROVIDER_BACKEND.new()
+	backend.initialize({
+		"faction_id": "base:test_faction",
+		"assignee_entity_id": "base:test_multi_stop_drone",
+		"owner_entity_id": "player",
+		"assignment_task_template_id": "base:test_assignment_travel",
+		"auto_dispatch_first_reach_location": true,
+	})
+	backend.build_view_model()
+
+	backend.confirm()
+	assert_true(GameState.active_quests.has("base:test_multi_stop_contract"))
+	assert_eq(GameState.active_tasks.size(), 1)
+	_assert_single_active_task_target("base:test_multi_stop_drone", TEST_FIXTURE_WORLD.connected_location_id())
+
+	TimeKeeper.advance_tick()
+	assert_true(GameState.active_quests.has("base:test_multi_stop_contract"))
+	var quest_value: Variant = GameState.active_quests.get("base:test_multi_stop_contract", {})
+	assert_true(quest_value is Dictionary)
+	if quest_value is Dictionary:
+		var quest: Dictionary = quest_value
+		assert_eq(int(quest.get("stage_index", -1)), 1)
+	_assert_single_active_task_target("base:test_multi_stop_drone", depot_location_id)
+	var drone := GameState.get_entity_instance("base:test_multi_stop_drone")
+	assert_not_null(drone)
+	if drone != null:
+		assert_eq(drone.location_id, TEST_FIXTURE_WORLD.connected_location_id())
+
+	TimeKeeper.advance_tick()
+	assert_false(GameState.active_quests.has("base:test_multi_stop_contract"))
+	assert_true("base:test_multi_stop_contract" in GameState.completed_quests)
+	assert_eq(GameState.active_tasks.size(), 0)
+	if drone != null:
+		assert_eq(drone.location_id, depot_location_id)
+
+
 func test_task_provider_backend_hides_contract_active_under_runtime_id() -> void:
 	DataManager.factions["base:test_faction"] = {
 		"faction_id": "base:test_faction",
@@ -704,6 +811,19 @@ func _inventory_has_template(entity: EntityInstance, template_id: String) -> boo
 func _event_history_contains(signal_name: String) -> bool:
 	var history := GameEvents.get_event_history(0, "", signal_name)
 	return not history.is_empty()
+
+
+func _assert_single_active_task_target(entity_id: String, target_location_id: String) -> void:
+	assert_eq(GameState.active_tasks.size(), 1)
+	if GameState.active_tasks.is_empty():
+		return
+	var task_value: Variant = GameState.active_tasks.values()[0]
+	assert_true(task_value is Dictionary)
+	if not task_value is Dictionary:
+		return
+	var task: Dictionary = task_value
+	assert_eq(str(task.get("entity_id", "")), entity_id)
+	assert_eq(str(task.get("target", "")), target_location_id)
 
 
 func _map_rows_contain_location(rows: Array, location_id: String) -> bool:

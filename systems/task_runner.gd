@@ -57,6 +57,12 @@ func accept_task(template_id: String, params: Dictionary = {}) -> String:
 		"reward": _duplicate_dict(params.get("reward", template.get("reward", {}))),
 		"complete_sound": str(params.get("complete_sound", template.get("complete_sound", ""))),
 	}
+	var source_quest_runtime_id := str(params.get("source_quest_runtime_id", ""))
+	if not source_quest_runtime_id.is_empty():
+		task_instance["source_quest_runtime_id"] = source_quest_runtime_id
+	var source_quest_id := str(params.get("source_quest_id", ""))
+	if not source_quest_id.is_empty():
+		task_instance["source_quest_id"] = source_quest_id
 	GameState.active_tasks[runtime_id] = task_instance
 	ScriptHookService.invoke_template_hook(template, "on_task_start", [task_instance.duplicate(true)])
 	GameEvents.task_started.emit(runtime_id, entity.entity_id)

@@ -95,6 +95,8 @@ func confirm() -> Dictionary:
 		"assignee_entity_id": assignee_lookup,
 		"owner_entity_id": owner_lookup,
 		"reward_recipient_entity_id": owner_lookup,
+		"assignment_task_template_id": str(_params.get("assignment_task_template_id", "base:goto_location")),
+		"auto_dispatch_first_reach_location": bool(_params.get("auto_dispatch_first_reach_location", false)),
 	}):
 		_status_text = "That contract could not be accepted right now."
 		return {}
@@ -103,8 +105,8 @@ func confirm() -> Dictionary:
 		AudioManager.play_sfx(accept_sound)
 	var quest_template := DataManager.get_quest(quest_id)
 	var quest_label := str(quest_template.get("display_name", quest_id))
-	var target_location_id := _resolve_first_reach_location(quest_template)
-	var dispatch_result := _maybe_dispatch_assignee(assignee_lookup, target_location_id)
+	var dispatch_result := _get_assignment_dispatch_result(quest_id, assignee_lookup)
+	var target_location_id := str(dispatch_result.get("target_location_id", _resolve_first_reach_location(quest_template)))
 	_status_text = _build_accept_status(quest_label, dispatch_result)
 	if GameEvents:
 		GameEvents.ui_notification_requested.emit(_status_text, "info")
@@ -300,44 +302,24 @@ func _build_confirm_label(assignment_context: Dictionary) -> String:
 	return "Accept Selected"
 
 
-func _maybe_dispatch_assignee(assignee_lookup: String, target_location_id: String) -> Dictionary:
+func _get_assignment_dispatch_result(quest_id: String, assignee_lookup: String) -> Dictionary:
 	if not bool(_params.get("auto_dispatch_first_reach_location", false)):
 		return {"status": "skipped"}
-	if target_location_id.is_empty():
-		return {"status": "missing_target"}
+	var quest_instance_value: Variant = GameState.active_quests.get(quest_id, {})
+	if not quest_instance_value is Dictionary:
+		return {"status": "skipped"}
+	var quest_instance: Dictionary = quest_instance_value
+	var target_location_id := str(quest_instance.get("assignment_last_target_location_id", ""))
 	var assignee := BACKEND_HELPERS.resolve_entity_lookup(assignee_lookup)
-	if assignee == null:
-		return {"status": "missing_assignee"}
-	if assignee.location_id == target_location_id:
-		return {
-			"status": "already_there",
-			"assignee_name": BACKEND_HELPERS.get_entity_display_name(assignee, assignee.entity_id),
-			"destination_name": _get_location_display_name(target_location_id),
-		}
-	var route_cost := LocationGraph.get_route_travel_cost(assignee.location_id, target_location_id)
-	if route_cost < 0:
-		return {
-			"status": "unreachable",
-			"assignee_name": BACKEND_HELPERS.get_entity_display_name(assignee, assignee.entity_id),
-			"destination_name": _get_location_display_name(target_location_id),
-		}
-	var assignment_task_id := str(_params.get("assignment_task_template_id", "base:goto_location"))
-	if not DataManager.has_task(assignment_task_id):
-		return {"status": "missing_task", "task_id": assignment_task_id}
-	_abandon_active_tasks_for_entity(assignee.entity_id)
-	var runtime_id := TimeKeeper.accept_task(assignment_task_id, {
-		"entity_id": assignee.entity_id,
-		"target": target_location_id,
-		"task_type": "TRAVEL",
-		"duration": maxi(route_cost, 1),
-		"allow_duplicate": true,
-	})
-	if runtime_id.is_empty():
-		return {"status": "failed"}
+	var assignee_name := ""
+	if assignee != null:
+		assignee_name = BACKEND_HELPERS.get_entity_display_name(assignee, assignee.entity_id)
 	return {
-		"status": "dispatched",
-		"runtime_id": runtime_id,
-		"assignee_name": BACKEND_HELPERS.get_entity_display_name(assignee, assignee.entity_id),
+		"status": str(quest_instance.get("assignment_last_dispatch_status", "skipped")),
+		"runtime_id": str(quest_instance.get("assignment_last_task_runtime_id", "")),
+		"task_id": str(quest_instance.get("assignment_last_task_template_id", "")),
+		"target_location_id": target_location_id,
+		"assignee_name": assignee_name,
 		"destination_name": _get_location_display_name(target_location_id),
 	}
 
@@ -388,20 +370,6 @@ func _resolve_entity_id_for_params(lookup_id: String) -> String:
 	if lookup_id.begins_with("entity:"):
 		return lookup_id.trim_prefix("entity:")
 	return lookup_id
-
-
-func _abandon_active_tasks_for_entity(entity_id: String) -> void:
-	var runtime_ids: Array[String] = []
-	for runtime_id_value in GameState.active_tasks.keys():
-		var runtime_id := str(runtime_id_value)
-		var task_value: Variant = GameState.active_tasks.get(runtime_id_value, {})
-		if not task_value is Dictionary:
-			continue
-		var task: Dictionary = task_value
-		if str(task.get("entity_id", "")) == entity_id:
-			runtime_ids.append(runtime_id)
-	for runtime_id in runtime_ids:
-		TimeKeeper.abandon_task(runtime_id)
 
 
 func _get_location_display_name(location_id: String) -> String:

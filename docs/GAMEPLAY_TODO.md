@@ -3,7 +3,7 @@
 Current high-value gameplay gaps identified from the implemented systems:
 
 - **Owned entities and assignment UI**: first-class pass implemented. Follow-up polish should add richer assignment queues, multi-task scheduling, and filters for larger rosters.
-- **Direct task assignment workflows**: assignment flow implemented. Owned-entity contract assignment can now accept a quest and dispatch the entity to the first reach-location objective in one action.
+- **Direct task assignment workflows**: assignment flow implemented. Owned-entity contract assignment can now accept a quest and auto-dispatch the entity through each assignee reach-location stage as the quest advances.
 - **Inventory action polish**: continue expanding item actions beyond use/discard toward compare, equip-best-slot, favorite/lock, and stack splitting if stack semantics become first-class.
 - **Status effects**: add first-class timed buffs/debuffs such as poison, bleeding, shielded, inspired, stunned, radiation, repair-over-time, or fatigue.
 - **Rest/recovery actions**: provide generic time-cost recovery loops for sleeping, resting, repair bays, clinics, or waiting until a resource recovers.
