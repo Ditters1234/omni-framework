@@ -2,7 +2,7 @@
 
 Current high-value gameplay gaps identified from the implemented systems:
 
-- **Owned entities and assignment UI**: first-class pass implemented. Roster filtering, generic sorting, and data-configured summary stats are in place for larger rosters. Follow-up polish should add richer assignment queues and multi-task scheduling.
+- **Owned entities and assignment UI**: first-class pass implemented. Roster filtering, generic sorting, data-configured summary stats, and queued assignment dispatch are in place for larger rosters. Follow-up polish should add richer queue editing/reordering tools if larger owned-entity content needs them.
 - **Direct task assignment workflows**: assignment flow implemented. Owned-entity contract assignment can now accept a quest and auto-dispatch the entity through each assignee reach-location stage as the quest advances.
 - **Inventory action polish**: continue expanding item actions beyond use/discard toward compare, equip-best-slot, favorite/lock, and stack splitting if stack semantics become first-class.
 - **Status effects**: add first-class timed buffs/debuffs such as poison, bleeding, shielded, inspired, stunned, radiation, repair-over-time, or fatigue.
@@ -13,4 +13,4 @@ Current high-value gameplay gaps identified from the implemented systems:
 - **Save/load risk UX**: add autosave notices, dangerous-action save prompts, and clearer mod/content mismatch recovery.
 - **Autonomous activity visibility**: surface what NPCs and owned entities are currently doing, where they are, and when their jobs will finish.
 
-Immediate implementation focus: richer task queue scaling once larger owned-entity content exists.
+Immediate implementation focus: inventory action polish or first-class status effects, depending on which gameplay loop needs pressure next.

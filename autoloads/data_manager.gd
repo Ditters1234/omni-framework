@@ -1888,6 +1888,7 @@ func _validate_backend_reference_fields(entry_id: String, file_path: String, pay
 			_validate_backend_stat_array(entry_id, file_path, payload, field_path, "summary_stat_ids")
 			_validate_backend_allowed_value(entry_id, file_path, payload, field_path, "initial_filter", ["all", "idle", "active", "current_location", "away"])
 			_validate_backend_allowed_value(entry_id, file_path, payload, field_path, "initial_sort", ["name", "location", "task"])
+			_validate_backend_allowed_value(entry_id, file_path, payload, field_path, "assignment_start_mode", ["replace", "queue", "parallel"])
 		"TaskProviderBackend":
 			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "provider_entity_id")
 			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "assignee_entity_id")

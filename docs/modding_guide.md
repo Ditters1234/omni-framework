@@ -900,9 +900,14 @@ Modders can use any string as a task type; unrecognized types fall through to du
 
 `TaskRunner` resolves the task countdown in this order:
 1. If `params.duration` or `params.remaining_ticks` is provided at accept time, use that.
-2. If the task type is `DELIVER` or `TRAVEL`, use `template.travel_cost` (falls back to `balance.default_travel_cost_ticks` config).
-3. Otherwise use `template.duration`.
-4. Minimum duration is always 1 tick.
+2. If the task type is `DELIVER` or `TRAVEL` and a target is present, use the current location graph route cost for the assigned entity when available.
+3. If the task type is `DELIVER` or `TRAVEL`, use `template.travel_cost` (falls back to `balance.default_travel_cost_ticks` config).
+4. Otherwise use `template.duration`.
+5. Minimum duration is always 1 tick.
+
+### Queued tasks
+
+Tasks can be accepted with `queue_if_busy: true`. If the assigned entity already has an active task, the new task is stored as a normal task instance with `status: "queued"` and does not tick down yet. When the entity's active task completes, `TaskRunner` promotes the oldest queued task to `status: "active"`, emits the normal `task_started` signal, and resolves travel duration from the entity's then-current location unless an explicit duration override was supplied. This keeps multi-task scheduling data-driven and avoids hardcoded path assumptions at queue time.
 
 Use:
 - `travel_cost` for travel-based tasks
@@ -1635,6 +1640,7 @@ No required params. Common useful optional fields:
 - `assignment_task_template_id` - defaults to `"base:goto_location"`
 - `assignment_faction_id` - enables the Assign Contract handoff to `TaskProviderBackend`
 - `assignment_provider_entity_id`
+- `assignment_start_mode` - one of `replace`, `queue`, or `parallel`; defaults to `replace` when `replace_existing_task` is true, otherwise `queue`
 - `selected_entity_id` - preselects an owned entity when returning from another screen
 - `suggested_location_id` - highlights a relevant destination, usually the first assigned quest objective
 - `initial_status_text` - shows a return/status message without requiring a fresh action
@@ -1646,9 +1652,9 @@ No required params. Common useful optional fields:
 - `show_discovered_locations_only` - defaults to `true`
 - `replace_existing_task` - defaults to `true`; location dispatch abandons existing active tasks for that entity before starting the new travel task
 
-This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, and contract-assignment handoffs. Roster filtering and sorting are generic (`idle`/`active`, here/away, name/location/task) and do not assume any genre-specific role tags. Roster stat previews are also data-driven: set `summary_stat_ids` when a route wants specific stats, or omit it to use the entity's defined non-capacity stats in loaded definition order. Location dispatch starts a low-level `TRAVEL` task for the selected entity and emits a player-facing notification. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start. The built-in owned-entity screen passes `auto_dispatch_first_reach_location: true` so a selected contract can be accepted and the selected entity can be sent through assignee reach-location objectives as the quest advances.
+This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, and contract-assignment handoffs. Roster filtering and sorting are generic (`idle`/`active`, here/away, name/location/task) and do not assume any genre-specific role tags. Roster stat previews are also data-driven: set `summary_stat_ids` when a route wants specific stats, or omit it to use the entity's defined non-capacity stats in loaded definition order. Location dispatch starts a low-level `TRAVEL` task for the selected entity and emits a player-facing notification. `assignment_start_mode` controls whether dispatch replaces existing work, queues behind the current active task, or runs in parallel. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start. The built-in owned-entity screen passes `auto_dispatch_first_reach_location: true` so a selected contract can be accepted and the selected entity can be sent through assignee reach-location objectives as the quest advances.
 
-Load validation now checks that `owned_entity_ids` is an array of non-empty string ids, rejects duplicate/self references, and verifies that referenced entities exist. `OwnedEntitiesBackend` payloads validate `owner_entity_id`, `assignment_provider_entity_id`, `assignment_task_template_id`, `assignment_faction_id`, `summary_stat_ids`, and supported initial filter/sort values when those fields are present. `TaskProviderBackend` payloads validate direct-assignment fields including provider, assignee, owner, faction, and assignment task references.
+Load validation now checks that `owned_entity_ids` is an array of non-empty string ids, rejects duplicate/self references, and verifies that referenced entities exist. `OwnedEntitiesBackend` payloads validate `owner_entity_id`, `assignment_provider_entity_id`, `assignment_task_template_id`, `assignment_faction_id`, `summary_stat_ids`, supported initial filter/sort values, and supported `assignment_start_mode` values when those fields are present. `TaskProviderBackend` payloads validate direct-assignment fields including provider, assignee, owner, faction, and assignment task references.
 
 #### `AssemblyEditorBackend`
 No required params, but common useful ones are:

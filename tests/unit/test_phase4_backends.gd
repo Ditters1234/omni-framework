@@ -751,6 +751,78 @@ func test_owned_entities_backend_filters_sorts_and_uses_configured_summary_stats
 			assert_eq(str(searched_row.get("entity_id", "")), "base:test_busy_drone")
 
 
+func test_owned_entities_backend_can_queue_assignment_behind_active_task() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	DataManager.tasks["base:test_queue_travel"] = {
+		"template_id": "base:test_queue_travel",
+		"display_name": "Travel",
+		"type": "TRAVEL",
+		"repeatable": true,
+	}
+	DataManager.tasks["base:test_queue_wait"] = {
+		"template_id": "base:test_queue_wait",
+		"display_name": "Wait",
+		"type": "WAIT",
+		"duration": 1,
+		"repeatable": true,
+	}
+	var drone_template := {
+		"entity_id": "base:test_queue_drone",
+		"display_name": "Queue Drone",
+		"description": "Queue fixture.",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"stats": {"power": 1},
+		"inventory": [],
+	}
+	DataManager.entities["base:test_queue_drone"] = drone_template.duplicate(true)
+	var drone := EntityInstance.from_template(drone_template)
+	GameState.commit_entity_instance(drone, "base:test_queue_drone")
+	player.owned_entity_ids = ["base:test_queue_drone"]
+	var wait_runtime_id := TimeKeeper.accept_task("base:test_queue_wait", {
+		"entity_id": "base:test_queue_drone",
+		"allow_duplicate": true,
+	})
+	assert_false(wait_runtime_id.is_empty())
+	var backend: RefCounted = OWNED_ENTITIES_BACKEND.new()
+	backend.initialize({
+		"owner_entity_id": "player",
+		"assignment_task_template_id": "base:test_queue_travel",
+		"assignment_start_mode": "queue",
+		"selected_entity_id": "base:test_queue_drone",
+	})
+
+	backend.assign_selected_to_location(TEST_FIXTURE_WORLD.connected_location_id())
+
+	assert_eq(GameState.active_tasks.size(), 2)
+	var queued_count := 0
+	for task_value in GameState.active_tasks.values():
+		if task_value is Dictionary:
+			var task: Dictionary = task_value
+			if str(task.get("entity_id", "")) == "base:test_queue_drone" and str(task.get("status", "active")) == "queued":
+				queued_count += 1
+	assert_eq(queued_count, 1)
+	var queued_view: Dictionary = backend.build_view_model()
+	var selected_value: Variant = queued_view.get("selected_entity", {})
+	assert_true(selected_value is Dictionary)
+	if selected_value is Dictionary:
+		var selected: Dictionary = selected_value
+		assert_eq(int(selected.get("queued_task_count", 0)), 1)
+
+	TimeKeeper.advance_tick()
+
+	assert_false(GameState.active_tasks.has(wait_runtime_id))
+	var active_travel_count := 0
+	for task_value in GameState.active_tasks.values():
+		if task_value is Dictionary:
+			var task: Dictionary = task_value
+			if str(task.get("entity_id", "")) == "base:test_queue_drone" and str(task.get("status", "active")) == "active":
+				active_travel_count += 1
+	assert_eq(active_travel_count, 1)
+
+
 func test_owned_entity_task_completion_notifies_player_owner() -> void:
 	var player := GameState.player as EntityInstance
 	assert_not_null(player)

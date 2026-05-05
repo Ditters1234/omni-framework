@@ -10,6 +10,8 @@ const TASK_TYPE_CRAFT := "CRAFT"
 const TASK_TYPE_DELIVER := "DELIVER"
 const TASK_TYPE_TRAVEL := "TRAVEL"
 const DEFAULT_TASK_DURATION := 1
+const TASK_STATUS_ACTIVE := "active"
+const TASK_STATUS_QUEUED := "queued"
 
 # ---------------------------------------------------------------------------
 # Boot
@@ -43,6 +45,10 @@ func accept_task(template_id: String, params: Dictionary = {}) -> String:
 		return ""
 	if not bool(params.get("allow_duplicate", false)) and not _can_accept_template(template):
 		return ""
+	var queue_if_busy := bool(params.get("queue_if_busy", false))
+	var should_queue := queue_if_busy and _entity_has_active_task(entity.entity_id)
+	var duration_override_value: Variant = params.get("duration", params.get("remaining_ticks", null))
+	var duration_locked := duration_override_value is int or duration_override_value is float
 	var runtime_id := _generate_runtime_id()
 	var task_type := str(params.get("task_type", template.get("type", TASK_TYPE_WAIT)))
 	var task_instance := {
@@ -51,9 +57,13 @@ func accept_task(template_id: String, params: Dictionary = {}) -> String:
 		"entity_id": entity.entity_id,
 		"type": task_type,
 		"target": str(params.get("target", template.get("target", ""))),
-		"remaining_ticks": _resolve_remaining_ticks(template, params),
+		"remaining_ticks": _resolve_remaining_ticks(template, params, entity),
 		"started_day": GameState.current_day,
 		"started_tick": GameState.current_tick,
+		"status": TASK_STATUS_QUEUED if should_queue else TASK_STATUS_ACTIVE,
+		"queued_at_tick": GameState.current_tick if should_queue else -1,
+		"queued_order": Time.get_ticks_usec() if should_queue else -1,
+		"duration_locked": duration_locked,
 		"reward": _duplicate_dict(params.get("reward", template.get("reward", {}))),
 		"complete_sound": str(params.get("complete_sound", template.get("complete_sound", ""))),
 	}
@@ -64,8 +74,9 @@ func accept_task(template_id: String, params: Dictionary = {}) -> String:
 	if not source_quest_id.is_empty():
 		task_instance["source_quest_id"] = source_quest_id
 	GameState.active_tasks[runtime_id] = task_instance
-	ScriptHookService.invoke_template_hook(template, "on_task_start", [task_instance.duplicate(true)])
-	GameEvents.task_started.emit(runtime_id, entity.entity_id)
+	if should_queue:
+		return runtime_id
+	_start_task_instance(runtime_id, task_instance, template, entity)
 	return runtime_id
 
 
@@ -89,6 +100,7 @@ func complete_task(runtime_id: String) -> bool:
 	_play_complete_sound(task_instance)
 	GameEvents.task_completed.emit(runtime_id, entity.entity_id)
 	_notify_owned_task_completed(task_instance, entity)
+	_start_next_queued_task_for_entity(entity.entity_id)
 	return true
 
 
@@ -133,6 +145,8 @@ func _on_tick(tick: int) -> void:
 		if not task_instance_data is Dictionary:
 			continue
 		var task_instance: Dictionary = task_instance_data
+		if str(task_instance.get("status", TASK_STATUS_ACTIVE)) == TASK_STATUS_QUEUED:
+			continue
 		var remaining_ticks := int(task_instance.get("remaining_ticks", 0))
 		if remaining_ticks <= 0:
 			to_complete.append(runtime_id)
@@ -155,12 +169,17 @@ func _generate_runtime_id() -> String:
 	return "task_%d_%d" % [Time.get_ticks_usec(), randi()]
 
 
-func _resolve_remaining_ticks(template: Dictionary, params: Dictionary = {}) -> int:
+func _resolve_remaining_ticks(template: Dictionary, params: Dictionary = {}, entity: EntityInstance = null) -> int:
 	var duration_override_value: Variant = params.get("duration", params.get("remaining_ticks", null))
-	if duration_override_value is int or duration_override_value is float:
+	if bool(params.get("duration_locked", true)) and (duration_override_value is int or duration_override_value is float):
 		return maxi(int(duration_override_value), DEFAULT_TASK_DURATION)
 	var task_type := str(template.get("type", TASK_TYPE_WAIT))
 	if task_type == TASK_TYPE_DELIVER or task_type == TASK_TYPE_TRAVEL:
+		var target := str(params.get("target", template.get("target", ""))).strip_edges()
+		if entity != null and not target.is_empty():
+			var route_cost := LocationGraph.get_route_travel_cost(entity.location_id, target)
+			if route_cost >= 0:
+				return maxi(route_cost, DEFAULT_TASK_DURATION)
 		var travel_cost := int(template.get("travel_cost", DataManager.get_config_value("balance.default_travel_cost_ticks", DEFAULT_TASK_DURATION)))
 		return maxi(travel_cost, DEFAULT_TASK_DURATION)
 	var duration := int(template.get("duration", DEFAULT_TASK_DURATION))
@@ -178,6 +197,66 @@ func _can_accept_template(template: Dictionary) -> bool:
 	if not repeatable and template_id in GameState.completed_task_templates:
 		return false
 	return true
+
+
+func _entity_has_active_task(entity_id: String) -> bool:
+	for task_instance_data in GameState.active_tasks.values():
+		if not task_instance_data is Dictionary:
+			continue
+		var task_instance: Dictionary = task_instance_data
+		if str(task_instance.get("entity_id", "")) != entity_id:
+			continue
+		if str(task_instance.get("status", TASK_STATUS_ACTIVE)) == TASK_STATUS_QUEUED:
+			continue
+		return true
+	return false
+
+
+func _start_task_instance(runtime_id: String, task_instance: Dictionary, template: Dictionary, entity: EntityInstance) -> void:
+	task_instance["status"] = TASK_STATUS_ACTIVE
+	task_instance["started_day"] = GameState.current_day
+	task_instance["started_tick"] = GameState.current_tick
+	task_instance["queued_at_tick"] = -1
+	task_instance["queued_order"] = -1
+	task_instance["remaining_ticks"] = _resolve_remaining_ticks(template, task_instance, entity)
+	GameState.active_tasks[runtime_id] = task_instance
+	ScriptHookService.invoke_template_hook(template, "on_task_start", [task_instance.duplicate(true)])
+	GameEvents.task_started.emit(runtime_id, entity.entity_id)
+
+
+func _start_next_queued_task_for_entity(entity_id: String) -> void:
+	var next_runtime_id := ""
+	var next_task: Dictionary = {}
+	for runtime_id_value in GameState.active_tasks.keys():
+		var runtime_id := str(runtime_id_value)
+		var task_instance_data: Variant = GameState.active_tasks.get(runtime_id_value, {})
+		if not task_instance_data is Dictionary:
+			continue
+		var task_instance: Dictionary = task_instance_data
+		if str(task_instance.get("entity_id", "")) != entity_id:
+			continue
+		if str(task_instance.get("status", TASK_STATUS_ACTIVE)) != TASK_STATUS_QUEUED:
+			continue
+		if next_task.is_empty() or _is_queued_before(task_instance, next_task):
+			next_runtime_id = runtime_id
+			next_task = task_instance.duplicate(true)
+	if next_runtime_id.is_empty():
+		return
+	var entity := _resolve_entity(entity_id)
+	if entity == null:
+		return
+	var template := TaskRegistry.get_task(str(next_task.get("template_id", "")))
+	if template.is_empty():
+		return
+	_start_task_instance(next_runtime_id, next_task, template, entity)
+
+
+func _is_queued_before(candidate: Dictionary, current: Dictionary) -> bool:
+	var candidate_tick := int(candidate.get("queued_at_tick", 0))
+	var current_tick := int(current.get("queued_at_tick", 0))
+	if candidate_tick != current_tick:
+		return candidate_tick < current_tick
+	return int(candidate.get("queued_order", 0)) < int(current.get("queued_order", 0))
 
 
 func _apply_reward(task_instance: Dictionary, entity: EntityInstance) -> void:

@@ -161,9 +161,13 @@ func _render_selected(row: Dictionary) -> void:
 		return
 	_selected_title_label.text = str(row.get("display_name", row.get("entity_id", "Entity")))
 	_selected_description_label.text = str(row.get("description", ""))
+	var queue_text := str(row.get("queue_text", ""))
+	var task_line := str(row.get("active_task_text", "Idle"))
+	if not queue_text.is_empty():
+		task_line = "%s (%s)" % [task_line, queue_text]
 	_selected_meta_label.text = "Location: %s\nTask: %s\nStats: %s\nEquipment: %s equipped, %s inventory items" % [
 		str(row.get("location_label", "Unknown")),
-		str(row.get("active_task_text", "Idle")),
+		task_line,
 		str(row.get("stat_preview_text", "")),
 		str(int(row.get("equipped_count", 0))),
 		str(int(row.get("inventory_count", 0))),
@@ -204,10 +208,14 @@ func _render_locations(rows: Array[Dictionary]) -> void:
 
 
 func _build_row_text(row: Dictionary) -> String:
+	var task_text := str(row.get("active_task_text", "Idle"))
+	var queue_text := str(row.get("queue_text", ""))
+	if not queue_text.is_empty():
+		task_text = "%s (%s)" % [task_text, queue_text]
 	return "%s\n%s | %s" % [
 		str(row.get("display_name", row.get("entity_id", "Entity"))),
 		str(row.get("location_label", "Unknown")),
-		str(row.get("active_task_text", "Idle")),
+		task_text,
 	]
 
 

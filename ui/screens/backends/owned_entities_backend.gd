@@ -14,6 +14,9 @@ const FILTER_AWAY := "away"
 const SORT_NAME := "name"
 const SORT_LOCATION := "location"
 const SORT_TASK := "task"
+const START_MODE_REPLACE := "replace"
+const START_MODE_QUEUE := "queue"
+const START_MODE_PARALLEL := "parallel"
 
 var _params: Dictionary = {}
 var _selected_entity_id: String = ""
@@ -38,6 +41,7 @@ static func register_contract() -> void:
 			"assignment_provider_entity_id",
 			"show_discovered_locations_only",
 			"replace_existing_task",
+			"assignment_start_mode",
 			"selected_entity_id",
 			"suggested_location_id",
 			"initial_status_text",
@@ -58,6 +62,7 @@ static func register_contract() -> void:
 			"assignment_provider_entity_id": TYPE_STRING,
 			"show_discovered_locations_only": TYPE_BOOL,
 			"replace_existing_task": TYPE_BOOL,
+			"assignment_start_mode": TYPE_STRING,
 			"selected_entity_id": TYPE_STRING,
 			"suggested_location_id": TYPE_STRING,
 			"initial_status_text": TYPE_STRING,
@@ -147,19 +152,29 @@ func assign_selected_to_location(location_id: String) -> void:
 	if not DataManager.has_task(task_id):
 		_status_text = "Assignment task template '%s' is not registered." % task_id
 		return
-	if _get_bool_param(_params, "replace_existing_task", true):
+	var start_mode := _get_assignment_start_mode()
+	if start_mode == START_MODE_REPLACE:
 		_abandon_active_tasks_for_entity(entity.entity_id)
-	var runtime_id := TimeKeeper.accept_task(task_id, {
+	var task_params: Dictionary = {
 		"entity_id": entity.entity_id,
 		"target": location_id,
 		"task_type": "TRAVEL",
-		"duration": maxi(route_cost, 1),
 		"allow_duplicate": true,
-	})
+		"queue_if_busy": start_mode == START_MODE_QUEUE,
+	}
+	if start_mode != START_MODE_QUEUE:
+		task_params["duration"] = maxi(route_cost, 1)
+	var runtime_id := TimeKeeper.accept_task(task_id, task_params)
 	if runtime_id.is_empty():
 		_status_text = "Unable to start that assignment."
 		return
-	_status_text = "Assigned %s to travel to %s." % [
+	var task_instance: Dictionary = {}
+	var task_value: Variant = GameState.active_tasks.get(runtime_id, {})
+	if task_value is Dictionary:
+		task_instance = task_value
+	var verb := "Queued" if str(task_instance.get("status", "active")) == "queued" else "Assigned"
+	_status_text = "%s %s to travel to %s." % [
+		verb,
 		BACKEND_HELPERS.get_entity_display_name(entity, entity.entity_id),
 		_get_location_display_name(location_id),
 	]
@@ -194,6 +209,7 @@ func _build_rows(owner: EntityInstance) -> Array[Dictionary]:
 		if entity == null:
 			continue
 		var active_task := _find_active_task(entity.entity_id)
+		var queued_task_count := _count_queued_tasks(entity.entity_id)
 		rows.append({
 			"entity_id": entity.entity_id,
 			"template_id": entity.template_id,
@@ -203,6 +219,8 @@ func _build_rows(owner: EntityInstance) -> Array[Dictionary]:
 			"location_label": _get_location_display_name(entity.location_id),
 			"active_task": active_task,
 			"active_task_text": _build_task_text(active_task),
+			"queued_task_count": queued_task_count,
+			"queue_text": _build_queue_text(queued_task_count),
 			"stat_preview_text": _build_stat_preview_text(entity),
 			"inventory_count": _count_loose_inventory(entity),
 			"equipped_count": entity.equipped.size(),
@@ -283,9 +301,22 @@ func _find_active_task(entity_id: String) -> Dictionary:
 		var task: Dictionary = task_value
 		if str(task.get("entity_id", "")) != entity_id:
 			continue
+		if str(task.get("status", "active")) == "queued":
+			continue
 		if best.is_empty() or int(task.get("remaining_ticks", 0)) < int(best.get("remaining_ticks", 0)):
 			best = task.duplicate(true)
 	return best
+
+
+func _count_queued_tasks(entity_id: String) -> int:
+	var count := 0
+	for task_value in GameState.active_tasks.values():
+		if not task_value is Dictionary:
+			continue
+		var task: Dictionary = task_value
+		if str(task.get("entity_id", "")) == entity_id and str(task.get("status", "active")) == "queued":
+			count += 1
+	return count
 
 
 func _abandon_active_tasks_for_entity(entity_id: String) -> void:
@@ -312,6 +343,21 @@ func _build_task_text(task: Dictionary) -> String:
 	if not target.is_empty():
 		label = "%s to %s" % [label, _get_location_display_name(target)]
 	return "%s, %s ticks remaining" % [label, str(int(task.get("remaining_ticks", 0)))]
+
+
+func _build_queue_text(queued_task_count: int) -> String:
+	if queued_task_count <= 0:
+		return ""
+	return "%d queued" % queued_task_count
+
+
+func _get_assignment_start_mode() -> String:
+	var mode := _get_string_param(_params, "assignment_start_mode", "").strip_edges()
+	if [START_MODE_REPLACE, START_MODE_QUEUE, START_MODE_PARALLEL].has(mode):
+		return mode
+	if _get_bool_param(_params, "replace_existing_task", true):
+		return START_MODE_REPLACE
+	return START_MODE_QUEUE
 
 
 func _build_status_text(rows: Array[Dictionary], selected_row: Dictionary, empty_label: String) -> String:
