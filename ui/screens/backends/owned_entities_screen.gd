@@ -8,6 +8,9 @@ const STACKED_LAYOUT_WIDTH := 760.0
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
+@onready var _search_edit: LineEdit = $MarginContainer/PanelContainer/VBoxContainer/FilterRow/SearchEdit
+@onready var _filter_button: OptionButton = $MarginContainer/PanelContainer/VBoxContainer/FilterRow/FilterButton
+@onready var _sort_button: OptionButton = $MarginContainer/PanelContainer/VBoxContainer/FilterRow/SortButton
 @onready var _main_content: GridContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent
 @onready var _rows_container: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/RowsScroll/RowsContainer
 @onready var _selected_title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/SelectedTitleLabel
@@ -27,6 +30,7 @@ var _pending_params: Dictionary = {}
 var _backend_initialized: bool = false
 var _last_view_model: Dictionary = {}
 var _opened_from_gameplay_shell: bool = false
+var _syncing_roster_controls: bool = false
 
 
 func initialize(params: Dictionary = {}) -> void:
@@ -81,6 +85,7 @@ func _refresh_state() -> void:
 	_description_label.text = str(view_model.get("description", ""))
 	_status_label.text = str(view_model.get("status_text", ""))
 	_back_button.text = str(view_model.get("cancel_label", "Back"))
+	_render_roster_controls(view_model)
 	var has_selection := bool(view_model.get("has_selection", false))
 	var suggested_location_id := str(view_model.get("suggested_location_id", ""))
 	_inspect_button.disabled = not has_selection
@@ -112,6 +117,40 @@ func _render_rows(rows: Array[Dictionary], empty_label: String) -> void:
 		button.text = _build_row_text(row)
 		button.pressed.connect(_on_row_pressed.bind(str(row.get("entity_id", ""))))
 		_rows_container.add_child(button)
+
+
+func _render_roster_controls(view_model: Dictionary) -> void:
+	_syncing_roster_controls = true
+	_search_edit.text = str(view_model.get("search_text", ""))
+	_render_option_button(
+		_filter_button,
+		_read_dictionary_array(view_model.get("filter_options", [])),
+		str(view_model.get("status_filter", "all"))
+	)
+	_render_option_button(
+		_sort_button,
+		_read_dictionary_array(view_model.get("sort_options", [])),
+		str(view_model.get("sort_mode", "name"))
+	)
+	_syncing_roster_controls = false
+
+
+func _render_option_button(button: OptionButton, options: Array[Dictionary], selected_id: String) -> void:
+	button.clear()
+	if options.is_empty():
+		button.add_item("Default", 0)
+		button.set_item_metadata(0, "")
+		button.select(0)
+		return
+	var selected_index := 0
+	for index in range(options.size()):
+		var option := options[index]
+		var option_id := str(option.get("id", ""))
+		button.add_item(str(option.get("label", option_id)), index)
+		button.set_item_metadata(index, option_id)
+		if option_id == selected_id:
+			selected_index = index
+	button.select(selected_index)
 
 
 func _render_selected(row: Dictionary) -> void:
@@ -174,6 +213,27 @@ func _build_row_text(row: Dictionary) -> String:
 
 func _on_row_pressed(entity_id: String) -> void:
 	_backend.select_entity(entity_id)
+	_refresh_state()
+
+
+func _on_roster_search_text_changed(new_text: String) -> void:
+	if _syncing_roster_controls:
+		return
+	_backend.set_roster_controls(new_text, _get_option_metadata(_filter_button), _get_option_metadata(_sort_button))
+	_refresh_state()
+
+
+func _on_roster_filter_selected(_index: int) -> void:
+	if _syncing_roster_controls:
+		return
+	_backend.set_roster_controls(_search_edit.text, _get_option_metadata(_filter_button), _get_option_metadata(_sort_button))
+	_refresh_state()
+
+
+func _on_roster_sort_selected(_index: int) -> void:
+	if _syncing_roster_controls:
+		return
+	_backend.set_roster_controls(_search_edit.text, _get_option_metadata(_filter_button), _get_option_metadata(_sort_button))
 	_refresh_state()
 
 
@@ -294,6 +354,13 @@ func _disconnect_runtime_signals() -> void:
 func _get_selected_entity_id() -> String:
 	var row := _read_dictionary(_last_view_model.get("selected_entity", {}))
 	return str(row.get("entity_id", ""))
+
+
+func _get_option_metadata(button: OptionButton) -> String:
+	var index := button.selected
+	if index < 0:
+		return ""
+	return str(button.get_item_metadata(index))
 
 
 func _add_wrapped_label(host: VBoxContainer, text: String) -> Label:

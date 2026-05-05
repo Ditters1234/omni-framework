@@ -1638,12 +1638,17 @@ No required params. Common useful optional fields:
 - `selected_entity_id` - preselects an owned entity when returning from another screen
 - `suggested_location_id` - highlights a relevant destination, usually the first assigned quest objective
 - `initial_status_text` - shows a return/status message without requiring a fresh action
+- `initial_search_text`
+- `initial_filter` - one of `all`, `idle`, `active`, `current_location`, or `away`
+- `initial_sort` - one of `name`, `location`, or `task`
+- `summary_stat_ids` - optional array of stat ids to show in roster row previews
+- `summary_stat_limit` - optional maximum number of preview stats when using automatic stat selection
 - `show_discovered_locations_only` - defaults to `true`
 - `replace_existing_task` - defaults to `true`; location dispatch abandons existing active tasks for that entity before starting the new travel task
 
-This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, and contract-assignment handoffs. Location dispatch starts a low-level `TRAVEL` task for the selected entity and emits a player-facing notification. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start. The built-in owned-entity screen passes `auto_dispatch_first_reach_location: true` so a selected contract can be accepted and the selected entity can be sent through assignee reach-location objectives as the quest advances.
+This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, and contract-assignment handoffs. Roster filtering and sorting are generic (`idle`/`active`, here/away, name/location/task) and do not assume any genre-specific role tags. Roster stat previews are also data-driven: set `summary_stat_ids` when a route wants specific stats, or omit it to use the entity's defined non-capacity stats in loaded definition order. Location dispatch starts a low-level `TRAVEL` task for the selected entity and emits a player-facing notification. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start. The built-in owned-entity screen passes `auto_dispatch_first_reach_location: true` so a selected contract can be accepted and the selected entity can be sent through assignee reach-location objectives as the quest advances.
 
-Load validation now checks that `owned_entity_ids` is an array of non-empty string ids, rejects duplicate/self references, and verifies that referenced entities exist. `OwnedEntitiesBackend` payloads validate `owner_entity_id`, `assignment_provider_entity_id`, `assignment_task_template_id`, and `assignment_faction_id` when those fields are present. `TaskProviderBackend` payloads validate direct-assignment fields including provider, assignee, owner, faction, and assignment task references.
+Load validation now checks that `owned_entity_ids` is an array of non-empty string ids, rejects duplicate/self references, and verifies that referenced entities exist. `OwnedEntitiesBackend` payloads validate `owner_entity_id`, `assignment_provider_entity_id`, `assignment_task_template_id`, `assignment_faction_id`, `summary_stat_ids`, and supported initial filter/sort values when those fields are present. `TaskProviderBackend` payloads validate direct-assignment fields including provider, assignee, owner, faction, and assignment task references.
 
 #### `AssemblyEditorBackend`
 No required params, but common useful ones are:

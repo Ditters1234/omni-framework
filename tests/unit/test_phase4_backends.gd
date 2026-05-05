@@ -683,6 +683,74 @@ func test_owned_entities_backend_lists_owned_entities_and_assigns_travel_task() 
 		assert_eq(str(active_task.get("type", "")), "TRAVEL")
 
 
+func test_owned_entities_backend_filters_sorts_and_uses_configured_summary_stats() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var idle_template := {
+		"entity_id": "base:test_idle_drone",
+		"display_name": "Alpha Drone",
+		"description": "Idle fixture.",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"stats": {"power": 3, "health": 10, "health_max": 10},
+		"inventory": [],
+	}
+	var busy_template := {
+		"entity_id": "base:test_busy_drone",
+		"display_name": "Beta Drone",
+		"description": "Busy fixture.",
+		"location_id": TEST_FIXTURE_WORLD.connected_location_id(),
+		"stats": {"power": 7, "health": 15, "health_max": 15},
+		"inventory": [],
+	}
+	DataManager.entities["base:test_idle_drone"] = idle_template.duplicate(true)
+	DataManager.entities["base:test_busy_drone"] = busy_template.duplicate(true)
+	var idle_drone := EntityInstance.from_template(idle_template)
+	var busy_drone := EntityInstance.from_template(busy_template)
+	GameState.commit_entity_instance(idle_drone, "base:test_idle_drone")
+	GameState.commit_entity_instance(busy_drone, "base:test_busy_drone")
+	player.owned_entity_ids = ["base:test_busy_drone", "base:test_idle_drone"]
+	GameState.active_tasks["task_busy"] = {
+		"runtime_id": "task_busy",
+		"template_id": "base:goto_location",
+		"entity_id": "base:test_busy_drone",
+		"type": "WAIT",
+		"remaining_ticks": 4,
+	}
+
+	var backend: RefCounted = OWNED_ENTITIES_BACKEND.new()
+	backend.initialize({
+		"owner_entity_id": "player",
+		"initial_filter": "idle",
+		"initial_sort": "location",
+		"summary_stat_ids": ["power"],
+	})
+
+	var view_model: Dictionary = backend.build_view_model()
+	var rows_value: Variant = view_model.get("rows", [])
+
+	assert_true(rows_value is Array)
+	if rows_value is Array:
+		var rows: Array = rows_value
+		assert_eq(rows.size(), 1)
+		if rows.size() > 0 and rows[0] is Dictionary:
+			var row: Dictionary = rows[0]
+			assert_eq(str(row.get("entity_id", "")), "base:test_idle_drone")
+			assert_eq(str(row.get("stat_preview_text", "")), "Power 3")
+
+	backend.set_roster_controls("beta", "all", "name")
+	view_model = backend.build_view_model()
+	rows_value = view_model.get("rows", [])
+	assert_true(rows_value is Array)
+	if rows_value is Array:
+		var searched_rows: Array = rows_value
+		assert_eq(searched_rows.size(), 1)
+		if searched_rows.size() > 0 and searched_rows[0] is Dictionary:
+			var searched_row: Dictionary = searched_rows[0]
+			assert_eq(str(searched_row.get("entity_id", "")), "base:test_busy_drone")
+
+
 func test_owned_entity_task_completion_notifies_player_owner() -> void:
 	var player := GameState.player as EntityInstance
 	assert_not_null(player)

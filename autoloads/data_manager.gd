@@ -1885,6 +1885,9 @@ func _validate_backend_reference_fields(entry_id: String, file_path: String, pay
 			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "assignment_provider_entity_id")
 			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_task_template_id", "task")
 			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_faction_id", "faction")
+			_validate_backend_stat_array(entry_id, file_path, payload, field_path, "summary_stat_ids")
+			_validate_backend_allowed_value(entry_id, file_path, payload, field_path, "initial_filter", ["all", "idle", "active", "current_location", "away"])
+			_validate_backend_allowed_value(entry_id, file_path, payload, field_path, "initial_sort", ["name", "location", "task"])
 		"TaskProviderBackend":
 			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "provider_entity_id")
 			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "assignee_entity_id")
@@ -1930,6 +1933,31 @@ func _validate_backend_registry_reference(entry_id: String, file_path: String, p
 	if not exists:
 		var registry_label := "AI template" if registry_kind == "ai_template" else registry_kind
 		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown %s '%s'." % [field_path, field_name, registry_label, reference_id])
+
+
+func _validate_backend_stat_array(entry_id: String, file_path: String, payload: Dictionary, field_path: String, field_name: String) -> void:
+	if not payload.has(field_name):
+		return
+	var stat_ids := _get_known_stat_ids()
+	var ids_value: Variant = payload.get(field_name, [])
+	if not ids_value is Array:
+		return
+	var ids: Array = ids_value
+	for index in range(ids.size()):
+		var stat_id := str(ids[index]).strip_edges()
+		if stat_id.is_empty():
+			continue
+		if not stat_ids.has(stat_id):
+			_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s[%d] references unknown stat '%s'." % [field_path, field_name, index, stat_id])
+
+
+func _validate_backend_allowed_value(entry_id: String, file_path: String, payload: Dictionary, field_path: String, field_name: String, allowed_values: Array[String]) -> void:
+	if not payload.has(field_name):
+		return
+	var value := str(payload.get(field_name, "")).strip_edges()
+	if value.is_empty() or allowed_values.has(value):
+		return
+	_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s has unsupported value '%s'." % [field_path, field_name, value])
 
 
 func _compose_field_path(field_path: String, field_name: String) -> String:

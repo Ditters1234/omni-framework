@@ -36,6 +36,28 @@ layout_mode = 2
 autowrap_mode = 3
 text = ""
 
+[node name="FilterRow" type="HFlowContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
+
+[node name="SearchEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/FilterRow"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Search roster"
+
+[node name="FilterButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/FilterRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+focus_mode = 2
+
+[node name="SortButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/FilterRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+focus_mode = 2
+
 [node name="MainContent" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -147,5 +169,8 @@ text = "Back"
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/ActionRow/ManageEquipmentButton" to="." method="_on_manage_equipment_button_pressed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/ActionRow/AssignContractButton" to="." method="_on_assign_contract_button_pressed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/ActionRow/RecallButton" to="." method="_on_recall_button_pressed"]
+[connection signal="text_changed" from="MarginContainer/PanelContainer/VBoxContainer/FilterRow/SearchEdit" to="." method="_on_roster_search_text_changed"]
+[connection signal="item_selected" from="MarginContainer/PanelContainer/VBoxContainer/FilterRow/FilterButton" to="." method="_on_roster_filter_selected"]
+[connection signal="item_selected" from="MarginContainer/PanelContainer/VBoxContainer/FilterRow/SortButton" to="." method="_on_roster_sort_selected"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/RefreshButton" to="." method="_on_refresh_button_pressed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/ButtonRow/BackButton" to="." method="_on_back_button_pressed"]

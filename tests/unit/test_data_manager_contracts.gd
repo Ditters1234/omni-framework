@@ -456,6 +456,9 @@ func test_validate_loaded_content_reports_unknown_backend_classes_and_contract_t
 
 
 func test_validate_loaded_content_reports_owned_entities_backend_reference_issues() -> void:
+	DataManager.definitions["stats"] = [
+		{"id": "power", "kind": "flat"}
+	]
 	DataManager.locations["base:market"] = {
 		"location_id": "base:market",
 		"display_name": "Market",
@@ -467,6 +470,9 @@ func test_validate_loaded_content_reports_owned_entities_backend_reference_issue
 				"assignment_provider_entity_id": "entity:base:missing_provider",
 				"assignment_task_template_id": "base:missing_task",
 				"assignment_faction_id": "base:missing_faction",
+				"summary_stat_ids": ["power", "missing_stat"],
+				"initial_filter": "invalid_filter",
+				"initial_sort": "invalid_sort",
 			},
 			{
 				"backend_class": "TaskProviderBackend",
@@ -486,6 +492,9 @@ func test_validate_loaded_content_reports_owned_entities_backend_reference_issue
 	assert_true(_messages_contain(issue_messages, "screens[0].assignment_provider_entity_id references unknown entity 'base:missing_provider'"))
 	assert_true(_messages_contain(issue_messages, "screens[0].assignment_task_template_id references unknown task 'base:missing_task'"))
 	assert_true(_messages_contain(issue_messages, "screens[0].assignment_faction_id references unknown faction 'base:missing_faction'"))
+	assert_true(_messages_contain(issue_messages, "screens[0].summary_stat_ids[1] references unknown stat 'missing_stat'"))
+	assert_true(_messages_contain(issue_messages, "screens[0].initial_filter has unsupported value 'invalid_filter'"))
+	assert_true(_messages_contain(issue_messages, "screens[0].initial_sort has unsupported value 'invalid_sort'"))
 	assert_true(_messages_contain(issue_messages, "screens[1].provider_entity_id references unknown entity 'base:missing_task_provider'"))
 	assert_true(_messages_contain(issue_messages, "screens[1].assignee_entity_id references unknown entity 'base:missing_assignee'"))
 	assert_true(_messages_contain(issue_messages, "screens[1].owner_entity_id references unknown entity 'base:missing_task_owner'"))
