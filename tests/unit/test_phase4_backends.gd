@@ -924,6 +924,40 @@ func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() ->
 		assert_true(found_hair)
 
 
+func test_entity_sheet_inventory_rows_report_data_driven_equip_slots() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var hair_part := PartInstance.from_template(DataManager.get_part("base:body_hair_long"))
+	hair_part.template_id = "base:body_hair_long"
+	hair_part.instance_id = "phase4_spare_hair"
+	player.add_part(hair_part)
+
+	var backend: RefCounted = ENTITY_SHEET_BACKEND.new()
+	backend.initialize({"target_entity_id": "player"})
+	var view_model: Dictionary = backend.build_view_model()
+	var inventory_rows_value: Variant = view_model.get("inventory_rows", [])
+	assert_true(inventory_rows_value is Array)
+	if not inventory_rows_value is Array:
+		return
+	var inventory_rows: Array = inventory_rows_value
+	var found_hair := false
+	for row_value in inventory_rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		if str(row.get("template_id", "")) != "base:body_hair_long":
+			continue
+		found_hair = true
+		assert_true(bool(row.get("can_equip", false)))
+		assert_eq(str(row.get("recommended_slot_id", "")), "hair")
+		var compatible_slots := _to_string_array(row.get("compatible_slot_ids", []))
+		assert_true(compatible_slots.has("hair"))
+		break
+	assert_true(found_hair)
+
+
 func _inventory_has_instance(entity: EntityInstance, instance_id: String) -> bool:
 	if entity == null:
 		return false
@@ -946,6 +980,16 @@ func _inventory_has_template(entity: EntityInstance, template_id: String) -> boo
 		if part.template_id == template_id:
 			return true
 	return false
+
+
+func _to_string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not value is Array:
+		return result
+	var values: Array = value
+	for item in values:
+		result.append(str(item))
+	return result
 
 
 func _event_history_contains(signal_name: String) -> bool:

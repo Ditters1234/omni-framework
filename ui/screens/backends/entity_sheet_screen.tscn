@@ -204,6 +204,11 @@ layout_mode = 2
 focus_mode = 2
 text = "Manage Equipment"
 
+[node name="EquipItemButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox"]
+layout_mode = 2
+focus_mode = 2
+text = "Equip"
+
 [node name="UseItemButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox"]
 layout_mode = 2
 focus_mode = 2

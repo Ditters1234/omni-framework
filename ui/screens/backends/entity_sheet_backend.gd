@@ -223,6 +223,9 @@ func _build_inventory_result(entity: EntityInstance) -> Dictionary:
 		entry["stat_summary"] = _build_part_stat_summary(template, {})
 		entry["custom_summary"] = _build_inventory_custom_summary(template, entry.get("instance_ids", []), entity)
 		entry["is_equipped"] = false
+		var equip_data := _build_inventory_equip_data(entity, part.template_id)
+		for key_value in equip_data.keys():
+			entry[key_value] = equip_data.get(key_value)
 		grouped[part.template_id] = entry
 
 	var grouped_values: Array = grouped.values()
@@ -282,6 +285,46 @@ func _build_socket_label_map(entity: EntityInstance) -> Dictionary:
 			continue
 		labels[socket_id] = str(socket_definition.get("label", BACKEND_HELPERS.humanize_id(socket_id)))
 	return labels
+
+
+func _build_inventory_equip_data(entity: EntityInstance, template_id: String) -> Dictionary:
+	var compatible_slot_ids: Array[String] = []
+	var compatible_slot_labels: Array[String] = []
+	var recommended_slot_id := ""
+	var recommended_slot_label := ""
+	if entity == null or template_id.is_empty():
+		return {
+			"can_equip": false,
+			"compatible_slot_ids": compatible_slot_ids,
+			"compatible_slot_labels": compatible_slot_labels,
+			"recommended_slot_id": "",
+			"recommended_slot_label": "",
+		}
+
+	var socket_labels := _build_socket_label_map(entity)
+	var ordered_slot_ids := _build_ordered_slot_ids(entity)
+	for slot_id in ordered_slot_ids:
+		if not entity.can_equip_template_in_slot(slot_id, template_id):
+			continue
+		compatible_slot_ids.append(slot_id)
+		compatible_slot_labels.append(str(socket_labels.get(slot_id, BACKEND_HELPERS.humanize_id(slot_id))))
+
+	for slot_id in compatible_slot_ids:
+		if entity.get_equipped(slot_id) == null:
+			recommended_slot_id = slot_id
+			break
+	if recommended_slot_id.is_empty() and not compatible_slot_ids.is_empty():
+		recommended_slot_id = compatible_slot_ids[0]
+	if not recommended_slot_id.is_empty():
+		recommended_slot_label = str(socket_labels.get(recommended_slot_id, BACKEND_HELPERS.humanize_id(recommended_slot_id)))
+
+	return {
+		"can_equip": not compatible_slot_ids.is_empty(),
+		"compatible_slot_ids": compatible_slot_ids,
+		"compatible_slot_labels": compatible_slot_labels,
+		"recommended_slot_id": recommended_slot_id,
+		"recommended_slot_label": recommended_slot_label,
+	}
 
 
 func _build_ordered_slot_ids(entity: EntityInstance) -> Array[String]:

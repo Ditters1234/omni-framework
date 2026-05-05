@@ -6,6 +6,7 @@ const MAIN_SCENE := preload("res://ui/main.tscn")
 const SETTINGS_SCENE_PATH := "res://ui/screens/settings/settings_screen.tscn"
 const GAMEPLAY_SHELL_SCENE_PATH := "res://ui/screens/gameplay_shell/gameplay_shell_screen.tscn"
 const ASSEMBLY_EDITOR_SCENE_PATH := "res://ui/screens/backends/assembly_editor_screen.tscn"
+const ENTITY_SHEET_SCENE_PATH := "res://ui/screens/backends/entity_sheet_screen.tscn"
 const SAVE_SLOT_LIST_SCENE := preload("res://ui/screens/save_slot_list/save_slot_list_screen.tscn")
 const TEST_SCREEN_SCENE := "res://tests/fixtures/ui_router/test_routed_screen.tscn"
 const TEST_SAVE_DIR := "user://test_saves/test_engine_owned_ui_behaviors/"
@@ -340,6 +341,50 @@ func test_gameplay_shell_debug_snapshot_includes_hosted_surface_snapshot_and_tit
 	var surface_title_label := shell.get_node("MarginContainer/VBoxContainer/SurfacePanel/MarginContainer/VBoxContainer/SurfaceHeader/SurfaceTitleLabel") as Label
 	assert_not_null(surface_title_label)
 	assert_eq(surface_title_label.text, "Inspect Player")
+
+
+func test_entity_sheet_direct_equip_button_commits_selected_inventory_part() -> void:
+	GameState.new_game()
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var hair_part := PartInstance.from_template(DataManager.get_part("base:body_hair_long"))
+	hair_part.template_id = "base:body_hair_long"
+	hair_part.instance_id = "engine_ui_spare_hair"
+	player.add_part(hair_part)
+
+	var screen_scene := load(ENTITY_SHEET_SCENE_PATH) as PackedScene
+	assert_not_null(screen_scene)
+	if screen_scene == null:
+		return
+	var screen_value: Variant = screen_scene.instantiate()
+	assert_true(screen_value is Control)
+	if not screen_value is Control:
+		return
+	var screen: Control = screen_value
+	_spawned_nodes.append(screen)
+	assert_not_null(_test_viewport)
+	if _test_viewport == null:
+		return
+	_test_viewport.add_child(screen)
+	screen.call("initialize", {"target_entity_id": "player"})
+	await get_tree().process_frame
+
+	screen.call("_on_inventory_row_selected", "inventory:base:body_hair_long")
+	await get_tree().process_frame
+	screen.call("_on_equip_item_button_pressed")
+	await get_tree().process_frame
+
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_player)
+	if updated_player == null:
+		return
+	var equipped_part := updated_player.get_equipped("hair")
+	assert_not_null(equipped_part)
+	if equipped_part != null:
+		assert_eq(equipped_part.instance_id, "engine_ui_spare_hair")
+	assert_null(updated_player.get_inventory_part("engine_ui_spare_hair"))
 
 
 func test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface() -> void:

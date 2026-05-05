@@ -88,7 +88,7 @@ Implementation note: the repository has completed the current Phase 4 backend sc
 | `ChallengeBackend` | `challenge` | ✅ Implemented | Single stat check → branch to `reward` or `action_payload` |
 | `TaskProviderBackend` | `task_provider` | ✅ Implemented | Faction job board — accept tasks from `faction.quest_pool` |
 | `ActiveQuestLogBackend` | `quest_log` | Implemented (Phase 5 basic) | Read active quests + stages + objectives + rewards from `GameState` |
-| `EntitySheetBackend` | `entity_sheet` | Implemented (Phase 5 pass 1) | Read-only full entity view: stats, currency balances, modifiers, equipped parts, inventory summary, faction standings |
+| `EntitySheetBackend` | `entity_sheet` | Implemented (Phase 5 pass 1, inventory polish pass) | Entity view: stats, currency balances, modifiers, equipped parts, searchable inventory, data-authored use actions, direct equip, discard, faction standings |
 | `FactionReputationBackend` | `faction_rep` | Implemented (Phase 5 basic) | Grid/list of factions with reputation tier + emblem + territory summary |
 | `AchievementListBackend` | `achievement_list` | Implemented (Phase 5 basic) | Browse achievement progress including locked/unlocked state and thresholds |
 | `EventLogBackend` | `event_log` | Implemented (Phase 5 basic) | Rolling history from `GameEvents._event_history` |
@@ -101,7 +101,7 @@ Notes on the new proposals:
 
 **`ActiveQuestLogBackend`** is not just `ListBackend` with quest rows because it needs to render per-stage objective state (`"Deliver the package" ✓`, `"Return to Gina"` → active). That objective rendering reads from `QuestTracker` output, not just the quest template. A generic list cannot encode that shape cleanly.
 
-**`EntitySheetBackend`** is the read-only complement to AssemblyEditor. Every genre needs this — "press C to open character sheet" is a universal UI idiom. It aggregates stats, per-part modifier breakdowns, inventory summary, and faction standings into one view.
+**`EntitySheetBackend`** is the everyday complement to AssemblyEditor. Every genre needs this — "press C to open character sheet" is a universal UI idiom. It aggregates stats, per-part modifier breakdowns, inventory summary, faction standings, and low-friction inventory actions. Equipment compatibility is still resolved from the same data-authored sockets and part tags used by AssemblyEditor.
 
 **`FactionReputationBackend`** could in theory live inside EntitySheet, but factions in this engine are a first-class relational database (see `modding_guide.md §3.6`). A dedicated view is cleaner, and it composes better with the faction emblem and territory data that already exist on faction templates.
 

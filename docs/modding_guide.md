@@ -1628,7 +1628,7 @@ No required params. Common useful optional fields:
 - `show_reputation`
 - `inventory_limit`
 
-The current entity sheet exposes stats, currency balances, equipped parts, inventory summaries, faction standing, data-authored inventory use actions, discard actions for loose inventory, and handoff into equipment management.
+The current entity sheet exposes stats, currency balances, equipped parts, inventory summaries, faction standing, data-authored inventory use actions, direct equip for loose inventory parts, discard actions for loose inventory, and handoff into equipment management. Direct equip is still data-driven: the backend derives compatible and recommended slots from the target entity's `provides_sockets`, part `tags`, and `required_tags`; no slot ids or item categories are hardcoded by the UI.
 
 #### `OwnedEntitiesBackend`
 No required params. Common useful optional fields:
