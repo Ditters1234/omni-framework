@@ -2,7 +2,7 @@
 
 Current high-value gameplay gaps identified from the implemented systems:
 
-- **Owned entities and assignment UI**: initial backend/screen/content pass implemented. Follow-up polish should add richer assignment queues, clearer multi-step quest guidance, and direct affordances for "assign contract, then send entity to objective location."
+- **Owned entities and assignment UI**: first-class pass implemented. Follow-up polish should add richer assignment queues and direct affordances for "assign contract, then send entity to objective location."
 - **Direct task assignment workflows**: make it obvious when a quest/task can be assigned to a non-player entity such as a robot, companion, worker, drone, or vehicle.
 - **Inventory action polish**: continue expanding item actions beyond use/discard toward compare, equip-best-slot, favorite/lock, and stack splitting if stack semantics become first-class.
 - **Status effects**: add first-class timed buffs/debuffs such as poison, bleeding, shielded, inspired, stunned, radiation, repair-over-time, or fatigue.
@@ -13,4 +13,4 @@ Current high-value gameplay gaps identified from the implemented systems:
 - **Save/load risk UX**: add autosave notices, dangerous-action save prompts, and clearer mod/content mismatch recovery.
 - **Autonomous activity visibility**: surface what NPCs and owned entities are currently doing, where they are, and when their jobs will finish.
 
-Immediate implementation focus: owned entities and assignment UI production polish.
+Immediate implementation focus: richer task/quest guidance for assigned entities.

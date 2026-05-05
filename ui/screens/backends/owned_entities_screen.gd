@@ -38,9 +38,14 @@ func initialize(params: Dictionary = {}) -> void:
 
 
 func _ready() -> void:
+	_connect_runtime_signals()
 	_sync_responsive_layout()
 	_initialize_backend()
 	_refresh_state()
+
+
+func _exit_tree() -> void:
+	_disconnect_runtime_signals()
 
 
 func _notification(what: int) -> void:
@@ -85,6 +90,8 @@ func _refresh_state() -> void:
 	_render_rows(_read_dictionary_array(view_model.get("rows", [])), str(view_model.get("empty_label", "No owned entities are available.")))
 	_render_selected(_read_dictionary(view_model.get("selected_entity", {})))
 	_render_locations(_read_dictionary_array(view_model.get("locations", [])))
+	if has_selection and not bool(view_model.get("has_assignable_destination", false)):
+		_assign_location_button.disabled = true
 
 
 func _render_rows(rows: Array[Dictionary], empty_label: String) -> void:
@@ -141,7 +148,7 @@ func _render_locations(rows: Array[Dictionary]) -> void:
 		_destination_button.add_item(label, index)
 		_destination_button.set_item_metadata(index, str(row.get("location_id", "")))
 		_destination_button.set_item_disabled(index, not bool(row.get("enabled", false)))
-		if index == 0 or bool(row.get("enabled", false)) and selected_index == 0:
+		if index == 0 or (bool(row.get("enabled", false)) and selected_index == 0):
 			selected_index = index
 	_destination_button.select(selected_index)
 
@@ -221,6 +228,10 @@ func _on_refresh_button_pressed() -> void:
 	_refresh_state()
 
 
+func _on_runtime_state_changed(_arg0: Variant = null, _arg1: Variant = null) -> void:
+	_refresh_state()
+
+
 func _on_back_button_pressed() -> void:
 	if _opened_from_gameplay_shell:
 		UIRouter.close_gameplay_shell_screen()
@@ -232,6 +243,37 @@ func _open_screen(screen_id: String, params: Dictionary) -> void:
 	if _opened_from_gameplay_shell and UIRouter.open_in_gameplay_shell(screen_id, params):
 		return
 	UIRouter.push(screen_id, params)
+
+
+func _connect_runtime_signals() -> void:
+	if GameEvents == null:
+		return
+	var task_started_callback := Callable(self, "_on_runtime_state_changed")
+	if GameEvents.has_signal("task_started") and not GameEvents.is_connected("task_started", task_started_callback):
+		GameEvents.task_started.connect(_on_runtime_state_changed)
+	var task_completed_callback := Callable(self, "_on_runtime_state_changed")
+	if GameEvents.has_signal("task_completed") and not GameEvents.is_connected("task_completed", task_completed_callback):
+		GameEvents.task_completed.connect(_on_runtime_state_changed)
+	var location_callback := Callable(self, "_on_runtime_state_changed")
+	if GameEvents.has_signal("location_changed") and not GameEvents.is_connected("location_changed", location_callback):
+		GameEvents.location_changed.connect(_on_runtime_state_changed)
+	var tick_callback := Callable(self, "_on_runtime_state_changed")
+	if GameEvents.has_signal("tick_advanced") and not GameEvents.is_connected("tick_advanced", tick_callback):
+		GameEvents.tick_advanced.connect(_on_runtime_state_changed)
+
+
+func _disconnect_runtime_signals() -> void:
+	if GameEvents == null:
+		return
+	var callback := Callable(self, "_on_runtime_state_changed")
+	if GameEvents.has_signal("task_started") and GameEvents.is_connected("task_started", callback):
+		GameEvents.task_started.disconnect(_on_runtime_state_changed)
+	if GameEvents.has_signal("task_completed") and GameEvents.is_connected("task_completed", callback):
+		GameEvents.task_completed.disconnect(_on_runtime_state_changed)
+	if GameEvents.has_signal("location_changed") and GameEvents.is_connected("location_changed", callback):
+		GameEvents.location_changed.disconnect(_on_runtime_state_changed)
+	if GameEvents.has_signal("tick_advanced") and GameEvents.is_connected("tick_advanced", callback):
+		GameEvents.tick_advanced.disconnect(_on_runtime_state_changed)
 
 
 func _get_selected_entity_id() -> String:

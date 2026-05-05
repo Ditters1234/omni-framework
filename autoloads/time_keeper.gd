@@ -156,6 +156,13 @@ func accept_task(template_id: String, params: Dictionary = {}) -> String:
 	return _task_runner.accept_task(template_id, params)
 
 
+func abandon_task(runtime_id: String) -> void:
+	if _task_runner == null:
+		GameState.active_tasks.erase(runtime_id)
+		return
+	_task_runner.abandon_task(runtime_id)
+
+
 func sync_from_game_state() -> void:
 	var ticks_per_day := _get_ticks_per_day()
 	_normalize_game_state_time(ticks_per_day)

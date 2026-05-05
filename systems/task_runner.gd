@@ -82,6 +82,7 @@ func complete_task(runtime_id: String) -> bool:
 	_mark_completion(task_instance)
 	_play_complete_sound(task_instance)
 	GameEvents.task_completed.emit(runtime_id, entity.entity_id)
+	_notify_owned_task_completed(task_instance, entity)
 	return true
 
 
@@ -221,6 +222,21 @@ func _play_complete_sound(task_instance: Dictionary) -> void:
 	if complete_sound.is_empty():
 		return
 	AudioManager.play_sfx(complete_sound)
+
+
+func _notify_owned_task_completed(task_instance: Dictionary, entity: EntityInstance) -> void:
+	if GameEvents == null or entity == null:
+		return
+	var player := GameState.player as EntityInstance
+	if player == null or not player.owned_entity_ids.has(entity.entity_id):
+		return
+	var template_id := str(task_instance.get("template_id", ""))
+	var template := TaskRegistry.get_task(template_id)
+	var task_label := str(template.get("display_name", template_id))
+	if task_label.is_empty():
+		task_label = "task"
+	var entity_label := str(entity.get_template().get("display_name", entity.entity_id))
+	GameEvents.ui_notification_requested.emit("%s completed %s." % [entity_label, task_label], "info")
 
 
 func _duplicate_dict(value: Variant) -> Dictionary:

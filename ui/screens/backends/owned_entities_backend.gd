@@ -24,6 +24,7 @@ static func register_contract() -> void:
 			"assignment_faction_id",
 			"assignment_provider_entity_id",
 			"show_discovered_locations_only",
+			"replace_existing_task",
 		],
 		"field_types": {
 			"owner_entity_id": TYPE_STRING,
@@ -35,6 +36,7 @@ static func register_contract() -> void:
 			"assignment_faction_id": TYPE_STRING,
 			"assignment_provider_entity_id": TYPE_STRING,
 			"show_discovered_locations_only": TYPE_BOOL,
+			"replace_existing_task": TYPE_BOOL,
 		},
 	})
 
@@ -63,6 +65,7 @@ func build_view_model() -> Dictionary:
 		"empty_label": empty_label,
 		"has_selection": not selected_row.is_empty(),
 		"can_assign_contract": not _get_string_param(_params, "assignment_faction_id", "").is_empty() and not selected_row.is_empty(),
+		"has_assignable_destination": _has_enabled_location(locations),
 		"assignment_faction_id": _get_string_param(_params, "assignment_faction_id", ""),
 		"assignment_provider_entity_id": _get_string_param(_params, "assignment_provider_entity_id", ""),
 	}
@@ -92,6 +95,8 @@ func assign_selected_to_location(location_id: String) -> void:
 	if not DataManager.has_task(task_id):
 		_status_text = "Assignment task template '%s' is not registered." % task_id
 		return
+	if _get_bool_param(_params, "replace_existing_task", true):
+		_abandon_active_tasks_for_entity(entity.entity_id)
 	var runtime_id := TimeKeeper.accept_task(task_id, {
 		"entity_id": entity.entity_id,
 		"target": location_id,
@@ -106,6 +111,8 @@ func assign_selected_to_location(location_id: String) -> void:
 		BACKEND_HELPERS.get_entity_display_name(entity, entity.entity_id),
 		_get_location_display_name(location_id),
 	]
+	if GameEvents:
+		GameEvents.ui_notification_requested.emit(_status_text, "info")
 
 
 func recall_selected() -> void:
@@ -192,6 +199,13 @@ func _build_location_rows(owner: EntityInstance, selected_row: Dictionary) -> Ar
 	return rows
 
 
+func _has_enabled_location(rows: Array[Dictionary]) -> bool:
+	for row in rows:
+		if bool(row.get("enabled", false)):
+			return true
+	return false
+
+
 func _get_assignable_location_ids(owner: EntityInstance) -> Array[String]:
 	var ids: Array[String] = []
 	if _get_bool_param(_params, "show_discovered_locations_only", true):
@@ -218,6 +232,20 @@ func _find_active_task(entity_id: String) -> Dictionary:
 		if best.is_empty() or int(task.get("remaining_ticks", 0)) < int(best.get("remaining_ticks", 0)):
 			best = task.duplicate(true)
 	return best
+
+
+func _abandon_active_tasks_for_entity(entity_id: String) -> void:
+	var runtime_ids: Array[String] = []
+	for runtime_id_value in GameState.active_tasks.keys():
+		var runtime_id := str(runtime_id_value)
+		var task_value: Variant = GameState.active_tasks.get(runtime_id_value, {})
+		if not task_value is Dictionary:
+			continue
+		var task: Dictionary = task_value
+		if str(task.get("entity_id", "")) == entity_id:
+			runtime_ids.append(runtime_id)
+	for runtime_id in runtime_ids:
+		TimeKeeper.abandon_task(runtime_id)
 
 
 func _build_task_text(task: Dictionary) -> String:

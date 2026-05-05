@@ -1632,8 +1632,11 @@ No required params. Common useful optional fields:
 - `assignment_faction_id` - enables the Assign Contract handoff to `TaskProviderBackend`
 - `assignment_provider_entity_id`
 - `show_discovered_locations_only` - defaults to `true`
+- `replace_existing_task` - defaults to `true`; location dispatch abandons existing active tasks for that entity before starting the new travel task
 
-This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, and contract-assignment handoffs. Location dispatch starts a low-level `TRAVEL` task for the selected entity. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start.
+This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, and contract-assignment handoffs. Location dispatch starts a low-level `TRAVEL` task for the selected entity and emits a player-facing notification. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start.
+
+Load validation now checks that `owned_entity_ids` is an array of non-empty string ids, rejects duplicate/self references, and verifies that referenced entities exist. `OwnedEntitiesBackend` payloads also validate `owner_entity_id`, `assignment_provider_entity_id`, `assignment_task_template_id`, and `assignment_faction_id` when those fields are present.
 
 #### `AssemblyEditorBackend`
 No required params, but common useful ones are:

@@ -445,6 +445,13 @@ func test_owned_entities_backend_lists_owned_entities_and_assigns_travel_task() 
 	var drone := EntityInstance.from_template(drone_template)
 	GameState.commit_entity_instance(drone, "base:test_drone")
 	player.owned_entity_ids = ["base:test_drone"]
+	GameState.active_tasks["task_old"] = {
+		"runtime_id": "task_old",
+		"template_id": "base:test_travel_assignment",
+		"entity_id": "base:test_drone",
+		"type": "WAIT",
+		"remaining_ticks": 9,
+	}
 
 	var backend: RefCounted = OWNED_ENTITIES_BACKEND.new()
 	backend.initialize({
@@ -468,6 +475,7 @@ func test_owned_entities_backend_lists_owned_entities_and_assigns_travel_task() 
 	backend.assign_selected_to_location(TEST_FIXTURE_WORLD.connected_location_id())
 
 	assert_eq(GameState.active_tasks.size(), 1)
+	assert_false(GameState.active_tasks.has("task_old"))
 	if GameState.active_tasks.is_empty():
 		return
 	var active_task_value: Variant = GameState.active_tasks.values()[0]
@@ -477,6 +485,49 @@ func test_owned_entities_backend_lists_owned_entities_and_assigns_travel_task() 
 		assert_eq(str(active_task.get("entity_id", "")), "base:test_drone")
 		assert_eq(str(active_task.get("target", "")), TEST_FIXTURE_WORLD.connected_location_id())
 		assert_eq(str(active_task.get("type", "")), "TRAVEL")
+
+
+func test_owned_entity_task_completion_notifies_player_owner() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	DataManager.tasks["base:test_owned_wait"] = {
+		"template_id": "base:test_owned_wait",
+		"display_name": "Calibration",
+		"type": "WAIT",
+		"duration": 1,
+		"repeatable": true,
+	}
+	var drone_template := {
+		"entity_id": "base:test_notify_drone",
+		"display_name": "Notify Drone",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"stats": {},
+	}
+	DataManager.entities["base:test_notify_drone"] = drone_template.duplicate(true)
+	GameState.commit_entity_instance(EntityInstance.from_template(drone_template), "base:test_notify_drone")
+	player.owned_entity_ids = ["base:test_notify_drone"]
+	GameEvents.clear_event_history()
+
+	var runtime_id := TimeKeeper.accept_task("base:test_owned_wait", {
+		"entity_id": "base:test_notify_drone",
+		"duration": 1,
+		"allow_duplicate": true,
+	})
+	assert_false(runtime_id.is_empty())
+
+	TimeKeeper.advance_tick()
+
+	var notifications := GameEvents.get_event_history(0, "ui", "ui_notification_requested")
+	assert_eq(notifications.size(), 1)
+	if notifications.size() > 0:
+		var entry: Dictionary = notifications[0]
+		var args_value: Variant = entry.get("args", [])
+		assert_true(args_value is Array)
+		if args_value is Array:
+			var args: Array = args_value
+			assert_eq(str(args[0]), "Notify Drone completed Calibration.")
 
 
 func test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment() -> void:

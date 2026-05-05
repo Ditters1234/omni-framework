@@ -101,6 +101,8 @@ Note: `data_validation_failed` is described in earlier planning docs but is not 
 - `dialogue_started(entity_id, dialogue_resource)`
 - `dialogue_ended(entity_id, dialogue_resource)`
 
+Owned entity assignment does not introduce a separate event. Location dispatch uses `task_started`, completion uses `task_completed`, and player-facing assignment/completion messages use `ui_notification_requested`.
+
 ### Encounters
 
 - `encounter_started(payload)` when an encounter backend initializes with resolved participants

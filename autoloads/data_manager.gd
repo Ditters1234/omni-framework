@@ -934,6 +934,8 @@ func _validate_template_schemas() -> void:
 		var entity_id := str(entity.get("entity_id", ""))
 		_validate_stat_map(entity_id, OmniConstants.DATA_ENTITIES, "stats", entity.get("stats", {}), stat_ids)
 		_validate_currency_map(entity_id, OmniConstants.DATA_ENTITIES, "currencies", entity.get("currencies", {}), currency_ids)
+		_validate_array_field(entity_id, OmniConstants.DATA_ENTITIES, "owned_entity_ids", entity)
+		_validate_string_array_elements(entity_id, OmniConstants.DATA_ENTITIES, "owned_entity_ids", entity.get("owned_entity_ids", []))
 		_validate_unique_object_ids(entity_id, OmniConstants.DATA_ENTITIES, "provides_sockets", entity.get("provides_sockets", []))
 
 	for recipe_value in recipes.values():
@@ -1471,6 +1473,25 @@ func _validate_entity_references() -> void:
 		if not location_id.is_empty() and not has_location(location_id):
 			_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' references unknown location '%s'." % [entity_id, location_id])
 
+		var owned_entity_ids_value: Variant = entity.get("owned_entity_ids", [])
+		if owned_entity_ids_value is Array:
+			var owned_entity_ids: Array = owned_entity_ids_value
+			var seen_owned_ids: Dictionary = {}
+			for index in range(owned_entity_ids.size()):
+				var owned_id_value: Variant = owned_entity_ids[index]
+				if not owned_id_value is String:
+					continue
+				var owned_entity_id := str(owned_id_value).strip_edges()
+				if owned_entity_id.is_empty():
+					continue
+				if owned_entity_id == entity_id:
+					_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' owned_entity_ids[%d] cannot reference itself." % [entity_id, index])
+				elif not has_entity(owned_entity_id):
+					_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' owned_entity_ids[%d] references unknown entity '%s'." % [entity_id, index, owned_entity_id])
+				if seen_owned_ids.has(owned_entity_id):
+					_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' owned_entity_ids contains duplicate entity '%s'." % [entity_id, owned_entity_id])
+				seen_owned_ids[owned_entity_id] = true
+
 		var inventory_instance_ids: Dictionary = {}
 		var inventory_value: Variant = entity.get("inventory", [])
 		if inventory_value is Array:
@@ -1573,6 +1594,12 @@ func _validate_backend_contracts() -> void:
 					interactions[index],
 					"interactions[%d]" % index
 				)
+				_validate_backend_reference_fields(
+					entity_id,
+					OmniConstants.DATA_ENTITIES,
+					interaction_value,
+					"interactions[%d]" % index
+				)
 		elif entity.has("interactions"):
 			_record_issue(entity_id, OmniConstants.DATA_ENTITIES, LOAD_PHASE_VALIDATION, "Entity '%s' field 'interactions' must be an array." % entity_id)
 
@@ -1590,6 +1617,12 @@ func _validate_backend_contracts() -> void:
 					_record_issue(location_id, OmniConstants.DATA_LOCATIONS, LOAD_PHASE_VALIDATION, "Location '%s' screens[%d] must be an object." % [location_id, index])
 					continue
 				_record_backend_contract_issues(
+					location_id,
+					OmniConstants.DATA_LOCATIONS,
+					screen_value,
+					"screens[%d]" % index
+				)
+				_validate_backend_reference_fields(
 					location_id,
 					OmniConstants.DATA_LOCATIONS,
 					screen_value,
@@ -1760,6 +1793,53 @@ func _record_backend_contract_issues(entry_id: String, file_path: String, payloa
 		var issue_field_path := str(issue.get("field_path", field_path))
 		var message := str(issue.get("message", "Invalid backend contract payload."))
 		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s: %s" % [issue_field_path, message])
+
+
+func _validate_backend_reference_fields(entry_id: String, file_path: String, payload_value: Variant, field_path: String) -> void:
+	if not payload_value is Dictionary:
+		return
+	var payload: Dictionary = payload_value
+	var backend_class := str(payload.get("backend_class", ""))
+	if backend_class != "OwnedEntitiesBackend":
+		return
+	_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "owner_entity_id")
+	_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "assignment_provider_entity_id")
+	_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_task_template_id", "task")
+	_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_faction_id", "faction")
+
+
+func _validate_backend_entity_lookup(entry_id: String, file_path: String, payload: Dictionary, field_path: String, field_name: String) -> void:
+	if not payload.has(field_name):
+		return
+	var lookup_value: Variant = payload.get(field_name, "")
+	if not lookup_value is String:
+		return
+	var lookup_id := str(lookup_value).strip_edges()
+	if lookup_id.is_empty() or lookup_id == "player":
+		return
+	if lookup_id.begins_with("entity:"):
+		lookup_id = lookup_id.trim_prefix("entity:")
+	if not has_entity(lookup_id):
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown entity '%s'." % [field_path, field_name, lookup_id])
+
+
+func _validate_backend_registry_reference(entry_id: String, file_path: String, payload: Dictionary, field_path: String, field_name: String, registry_kind: String) -> void:
+	if not payload.has(field_name):
+		return
+	var id_value: Variant = payload.get(field_name, "")
+	if not id_value is String:
+		return
+	var reference_id := str(id_value).strip_edges()
+	if reference_id.is_empty():
+		return
+	var exists := false
+	match registry_kind:
+		"task":
+			exists = has_task(reference_id)
+		"faction":
+			exists = has_faction(reference_id)
+	if not exists:
+		_record_issue(entry_id, file_path, LOAD_PHASE_VALIDATION, "%s.%s references unknown %s '%s'." % [field_path, field_name, registry_kind, reference_id])
 
 
 func _compose_field_path(field_path: String, field_name: String) -> String:

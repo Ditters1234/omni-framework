@@ -232,7 +232,7 @@ Minimum required contracts:
 - `CatalogListBackend`: `data_source`, `action_payload`
 - `EncounterBackend`: `encounter_id`
 - `EntitySheetBackend`: no required fields; optional params are type-checked at load time
-- `OwnedEntitiesBackend`: no required fields; optional params are type-checked at load time
+- `OwnedEntitiesBackend`: no required fields; optional params are type-checked at load time; optional entity/task/faction reference fields are cross-checked against registries
 - `ActiveQuestLogBackend`: no required fields; optional params are type-checked at load time
 - `FactionReputationBackend`: no required fields; optional params are type-checked at load time
 - `AchievementListBackend`: no required fields; optional params are type-checked at load time

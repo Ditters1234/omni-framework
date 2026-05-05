@@ -175,6 +175,7 @@ func test_validate_loaded_content_reports_cross_registry_reference_failures() ->
 		"entity_id": "base:broken_vendor",
 		"display_name": "Broken Vendor",
 		"location_id": "base:missing_location",
+		"owned_entity_ids": ["base:missing_owned_entity"],
 		"inventory": [
 			{"instance_id": "broken_arm", "template_id": "base:missing_part"}
 		],
@@ -192,8 +193,9 @@ func test_validate_loaded_content_reports_cross_registry_reference_failures() ->
 	var issues := DataManager.validate_loaded_content()
 	var issue_messages := _issue_messages(issues)
 
-	assert_eq(issues.size(), 4)
+	assert_eq(issues.size(), 5)
 	assert_true(issue_messages.has("Entity 'base:broken_vendor' references unknown location 'base:missing_location'."))
+	assert_true(issue_messages.has("Entity 'base:broken_vendor' owned_entity_ids[0] references unknown entity 'base:missing_owned_entity'."))
 	assert_true(issue_messages.has("Entity 'base:broken_vendor' inventory references unknown part template 'base:missing_part'."))
 	assert_true(issue_messages.has("Entity 'base:broken_vendor' socket 'left_arm' references missing inventory instance 'missing_instance'."))
 	assert_true(issue_messages.has("Location 'base:start' connection 'base:missing_location' references unknown location 'base:missing_location'."))
@@ -425,6 +427,31 @@ func test_validate_loaded_content_reports_unknown_backend_classes_and_contract_t
 
 	assert_true(_messages_contain(issue_messages, "screens[0].target_entity_id"))
 	assert_true(_messages_contain(issue_messages, "Unknown backend_class 'UnknownBackend'"))
+
+
+func test_validate_loaded_content_reports_owned_entities_backend_reference_issues() -> void:
+	DataManager.locations["base:market"] = {
+		"location_id": "base:market",
+		"display_name": "Market",
+		"connections": {},
+		"screens": [
+			{
+				"backend_class": "OwnedEntitiesBackend",
+				"owner_entity_id": "base:missing_owner",
+				"assignment_provider_entity_id": "entity:base:missing_provider",
+				"assignment_task_template_id": "base:missing_task",
+				"assignment_faction_id": "base:missing_faction",
+			},
+		],
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "screens[0].owner_entity_id references unknown entity 'base:missing_owner'"))
+	assert_true(_messages_contain(issue_messages, "screens[0].assignment_provider_entity_id references unknown entity 'base:missing_provider'"))
+	assert_true(_messages_contain(issue_messages, "screens[0].assignment_task_template_id references unknown task 'base:missing_task'"))
+	assert_true(_messages_contain(issue_messages, "screens[0].assignment_faction_id references unknown faction 'base:missing_faction'"))
 
 
 func test_validate_loaded_content_reports_unknown_push_screen_targets() -> void:
