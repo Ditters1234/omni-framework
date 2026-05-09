@@ -168,6 +168,28 @@
       "assembly_socket_map": {}
     },
     {
+      "entity_id": "base:apartment_cache",
+      "display_name": "Apartment Cache",
+      "description": "A small stash of supplies left in the apartment for testing loot review and transfer flows.",
+      "location_id": "base:apartment",
+      "currencies": {
+        "credits": 35
+      },
+      "stats": {},
+      "flags": {},
+      "inventory": [
+        {
+          "instance_id": "cache_medkit_001",
+          "template_id": "base:field_medkit"
+        },
+        {
+          "instance_id": "cache_chip_001",
+          "template_id": "base:salvage_chip"
+        }
+      ],
+      "interactions": []
+    },
+    {
       "entity_id": "base:training_drone",
       "display_name": "Training Drone",
       "description": "A battered clinic sparring unit with padded arms and very little bedside manner.",

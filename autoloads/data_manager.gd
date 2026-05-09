@@ -2071,6 +2071,9 @@ func _validate_backend_reference_fields(entry_id: String, file_path: String, pay
 			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "owner_entity_id")
 			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "faction_id", "faction")
 			_validate_backend_registry_reference(entry_id, file_path, payload, field_path, "assignment_task_template_id", "task")
+		"LootBackend":
+			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "source_entity_id")
+			_validate_backend_entity_lookup(entry_id, file_path, payload, field_path, "destination_entity_id")
 
 
 func _validate_backend_entity_lookup(entry_id: String, file_path: String, payload: Dictionary, field_path: String, field_name: String) -> void:

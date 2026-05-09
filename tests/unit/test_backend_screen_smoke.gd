@@ -114,6 +114,14 @@ const SCREEN_CASES := [
 		},
 	},
 	{
+		"scene_path": UI_ROUTE_CATALOG.LOOT_SCENE,
+		"params": {
+			"source_entity_id": "base:screen_smoke_cache",
+			"destination_entity_id": "player",
+			"screen_title": "Smoke Loot",
+		},
+	},
+	{
 		"scene_path": UI_ROUTE_CATALOG.WORLD_MAP_SCENE,
 		"params": {
 			"screen_title": "Smoke World Map",
@@ -200,6 +208,19 @@ func _seed_backend_screen_runtime() -> void:
 	}
 	DataManager.entities["base:screen_smoke_vendor"] = vendor_template.duplicate(true)
 	GameState.commit_entity_instance(EntityInstance.from_template(vendor_template), "base:screen_smoke_vendor")
+	var cache_template := {
+		"entity_id": "base:screen_smoke_cache",
+		"display_name": "Smoke Cache",
+		"description": "Loot cache for backend smoke tests.",
+		"location_id": GameState.current_location_id,
+		"currencies": {"credits": 2},
+		"inventory": [
+			{"instance_id": "base:screen_smoke_cache:arm", "template_id": "base:body_arm_standard"},
+		],
+		"interactions": [],
+	}
+	DataManager.entities["base:screen_smoke_cache"] = cache_template.duplicate(true)
+	GameState.commit_entity_instance(EntityInstance.from_template(cache_template), "base:screen_smoke_cache")
 	var drone_template := {
 		"entity_id": "base:screen_smoke_drone",
 		"display_name": "Smoke Drone",

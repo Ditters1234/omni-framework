@@ -23,6 +23,7 @@ const ACHIEVEMENT_LIST_BACKEND := preload("res://ui/screens/backends/achievement
 const EVENT_LOG_BACKEND := preload("res://ui/screens/backends/event_log_backend.gd")
 const WORLD_MAP_BACKEND := preload("res://ui/screens/backends/world_map_backend.gd")
 const ENCOUNTER_BACKEND := preload("res://ui/screens/backends/encounter_backend.gd")
+const LOOT_BACKEND := preload("res://ui/screens/backends/loot_backend.gd")
 const SCRIPT_HOOK_LOADER := preload("res://systems/script_hook_loader.gd")
 
 const MODS_PATH := "res://mods/"
@@ -138,6 +139,7 @@ func _register_backend_contracts() -> void:
 	EVENT_LOG_BACKEND.register_contract()
 	WORLD_MAP_BACKEND.register_contract()
 	ENCOUNTER_BACKEND.register_contract()
+	LOOT_BACKEND.register_contract()
 	BACKEND_CONTRACT_REGISTRY.lock()
 
 

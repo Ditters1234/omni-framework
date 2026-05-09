@@ -78,6 +78,7 @@ func _render_location_actions() -> void:
 	_location_description_label.visible = not location_description.is_empty()
 
 	var has_any_action := false
+	var rendered_screens: Array[Dictionary] = []
 
 	# Location-owned screens (non-global)
 	var screens: Variant = _location_template.get("screens", [])
@@ -88,7 +89,10 @@ func _render_location_actions() -> void:
 			var entry: Dictionary = (screen_entry as Dictionary).duplicate(true)
 			if _is_global_shell_surface(entry):
 				continue
+			if not _is_backend_entry_available(entry):
+				continue
 			_add_interaction_button(entry)
+			rendered_screens.append(_build_rendered_screen_entry(entry))
 			has_any_action = true
 
 	# Present entities — their interactions merge into the actions column
@@ -121,6 +125,8 @@ func _render_location_actions() -> void:
 		_interactions_container.add_child(separator)
 
 		for interaction in interactions:
+			if not _is_backend_entry_available(interaction, entity_id):
+				continue
 			_add_entity_interaction_button(entity_id, interaction)
 			has_any_action = true
 
@@ -132,6 +138,7 @@ func _render_location_actions() -> void:
 	_last_view_model = {
 		"surface_id": "location_surface",
 		"location_id": _location_id,
+		"screens": rendered_screens,
 		"entities": entity_entries,
 		"travel": travel_entries,
 		"status_text": "",
@@ -142,6 +149,56 @@ func _is_global_shell_surface(screen_entry: Dictionary) -> bool:
 	var backend_class: String = str(screen_entry.get("backend_class", ""))
 	var screen_id: String = UI_ROUTE_CATALOG.get_screen_id_for_backend(backend_class)
 	return GLOBAL_SHELL_SURFACE_IDS.has(screen_id)
+
+
+func _is_backend_entry_available(entry: Dictionary, default_source_entity_id: String = "") -> bool:
+	var backend_class := str(entry.get("backend_class", ""))
+	match backend_class:
+		"LootBackend":
+			return _is_loot_entry_available(entry, default_source_entity_id)
+	return true
+
+
+func _is_loot_entry_available(entry: Dictionary, default_source_entity_id: String) -> bool:
+	if not bool(entry.get("hide_when_empty", true)):
+		return true
+	var source_id := str(entry.get("source_entity_id", default_source_entity_id)).strip_edges()
+	if source_id.begins_with("entity:"):
+		source_id = source_id.trim_prefix("entity:")
+	if source_id.is_empty():
+		return true
+	var source := GameState.get_entity_instance(source_id)
+	if source == null:
+		return true
+	if _entity_has_loose_inventory(source):
+		return true
+	if not bool(entry.get("include_currencies", true)):
+		return false
+	return _entity_has_positive_currency(source)
+
+
+func _entity_has_loose_inventory(entity: EntityInstance) -> bool:
+	for part_value in entity.inventory:
+		var part := part_value as PartInstance
+		if part != null and not part.is_equipped:
+			return true
+	return false
+
+
+func _entity_has_positive_currency(entity: EntityInstance) -> bool:
+	for currency_id_value in entity.currencies.keys():
+		var currency_id := str(currency_id_value)
+		if entity.get_currency(currency_id) > 0.0:
+			return true
+	return false
+
+
+func _build_rendered_screen_entry(entry: Dictionary) -> Dictionary:
+	return {
+		"tab_id": str(entry.get("tab_id", "")),
+		"display_name": str(entry.get("display_name", entry.get("label", ""))),
+		"backend_class": str(entry.get("backend_class", "")),
+	}
 
 
 func _add_interaction_button(screen_entry: Dictionary) -> void:

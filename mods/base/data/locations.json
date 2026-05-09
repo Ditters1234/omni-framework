@@ -28,6 +28,15 @@
           "screen_title": "Owned Entities"
         },
         {
+          "tab_id": "apt_cache",
+          "display_name": "Supply Cache",
+          "description": "Review and take supplies from the apartment cache.",
+          "backend_class": "LootBackend",
+          "source_entity_id": "base:apartment_cache",
+          "destination_entity_id": "player",
+          "screen_title": "Supply Cache"
+        },
+        {
           "tab_id": "apt_quests",
           "display_name": "Job Board",
           "description": "Review your active contracts.",

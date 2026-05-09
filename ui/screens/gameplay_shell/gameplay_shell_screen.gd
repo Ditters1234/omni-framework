@@ -243,6 +243,8 @@ func _build_surface_title(screen_id: String) -> String:
 			return "Event Log"
 		"world_map":
 			return "World Map"
+		"loot":
+			return "Loot"
 		_:
 			return screen_id.capitalize()
 

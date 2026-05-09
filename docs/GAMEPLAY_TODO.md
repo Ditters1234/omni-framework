@@ -8,9 +8,9 @@ Current high-value gameplay gaps identified from the implemented systems:
 - **Status effects**: first-class data-driven timed effects are implemented with stat modifiers, tick/expire actions, stacking modes, dispatcher actions, save/load persistence, and entity sheet visibility. Follow-up polish should add condition checks when content needs them.
 - **Rest/recovery actions**: first pass implemented through data-authored time buttons, task completion actions, and status effects. Follow-up polish should add location-specific rest/clinic/repair affordances as normal entity/location interactions once content needs them.
 - **World objects**: do not add a separate engine primitive unless a future need proves entities cannot cover it. Containers, terminals, doors, harvest nodes, loot piles, switches, and traps should be modeled through the existing entity + interaction/backend/action systems first.
-- **Loot review flows**: add a dedicated loot/container backend for take-all, selective transfer, and reward review outside quests and encounters.
+- **Loot review flows**: first pass implemented through `LootBackend`. Containers and loot piles are normal entities with inventory/currencies; the backend supports selected transfer, take-all, optional currency pickup, entity-validated source/destination routing, auto-pop on depletion, and gameplay-surface hiding for empty caches. Follow-up polish should add richer reward-review entry points from encounters/quests if those flows need a dedicated post-resolution screen instead of notifications.
 - **Incapacitation/death lifecycle**: formalize what happens when an entity reaches zero health or another failure threshold.
 - **Save/load risk UX**: add autosave notices, dangerous-action save prompts, and clearer mod/content mismatch recovery.
 - **Autonomous activity visibility**: surface what NPCs and owned entities are currently doing, where they are, and when their jobs will finish.
 
-Immediate implementation focus: loot review flows, richer autonomous activity visibility, or save/load risk UX depending on which gameplay loop needs pressure next.
+Immediate implementation focus: richer autonomous activity visibility, save/load risk UX, or incapacitation/death lifecycle depending on which gameplay loop needs pressure next.

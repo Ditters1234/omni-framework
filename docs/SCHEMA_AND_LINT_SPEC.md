@@ -244,6 +244,7 @@ Minimum required contracts:
 - `EncounterBackend`: `encounter_id`; optional `ai_log_template_id` is cross-checked against AI templates
 - `EntitySheetBackend`: no required fields; optional params are type-checked at load time, including the `show_status_effects` display flag
 - `OwnedEntitiesBackend`: no required fields; optional params are type-checked at load time; optional entity/task/faction/stat reference fields are cross-checked against registries; `initial_filter`, `initial_sort`, and `assignment_start_mode` are validated against supported roster/dispatch controls
+- `LootBackend`: `source_entity_id`; optional destination entity and display flags are type-checked at load time, including empty-state controls such as `pop_when_empty` and `hide_when_empty`; `source_entity_id` and `destination_entity_id` are cross-checked against entity registries when present
 - `ActiveQuestLogBackend`: no required fields; optional params are type-checked at load time
 - `FactionReputationBackend`: no required fields; optional params are type-checked at load time
 - `AchievementListBackend`: no required fields; optional params are type-checked at load time

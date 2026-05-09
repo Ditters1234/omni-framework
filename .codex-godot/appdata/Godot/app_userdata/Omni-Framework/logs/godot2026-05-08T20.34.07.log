@@ -1,0 +1,727 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+
+---  GUT  ---
+[INFO]:  using [D:/GodotProjects/omni-framework/.codex-godot/appdata/Godot/app_userdata/Omni-Framework] for temporary output.
+Godot version:  4.6.2
+GUT version:  9.6.0
+
+
+res://tests/content/test_base_content_invariants.gd
+* test_base_bootstrap_content_exists
+* test_base_kael_ai_persona_exists_and_is_bound
+* test_base_player_head_has_custom_color_values_for_ui_testing
+* test_resource_and_capacity_stats_have_valid_pair_links
+* test_base_content_uses_known_stats_currencies_and_location_backends
+* test_base_mod_ships_reference_dialogue_and_script_hook_fixtures
+* test_base_ships_the_timed_recipe_craft_task_shell
+* test_base_ships_reference_encounters_and_launch_interactions
+* test_base_ships_reference_status_effects
+9/9 passed.
+
+
+res://tests/integration/test_game_state_and_save_flow.gd
+* test_player_currency_is_owned_by_player_entity
+* test_save_round_trip_restores_game_state
+2/2 passed.
+
+
+res://tests/integration/test_save_load_round_trip_hardening.gd
+* test_runtime_state_buckets_survive_save_load_round_trip
+* test_incomplete_current_schema_saves_are_rejected
+* test_future_schema_saves_are_rejected
+* test_purge_all_saves_removes_old_slots
+4/4 passed.
+
+
+res://tests/integration/test_save_manager_hardening.gd
+* test_failed_load_restores_previous_runtime_state
+* test_save_directory_is_isolated_while_running_gut
+2/2 passed.
+
+
+res://tests/integration/test_save_manager_time_sync.gd
+* test_load_game_resynchronizes_tick_position_within_day
+WARNING: TimeKeeper: resynchronized GameState.current_day from 1 to 52 using current_tick=1234 and ticks_per_day=24.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _normalize_game_state_time (res://autoloads/time_keeper.gd:275)
+       [1] sync_from_game_state (res://autoloads/time_keeper.gd:168)
+       [2] _sync_timekeeper_from_game_state (res://autoloads/save_manager.gd:617)
+       [3] save_game (res://autoloads/save_manager.gd:182)
+       [4] test_load_game_resynchronizes_tick_position_within_day (res://tests/integration/test_save_manager_time_sync.gd:12)
+       [5] _run_test (res://addons/gut/gut.gd:615)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_warning error containing 'TimeKeeper: resynchronized GameState.current_day'.  
+WARNING: TimeKeeper: resynchronized GameState.current_day from 52 to 1 using current_tick=0 and ticks_per_day=24.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _normalize_game_state_time (res://autoloads/time_keeper.gd:275)
+       [1] sync_from_game_state (res://autoloads/time_keeper.gd:168)
+       [2] _sync_timekeeper (res://autoloads/game_state.gd:669)
+       [3] reset (res://autoloads/game_state.gd:133)
+       [4] from_dict (res://autoloads/game_state.gd:442)
+       [5] load_game (res://autoloads/save_manager.gd:324)
+       [6] test_load_game_resynchronizes_tick_position_within_day (res://tests/integration/test_save_manager_time_sync.gd:15)
+       [7] _run_test (res://addons/gut/gut.gd:615)
+       [8] _test_the_scripts (res://addons/gut/gut.gd:818)
+1/1 passed.
+
+
+res://tests/unit/test_action_dispatcher_actions.gd
+* test_give_currency_adds_to_player
+* test_take_currency_subtracts_from_player
+* test_give_part_adds_to_player_inventory
+* test_remove_part_by_template_removes_one_from_inventory
+* test_modify_stat_changes_player_stat
+* test_set_flag_global_and_entity
+* test_travel_changes_player_location
+* test_unlock_location_adds_to_discovered
+* test_start_quest_action_begins_quest
+* test_start_task_action_forwards_duration_and_completion_actions
+* test_unlock_achievement_action_unlocks
+* test_spawn_entity_creates_runtime_instance
+* test_reward_action_delegates_to_reward_service
+13/13 passed.
+
+
+res://tests/unit/test_action_dispatcher_emit_signal.gd
+* test_emit_signal_forwards_args_positionally
+* test_push_screen_routes_through_ui_router_with_params
+* test_learn_recipe_sets_the_documented_learned_flag_on_the_player
+* test_modify_reputation_updates_runtime_state_and_emits_the_new_event
+4/4 passed.
+
+
+res://tests/unit/test_ai_bt_nodes.gd
+* test_bt_action_ai_query_writes_text_result_to_blackboard
+* test_bt_action_ai_query_parses_enum_matches_with_casing_and_partial_text
+* test_bt_action_ai_query_parses_json_and_falls_back_on_malformed_json
+WARNING: BTActionAIQuery: json_parse_failed
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _finish_failure (res://systems/ai/bt_action_ai_query.gd:143)
+       [1] _consume_response (res://systems/ai/bt_action_ai_query.gd:109)
+       [2] _tick (res://systems/ai/bt_action_ai_query.gd:57)
+       [3] test_bt_action_ai_query_parses_json_and_falls_back_on_malformed_json (res://tests/unit/test_ai_bt_nodes.gd:119)
+* test_bt_action_ai_query_times_out_and_writes_fallback_value
+WARNING: BTActionAIQuery: timeout
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _finish_failure (res://systems/ai/bt_action_ai_query.gd:143)
+       [1] _tick (res://systems/ai/bt_action_ai_query.gd:54)
+       [2] test_bt_action_ai_query_times_out_and_writes_fallback_value (res://tests/unit/test_ai_bt_nodes.gd:139)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+       [5] _run_test (res://addons/gut/gut.gd:643)
+       [6] after_each (res://tests/unit/test_ai_bt_nodes.gd:32)
+* test_bt_condition_ai_check_handles_yes_no_edge_cases_and_default_result
+WARNING: BTConditionAICheck: yes_no_parse_failed
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _finish_with_default (res://systems/ai/bt_condition_ai_check.gd:110)
+       [1] _consume_response (res://systems/ai/bt_condition_ai_check.gd:103)
+       [2] _tick (res://systems/ai/bt_condition_ai_check.gd:56)
+       [3] test_bt_condition_ai_check_handles_yes_no_edge_cases_and_default_result (res://tests/unit/test_ai_bt_nodes.gd:177)
+* test_kael_reference_behavior_tree_uses_ai_path_and_falls_back_when_ai_is_disabled
+WARNING: BTActionAIQuery: ai_unavailable
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _finish_failure (res://systems/ai/bt_action_ai_query.gd:143)
+       [1] _begin_request (res://systems/ai/bt_action_ai_query.gd:83)
+       [2] _tick (res://systems/ai/bt_action_ai_query.gd:48)
+       [3] test_kael_reference_behavior_tree_uses_ai_path_and_falls_back_when_ai_is_disabled (res://tests/unit/test_ai_bt_nodes.gd:206)
+6/6 passed.
+
+
+res://tests/unit/test_ai_chat_service.gd
+* test_build_system_prompt_resolves_known_fixture_tokens
+* test_history_window_keeps_only_most_recent_turns
+* test_validate_response_uses_fallback_for_empty_and_character_breaking_text
+* test_validate_response_truncates_overlong_reply_and_deflects_forbidden_topics
+* test_send_message_async_builds_context_and_appends_history
+5/5 passed.
+
+
+res://tests/unit/test_ai_manager_hardening.gd
+* test_initialize_respects_enabled_flag_even_with_real_provider_value
+* test_generate_async_noops_without_ai_error_when_disabled
+* test_invalid_provider_config_stays_unavailable_and_reports_error
+* test_generate_async_emits_ai_response_event_and_records_debug_history
+* test_generate_async_emits_ai_error_when_provider_fails
+WARNING: FakeAIProvider: scripted failure.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _set_last_error (res://autoloads/ai_manager.gd:576)
+       [1] _finalize_request_error (res://autoloads/ai_manager.gd:466)
+       [2] _run_generate_request (res://autoloads/ai_manager.gd:306)
+       [3] _process_request_queue (res://autoloads/ai_manager.gd:377)
+[ExpectedError]Expected push_warning error containing 'FakeAIProvider: scripted failure.'.  
+* test_generate_streaming_returns_request_id_and_emits_tokens_and_response
+* test_ai_manager_serializes_overlapping_async_requests
+* test_ai_manager_serializes_streaming_behind_active_generate
+* test_generate_async_accepts_documented_array_context_shape
+* test_initialize_resets_debug_history_between_boot_cycles
+10/10 passed.
+
+
+res://tests/unit/test_ai_manager_provider_config.gd
+* test_initialize_reads_nested_provider_block
+* test_nobodywho_provider_reports_missing_model_without_stub_error
+WARNING: NobodyWhoProvider: model_path does not exist: user://missing_nobodywho_model.gguf
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _load_model (res://systems/ai/providers/nobodywho_provider.gd:141)
+       [1] initialize (res://systems/ai/providers/nobodywho_provider.gd:72)
+       [2] initialize (res://autoloads/ai_manager.gd:76)
+       [3] test_nobodywho_provider_reports_missing_model_without_stub_error (res://tests/unit/test_ai_manager_provider_config.gd:45)
+       [4] _run_test (res://addons/gut/gut.gd:615)
+       [5] _test_the_scripts (res://addons/gut/gut.gd:818)
+       [6] _run_test (res://addons/gut/gut.gd:643)
+       [7] after_each (res://tests/unit/test_ai_manager_provider_config.gd:19)
+[ExpectedError]Expected push_warning error containing 'NobodyWhoProvider: model_path does not exist'.  
+* test_nobodywho_model_path_normalization_preserves_supported_path_forms
+3/3 passed.
+
+
+res://tests/unit/test_app_settings.gd
+* test_load_settings_returns_defaults_when_file_is_missing
+* test_settings_path_is_isolated_while_running_gut
+* test_save_and_load_settings_round_trip_normalizes_values
+* test_apply_settings_updates_audio_manager_and_window_mode
+* test_ai_settings_round_trip_normalizes_engine_owned_connection_fields
+5/5 passed.
+
+
+res://tests/unit/test_assembly_editor_backend.gd
+* test_build_view_model_returns_rows_and_sidebar_data_for_player_loadout
+* test_build_cancel_action_returns_pop_when_cancel_screen_is_empty
+* test_confirm_requires_pending_changes_by_default
+* test_confirm_returns_configured_next_screen_action_when_allowing_no_change_confirmation
+* test_owned_inventory_install_preserves_instance_values_without_spending_currency
+* test_vendor_inventory_install_charges_and_moves_exact_instance
+* test_commit_entity_plays_template_equip_sound_when_a_new_part_is_equipped
+7/7 passed.
+
+
+res://tests/unit/test_audio_manager_hardening.gd
+* test_reload_ui_sound_config_updates_from_data_manager_via_all_mods_loaded_signal
+* test_missing_audio_buses_fall_back_to_master_bus
+WARNING: AudioManager: audio bus 'DefinitelyMissingAudioBus' was not found. Falling back to 'Master'.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _warn_once (res://autoloads/audio_manager.gd:520)
+       [1] _resolve_audio_bus (res://autoloads/audio_manager.gd:380)
+       [2] test_missing_audio_buses_fall_back_to_master_bus (res://tests/unit/test_audio_manager_hardening.gd:53)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_warning error containing 'DefinitelyMissingAudioBus'.  
+* test_refresh_audio_volumes_preserves_per_sfx_volume_offset
+* test_game_pause_and_resume_signals_pause_and_resume_music_players
+* test_overlapping_music_transitions_do_not_stop_the_latest_track
+5/5 passed.
+
+
+res://tests/unit/test_backend_contract_registry.gd
+* test_validate_payload_reports_missing_required_fields_and_bad_types
+* test_validate_payload_rejects_unknown_backend_class
+* test_lock_prevents_late_contract_mutation
+WARNING: BackendContractRegistry: attempted to register 'TestBackend' after the registry was locked.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] register (res://systems/backend_contract_registry.gd:26)
+       [1] test_lock_prevents_late_contract_mutation (res://tests/unit/test_backend_contract_registry.gd:44)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+       [4] _run_test (res://addons/gut/gut.gd:643)
+       [5] test_overlapping_music_transitions_do_not_stop_the_latest_track (res://tests/unit/test_audio_manager_hardening.gd:105)
+[ExpectedError]Expected push_warning error containing 'attempted to register 'TestBackend' after the registry was locked'.  
+3/3 passed.
+
+
+res://tests/unit/test_backend_screen_smoke.gd
+* test_phase4_backend_screens_instantiate_and_initialize_without_runtime_errors
+1/1 passed.
+
+
+res://tests/unit/test_condition_evaluator.gd
+* test_has_flag_global_returns_true_when_flag_is_set
+* test_has_flag_entity_checks_entity_flags
+* test_stat_check_evaluates_effective_stat
+* test_has_currency_checks_player_balance
+* test_has_part_checks_inventory_and_equipped
+* test_has_item_tag_checks_for_tagged_parts
+* test_reach_location_checks_current_player_location
+* test_quest_complete_checks_completed_quests_list
+* test_reputation_threshold_checks_faction_standing
+* test_and_block_requires_all_conditions_to_pass
+* test_or_block_requires_any_condition_to_pass
+* test_not_block_inverts_the_inner_condition
+* test_empty_condition_is_vacuously_true
+13/13 passed.
+
+
+res://tests/unit/test_data_manager_contracts.gd
+* test_register_additions_rejects_wrong_section_type_without_mutating_registry
+* test_register_additions_rejects_missing_required_fields_and_duplicate_ids
+* test_apply_patches_supports_definition_patches
+* test_apply_patches_reports_missing_patch_targets
+* test_apply_patches_reports_unknown_patch_operations
+* test_register_additions_loads_ai_personas_and_apply_patches_updates_tags
+* test_register_additions_loads_status_effects_and_apply_patches_updates_tags
+* test_register_additions_loads_ai_templates_and_apply_patches_updates_tags
+* test_validate_loaded_content_reports_cross_registry_reference_failures
+* test_validate_loaded_content_reports_unknown_stats_and_currencies
+* test_validate_loaded_content_reports_encounter_contract_failures
+* test_validate_loaded_content_reports_unknown_ai_persona_references
+* test_validate_loaded_content_reports_recipe_reference_failures
+* test_validate_loaded_content_reports_runtime_config_shape_issues
+* test_query_locations_filters_and_returns_copies
+* test_validate_loaded_content_reports_unknown_backend_classes_and_contract_type_issues
+* test_validate_loaded_content_reports_owned_entities_backend_reference_issues
+* test_validate_loaded_content_reports_unknown_push_screen_targets
+* test_validate_loaded_content_accepts_known_push_screen_targets_in_quest_actions
+* test_debug_snapshot_reports_issue_counts_and_file_activity
+20/20 passed.
+
+
+res://tests/unit/test_data_manager_queries.gd
+* test_query_parts_filters_by_tags_and_returns_copies
+* test_query_entities_filters_by_location
+* test_query_recipes_filters_by_station_tags_and_returns_copies
+* test_query_ai_personas_filters_by_tags_and_returns_copies
+* test_query_ai_templates_filters_by_purpose_and_returns_copies
+* test_query_encounters_filters_by_tags_and_returns_copies
+* test_query_status_effects_filters_by_tags_and_returns_copies
+7/7 passed.
+
+
+res://tests/unit/test_definition_loader_stat_metadata.gd
+* test_load_additions_normalizes_stat_kinds_and_pairs
+1/1 passed.
+
+
+res://tests/unit/test_dev_debug_overlay.gd
+* test_overlay_exposes_filters_and_refresh_state
+* test_overlay_filters_can_be_changed_without_runtime_errors
+2/2 passed.
+
+
+res://tests/unit/test_dialogue_ai_mode.gd
+* test_dialogue_screen_hybrid_ai_handoff_streams_and_returns_to_topics
+* test_hybrid_branch_is_hidden_when_ai_is_disabled
+* test_freeform_mode_opens_directly_into_ai_chat
+* test_history_window_setting_limits_dialogue_ai_history
+4/4 passed.
+
+
+res://tests/unit/test_encounter_backend.gd
+* test_unavailable_action_does_not_apply_cost
+* test_player_resolution_stops_opponent_action
+* test_encounter_completion_notifies_and_records_reward_summary
+* test_encounter_outcome_dispatches_action_list
+* test_ai_encounter_log_flavor_updates_log_without_changing_mechanics
+* test_ai_encounter_log_flavor_uses_data_authored_template_id
+* test_ai_encounter_log_flavor_holds_fallback_and_serializes_requests
+* test_ai_encounter_log_flavor_shows_fallback_on_error
+WARNING: FakeAIProvider: scripted log failure.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _set_last_error (res://autoloads/ai_manager.gd:576)
+       [1] _finalize_request_error (res://autoloads/ai_manager.gd:466)
+       [2] _run_generate_request (res://autoloads/ai_manager.gd:306)
+       [3] _process_request_queue (res://autoloads/ai_manager.gd:377)
+[ExpectedError]Expected push_warning error containing 'FakeAIProvider: scripted log failure.'.  
+* test_resolve_effect_stops_later_effects
+* test_continue_navigates_after_resolution_review
+* test_cancel_outcome_waits_for_resolution_review
+* test_encounter_tags_gate_followup_actions_and_expire
+* test_max_rounds_resolves_after_opponent_action
+13/13 passed.
+
+
+res://tests/unit/test_encounter_runtime.gd
+* test_compute_delta_uses_user_and_target_stat_modifiers
+* test_pick_weighted_action_uses_availability_and_weight_modifiers
+* test_encounter_stat_clamp_respects_meter_and_counter_kinds
+3/3 passed.
+
+
+res://tests/unit/test_engine_owned_screen_smoke.gd
+* test_engine_owned_screens_instantiate_and_initialize_without_runtime_errors
+1/1 passed.
+
+
+res://tests/unit/test_engine_owned_ui_behaviors.gd
+* test_ui_cancel_pushes_and_pops_pause_menu_from_gameplay_shell
+* test_main_menu_new_game_opens_character_creator_surface_without_crashing
+* test_global_notification_popup_renders_above_routed_screens
+* test_save_slot_list_delete_requires_confirmation_before_removing_slot
+* test_settings_back_persists_dirty_changes_and_pops_to_previous_route
+* test_settings_ai_button_toggles_to_disconnect_after_connection
+* test_settings_ai_chat_controls_persist_history_window_and_streaming_speed
+* test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen
+* test_gameplay_shell_debug_snapshot_includes_hosted_surface_snapshot_and_title
+* test_entity_sheet_direct_equip_button_commits_selected_inventory_part
+* test_entity_sheet_surfaces_active_status_effects
+* test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
+* test_assembly_editor_custom_field_signal_updates_draft_part_detail_view_model
+* test_location_surface_lists_present_entities_and_entity_interactions
+* test_location_surface_travel_button_advances_time_by_connection_cost
+* test_location_surface_empty_location_param_falls_back_to_game_state_location
+* test_gameplay_shell_hosts_default_location_surface
+* test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_after_travel_signal
+18/18 passed.
+
+
+res://tests/unit/test_entity_instance_equipping.gd
+* test_set_equipped_template_replaces_slot_contents
+* test_inventory_equip_and_unequip_moves_part_between_inventory_and_slot
+* test_unequip_prunes_parts_when_required_tags_disappear
+* test_inventory_replacement_prunes_only_after_new_part_is_equipped
+* test_unequip_prunes_parts_when_dynamic_socket_disappears
+5/5 passed.
+
+
+res://tests/unit/test_entity_instance_stats.gd
+* test_from_template_applies_defaults_location_and_currencies
+* test_set_stat_clamps_resource_to_capacity_and_capacity_back_to_resource
+* test_owned_entity_ids_round_trip_through_runtime_serialization
+3/3 passed.
+
+
+res://tests/unit/test_game_events_contracts.gd
+* test_signal_catalog_exposes_expected_domains_and_filters_deprecated_entries
+* test_emit_dynamic_emits_and_records_history
+* test_emit_dynamic_rejects_unknown_signal_or_wrong_arity
+WARNING: GameEvents: unknown signal 'not_a_real_signal'.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] emit_dynamic (res://autoloads/game_events.gd:248)
+       [1] test_emit_dynamic_rejects_unknown_signal_or_wrong_arity (res://tests/unit/test_game_events_contracts.gd:54)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: GameEvents: signal 'quest_started' expected 1 args but received 0.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] emit_dynamic (res://autoloads/game_events.gd:252)
+       [1] test_emit_dynamic_rejects_unknown_signal_or_wrong_arity (res://tests/unit/test_game_events_contracts.gd:55)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_warning error containing 'unknown signal 'not_a_real_signal''.  
+[ExpectedError]Expected push_warning error containing 'signal 'quest_started' expected 1 args but received 0'.  
+* test_unlock_achievement_emits_unlock_vfx_metadata
+* test_save_and_load_emit_documented_success_and_failure_signals
+* test_mod_loader_can_discover_and_order_base_mod
+* test_mod_loader_phase_one_populates_registries
+* test_mod_loader_phase_two_and_script_preload_complete
+* test_mod_loader_load_all_mods_completes
+* test_boot_can_initialize_ai_and_start_new_game
+* test_repeated_boot_cycle_stays_stable
+* test_entity_instance_equipping_flow_matches_boot_suites
+* test_save_and_load_flow_matches_boot_suites
+WARNING: TimeKeeper: resynchronized GameState.current_day from 2 to 1 using current_tick=7 and ticks_per_day=24.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _normalize_game_state_time (res://autoloads/time_keeper.gd:275)
+       [1] sync_from_game_state (res://autoloads/time_keeper.gd:168)
+       [2] _sync_timekeeper_from_game_state (res://autoloads/save_manager.gd:617)
+       [3] save_game (res://autoloads/save_manager.gd:182)
+       [4] test_save_and_load_flow_matches_boot_suites (res://tests/unit/test_game_events_contracts.gd:224)
+       [5] _run_test (res://addons/gut/gut.gd:615)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_warning error containing 'TimeKeeper: resynchronized GameState.current_day'.  
+13/13 passed.
+
+
+res://tests/unit/test_gameplay_location_surface_presence.gd
+* test_static_player_template_id_is_filtered_from_present_entity_ids
+* test_runtime_player_instance_is_filtered_from_present_entity_ids
+2/2 passed.
+
+
+res://tests/unit/test_gameplay_shell_presenter.gd
+* test_build_view_model_without_session_returns_disabled_shell_state
+* test_build_view_model_with_session_exposes_player_location_and_time_controls
+* test_time_button_specs_accept_data_authored_task_buttons
+3/3 passed.
+
+
+res://tests/unit/test_location_access_service.gd
+* test_location_without_entry_condition_is_enterable
+* test_location_entry_condition_blocks_when_flag_missing
+* test_location_entry_condition_allows_when_flag_matches
+* test_entry_conditions_array_uses_or_logic
+4/4 passed.
+
+
+res://tests/unit/test_mod_loader_load_order.gd
+* test_resolve_load_order_respects_dependencies_before_load_order
+* test_filter_loadable_mods_skips_missing_dependencies
+WARNING: ModLoader: Skipping mod because dependencies are unavailable: missing:mod.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _record_load_error (res://autoloads/mod_loader.gd:586)
+       [1] _filter_loadable_mods (res://autoloads/mod_loader.gd:338)
+       [2] test_filter_loadable_mods_skips_missing_dependencies (res://tests/unit/test_mod_loader_load_order.gd:29)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_warning error containing 'Skipping mod because dependencies are unavailable'.  
+* test_validate_manifest_normalizes_fields_and_deduplicates_dependencies
+* test_validate_manifest_rejects_invalid_field_types
+WARNING: ModLoader: Manifest field 'load_order' must be an integer.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _record_load_error (res://autoloads/mod_loader.gd:586)
+       [1] _validate_manifest (res://autoloads/mod_loader.gd:248)
+       [2] test_validate_manifest_rejects_invalid_field_types (res://tests/unit/test_mod_loader_load_order.gd:70)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_warning error containing 'Manifest field 'load_order' must be an integer.'.  
+* test_validate_base_manifest_requires_enabled_base_with_zero_load_order
+ERROR: ModLoader: Base mod cannot be disabled.
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _record_load_error (res://autoloads/mod_loader.gd:584)
+       [1] _validate_base_manifest (res://autoloads/mod_loader.gd:297)
+       [2] test_validate_base_manifest_requires_enabled_base_with_zero_load_order (res://tests/unit/test_mod_loader_load_order.gd:89)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_error error containing 'Base mod cannot be disabled.'.  
+* test_filter_loadable_mods_skips_duplicate_mod_ids
+WARNING: ModLoader: Duplicate mod id 'dup_mod' detected. Skipping later manifest.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _record_load_error (res://autoloads/mod_loader.gd:586)
+       [1] _filter_loadable_mods (res://autoloads/mod_loader.gd:321)
+       [2] test_filter_loadable_mods_skips_duplicate_mod_ids (res://tests/unit/test_mod_loader_load_order.gd:104)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_warning error containing 'Duplicate mod id 'dup_mod' detected'.  
+* test_debug_snapshot_and_boot_events_reflect_ready_state
+7/7 passed.
+
+
+res://tests/unit/test_part_instance_custom_values.gd
+* test_from_template_initializes_custom_values_from_custom_fields
+* test_from_template_keeps_legacy_custom_field_labels_as_blank_values
+* test_entity_inventory_entry_overrides_custom_field_defaults
+* test_custom_values_round_trip_through_part_dict
+4/4 passed.
+
+
+res://tests/unit/test_phase4_backends.gd
+* test_mod_loader_registers_phase4_backend_contracts
+* test_exchange_backend_moves_stocked_part_and_transfers_currency
+* test_loot_backend_transfers_selected_item_without_price
+* test_loot_backend_take_all_transfers_items_and_currencies
+* test_catalog_list_backend_mints_new_part_for_buyer
+* test_list_backend_builds_inventory_rows_from_player_inventory
+* test_list_backend_actions_use_selected_inventory_instance
+* test_list_backend_uses_shared_quest_card_view_model_for_active_quests
+* test_challenge_backend_applies_success_reward_to_player
+* test_challenge_backend_defers_reward_events_until_after_commit
+* test_task_provider_backend_lists_faction_contracts_and_accepts_selected_quest
+* test_task_provider_backend_can_assign_and_dispatch_owned_entity
+* test_assigned_owned_entity_continues_through_multi_stage_reach_location_quest
+* test_task_provider_backend_hides_contract_active_under_runtime_id
+* test_dialogue_backend_resolves_sample_dialogue_resource
+* test_world_map_backend_builds_graph_and_travels
+* test_world_map_backend_uses_total_route_cost_for_multi_hop_travel
+* test_owned_entities_backend_lists_owned_entities_and_assigns_travel_task
+* test_owned_entities_backend_filters_sorts_and_uses_configured_summary_stats
+* test_owned_entities_backend_can_queue_assignment_behind_active_task
+* test_owned_entity_task_completion_notifies_player_owner
+* test_entity_sheet_backend_builds_player_sheet_with_stats_and_equipment
+* test_entity_sheet_inventory_rows_report_data_driven_equip_slots
+23/23 passed.
+
+
+res://tests/unit/test_phase5_backends.gd
+* test_active_quest_log_backend_builds_quest_cards
+* test_faction_reputation_backend_lists_seeded_faction
+* test_achievement_list_backend_reports_progress_and_unlock_state
+* test_achievement_list_backend_hides_hidden_rows_until_unlocked
+* test_event_log_backend_reads_recent_game_events
+5/5 passed.
+
+
+res://tests/unit/test_phase6_crafting.gd
+* test_crafting_backend_lists_available_recipe_with_recipe_card
+* test_crafting_backend_consumes_inputs_and_adds_output
+* test_instant_craft_emits_inventory_signals_per_consumed_and_created_part
+* test_crafting_backend_starts_timed_recipe_task
+* test_timed_craft_emits_task_started_without_output_signal
+* test_timed_recipe_without_task_template_does_not_consume_or_output
+* test_confirm_rejects_directly_selected_recipe_outside_station_filters
+* test_confirm_rejects_directly_selected_hidden_recipe
+* test_non_numeric_required_stat_makes_recipe_uncraftable
+* test_crafting_screen_hides_recipe_card_when_station_has_no_rows
+* test_crafting_screen_row_text_includes_output_and_confirm_tooltip
+11/11 passed.
+
+
+res://tests/unit/test_phase6_world_gen.gd
+* test_world_gen_hooks_noop_when_ai_is_disabled
+* test_location_change_narration_appears_in_event_log_when_enabled
+* test_task_provider_backend_surfaces_cached_ai_flavor_text
+3/3 passed.
+
+
+res://tests/unit/test_phase7_lore.gd
+* test_entity_lore_noop_when_ai_is_disabled
+* test_entity_lore_cache_miss_generates_and_stores
+* test_entity_lore_cache_hit_avoids_redundant_api_calls
+* test_lore_cache_clears_on_reset
+* test_part_lore_cache_miss_generates_and_stores
+5/5 passed.
+
+
+res://tests/unit/test_quest_tracker.gd
+* test_start_quest_emits_signal_and_creates_active_instance
+* test_duplicate_start_is_rejected
+* test_stage_auto_advances_when_objectives_are_already_met
+* test_location_objective_completes_quest_on_travel
+* test_quest_completion_applies_reward
+* test_quest_completion_notifies_with_reward_summary
+* test_assigned_entity_can_complete_quest_objective_for_player_reward
+* test_manual_complete_moves_quest_to_completed
+* test_fail_quest_emits_signal_and_removes_from_active
+9/9 passed.
+
+
+res://tests/unit/test_runtime_entity_presence.gd
+* test_runtime_entity_presence
+* test_entity_moves_between_locations
+2/2 passed.
+
+
+res://tests/unit/test_status_effect_runner.gd
+* test_status_effect_stat_modifiers_stack_and_expire_on_ticks
+* test_status_effect_tick_and_expire_actions_use_target_entity
+* test_action_dispatcher_applies_and_removes_status_effects
+3/3 passed.
+
+
+res://tests/unit/test_task_routine_runner.gd
+* test_routine_starts_travel_task_for_entity_at_configured_tick
+* test_routine_uses_location_graph_route_cost_when_duration_is_omitted
+* test_duration_override_wins_over_location_graph_route_cost
+* test_routine_does_not_start_same_entry_twice_on_same_day
+* test_routine_can_start_same_entry_again_next_day
+* test_travel_task_completion_moves_non_player_entity
+6/6 passed.
+
+
+res://tests/unit/test_time_keeper_hardening.gd
+* test_stop_preserves_tick_position_for_correct_next_day_rollover
+* test_sync_from_game_state_normalizes_current_day_from_current_tick
+WARNING: TimeKeeper: resynchronized GameState.current_day from 1 to 3 using current_tick=49 and ticks_per_day=24.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _normalize_game_state_time (res://autoloads/time_keeper.gd:275)
+       [1] sync_from_game_state (res://autoloads/time_keeper.gd:168)
+       [2] test_sync_from_game_state_normalizes_current_day_from_current_tick (res://tests/unit/test_time_keeper_hardening.gd:45)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+       [5] _run_test (res://addons/gut/gut.gd:643)
+       [6] after_each (res://tests/unit/test_time_keeper_hardening.gd:22)
+[ExpectedError]Expected push_warning error containing 'TimeKeeper: resynchronized GameState.current_day'.  
+* test_invalid_ticks_per_day_falls_back_to_default_clock_contract
+WARNING: TimeKeeper: invalid game.ticks_per_day value '0'. Falling back to 24.
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _get_ticks_per_day (res://autoloads/time_keeper.gd:248)
+       [1] sync_from_game_state (res://autoloads/time_keeper.gd:167)
+       [2] test_invalid_ticks_per_day_falls_back_to_default_clock_contract (res://tests/unit/test_time_keeper_hardening.gd:66)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+[ExpectedError]Expected push_warning error containing 'TimeKeeper: invalid game.ticks_per_day value '0''.  
+* test_advance_tick_emits_tick_and_day_events_through_game_events
+* test_advance_tick_dispatches_on_tick_for_carried_part_hooks
+5/5 passed.
+
+
+res://tests/unit/test_ui_component_library.gd
+* test_foundational_component_library_renders_sample_view_models
+* test_remaining_component_library_renders_sample_view_models
+* test_tab_panel_switches_content_between_tabs
+* test_assembly_slot_row_renders_selection_state_and_button_availability
+4/4 passed.
+
+
+res://tests/unit/test_ui_route_catalog.gd
+* test_runtime_screen_registry_paths_exist_for_every_engine_owned_screen
+* test_backend_screen_ids_map_to_known_routes
+2/2 passed.
+
+
+res://tests/unit/test_ui_router_hardening.gd
+* test_push_and_pop_manage_visibility_hooks_and_ui_events
+* test_replace_all_preserves_current_stack_when_target_route_is_invalid
+ERROR: UIRouter: Unknown screen 'missing'.
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _record_error (res://autoloads/ui_router.gd:370)
+       [1] _instantiate_screen (res://autoloads/ui_router.gd:236)
+       [2] replace_all (res://autoloads/ui_router.gd:83)
+       [3] test_replace_all_preserves_current_stack_when_target_route_is_invalid (res://tests/unit/test_ui_router_hardening.gd:73)
+       [4] _run_test (res://addons/gut/gut.gd:615)
+       [5] _test_the_scripts (res://addons/gut/gut.gd:818)
+       [6] _run_test (res://addons/gut/gut.gd:643)
+       [7] test_push_and_pop_manage_visibility_hooks_and_ui_events (res://tests/unit/test_ui_router_hardening.gd:65)
+[ExpectedError]Expected push_error error containing 'UIRouter: Unknown screen 'missing'.'.  
+* test_replace_all_emits_pop_events_for_each_removed_screen
+* test_push_requires_initialized_container_and_records_debug_state
+ERROR: UIRouter: push('first') called before initialize() set a valid screen container.
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _record_error (res://autoloads/ui_router.gd:370)
+       [1] _can_navigate (res://autoloads/ui_router.gd:277)
+       [2] push (res://autoloads/ui_router.gd:57)
+       [3] test_push_requires_initialized_container_and_records_debug_state (res://tests/unit/test_ui_router_hardening.gd:114)
+       [4] _run_test (res://addons/gut/gut.gd:615)
+       [5] _test_the_scripts (res://addons/gut/gut.gd:818)
+       [6] _run_test (res://addons/gut/gut.gd:643)
+       [7] test_replace_all_emits_pop_events_for_each_removed_screen (res://tests/unit/test_ui_router_hardening.gd:108)
+[ExpectedError]Expected push_error error containing 'UIRouter: push('first') called before initialize() set a valid screen container.'.  
+* test_router_debug_snapshot_tracks_registered_screens_params_and_visibility
+* test_registered_scene_must_inherit_control
+ERROR: UIRouter: Scene 'invalid' at 'res://tests/fixtures/ui_router/test_invalid_screen.tscn' must inherit Control.
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _record_error (res://autoloads/ui_router.gd:370)
+       [1] _instantiate_screen (res://autoloads/ui_router.gd:254)
+       [2] push (res://autoloads/ui_router.gd:59)
+       [3] test_registered_scene_must_inherit_control (res://tests/unit/test_ui_router_hardening.gd:175)
+       [4] _run_test (res://addons/gut/gut.gd:615)
+       [5] _test_the_scripts (res://addons/gut/gut.gd:818)
+       [6] _run_test (res://addons/gut/gut.gd:643)
+       [7] test_replace_all_emits_pop_events_for_each_removed_screen (res://tests/unit/test_ui_router_hardening.gd:108)
+[ExpectedError]Expected push_error error containing 'UIRouter: Scene 'invalid' at 'res://tests/fixtures/ui_router/test_invalid_screen.tscn' must inherit Control.'.  
+6/6 passed.
+
+
+res://tests/unit/test_world_map_graph.gd
+* test_initial_render_before_layout_centers_all_locations_in_fallback_viewport
+1/1 passed.
+
+
+
+
+==============================================
+= Run Summary
+==============================================
+
+Totals
+------
+Scripts              48
+Tests               288
+Passing Tests       288
+Asserts            2020
+Time              6.133s
+
+
+---- All tests passed! ----
+
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2641)

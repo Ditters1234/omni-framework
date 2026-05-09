@@ -730,6 +730,81 @@ func test_gameplay_shell_hosts_default_location_surface() -> void:
 	assert_not_null(active_surface)
 
 
+func test_location_surface_hides_depleted_loot_cache() -> void:
+	DataManager.entities["base:test_surface_cache"] = {
+		"entity_id": "base:test_surface_cache",
+		"display_name": "Surface Cache",
+		"description": "Fixture cache for location-surface empty-state tests.",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"currencies": {"credits": 7},
+		"inventory": [
+			{"instance_id": "surface_cache_arm", "template_id": "base:body_arm_standard"},
+		],
+	}
+	var location_template := DataManager.get_location(TEST_FIXTURE_WORLD.starting_location_id())
+	var screens: Array = []
+	var screens_value: Variant = location_template.get("screens", [])
+	if screens_value is Array:
+		screens = (screens_value as Array).duplicate(true)
+	screens.append({
+		"tab_id": "test_surface_cache",
+		"display_name": "Surface Cache",
+		"description": "Review and take fixture cache contents.",
+		"backend_class": "LootBackend",
+		"source_entity_id": "base:test_surface_cache",
+		"destination_entity_id": "player",
+	})
+	location_template["screens"] = screens
+	DataManager.locations[TEST_FIXTURE_WORLD.starting_location_id()] = location_template
+	GameState.new_game()
+	var packed_scene := load(GAMEPLAY_SHELL_SCENE_PATH) as PackedScene
+	assert_not_null(packed_scene)
+	var instance_value: Variant = packed_scene.instantiate()
+	assert_true(instance_value is Control)
+	var shell := instance_value as Control
+	_spawned_nodes.append(shell)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(shell)
+	shell.call("initialize", {})
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var location_surface := shell.find_child("GameplayLocationSurface", true, false) as Control
+	assert_not_null(location_surface)
+	if location_surface == null:
+		return
+	assert_not_null(_find_button_with_text(location_surface, "Surface Cache"))
+
+	var cache := GameState.get_entity_instance("base:test_surface_cache")
+	assert_not_null(cache)
+	if cache == null:
+		return
+	var part_ids: Array[String] = []
+	for part_value in cache.inventory:
+		var part := part_value as PartInstance
+		if part != null:
+			part_ids.append(part.instance_id)
+	for part_id in part_ids:
+		cache.remove_part(part_id)
+	for currency_id_value in cache.currencies.keys():
+		var currency_id := str(currency_id_value)
+		cache.spend_currency(currency_id, cache.get_currency(currency_id))
+	GameState.commit_entity_instance(cache, cache.entity_id)
+
+	location_surface.call("_load_location")
+	await get_tree().process_frame
+
+	assert_null(_find_button_with_text(location_surface, "Surface Cache"))
+	var snapshot_value: Variant = location_surface.call("get_debug_snapshot")
+	assert_true(snapshot_value is Dictionary)
+	if snapshot_value is Dictionary:
+		var snapshot: Dictionary = snapshot_value
+		var rendered_screens_value: Variant = snapshot.get("screens", [])
+		assert_true(rendered_screens_value is Array)
+		if rendered_screens_value is Array:
+			assert_false(_screen_rows_contain_tab(rendered_screens_value, "test_surface_cache"))
+
+
 func test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_after_travel_signal() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)
@@ -916,6 +991,16 @@ func _first_non_current_map_location(rows: Array, current_location_id: String) -
 		if not location_id.is_empty() and location_id != current_location_id:
 			return location_id
 	return ""
+
+
+func _screen_rows_contain_tab(rows: Array, tab_id: String) -> bool:
+	for row_value in rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		if str(row.get("tab_id", "")) == tab_id:
+			return true
+	return false
 
 
 func _find_entity_row(rows: Array, entity_id: String) -> Variant:

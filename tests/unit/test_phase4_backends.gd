@@ -13,6 +13,7 @@ const OWNED_ENTITIES_BACKEND := preload("res://ui/screens/backends/owned_entitie
 const CRAFTING_BACKEND := preload("res://ui/screens/backends/crafting_backend.gd")
 const WORLD_MAP_BACKEND := preload("res://ui/screens/backends/world_map_backend.gd")
 const ENCOUNTER_BACKEND := preload("res://ui/screens/backends/encounter_backend.gd")
+const LOOT_BACKEND := preload("res://ui/screens/backends/loot_backend.gd")
 
 
 func before_each() -> void:
@@ -39,6 +40,7 @@ func test_mod_loader_registers_phase4_backend_contracts() -> void:
 	assert_true(registered_backend_classes.has("EventLogBackend"))
 	assert_true(registered_backend_classes.has("WorldMapBackend"))
 	assert_true(registered_backend_classes.has("EncounterBackend"))
+	assert_true(registered_backend_classes.has("LootBackend"))
 
 
 func test_exchange_backend_moves_stocked_part_and_transfers_currency() -> void:
@@ -77,6 +79,77 @@ func test_exchange_backend_moves_stocked_part_and_transfers_currency() -> void:
 	if updated_vendor != null:
 		assert_eq(updated_vendor.inventory.size(), 0)
 		assert_eq(updated_vendor.get_currency("credits"), initial_vendor_credits + 8.0)
+
+
+func test_loot_backend_transfers_selected_item_without_price() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var cache := _add_runtime_loot_cache()
+	var initial_player_inventory_size := player.inventory.size()
+
+	var backend: RefCounted = LOOT_BACKEND.new()
+	backend.initialize({
+		"source_entity_id": cache.entity_id,
+		"destination_entity_id": "player",
+	})
+	var view_model: Dictionary = backend.build_view_model()
+	var rows: Array[Dictionary] = _read_dictionary_array(view_model.get("rows", []))
+	assert_eq(rows.size(), 2)
+	backend.select_row("loot_cache_arm")
+	backend.take_selected()
+
+	var updated_cache := GameState.get_entity_instance(cache.entity_id)
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_cache)
+	assert_not_null(updated_player)
+	if updated_cache != null:
+		assert_null(updated_cache.get_inventory_part("loot_cache_arm"))
+	if updated_player != null:
+		assert_not_null(updated_player.get_inventory_part("loot_cache_arm"))
+		assert_eq(updated_player.inventory.size(), initial_player_inventory_size + 1)
+
+
+func test_loot_backend_take_all_transfers_items_and_currencies() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var cache := _add_runtime_loot_cache()
+	var initial_player_inventory_size := player.inventory.size()
+	var initial_credits := player.get_currency("credits")
+
+	var backend: RefCounted = LOOT_BACKEND.new()
+	backend.initialize({
+		"source_entity_id": cache.entity_id,
+		"destination_entity_id": "player",
+	})
+	backend.take_all()
+
+	var updated_cache := GameState.get_entity_instance(cache.entity_id)
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_cache)
+	assert_not_null(updated_player)
+	if updated_cache != null:
+		assert_eq(updated_cache.inventory.size(), 0)
+		assert_eq(updated_cache.get_currency("credits"), 0.0)
+	if updated_player != null:
+		assert_eq(updated_player.inventory.size(), initial_player_inventory_size + 2)
+		assert_eq(updated_player.get_currency("credits"), initial_credits + 17.0)
+
+
+func test_loot_backend_returns_pop_action_when_source_is_depleted() -> void:
+	var cache := _add_runtime_loot_cache()
+	var backend: RefCounted = LOOT_BACKEND.new()
+	backend.initialize({
+		"source_entity_id": cache.entity_id,
+		"destination_entity_id": "player",
+	})
+
+	var action: Dictionary = backend.take_all()
+
+	assert_eq(str(action.get("type", "")), "pop")
 
 
 func test_catalog_list_backend_mints_new_part_for_buyer() -> void:
@@ -980,6 +1053,37 @@ func _inventory_has_template(entity: EntityInstance, template_id: String) -> boo
 		if part.template_id == template_id:
 			return true
 	return false
+
+
+func _add_runtime_loot_cache() -> EntityInstance:
+	var cache_template := {
+		"entity_id": "base:test_loot_cache",
+		"display_name": "Test Loot Cache",
+		"description": "Fixture cache for loot backend tests.",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"currencies": {"credits": 17},
+		"stats": {},
+		"inventory": [
+			{"instance_id": "loot_cache_arm", "template_id": "base:body_arm_standard"},
+			{"instance_id": "loot_cache_hair", "template_id": "base:body_hair_long"},
+		],
+	}
+	DataManager.entities["base:test_loot_cache"] = cache_template.duplicate(true)
+	var cache := EntityInstance.from_template(cache_template)
+	GameState.commit_entity_instance(cache, cache.entity_id)
+	return cache
+
+
+func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if not value is Array:
+		return result
+	var values: Array = value
+	for item in values:
+		if item is Dictionary:
+			var dictionary_item: Dictionary = item
+			result.append(dictionary_item)
+	return result
 
 
 func _to_string_array(value: Variant) -> Array[String]:

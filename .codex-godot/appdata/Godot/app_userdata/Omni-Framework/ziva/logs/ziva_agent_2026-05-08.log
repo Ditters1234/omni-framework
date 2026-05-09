@@ -1,0 +1,13 @@
+2026-05-08T20:22:43.882-05:00 [info] Crash handler installed
+2026-05-08T20:22:43.882-05:00 [info] Initializing with plugin_version=v2.5.1, godot_version=4.6.2-stable (official), os_name=Windows, os_arch=x86_64 os_version=10.0.26200
+2026-05-08T20:22:43.882-05:00 [info] BinDepsManager: installing bin-deps D:/GodotProjects/omni-framework/addons/ziva_agent/bin-deps/windows_x86_64 -> D:\GodotProjects\omni-framework\.codex-godot\localappdata\ziva\bin-deps\windows_x86_64
+2026-05-08T20:22:44.063-05:00 [info] Ziva UI mode: side dock
+2026-05-08T20:22:45.239-05:00 [info] Loaded tools count=38
+2026-05-08T20:22:45.240-05:00 [warning] Headless mode detected, skipping initialize
+2026-05-08T20:22:45.240-05:00 [warning] Webview not initialized, cannot register bridge bindings
+2026-05-08T20:22:45.240-05:00 [info] Using server url=https://ziva.sh
+2026-05-08T20:22:45.240-05:00 [info] Using webview url=file://D:/GodotProjects/omni-framework/addons/ziva_agent/dist/index.html
+2026-05-08T20:22:45.240-05:00 [info] Opening webview url attempt=1
+2026-05-08T20:22:45.240-05:00 [info] set_url called with url=file://D:/GodotProjects/omni-framework/addons/ziva_agent/dist/index.html
+2026-05-08T20:22:45.241-05:00 [info] Found disk-changed dialog for auto-suppression (node=@ConfirmationDialog@10547, title=Files have been modified outside Godot)
+2026-05-08T20:22:45.243-05:00 [info] Found disk-changed dialog for auto-suppression (node=@ConfirmationDialog@9087, title=Files have been modified outside Godot)

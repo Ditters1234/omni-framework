@@ -1542,6 +1542,7 @@ The current loader registers these backend classes:
 - `EncounterBackend`
 - `EntitySheetBackend`
 - `OwnedEntitiesBackend`
+- `LootBackend`
 - `ActiveQuestLogBackend`
 - `FactionReputationBackend`
 - `AchievementListBackend`
@@ -1699,6 +1700,39 @@ No required params. Common useful optional fields:
 This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, and contract-assignment handoffs. Roster filtering and sorting are generic (`idle`/`active`, here/away, name/location/task) and do not assume any genre-specific role tags. Roster stat previews are also data-driven: set `summary_stat_ids` when a route wants specific stats, or omit it to use the entity's defined non-capacity stats in loaded definition order. Location dispatch starts a low-level `TRAVEL` task for the selected entity and emits a player-facing notification. `assignment_start_mode` controls whether dispatch replaces existing work, queues behind the current active task, or runs in parallel. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start. The built-in owned-entity screen passes `auto_dispatch_first_reach_location: true` so a selected contract can be accepted and the selected entity can be sent through assignee reach-location objectives as the quest advances.
 
 Load validation now checks that `owned_entity_ids` is an array of non-empty string ids, rejects duplicate/self references, and verifies that referenced entities exist. `OwnedEntitiesBackend` payloads validate `owner_entity_id`, `assignment_provider_entity_id`, `assignment_task_template_id`, `assignment_faction_id`, `summary_stat_ids`, supported initial filter/sort values, and supported `assignment_start_mode` values when those fields are present. `TaskProviderBackend` payloads validate direct-assignment fields including provider, assignee, owner, faction, and assignment task references.
+
+#### `LootBackend`
+Required:
+- `source_entity_id`
+
+Common useful optional fields:
+- `destination_entity_id` - defaults to `"player"`
+- `screen_title`
+- `screen_description`
+- `screen_summary`
+- `confirm_label`
+- `take_all_label`
+- `cancel_label`
+- `empty_label`
+- `include_currencies` - defaults to `true`
+- `pop_when_empty` - defaults to `true`
+- `hide_when_empty` - defaults to `true` when rendered from the gameplay location surface
+
+`LootBackend` is the data-driven container and loot-review surface. The source and destination are both normal entities; no separate world-object type is needed for caches, crates, dropped loot, harvest nodes, or quest reward piles. The backend lists loose part instances in the source entity's inventory, can transfer a selected instance, and can take all loose inventory plus positive currency balances when `include_currencies` is enabled. It commits duplicated `EntityInstance` copies back through `GameState`, emits acquisition/removal events, and leaves equipment alone. Gameplay location surfaces skip empty loot entries by default so a depleted cache does not remain as a dead action; set `hide_when_empty: false` for inspectable containers that should stay visible after being emptied.
+
+Example:
+```json
+{
+  "tab_id": "supply_cache",
+  "display_name": "Supply Cache",
+  "description": "Review and take supplies from the cache.",
+  "backend_class": "LootBackend",
+  "source_entity_id": "my_name:my_mod:supply_cache",
+  "destination_entity_id": "player",
+  "screen_title": "Supply Cache",
+  "pop_when_empty": false
+}
+```
 
 #### `AssemblyEditorBackend`
 No required params, but common useful ones are:

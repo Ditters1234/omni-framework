@@ -1,0 +1,1240 @@
+{
+	"created_at": "2026-05-09 01:35:38",
+	"engine_version": "0.1.0",
+	"game_state": {
+		"achievement_stats": {
+
+		},
+		"active_quests": {
+
+		},
+		"active_status_effects": {
+
+		},
+		"active_tasks": {
+
+		},
+		"ai_lore_cache": {
+
+		},
+		"completed_quests": [],
+		"completed_task_templates": [],
+		"current_day": 1,
+		"current_location_id": "base:apartment",
+		"current_tick": 0,
+		"discovered_recipes": [],
+		"entity_instances": {
+			"base:apartment_cache": {
+				"currencies": {
+					"credits": 35.0
+				},
+				"discovered_locations": [],
+				"entity_id": "base:apartment_cache",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "cache_medkit_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "cache_chip_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:salvage_chip"
+					}
+				],
+				"location_id": "base:apartment",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 0.0,
+					"charisma": 0.0,
+					"health": 100.0,
+					"health_max": 100.0,
+					"luck": 0.0,
+					"power": 0.0,
+					"stamina": 50.0,
+					"stamina_max": 50.0
+				},
+				"template_id": "base:apartment_cache"
+			},
+			"base:npc_fixer": {
+				"currencies": {
+					"credits": 5000.0
+				},
+				"discovered_locations": [],
+				"entity_id": "base:npc_fixer",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "kael_charm_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:lucky_charm"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "kael_medkit_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "kael_medkit_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					}
+				],
+				"location_id": "base:warehouse",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 0.0,
+					"charisma": 5.0,
+					"health": 80.0,
+					"health_max": 80.0,
+					"luck": 3.0,
+					"power": 0.0,
+					"stamina": 50.0,
+					"stamina_max": 50.0
+				},
+				"template_id": "base:npc_fixer"
+			},
+			"base:npc_theta": {
+				"currencies": {
+					"credits": 9999.0,
+					"data_shards": 50.0
+				},
+				"discovered_locations": [],
+				"entity_id": "base:npc_theta",
+				"equipped": {
+
+				},
+				"flags": {
+					"met_player": false
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_optic_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:optic_implant"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_armor_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:kevlar_weave"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_baton_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:stun_baton"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_reflex_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:reflex_booster"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_ceramic_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:ceramic_plating"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_mono_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:mono_blade"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_synth_head_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:synth_head"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_synth_torso_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:synth_torso"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_synth_arms_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:synth_arms"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "theta_synth_legs_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:synth_legs"
+					}
+				],
+				"location_id": "base:market_row",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 0.0,
+					"charisma": 4.0,
+					"health": 150.0,
+					"health_max": 150.0,
+					"luck": 0.0,
+					"power": 2.0,
+					"stamina": 50.0,
+					"stamina_max": 50.0
+				},
+				"template_id": "base:npc_theta"
+			},
+			"base:player": {
+				"currencies": {
+					"credits": 425.0,
+					"data_shards": 2.0
+				},
+				"discovered_locations": [
+					"base:apartment",
+					"base:market_row"
+				],
+				"entity_id": "base:player",
+				"equipped": {
+					"arms": {
+						"custom_values": {
+
+						},
+						"equipped_slot": "arms",
+						"flags": {
+
+						},
+						"instance_id": "p_arms_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_arms_male"
+					},
+					"feet": {
+						"custom_values": {
+
+						},
+						"equipped_slot": "feet",
+						"flags": {
+
+						},
+						"instance_id": "p_feet_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_feet_male"
+					},
+					"hands": {
+						"custom_values": {
+
+						},
+						"equipped_slot": "hands",
+						"flags": {
+
+						},
+						"instance_id": "p_hands_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_hands_male"
+					},
+					"head": {
+						"custom_values": {
+							"eye_color": "green",
+							"hair_color": "black"
+						},
+						"equipped_slot": "head",
+						"flags": {
+
+						},
+						"instance_id": "p_head_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_head_male"
+					},
+					"legs": {
+						"custom_values": {
+
+						},
+						"equipped_slot": "legs",
+						"flags": {
+
+						},
+						"instance_id": "p_legs_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_legs_male"
+					},
+					"torso": {
+						"custom_values": {
+
+						},
+						"equipped_slot": "torso",
+						"flags": {
+
+						},
+						"instance_id": "p_torso_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_torso_male"
+					}
+				},
+				"flags": {
+					"tutorial_complete": false
+				},
+				"inventory": [
+					{
+						"custom_values": {
+							"eye_color": "green",
+							"hair_color": "black"
+						},
+						"equipped_slot": "head",
+						"flags": {
+
+						},
+						"instance_id": "p_head_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_head_male"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "torso",
+						"flags": {
+
+						},
+						"instance_id": "p_torso_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_torso_male"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "arms",
+						"flags": {
+
+						},
+						"instance_id": "p_arms_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_arms_male"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "legs",
+						"flags": {
+
+						},
+						"instance_id": "p_legs_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_legs_male"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "hands",
+						"flags": {
+
+						},
+						"instance_id": "p_hands_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_hands_male"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "feet",
+						"flags": {
+
+						},
+						"instance_id": "p_feet_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_feet_male"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "p_baton_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:stun_baton"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "p_chip_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:salvage_chip"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "p_chip_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:salvage_chip"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "p_medkit_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					}
+				],
+				"location_id": "base:apartment",
+				"owned_entity_ids": [
+					"base:utility_drone"
+				],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 0.0,
+					"charisma": 1.0,
+					"health": 100.0,
+					"health_max": 100.0,
+					"luck": 0.0,
+					"power": 1.0,
+					"stamina": 50.0,
+					"stamina_max": 50.0
+				},
+				"template_id": "base:player"
+			},
+			"base:training_drone": {
+				"currencies": {
+
+				},
+				"discovered_locations": [],
+				"entity_id": "base:training_drone",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [],
+				"location_id": "base:market_row",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 1.0,
+					"charisma": 0.0,
+					"health": 35.0,
+					"health_max": 35.0,
+					"luck": 0.0,
+					"power": 1.0,
+					"stamina": 30.0,
+					"stamina_max": 30.0
+				},
+				"template_id": "base:training_drone"
+			},
+			"base:utility_drone": {
+				"currencies": {
+
+				},
+				"discovered_locations": [],
+				"entity_id": "base:utility_drone",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "drone_chip_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:salvage_chip"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "drone_grip_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:diagnostic_grip"
+					}
+				],
+				"location_id": "base:apartment",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 1.0,
+					"charisma": 0.0,
+					"health": 60.0,
+					"health_max": 60.0,
+					"luck": 0.0,
+					"power": 1.0,
+					"stamina": 40.0,
+					"stamina_max": 40.0
+				},
+				"template_id": "base:utility_drone"
+			},
+			"example:bounty_board:enforcer_voss": {
+				"currencies": {
+					"credits": 800.0
+				},
+				"discovered_locations": [],
+				"entity_id": "example:bounty_board:enforcer_voss",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "voss_knuckles_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:bounty_board:shock_knuckles"
+					}
+				],
+				"location_id": "example:bounty_board:outpost",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 4.0,
+					"charisma": 1.0,
+					"health": 150.0,
+					"health_max": 150.0,
+					"luck": 0.0,
+					"power": 5.0,
+					"stamina": 80.0,
+					"stamina_max": 80.0
+				},
+				"template_id": "example:bounty_board:enforcer_voss"
+			},
+			"example:bounty_board:handler_rin": {
+				"currencies": {
+					"credits": 5000.0
+				},
+				"discovered_locations": [],
+				"entity_id": "example:bounty_board:handler_rin",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "rin_badge_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:bounty_board:ironweld_badge"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "rin_knuckles_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:bounty_board:shock_knuckles"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "rin_knuckles_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:bounty_board:shock_knuckles"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "rin_scrambler_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:bounty_board:signal_scrambler"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "rin_medkit_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "rin_medkit_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					}
+				],
+				"location_id": "example:bounty_board:outpost",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 0.0,
+					"charisma": 5.0,
+					"health": 90.0,
+					"health_max": 90.0,
+					"luck": 2.0,
+					"power": 1.0,
+					"stamina": 60.0,
+					"stamina_max": 60.0
+				},
+				"template_id": "example:bounty_board:handler_rin"
+			},
+			"example:traveling_merchant": {
+				"currencies": {
+					"credits": 2500.0
+				},
+				"discovered_locations": [],
+				"entity_id": "example:traveling_merchant",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "sable_medkit_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "sable_medkit_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "sable_chip_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:salvage_chip"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "sable_chip_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:salvage_chip"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "sable_scrap_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:scrap_plate"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "sable_charm_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:lucky_charm"
+					}
+				],
+				"location_id": "example:merchant_house",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 0.0,
+					"charisma": 3.0,
+					"health": 80.0,
+					"health_max": 80.0,
+					"luck": 2.0,
+					"power": 0.0,
+					"stamina": 50.0,
+					"stamina_max": 50.0
+				},
+				"template_id": "example:traveling_merchant"
+			},
+			"example:undercity_clinic:dr_mira": {
+				"currencies": {
+					"credits": 3000.0
+				},
+				"discovered_locations": [],
+				"entity_id": "example:undercity_clinic:dr_mira",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_stim_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:combat_stim"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_stim_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:combat_stim"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_stim_003",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:combat_stim"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_patch_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:trauma_patch"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_patch_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:trauma_patch"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_patch_003",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:trauma_patch"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_blood_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:synth_blood"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_blood_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:synth_blood"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_blood_003",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:synth_blood"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_blood_004",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "example:undercity_clinic:synth_blood"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_medkit_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					},
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "mira_medkit_002",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:field_medkit"
+					}
+				],
+				"location_id": "example:undercity_clinic:clinic",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"armor": 1.0,
+					"charisma": 4.0,
+					"health": 120.0,
+					"health_max": 120.0,
+					"luck": 1.0,
+					"power": 2.0,
+					"stamina": 70.0,
+					"stamina_max": 70.0
+				},
+				"template_id": "example:undercity_clinic:dr_mira"
+			}
+		},
+		"event_history": [],
+		"faction_reputations": {
+
+		},
+		"flags": {
+
+		},
+		"player_id": "base:player",
+		"runtime_state_buckets": {
+
+		},
+		"unlocked_achievements": []
+	},
+	"save_schema_version": 1,
+	"slot_metadata": {
+		"day": 1,
+		"display_name": "Day 1",
+		"location_id": "base:apartment",
+		"location_name": "Your Apartment",
+		"playtime_seconds": 0,
+		"slot_kind": "manual",
+		"slot_label": "Slot 3",
+		"tick": 0
+	},
+	"updated_at": "2026-05-09 01:35:38"
+}

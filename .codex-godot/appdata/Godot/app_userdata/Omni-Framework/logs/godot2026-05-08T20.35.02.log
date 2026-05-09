@@ -1,0 +1,76 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+
+---  GUT  ---
+[INFO]:  using [D:/GodotProjects/omni-framework/.codex-godot/appdata/Godot/app_userdata/Omni-Framework] for temporary output.
+Godot version:  4.6.2
+GUT version:  9.6.0
+
+
+res://tests/unit/test_engine_owned_ui_behaviors.gd
+* test_ui_cancel_pushes_and_pops_pause_menu* test_exchange_backe* test_main1/1 passed.
+
+
+
+
+==============================================
+= Run Summary
+==============================================
+
+Totals
+------
+Scripts               1
+Tests                 1
+Passing Tests         1
+Asserts              96
+Time              1.27s
+
+
+Ran Scripts matching "test_backend_screen_smoke"
+---- All tests passed! ----
+
+t_settings_ai_chat_controls_persist_history_window_and_streaming_speed
+* test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen
+* test_gameplay_shell_debug_snapshot_includes_hosted_surface_snapshot_and_title
+* test_entity_sheet_direct_equip_button_commits_selected_inventory_part
+* test_entity_sheet_surfaces_active_status_effects
+* test_initial_gameplay_shell_assembly_surface_begin_reveals_location_surface
+* test_assembly_editor_custom_field_signal_updates_draft_part_detail_view_model
+* test_location_surface_lists_present_entities_and_entity_interactions
+* test_location_surface_travel_button_advances_time_by_connection_cost
+* test_location_surface_empty_location_param_falls_back_to_game_state_location
+* test_gameplay_shell_hosts_default_location_surface
+* test_location_surface_hides_depleted_loot_cache
+    [Failed]:  Expected [<null>] to be anything but NULL:  
+      at line 751
+    [Failed]:  Expected [<null>] to be anything but NULL:  
+      at line 754
+* test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_after_travel_signal
+18/19 passed.
+
+
+
+
+==============================================
+= Run Summary
+==============================================
+
+res://tests/unit/test_engine_owned_ui_behaviors.gd
+- test_location_surface_hides_depleted_loot_cache
+    [Failed]:  Expected [<null>] to be anything but NULL:  
+          at line 751
+    [Failed]:  Expected [<null>] to be anything but NULL:  
+          at line 754
+
+Totals
+------
+Scripts               1
+Tests                19
+Passing Tests        18
+Failing Tests         1
+Asserts           216/218
+Time              2.176s
+
+
+Ran Scripts matching "test_engine_owned_ui_behaviors"
+---- 1 failing tests ----
+
