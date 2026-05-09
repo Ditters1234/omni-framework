@@ -88,7 +88,7 @@ Implementation note: the repository has completed the current Phase 4 backend sc
 | `ChallengeBackend` | `challenge` | ✅ Implemented | Single stat check → branch to `reward` or `action_payload` |
 | `TaskProviderBackend` | `task_provider` | ✅ Implemented | Faction job board — accept tasks from `faction.quest_pool` |
 | `ActiveQuestLogBackend` | `quest_log` | Implemented (Phase 5 basic) | Read active quests + stages + objectives + rewards from `GameState` |
-| `EntitySheetBackend` | `entity_sheet` | Implemented (Phase 5 pass 1, inventory polish pass) | Entity view: stats, currency balances, modifiers, equipped parts, searchable inventory, data-authored use actions, direct equip, discard, faction standings |
+| `EntitySheetBackend` | `entity_sheet` | Implemented (Phase 5 pass 1, inventory polish pass) | Entity view: stats, currency balances, modifiers, equipped parts, searchable inventory, data-authored use actions, direct equip, discard, per-instance favorite/lock controls, faction standings |
 | `FactionReputationBackend` | `faction_rep` | Implemented (Phase 5 basic) | Grid/list of factions with reputation tier + emblem + territory summary |
 | `AchievementListBackend` | `achievement_list` | Implemented (Phase 5 basic) | Browse achievement progress including locked/unlocked state and thresholds |
 | `EventLogBackend` | `event_log` | Implemented (Phase 5 basic) | Rolling history from `GameEvents._event_history` |
@@ -453,7 +453,7 @@ Each follows the Phase 1 pattern: scene, screen script, backend script, contract
 
 ### Phase 5 — Moddable backends, round 2 (~3–4 days)
 
-The remaining read-only view backends depend on existing runtime state and the component library that is already in place.
+The read-only view backend scope is complete for the current UI rollout and depends on existing runtime state plus the component library that is already in place.
 
 1. `EntitySheetBackend` + `stat_sheet` integration. Implemented in Phase 5 pass 1 with `entity_sheet` routing, read-only entity stats/equipment/inventory/reputation view models, and screen smoke/unit coverage.
 2. `ActiveQuestLogBackend` + `quest_card`. Implemented in the Phase 5 basic completion pass.
