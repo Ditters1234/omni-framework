@@ -23,6 +23,7 @@ const SCREEN_QUEST_LOG := "quest_log"
 const SCREEN_FACTION_REP := "faction_rep"
 const SCREEN_ACHIEVEMENT_LIST := "achievement_list"
 const SCREEN_EVENT_LOG := "event_log"
+const SCREEN_REWARD_REVIEW := "reward_review"
 const SCREEN_WORLD_MAP := "world_map"
 const SCREEN_ENCOUNTER := "encounter"
 const SCREEN_LOOT := "loot"
@@ -47,6 +48,7 @@ const QUEST_LOG_SCENE := "res://ui/screens/backends/active_quest_log_screen.tscn
 const FACTION_REP_SCENE := "res://ui/screens/backends/faction_reputation_screen.tscn"
 const ACHIEVEMENT_LIST_SCENE := "res://ui/screens/backends/achievement_list_screen.tscn"
 const EVENT_LOG_SCENE := "res://ui/screens/backends/event_log_screen.tscn"
+const REWARD_REVIEW_SCENE := "res://ui/screens/backends/reward_review_screen.tscn"
 const WORLD_MAP_SCENE := "res://ui/screens/backends/world_map_screen.tscn"
 const ENCOUNTER_SCENE := "res://ui/screens/backends/encounter_screen.tscn"
 const LOOT_SCENE := "res://ui/screens/backends/loot_screen.tscn"
@@ -73,6 +75,7 @@ const ENGINE_SCREEN_IDS := [
 	SCREEN_FACTION_REP,
 	SCREEN_ACHIEVEMENT_LIST,
 	SCREEN_EVENT_LOG,
+	SCREEN_REWARD_REVIEW,
 	SCREEN_WORLD_MAP,
 	SCREEN_ENCOUNTER,
 	SCREEN_LOOT,
@@ -93,6 +96,7 @@ const BACKEND_SCREEN_MAP := {
 	"FactionReputationBackend": "faction_rep",
 	"AchievementListBackend": "achievement_list",
 	"EventLogBackend": "event_log",
+	"RewardReviewBackend": "reward_review",
 	"WorldMapBackend": "world_map",
 	"EncounterBackend": "encounter",
 	"LootBackend": "loot",
@@ -120,6 +124,7 @@ const RUNTIME_SCREEN_REGISTRY := {
 	SCREEN_FACTION_REP: FACTION_REP_SCENE,
 	SCREEN_ACHIEVEMENT_LIST: ACHIEVEMENT_LIST_SCENE,
 	SCREEN_EVENT_LOG: EVENT_LOG_SCENE,
+	SCREEN_REWARD_REVIEW: REWARD_REVIEW_SCENE,
 	SCREEN_WORLD_MAP: WORLD_MAP_SCENE,
 	SCREEN_ENCOUNTER: ENCOUNTER_SCENE,
 	SCREEN_LOOT: LOOT_SCENE,

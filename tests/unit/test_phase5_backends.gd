@@ -5,6 +5,7 @@ const ACTIVE_QUEST_LOG_BACKEND := preload("res://ui/screens/backends/active_ques
 const FACTION_REPUTATION_BACKEND := preload("res://ui/screens/backends/faction_reputation_backend.gd")
 const ACHIEVEMENT_LIST_BACKEND := preload("res://ui/screens/backends/achievement_list_backend.gd")
 const EVENT_LOG_BACKEND := preload("res://ui/screens/backends/event_log_backend.gd")
+const REWARD_REVIEW_BACKEND := preload("res://ui/screens/backends/reward_review_backend.gd")
 
 
 func before_each() -> void:
@@ -122,3 +123,33 @@ func test_event_log_backend_reads_recent_game_events() -> void:
 		if not rows.is_empty() and rows[0] is Dictionary:
 			var row: Dictionary = rows[0]
 			assert_eq(str(row.get("signal_name", "")), "ui_notification_requested")
+
+
+func test_reward_review_backend_reads_completion_reward_history() -> void:
+	GameState.record_event("quest_completed", {
+		"display_name": "Delivery",
+		"reward_summary": "Credits +50",
+		"description": "Quest complete: Delivery | Rewards: Credits +50",
+	})
+	GameState.record_event("encounter_resolved", {
+		"display_name": "Alley Ambush",
+		"reward_summary": "Credits +5",
+		"description": "Encounter complete: Alley Ambush | Rewards: Credits +5",
+	})
+	var backend: RefCounted = REWARD_REVIEW_BACKEND.new()
+	backend.initialize({"limit": 5})
+
+	var view_model: Dictionary = backend.build_view_model()
+	var rows_value: Variant = view_model.get("rows", [])
+
+	assert_true(rows_value is Array)
+	if rows_value is Array:
+		var rows: Array = rows_value
+		assert_eq(rows.size(), 2)
+		if rows.size() >= 2 and rows[0] is Dictionary and rows[1] is Dictionary:
+			var newest_row: Dictionary = rows[0]
+			var older_row: Dictionary = rows[1]
+			assert_eq(str(newest_row.get("event_type", "")), "encounter_resolved")
+			assert_eq(str(newest_row.get("reward_summary", "")), "Credits +5")
+			assert_eq(str(older_row.get("event_type", "")), "quest_completed")
+			assert_eq(str(older_row.get("reward_summary", "")), "Credits +50")

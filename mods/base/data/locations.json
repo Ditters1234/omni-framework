@@ -45,6 +45,13 @@
           "include_completed": true
         },
         {
+          "tab_id": "apt_rewards",
+          "display_name": "Reward History",
+          "description": "Review completed contract and encounter rewards.",
+          "backend_class": "RewardReviewBackend",
+          "screen_title": "Reward History"
+        },
+        {
           "tab_id": "apt_achievements",
           "display_name": "Milestones",
           "description": "Track what you've accomplished so far.",

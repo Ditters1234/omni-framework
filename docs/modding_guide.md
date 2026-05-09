@@ -1589,6 +1589,7 @@ The current loader registers these backend classes:
 - `FactionReputationBackend`
 - `AchievementListBackend`
 - `EventLogBackend`
+- `RewardReviewBackend`
 - `WorldMapBackend`
 
 If you reference an unknown `backend_class`, load validation will fail.
@@ -1879,6 +1880,17 @@ No required params. Common useful optional fields:
 Notes:
 - Rows always include the recorded event name, args summary, and timestamp.
 - If a world-generation hook calls `GameEvents.add_event_narration(...)`, the backend also exposes `narration_text` for that event row and the stock screen renders it as an extra line.
+
+#### `RewardReviewBackend`
+No required params. Common useful optional fields:
+- `screen_title`
+- `screen_description`
+- `cancel_label`
+- `limit`
+- `event_types` - defaults to `["quest_completed", "encounter_resolved"]`
+- `newest_first`
+
+`RewardReviewBackend` reads `GameState.event_history` rather than a quest- or encounter-specific data store. Quest and encounter completion flows already record `display_name`, `description`, and `reward_summary` payload fields, so this backend can show reward history without knowing about fixed currencies, stats, item categories, or encounter outcome ids.
 
 ---
 

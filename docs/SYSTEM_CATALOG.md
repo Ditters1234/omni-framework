@@ -185,6 +185,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`modding_guide.md`](modding_guide.md) |
 | `AchievementListBackend` | `ui/screens/backends/achievement_list_screen.tscn` | Optional locked/unlocked filters | Achievement unlock state and stat progress, with hidden achievements suppressed until unlocked. | [`modding_guide.md`](modding_guide.md) |
 | `EventLogBackend` | `ui/screens/backends/event_log_screen.tscn` | Optional event limit/domain/signal filters | Recent `GameEvents` history with optional narrated flavor lines. | [`modding_guide.md`](modding_guide.md) |
+| `RewardReviewBackend` | `ui/screens/backends/reward_review_screen.tscn` | Optional runtime event filters and limit | Recent quest/encounter completion reward summaries sourced from `GameState.event_history`. | [`modding_guide.md`](modding_guide.md) |
 | `WorldMapBackend` | `ui/screens/backends/world_map_screen.tscn` | Optional title/description and display filters | Location graph with faction-tinted nodes, adaptive zoom decluttering, route lines, zoom/pan/orientation controls, and travel-on-click that consumes the cheapest routed total `travel_cost` in ticks. | [`modding_guide.md`](modding_guide.md) |
 
 **How it works:**

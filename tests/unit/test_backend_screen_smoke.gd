@@ -114,6 +114,13 @@ const SCREEN_CASES := [
 		},
 	},
 	{
+		"scene_path": UI_ROUTE_CATALOG.REWARD_REVIEW_SCENE,
+		"params": {
+			"screen_title": "Smoke Rewards",
+			"limit": 10,
+		},
+	},
+	{
 		"scene_path": UI_ROUTE_CATALOG.LOOT_SCENE,
 		"params": {
 			"source_entity_id": "base:screen_smoke_cache",
@@ -298,6 +305,11 @@ func _seed_backend_screen_runtime() -> void:
 	}
 	GameState.achievement_stats["smoke_events"] = 1.0
 	GameEvents.ui_notification_requested.emit("Smoke event", "info")
+	GameState.record_event("quest_completed", {
+		"display_name": "Smoke Quest",
+		"reward_summary": "Credits +1",
+		"description": "Quest complete: Smoke Quest | Rewards: Credits +1",
+	})
 
 
 func _create_test_viewport() -> SubViewport:

@@ -38,6 +38,7 @@ func test_mod_loader_registers_phase4_backend_contracts() -> void:
 	assert_true(registered_backend_classes.has("FactionReputationBackend"))
 	assert_true(registered_backend_classes.has("AchievementListBackend"))
 	assert_true(registered_backend_classes.has("EventLogBackend"))
+	assert_true(registered_backend_classes.has("RewardReviewBackend"))
 	assert_true(registered_backend_classes.has("WorldMapBackend"))
 	assert_true(registered_backend_classes.has("EncounterBackend"))
 	assert_true(registered_backend_classes.has("LootBackend"))
