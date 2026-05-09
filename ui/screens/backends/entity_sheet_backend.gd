@@ -4,6 +4,9 @@ class_name OmniEntitySheetBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
+const ASSEMBLY_COMMIT_SERVICE := preload("res://systems/assembly_commit_service.gd")
+const INVENTORY_FLAG_FAVORITE := "favorite"
+const INVENTORY_FLAG_LOCKED := "inventory_locked"
 
 var _params: Dictionary = {}
 
@@ -52,6 +55,151 @@ static func register_contract() -> void:
 
 func initialize(params: Dictionary) -> void:
 	_params = params.duplicate(true)
+
+
+func build_equipment_management_params() -> Dictionary:
+	return {
+		"target_entity_id": "player",
+		"budget_entity_id": "player",
+		"budget_currency_id": _resolve_player_budget_currency_id(),
+		"option_source_entity_id": "player",
+		"screen_title": "Manage Equipment",
+		"screen_description": "Equip carried parts and preview stat changes before committing.",
+		"cancel_label": "Back",
+		"confirm_label": "Apply",
+		"pop_on_confirm": true,
+	}
+
+
+func can_use_inventory_row(row: Dictionary) -> bool:
+	if bool(row.get("is_equipped", false)):
+		return false
+	var template: Dictionary = _read_dictionary(row.get("template", {}))
+	if _read_use_actions(template).is_empty():
+		return false
+	if bool(template.get("consume_on_use", false)):
+		return not _read_first_unlocked_instance_id(row).is_empty()
+	return true
+
+
+func can_equip_inventory_row(row: Dictionary) -> bool:
+	if bool(row.get("is_equipped", false)):
+		return false
+	if _read_first_instance_id(row).is_empty():
+		return false
+	return bool(row.get("can_equip", false)) and not str(row.get("recommended_slot_id", "")).is_empty()
+
+
+func can_discard_inventory_row(row: Dictionary) -> bool:
+	if bool(row.get("is_equipped", false)):
+		return false
+	return not _read_first_unlocked_instance_id(row).is_empty()
+
+
+func is_selected_inventory_flag_set(row: Dictionary, flag_id: String) -> bool:
+	var instance_id := _read_first_instance_id(row)
+	if instance_id.is_empty():
+		return false
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return false
+	var part := player.get_inventory_part(instance_id)
+	if part == null:
+		return false
+	return bool(part.flags.get(flag_id, false))
+
+
+func equip_inventory_row(row: Dictionary) -> Dictionary:
+	if row.is_empty() or not can_equip_inventory_row(row):
+		return {"ok": false, "message": ""}
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return {"ok": false, "message": ""}
+	var instance_id := _read_first_instance_id(row)
+	var slot_id := str(row.get("recommended_slot_id", ""))
+	if instance_id.is_empty() or slot_id.is_empty():
+		return {"ok": false, "message": ""}
+	var previous_entity := player
+	var committed_entity := player.duplicate_instance()
+	if not committed_entity.equip(instance_id, slot_id):
+		return {"ok": false, "message": ""}
+	ASSEMBLY_COMMIT_SERVICE.commit_entity(previous_entity, committed_entity, "player")
+	var display_name := str(row.get("display_name", "item"))
+	var slot_label := str(row.get("recommended_slot_label", slot_id))
+	var message := "Equipped %s to %s." % [display_name, slot_label]
+	GameEvents.ui_notification_requested.emit(message, "info")
+	return {"ok": true, "message": message}
+
+
+func use_inventory_row(row: Dictionary) -> Dictionary:
+	if row.is_empty() or not can_use_inventory_row(row):
+		return {"ok": false, "message": ""}
+	var display_name := str(row.get("display_name", "item"))
+	var template: Dictionary = _read_dictionary(row.get("template", {}))
+	var consumes_item := bool(template.get("consume_on_use", false))
+	var instance_id := _read_first_unlocked_instance_id(row) if consumes_item else _read_first_instance_id(row)
+	var actions := _read_use_actions(template)
+	for action in actions:
+		var action_payload := action.duplicate(true)
+		if not action_payload.has("entity_id"):
+			action_payload["entity_id"] = "player"
+		if not action_payload.has("instance_id") and not instance_id.is_empty():
+			action_payload["instance_id"] = instance_id
+		if not action_payload.has("template_id"):
+			action_payload["template_id"] = str(row.get("template_id", ""))
+		if not action_payload.has("part_id"):
+			action_payload["part_id"] = str(row.get("template_id", ""))
+		ActionDispatcher.dispatch(action_payload)
+	if consumes_item:
+		ActionDispatcher.dispatch({
+			"type": "consume",
+			"entity_id": "player",
+			"instance_id": instance_id,
+			"template_id": str(row.get("template_id", "")),
+		})
+	var message := "Used %s." % display_name
+	GameEvents.ui_notification_requested.emit(message, "info")
+	return {"ok": true, "message": message}
+
+
+func discard_inventory_row(row: Dictionary) -> Dictionary:
+	if row.is_empty() or not can_discard_inventory_row(row):
+		return {"ok": false, "message": ""}
+	var display_name := str(row.get("display_name", "item"))
+	var instance_id := _read_first_unlocked_instance_id(row)
+	ActionDispatcher.dispatch({
+		"type": "consume",
+		"entity_id": "player",
+		"instance_id": instance_id,
+		"template_id": str(row.get("template_id", "")),
+	})
+	var message := "Discarded %s." % display_name
+	GameEvents.ui_notification_requested.emit(message, "info")
+	return {"ok": true, "message": message}
+
+
+func toggle_inventory_flag(row: Dictionary, flag_id: String, label: String) -> Dictionary:
+	if row.is_empty() or bool(row.get("is_equipped", false)):
+		return {"ok": false, "message": ""}
+	var instance_id := _read_first_instance_id(row)
+	if instance_id.is_empty():
+		return {"ok": false, "message": ""}
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return {"ok": false, "message": ""}
+	var part := player.get_inventory_part(instance_id)
+	if part == null:
+		return {"ok": false, "message": ""}
+	var next_value := not bool(part.flags.get(flag_id, false))
+	if next_value:
+		part.flags[flag_id] = true
+	else:
+		part.flags.erase(flag_id)
+	var display_name := str(row.get("display_name", "item"))
+	var action_label := label.capitalize() if next_value else "un%s" % label
+	var message := "%s %s." % [action_label, display_name]
+	GameEvents.ui_notification_requested.emit(message, "info")
+	return {"ok": true, "message": message, "value": next_value}
 
 
 func build_view_model() -> Dictionary:
@@ -548,6 +696,61 @@ func _build_inventory_custom_summary(template: Dictionary, instance_ids_value: V
 	return ""
 
 
+func _read_use_actions(template: Dictionary) -> Array[Dictionary]:
+	var actions: Array[Dictionary] = []
+	var actions_value: Variant = template.get("use_actions", [])
+	if actions_value is Array:
+		var raw_actions: Array = actions_value
+		for action_value in raw_actions:
+			if action_value is Dictionary:
+				var action: Dictionary = action_value
+				actions.append(action.duplicate(true))
+	var action_payload_value: Variant = template.get("use_action_payload", {})
+	if action_payload_value is Dictionary:
+		var action_payload: Dictionary = action_payload_value
+		if not action_payload.is_empty():
+			actions.append(action_payload.duplicate(true))
+	return actions
+
+
+func _read_first_instance_id(row: Dictionary) -> String:
+	var instance_ids := _read_string_array(row.get("instance_ids", []))
+	if not instance_ids.is_empty():
+		return instance_ids[0]
+	return str(row.get("instance_id", ""))
+
+
+func _read_first_unlocked_instance_id(row: Dictionary) -> String:
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return ""
+	var instance_ids := _read_string_array(row.get("instance_ids", []))
+	if instance_ids.is_empty():
+		var instance_id := str(row.get("instance_id", ""))
+		if not instance_id.is_empty():
+			instance_ids.append(instance_id)
+	for instance_id in instance_ids:
+		var part := player.get_inventory_part(instance_id)
+		if part == null:
+			continue
+		if not bool(part.flags.get(INVENTORY_FLAG_LOCKED, false)):
+			return instance_id
+	return ""
+
+
+func _resolve_player_budget_currency_id() -> String:
+	var configured_value: Variant = DataManager.get_config_value("economy.default_currency_id", DataManager.get_config_value("ui.default_budget_currency_id", ""))
+	var configured_id := str(configured_value).strip_edges()
+	var player := GameState.player as EntityInstance
+	if player != null and not configured_id.is_empty() and player.currencies.has(configured_id):
+		return configured_id
+	if player == null or player.currencies.is_empty():
+		return configured_id
+	var currency_keys: Array = player.currencies.keys()
+	currency_keys.sort()
+	return str(currency_keys[0])
+
+
 func _read_inventory_limit() -> int:
 	return _get_int_param(_params, "inventory_limit", 0, 0)
 
@@ -560,6 +763,13 @@ func _read_float(value: Variant) -> float:
 	if value is int or value is float:
 		return float(value)
 	return 0.0
+
+
+func _read_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary_value: Dictionary = value
+		return dictionary_value.duplicate(true)
+	return {}
 
 
 func _read_dictionary_rows(value: Variant) -> Array[Dictionary]:
