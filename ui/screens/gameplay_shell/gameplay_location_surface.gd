@@ -5,6 +5,7 @@ class_name GameplayLocationSurface
 
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const LOCATION_ACCESS_SERVICE := preload("res://systems/location_access_service.gd")
+const TASK_ACTIVITY_SUMMARY := preload("res://systems/task_activity_summary.gd")
 const GLOBAL_SHELL_SURFACE_IDS := {
 	"entity_sheet": true,
 	"quest_log": true,
@@ -111,16 +112,16 @@ func _render_location_actions() -> void:
 		if interactions.is_empty():
 			# Entity is present but has no interactions — show as a label only
 			var presence_label := Label.new()
-			presence_label.text = display_name
-			presence_label.tooltip_text = description
+			presence_label.text = _build_presence_label_text(entity_entry)
+			presence_label.tooltip_text = _build_presence_tooltip(description, entity_entry)
 			presence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			_interactions_container.add_child(presence_label)
 			continue
 
 		# Add a label separator for the entity
 		var separator := Label.new()
-		separator.text = display_name
-		separator.tooltip_text = description
+		separator.text = _build_presence_label_text(entity_entry)
+		separator.tooltip_text = _build_presence_tooltip(description, entity_entry)
 		separator.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_interactions_container.add_child(separator)
 
@@ -278,11 +279,16 @@ func _collect_entity_presence() -> Array[Dictionary]:
 		var display_name := str(entity_template.get("display_name", entity_id))
 		var description := str(entity_template.get("description", ""))
 		var interactions := _read_entity_interactions(entity_template)
+		var activity := TASK_ACTIVITY_SUMMARY.build_for_entity(entity_id)
 		collected_entities.append({
 			"entity_id": entity_id,
 			"display_name": display_name,
 			"description": description,
 			"interactions": interactions,
+			"activity": activity,
+			"activity_text": str(activity.get("active_task_text", "Idle")),
+			"activity_detail_text": str(activity.get("detail_text", "Idle")),
+			"queued_task_count": int(activity.get("queued_task_count", 0)),
 		})
 	return collected_entities
 
@@ -343,6 +349,26 @@ func _read_entity_interactions(entity_template: Dictionary) -> Array[Dictionary]
 			var interaction: Dictionary = interaction_value
 			interactions.append(interaction.duplicate(true))
 	return interactions
+
+
+func _build_presence_label_text(entity_entry: Dictionary) -> String:
+	var display_name := str(entity_entry.get("display_name", entity_entry.get("entity_id", "Entity")))
+	var activity_text := str(entity_entry.get("activity_text", "Idle"))
+	var queued_count := int(entity_entry.get("queued_task_count", 0))
+	if activity_text.is_empty() or activity_text == "Idle":
+		return display_name
+	if queued_count > 0:
+		activity_text = "%s (%d queued)" % [activity_text, queued_count]
+	return "%s\n%s" % [display_name, activity_text]
+
+
+func _build_presence_tooltip(description: String, entity_entry: Dictionary) -> String:
+	var activity_detail := str(entity_entry.get("activity_detail_text", "Idle"))
+	if activity_detail.is_empty() or activity_detail == "Idle":
+		return description
+	if description.is_empty():
+		return activity_detail
+	return "%s\n%s" % [description, activity_detail]
 
 
 func _add_entity_interaction_button(entity_id: String, interaction: Dictionary) -> void:

@@ -570,6 +570,18 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 	_register_runtime_screens()
 	GameState.new_game()
 	GameState.travel_to(TEST_FIXTURE_WORLD.connected_location_id())
+	DataManager.tasks["base:fixture_wait"] = {
+		"template_id": "base:fixture_wait",
+		"display_name": "Hold Position",
+		"type": "WAIT",
+		"duration": 3,
+		"repeatable": true,
+	}
+	TimeKeeper.accept_task("base:fixture_wait", {
+		"entity_id": TEST_FIXTURE_WORLD.fixture_vendor_id(),
+		"duration": 3,
+		"allow_duplicate": true,
+	})
 
 	UIRouter.replace_all("gameplay_shell")
 	await get_tree().process_frame
@@ -596,6 +608,9 @@ func test_location_surface_lists_present_entities_and_entity_interactions() -> v
 		return
 	var vendor: Dictionary = vendor_value
 	assert_eq(str(vendor.get("display_name", "")), "Fixture Vendor")
+	assert_true(str(vendor.get("activity_text", "")).contains("Hold Position"))
+	assert_true(str(vendor.get("activity_detail_text", "")).contains("3 ticks remaining"))
+	assert_not_null(_find_label_containing_text(location_surface, "Hold Position"))
 
 	var trade_button := _find_button_with_text(location_surface, "Browse Stock")
 	assert_not_null(trade_button)
@@ -967,6 +982,17 @@ func _find_label_with_text(root: Node, text: String) -> Label:
 		if label != null and label.text == text:
 			return label
 		var match := _find_label_with_text(child, text)
+		if match != null:
+			return match
+	return null
+
+
+func _find_label_containing_text(root: Node, text: String) -> Label:
+	for child in root.get_children():
+		var label := child as Label
+		if label != null and label.text.contains(text):
+			return label
+		var match := _find_label_containing_text(child, text)
 		if match != null:
 			return match
 	return null

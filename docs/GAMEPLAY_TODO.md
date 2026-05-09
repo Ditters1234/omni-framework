@@ -11,6 +11,6 @@ Current high-value gameplay gaps identified from the implemented systems:
 - **Loot review flows**: first pass implemented through `LootBackend`. Containers and loot piles are normal entities with inventory/currencies; the backend supports selected transfer, take-all, optional currency pickup, entity-validated source/destination routing, auto-pop on depletion, and gameplay-surface hiding for empty caches. Follow-up polish should add richer reward-review entry points from encounters/quests if those flows need a dedicated post-resolution screen instead of notifications.
 - **Incapacitation/death lifecycle**: formalize what happens when an entity reaches zero health or another failure threshold.
 - **Save/load risk UX**: add autosave notices, dangerous-action save prompts, and clearer mod/content mismatch recovery.
-- **Autonomous activity visibility**: surface what NPCs and owned entities are currently doing, where they are, and when their jobs will finish.
+- **Autonomous activity visibility**: first pass implemented. Shared task activity summaries now surface active/queued work, destination labels, and remaining ticks in owned-entity management and present-entity location rows. Follow-up polish should add richer queue editing/reordering tools if larger rosters need hands-on schedule control.
 
-Immediate implementation focus: richer autonomous activity visibility, save/load risk UX, or incapacitation/death lifecycle depending on which gameplay loop needs pressure next.
+Immediate implementation focus: save/load risk UX, incapacitation/death lifecycle, or deeper owned-entity queue editing depending on which gameplay loop needs pressure next.

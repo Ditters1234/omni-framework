@@ -883,6 +883,8 @@ func test_owned_entities_backend_can_queue_assignment_behind_active_task() -> vo
 	if selected_value is Dictionary:
 		var selected: Dictionary = selected_value
 		assert_eq(int(selected.get("queued_task_count", 0)), 1)
+		assert_true(str(selected.get("active_task_text", "")).contains("Wait"))
+		assert_true(str(selected.get("activity_detail_text", "")).contains("queued"))
 
 	TimeKeeper.advance_tick()
 

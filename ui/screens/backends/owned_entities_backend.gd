@@ -4,6 +4,7 @@ class_name OmniOwnedEntitiesBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
+const TASK_ACTIVITY_SUMMARY := preload("res://systems/task_activity_summary.gd")
 const DEFAULT_ASSIGNMENT_TASK_ID := "base:goto_location"
 const DEFAULT_SUMMARY_STAT_LIMIT := 4
 const FILTER_ALL := "all"
@@ -208,8 +209,9 @@ func _build_rows(owner: EntityInstance) -> Array[Dictionary]:
 		var entity := GameState.get_entity_instance(entity_id)
 		if entity == null:
 			continue
-		var active_task := _find_active_task(entity.entity_id)
-		var queued_task_count := _count_queued_tasks(entity.entity_id)
+		var activity := TASK_ACTIVITY_SUMMARY.build_for_entity(entity.entity_id)
+		var active_task := _read_dictionary(activity.get("active_task", {}))
+		var queued_task_count := int(activity.get("queued_task_count", 0))
 		rows.append({
 			"entity_id": entity.entity_id,
 			"template_id": entity.template_id,
@@ -217,10 +219,12 @@ func _build_rows(owner: EntityInstance) -> Array[Dictionary]:
 			"description": str(entity.get_template().get("description", "")),
 			"location_id": entity.location_id,
 			"location_label": _get_location_display_name(entity.location_id),
+			"activity": activity,
 			"active_task": active_task,
-			"active_task_text": _build_task_text(active_task),
+			"active_task_text": str(activity.get("active_task_text", "Idle")),
 			"queued_task_count": queued_task_count,
-			"queue_text": _build_queue_text(queued_task_count),
+			"queue_text": str(activity.get("queue_text", "")),
+			"activity_detail_text": str(activity.get("detail_text", "Idle")),
 			"stat_preview_text": _build_stat_preview_text(entity),
 			"inventory_count": _count_loose_inventory(entity),
 			"equipped_count": entity.equipped.size(),
@@ -293,32 +297,6 @@ func _get_assignable_location_ids(owner: EntityInstance) -> Array[String]:
 	return ids
 
 
-func _find_active_task(entity_id: String) -> Dictionary:
-	var best: Dictionary = {}
-	for task_value in GameState.active_tasks.values():
-		if not task_value is Dictionary:
-			continue
-		var task: Dictionary = task_value
-		if str(task.get("entity_id", "")) != entity_id:
-			continue
-		if str(task.get("status", "active")) == "queued":
-			continue
-		if best.is_empty() or int(task.get("remaining_ticks", 0)) < int(best.get("remaining_ticks", 0)):
-			best = task.duplicate(true)
-	return best
-
-
-func _count_queued_tasks(entity_id: String) -> int:
-	var count := 0
-	for task_value in GameState.active_tasks.values():
-		if not task_value is Dictionary:
-			continue
-		var task: Dictionary = task_value
-		if str(task.get("entity_id", "")) == entity_id and str(task.get("status", "active")) == "queued":
-			count += 1
-	return count
-
-
 func _abandon_active_tasks_for_entity(entity_id: String) -> void:
 	var runtime_ids: Array[String] = []
 	for runtime_id_value in GameState.active_tasks.keys():
@@ -331,24 +309,6 @@ func _abandon_active_tasks_for_entity(entity_id: String) -> void:
 			runtime_ids.append(runtime_id)
 	for runtime_id in runtime_ids:
 		TimeKeeper.abandon_task(runtime_id)
-
-
-func _build_task_text(task: Dictionary) -> String:
-	if task.is_empty():
-		return "Idle"
-	var template_id := str(task.get("template_id", ""))
-	var template := DataManager.get_task(template_id)
-	var label := str(template.get("display_name", BACKEND_HELPERS.humanize_id(template_id)))
-	var target := str(task.get("target", ""))
-	if not target.is_empty():
-		label = "%s to %s" % [label, _get_location_display_name(target)]
-	return "%s, %s ticks remaining" % [label, str(int(task.get("remaining_ticks", 0)))]
-
-
-func _build_queue_text(queued_task_count: int) -> String:
-	if queued_task_count <= 0:
-		return ""
-	return "%d queued" % queued_task_count
 
 
 func _get_assignment_start_mode() -> String:
@@ -525,3 +485,10 @@ func _format_number(amount: float) -> String:
 	if absf(amount - roundf(amount)) < 0.001:
 		return str(int(roundf(amount)))
 	return "%.2f" % amount
+
+
+func _read_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary_value: Dictionary = value
+		return dictionary_value.duplicate(true)
+	return {}

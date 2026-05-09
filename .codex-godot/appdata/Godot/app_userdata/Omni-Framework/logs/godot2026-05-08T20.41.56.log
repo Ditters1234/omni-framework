@@ -7,28 +7,13 @@ GUT version:  9.6.0
 
 
 res://tests/unit/test_engine_owned_ui_behaviors.gd
-* test_ui_cancel_pushes_and_pops_pause_menu* test_exchange_backe* test_main1/1 passed.
-
-
-
-
-==============================================
-= Run Summary
-==============================================
-
-Totals
-------
-Scripts               1
-Tests                 1
-Passing Tests         1
-Asserts              96
-Time              1.27s
-
-
-Ran Scripts matching "test_backend_screen_smoke"
----- All tests passed! ----
-
-t_settings_ai_chat_controls_persist_history_window_and_streaming_speed
+* test_ui_cancel_pushes_and_pops_pause_menu_from_gameplay_shell
+* test_main_menu_new_game_opens_character_creator_surface_without_crashing
+* test_global_notification_popup_renders_above_routed_screens
+* test_save_slot_list_delete_requires_confirmation_before_removing_slot
+* test_settings_back_persists_dirty_changes_and_pops_to_previous_route
+* test_settings_ai_button_toggles_to_disconnect_after_connection
+* test_settings_ai_chat_controls_persist_history_window_and_streaming_speed
 * test_router_exposes_current_screen_debug_snapshot_for_engine_owned_screen
 * test_gameplay_shell_debug_snapshot_includes_hosted_surface_snapshot_and_title
 * test_entity_sheet_direct_equip_button_commits_selected_inventory_part
@@ -40,12 +25,8 @@ t_settings_ai_chat_controls_persist_history_window_and_streaming_speed
 * test_location_surface_empty_location_param_falls_back_to_game_state_location
 * test_gameplay_shell_hosts_default_location_surface
 * test_location_surface_hides_depleted_loot_cache
-    [Failed]:  Expected [<null>] to be anything but NULL:  
-      at line 751
-    [Failed]:  Expected [<null>] to be anything but NULL:  
-      at line 754
 * test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_after_travel_signal
-18/19 passed.
+19/19 passed.
 
 
 
@@ -54,23 +35,26 @@ t_settings_ai_chat_controls_persist_history_window_and_streaming_speed
 = Run Summary
 ==============================================
 
-res://tests/unit/test_engine_owned_ui_behaviors.gd
-- test_location_surface_hides_depleted_loot_cache
-    [Failed]:  Expected [<null>] to be anything but NULL:  
-          at line 751
-    [Failed]:  Expected [<null>] to be anything but NULL:  
-          at line 754
-
 Totals
 ------
 Scripts               1
 Tests                19
-Passing Tests        18
-Failing Tests         1
-Asserts           216/218
-Time              2.176s
+Passing Tests        19
+Asserts             225
+Time              2.052s
 
 
 Ran Scripts matching "test_engine_owned_ui_behaviors"
----- 1 failing tests ----
+---- All tests passed! ----
+
+--
+Scripts               1
+Tests                24
+Passing Tests        24
+Asserts             190
+Time              0.838s
+
+
+Ran Scripts matching "test_phase4_backends"
+---- All tests passed! ----
 

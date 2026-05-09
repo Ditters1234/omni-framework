@@ -66,6 +66,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 |---|---|---|---|---|
 | `QuestTracker` | `QuestTracker` | `systems/quest_tracker.gd` | GameState, DataManager | Quest HSM built on LimboAI. Drives quest stages, objectives, and completion. |
 | `TaskRunner` | `TaskRunner` | `systems/task_runner.gd` | GameState, DataManager | Tick-driven task execution, queued task promotion, completion checking, and data-authored task completion actions. |
+| `TaskActivitySummary` | `TaskActivitySummary` | `systems/task_activity_summary.gd` | GameState, DataManager | Shared formatter for active/queued entity task visibility, including target labels and remaining tick text. |
 | `StatusEffectRunner` | `StatusEffectRunner` | `systems/status_effect_runner.gd` | GameState, DataManager | Tick-driven status effect application, stacking, per-tick actions, stat modifiers, and expiration. |
 | `TaskRoutineRunner` | `OmniTaskRoutineRunner` | `systems/task_routine_runner.gd` | GameState, DataManager, TaskRunner | Starts task templates from daily time windows for scheduled NPC/entity movement. Autoload singleton. |
 | `LocationAccessService` | `LocationAccessService` | `systems/location_access_service.gd` | DataManager, ConditionEvaluator | Shared travel/entry gate checks using `entry_condition` and `entry_conditions` on locations. |

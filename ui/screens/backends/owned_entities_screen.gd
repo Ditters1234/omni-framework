@@ -165,9 +165,11 @@ func _render_selected(row: Dictionary) -> void:
 	var task_line := str(row.get("active_task_text", "Idle"))
 	if not queue_text.is_empty():
 		task_line = "%s (%s)" % [task_line, queue_text]
-	_selected_meta_label.text = "Location: %s\nTask: %s\nStats: %s\nEquipment: %s equipped, %s inventory items" % [
+	var activity_detail := str(row.get("activity_detail_text", task_line))
+	_selected_meta_label.text = "Location: %s\nTask: %s\nActivity: %s\nStats: %s\nEquipment: %s equipped, %s inventory items" % [
 		str(row.get("location_label", "Unknown")),
 		task_line,
+		activity_detail,
 		str(row.get("stat_preview_text", "")),
 		str(int(row.get("equipped_count", 0))),
 		str(int(row.get("inventory_count", 0))),

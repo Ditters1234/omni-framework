@@ -635,8 +635,6 @@ WARNING: TimeKeeper: invalid game.ticks_per_day value '0'. Falling back to 24.
        [2] test_invalid_ticks_per_day_falls_back_to_default_clock_contract (res://tests/unit/test_time_keeper_hardening.gd:66)
        [3] _run_test (res://addons/gut/gut.gd:615)
        [4] _test_the_scripts (res://addons/gut/gut.gd:818)
-       [5] _run_test (res://addons/gut/gut.gd:643)
-       [6] after_each (res://tests/unit/test_time_keeper_hardening.gd:22)
 [ExpectedError]Expected push_warning error containing 'TimeKeeper: invalid game.ticks_per_day value '0''.  
 * test_advance_tick_emits_tick_and_day_events_through_game_events
 * test_advance_tick_dispatches_on_tick_for_carried_part_hooks
@@ -719,8 +717,8 @@ Totals
 Scripts              48
 Tests               290
 Passing Tests       290
-Asserts            2031
-Time              5.292s
+Asserts            2036
+Time              5.447s
 
 
 ---- All tests passed! ----
