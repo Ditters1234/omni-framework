@@ -179,7 +179,7 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 | `DialogueBackend` | `ui/screens/backends/dialogue_screen.tscn` | Dialogue Manager `.dialogue` ref plus optional `ai_mode` | NPC branching dialogue with optional hybrid/freeform AI chat handoff driven by `AIChatService`. | [`modding_guide.md`](modding_guide.md) |
 | `EncounterBackend` | `ui/screens/backends/encounter_screen.tscn` | Encounter ID, participant overrides, navigation overrides | Data-authored, turn-based encounters with player actions, weighted opponent actions, real stat mutation, encounter-local meters, outcome rewards/actions, and optional AI-flavored action log text. | [`modding_guide.md`](modding_guide.md) |
 | `EntitySheetBackend` | `ui/screens/backends/entity_sheet_screen.tscn` | Optional entity target and display flags | Entity stats, active status effects, currency balances, equipment, data-driven inventory use/equip/discard actions, and faction standing. | [`modding_guide.md`](modding_guide.md) |
-| `OwnedEntitiesBackend` | `ui/screens/backends/owned_entities_screen.tscn` | Optional owner entity, roster controls, summary stats, and assignment defaults | Owned-entity management surface with validated ownership, generic roster filtering/sorting, inspect, equipment, location dispatch, queued assignments, recall, task-state refresh, completion notifications, and contract-assignment handoffs. | [`modding_guide.md`](modding_guide.md) |
+| `OwnedEntitiesBackend` | `ui/screens/backends/owned_entities_screen.tscn` | Optional owner entity, roster controls, summary stats, and assignment defaults | Owned-entity management surface with validated ownership, generic roster filtering/sorting, inspect, equipment, location dispatch, queued assignments, queue reordering/cancellation, recall, task-state refresh, completion notifications, and contract-assignment handoffs. | [`modding_guide.md`](modding_guide.md) |
 | `LootBackend` | `ui/screens/backends/loot_screen.tscn` | Source/destination entity refs and display flags | Entity-backed container/loot review surface with selected transfer, take-all, optional currency pickup, empty-cache hiding, and no separate world-object primitive. | [`modding_guide.md`](modding_guide.md) |
 | `ActiveQuestLogBackend` | `ui/screens/backends/active_quest_log_screen.tscn` | Optional completed quest display | Active quest cards with stages, objectives, and rewards. | [`modding_guide.md`](modding_guide.md) |
 | `FactionReputationBackend` | `ui/screens/backends/faction_reputation_screen.tscn` | Optional entity target and known-only filter | Faction badges, descriptions, territory, and standing. | [`modding_guide.md`](modding_guide.md) |
@@ -256,7 +256,7 @@ See [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) for:
 - **Game State:** `game_started`, `location_changed`, `entity_stat_changed`, `flag_changed`
 - **Inventory:** `part_acquired`, `part_removed`, `part_equipped`, `part_unequipped`
 - **Economy:** `entity_currency_changed`, `transaction_completed`
-- **Quests/Tasks:** `quest_started`, `quest_stage_advanced`, `quest_completed`, `task_started`, `task_completed`
+- **Quests/Tasks:** `quest_started`, `quest_stage_advanced`, `quest_completed`, `task_started`, `task_completed`, `task_abandoned`, `task_queue_changed`
 - **Encounters:** `encounter_started`, `encounter_round_advanced`, `encounter_action_resolved`, `encounter_resolved`
 - **Achievements:** `achievement_unlocked`
 - **UI:** `ui_screen_pushed`, `ui_screen_popped`, `ui_notification_requested`
