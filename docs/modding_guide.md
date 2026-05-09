@@ -1490,6 +1490,7 @@ Common fields:
 - `game`
 - `ui`
 - `stats`
+- `entity_lifecycle`
 - `task_routines`
 
 ### Example
@@ -1512,6 +1513,26 @@ Common fields:
       "combat": ["power"],
       "social": ["charisma"]
     }
+  },
+  "entity_lifecycle": {
+    "rules": [
+      {
+        "rule_id": "my_name:my_mod:resolve_broken",
+        "display_name": "Resolve Broken",
+        "stat": "resolve",
+        "state_flag": "my_name:my_mod:resolve_broken",
+        "condition": {
+          "type": "stat_check",
+          "entity_id": "context:entity",
+          "stat": "resolve",
+          "op": "<=",
+          "value": 0
+        },
+        "notification": "{entity_name} is shaken.",
+        "clear_when_condition_false": true,
+        "exit_notification": "{entity_name} regains resolve."
+      }
+    ]
   }
 }
 ```
@@ -1523,9 +1544,28 @@ Common fields:
 - Starting currencies are set on the player entity template in `entities.json`, not in `config.json`. To change starting money, patch the player entity's `currencies` field.
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when provided
 - `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)`, or objects with `label` plus `ticks`/`time`. Object entries may include `task_template_id`, `entity_id`, `completion_actions`, `reward`, and `status_text`; the base `"Rest"` button starts `base:downtime`, advances four ticks, and lets that task apply recovery through data-authored completion actions.
+- `entity_lifecycle.rules` is an optional array of lifecycle rules evaluated for every live entity when matching stats change. Use it for incapacitation, defeat, morale breaks, shutdown, unconsciousness, or any other threshold state without hardcoding a stat in engine code.
 - The current base content also defines `game.new_game_flow`, which means the startup flow can be configured through data instead of hardcoding it all in scripts
 
 Task routines are configured through `config.json` under the `task_routines` key (or nested under `routines.task_routines`). See Section 11.1 for the full schema. Mods can add their own routines through their own `config.json`, and multiple mods' routines will all be active simultaneously since config is deep-merged.
+
+### Entity lifecycle rules
+
+Each lifecycle rule uses normal `ConditionEvaluator` syntax. The current entity is available as `context:entity`, so the same rule can apply to the player, NPCs, owned entities, spawned enemies, or any other live entity instance.
+
+Supported fields:
+- `rule_id` - unique id for the rule.
+- `display_name` - optional label used in notifications and debug views.
+- `stat` - optional stat id or array of stat ids used as an event filter. Omit it for rules that should be checked on any stat change.
+- `state_flag` - optional entity flag set when the rule enters. Defaults to `lifecycle:<rule_id>`.
+- `condition` - required condition dictionary. Use `"entity_id": "context:entity"` for entity-local checks.
+- `actions` - optional `ActionDispatcher` actions fired when the state becomes active. Entity-scoped actions such as `set_flag`, `modify_stat`, `apply_status_effect`, `give_part`, `give_currency`, and `start_task` receive the current `entity_id` when omitted.
+- `notification` and `notification_level` - optional UI toast on entry. Message templates support `{entity_id}`, `{entity_name}`, `{rule_id}`, `{state_name}`, `{state_flag}`, `{stat}`, and `{value}`.
+- `clear_when_condition_false` - when true, clears `state_flag` and emits the exit path after the condition stops matching.
+- `exit_actions`, `exit_notification`, and `exit_notification_level` - optional recovery/exit path.
+- `game_over_on_player` - optional bool; emits `game_over` when the player enters the state.
+
+The base mod ships a rule that maps `health <= 0` to `base:incapacitated`, but total conversions can replace or patch it to use any authored stat or condition.
 
 ---
 

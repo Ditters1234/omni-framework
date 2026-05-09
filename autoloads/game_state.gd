@@ -7,6 +7,7 @@ extends Node
 class_name OmniGameState
 
 const STATUS_EFFECT_RUNNER := preload("res://systems/status_effect_runner.gd")
+const ENTITY_LIFECYCLE_RUNNER := preload("res://systems/entity_lifecycle_runner.gd")
 
 # ---------------------------------------------------------------------------
 # Runtime state
@@ -60,6 +61,7 @@ var runtime_state_buckets: Dictionary = {}
 const EVENT_HISTORY_LIMIT := 200
 var _quest_tracker: QuestTracker = null
 var _status_effect_runner: Node = null
+var _entity_lifecycle_runner: Node = null
 
 # ---------------------------------------------------------------------------
 # Boot
@@ -70,6 +72,8 @@ func _ready() -> void:
 	add_child(_quest_tracker)
 	_status_effect_runner = STATUS_EFFECT_RUNNER.new()
 	add_child(_status_effect_runner)
+	_entity_lifecycle_runner = ENTITY_LIFECYCLE_RUNNER.new()
+	add_child(_entity_lifecycle_runner)
 
 
 # ---------------------------------------------------------------------------

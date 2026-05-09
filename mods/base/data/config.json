@@ -98,6 +98,29 @@
       ]
     }
   },
+  "entity_lifecycle": {
+    "rules": [
+      {
+        "rule_id": "base:zero_health_incapacitated",
+        "display_name": "Incapacitated",
+        "stat": "health",
+        "state_flag": "base:incapacitated",
+        "condition": {
+          "type": "stat_check",
+          "entity_id": "context:entity",
+          "stat": "health",
+          "op": "<=",
+          "value": 0
+        },
+        "notification": "{entity_name} is incapacitated.",
+        "notification_level": "warning",
+        "clear_when_condition_false": true,
+        "exit_notification": "{entity_name} is no longer incapacitated.",
+        "exit_notification_level": "info",
+        "game_over_on_player": true
+      }
+    ]
+  },
   "ai": {
     "narration_enabled": true,
     "task_flavor_enabled": true,

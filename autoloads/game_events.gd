@@ -27,6 +27,7 @@ const SIGNAL_CATALOG := {
 		{"name": "entity_stat_changed", "args": ["entity_id", "stat_key", "old_value", "new_value"]},
 		{"name": "entity_reputation_changed", "args": ["entity_id", "faction_id", "old_value", "new_value"]},
 		{"name": "flag_changed", "args": ["entity_id", "flag_id", "value"]},
+		{"name": "entity_lifecycle_state_changed", "args": ["entity_id", "rule_id", "state_flag", "active"]},
 		{"name": "status_effect_applied", "args": ["entity_id", "status_effect_id", "runtime_id"]},
 		{"name": "status_effect_ticked", "args": ["entity_id", "status_effect_id", "runtime_id"]},
 		{"name": "status_effect_expired", "args": ["entity_id", "status_effect_id", "runtime_id"]},
@@ -119,6 +120,7 @@ signal player_stat_changed(stat_key: String, old_value: float, new_value: float)
 signal entity_stat_changed(entity_id: String, stat_key: String, old_value: float, new_value: float)
 signal entity_reputation_changed(entity_id: String, faction_id: String, old_value: float, new_value: float)
 signal flag_changed(entity_id: String, flag_id: String, value: Variant)
+signal entity_lifecycle_state_changed(entity_id: String, rule_id: String, state_flag: String, active: bool)
 signal status_effect_applied(entity_id: String, status_effect_id: String, runtime_id: String)
 signal status_effect_ticked(entity_id: String, status_effect_id: String, runtime_id: String)
 signal status_effect_expired(entity_id: String, status_effect_id: String, runtime_id: String)

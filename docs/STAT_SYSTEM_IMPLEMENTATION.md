@@ -105,6 +105,8 @@ Field expectations:
 
 The `_max` suffix remains the required naming convention for capacity stats, but metadata should be the source of truth for validation and tooling.
 
+Runtime failure states are not hardcoded into the stat system. `EntityLifecycleRunner` evaluates `config.json` `entity_lifecycle.rules` against normal `ConditionEvaluator` blocks, so base content can treat `health <= 0` as incapacitated while a total conversion can use any other stat, flag, or condition.
+
 ## Always Paired Stats
 
 **Rule:** If you define one, you MUST define the other.

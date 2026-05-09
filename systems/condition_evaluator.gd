@@ -369,6 +369,13 @@ static func _check_encounter_tag(condition: Dictionary, context: Dictionary = {}
 static func _resolve_entity(entity_id: String, context: Dictionary = {}) -> EntityInstance:
 	if entity_id.is_empty() or entity_id == "player":
 		return GameState.player as EntityInstance
+	if entity_id.begins_with("context:"):
+		var context_key := entity_id.trim_prefix("context:")
+		var context_value: Variant = context.get(context_key, null)
+		if context_value is EntityInstance:
+			return context_value as EntityInstance
+		if context_value is String:
+			return _resolve_entity(str(context_value), {})
 	if entity_id.begins_with("encounter:"):
 		var role := entity_id.trim_prefix("encounter:")
 		var encounter_entities_value: Variant = context.get("encounter_entities", {})

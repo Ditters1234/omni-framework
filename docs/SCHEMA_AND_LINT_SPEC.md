@@ -158,6 +158,7 @@ Rules:
 - `game.starting_discovered_locations` must be an array of known location ids when present.
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when present.
 - `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)`, or objects with a non-empty `label` plus `ticks` or a parseable `time` label. Object entries may reference a known `task_template_id` and may include `completion_actions` validated as normal action payloads.
+- `entity_lifecycle.rules` must be an array when present. Each rule should include a non-empty `rule_id`, a condition dictionary, and only reference stats/flags/actions that exist in the active mod stack. Lifecycle rules are allowed to reference any authored stat; there is no engine-required `health` or `death` stat.
 - `task_routines` must be an array of routine objects when present. Each routine must declare `entity_id` and `entries`. Each entry must declare a tick field (`tick`, `at_tick`, or `tick_into_day`) and a task template field (`task_template_id` or `template_id`). Referenced entity ids and task template ids must exist.
 
 ### Factions
@@ -216,7 +217,7 @@ Rules:
 
 ### Config
 
-- Validate known subtrees strictly: `game`, `balance`, `ui`, `stats`, `ai`
+- Validate known subtrees strictly: `game`, `balance`, `ui`, `stats`, `entity_lifecycle`, `ai`
 - Unknown keys inside strict subtrees should warn or error depending on maturity of the schema.
 - Config should remain more permissive than gameplay template files, but not unbounded.
 
