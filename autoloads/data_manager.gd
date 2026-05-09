@@ -1495,6 +1495,21 @@ func _validate_config_references() -> void:
 		var ui_config: Dictionary = ui_config_value
 		_validate_time_advance_buttons(ui_config)
 
+	var economy_config_value: Variant = config.get("economy", {})
+	if economy_config_value is Dictionary:
+		var economy_config: Dictionary = economy_config_value
+		_validate_default_currency_config(economy_config)
+
+	var tasks_config_value: Variant = config.get("tasks", {})
+	if tasks_config_value is Dictionary:
+		var tasks_config: Dictionary = tasks_config_value
+		_validate_default_task_config(tasks_config)
+
+	var crafting_config_value: Variant = config.get("crafting", {})
+	if crafting_config_value is Dictionary:
+		var crafting_config: Dictionary = crafting_config_value
+		_validate_crafting_config(crafting_config)
+
 	var ai_config_value: Variant = config.get("ai", {})
 	if ai_config_value is Dictionary:
 		var ai_config: Dictionary = ai_config_value
@@ -1583,6 +1598,39 @@ func _validate_time_advance_object_entry(index: int, button_config: Dictionary) 
 			_validate_action_payload("base", OmniConstants.DATA_CONFIG, action_value, "%s.completion_actions[%d]" % [field_path, action_index])
 
 
+func _validate_default_currency_config(economy_config: Dictionary) -> void:
+	if not economy_config.has("default_currency_id"):
+		return
+	var currency_id := str(economy_config.get("default_currency_id", "")).strip_edges()
+	if currency_id.is_empty():
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'economy.default_currency_id' must be a non-empty string.")
+		return
+	var currency_ids := _get_known_currency_ids()
+	if not currency_ids.has(currency_id):
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'economy.default_currency_id' references unknown currency '%s'." % currency_id)
+
+
+func _validate_default_task_config(tasks_config: Dictionary) -> void:
+	for field_name in ["default_assignment_task_template_id", "default_travel_task_template_id"]:
+		if not tasks_config.has(field_name):
+			continue
+		var task_id := str(tasks_config.get(field_name, "")).strip_edges()
+		if task_id.is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'tasks.%s' must be a non-empty string." % field_name)
+		elif not has_task(task_id):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'tasks.%s' references unknown task '%s'." % [field_name, task_id])
+
+
+func _validate_crafting_config(crafting_config: Dictionary) -> void:
+	if not crafting_config.has("default_task_template_id"):
+		return
+	var task_id := str(crafting_config.get("default_task_template_id", "")).strip_edges()
+	if task_id.is_empty():
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'crafting.default_task_template_id' must be a non-empty string.")
+	elif not has_task(task_id):
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'crafting.default_task_template_id' references unknown task '%s'." % task_id)
+
+
 func _validate_ai_config(ai_config: Dictionary) -> void:
 	if ai_config.has("default_persona_id"):
 		var default_persona_id_value: Variant = ai_config.get("default_persona_id", "")
@@ -1590,6 +1638,13 @@ func _validate_ai_config(ai_config: Dictionary) -> void:
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.default_persona_id' must be a non-empty string.")
 		elif not has_ai_persona(str(default_persona_id_value)):
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.default_persona_id' references unknown AI persona '%s'." % str(default_persona_id_value))
+
+	if ai_config.has("encounter_log_template_id"):
+		var encounter_log_template_value: Variant = ai_config.get("encounter_log_template_id", "")
+		if not (encounter_log_template_value is String) or str(encounter_log_template_value).strip_edges().is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.encounter_log_template_id' must be a non-empty string.")
+		elif not has_ai_template(str(encounter_log_template_value)):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.encounter_log_template_id' references unknown AI template '%s'." % str(encounter_log_template_value))
 
 	for flag_key in ["narration_enabled", "task_flavor_enabled", "lore_enabled", "encounter_log_flavor_enabled"]:
 		if ai_config.has(flag_key) and not (ai_config.get(flag_key, false) is bool):

@@ -23,13 +23,14 @@ func render(view_model: Dictionary) -> void:
 
 
 func _apply_view_model(view_model: Dictionary) -> void:
-	var currency_id := str(view_model.get("currency_id", "credits"))
+	var currency_id := str(view_model.get("currency_id", "")).strip_edges()
 	var budget := float(view_model.get("budget", 0.0))
 	var spent := float(view_model.get("spent", 0.0))
 	var remaining := float(view_model.get("remaining", budget - spent))
 	var currency_symbol := str(view_model.get("currency_symbol", ""))
 
-	_title_label.text = "%s Budget" % currency_id.capitalize()
+	var currency_label := currency_id.capitalize() if not currency_id.is_empty() else "Currency"
+	_title_label.text = "%s Budget" % currency_label
 	_available_label.text = "Starting: %s" % _format_amount(budget, currency_symbol)
 	_spent_label.text = "Spent: %s" % _format_amount(spent, currency_symbol)
 	_remaining_label.text = "Remaining: %s" % _format_amount(remaining, currency_symbol)

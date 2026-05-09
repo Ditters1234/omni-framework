@@ -550,15 +550,13 @@ static func _reputation_tier_for_value(value: float) -> String:
 
 
 static func _color_token_for_group(group_name: String) -> String:
-	match group_name:
-		"combat":
-			return "warning"
-		"survival":
-			return "positive"
-		"economy":
-			return "primary"
-		_:
-			return "info"
+	var configured_value: Variant = DataManager.get_config_value("ui.stat_group_color_tokens", {})
+	if configured_value is Dictionary:
+		var configured: Dictionary = configured_value
+		var color_token := str(configured.get(group_name, "")).strip_edges()
+		if not color_token.is_empty():
+			return color_token
+	return "info"
 
 
 static func _format_number(amount: float) -> String:

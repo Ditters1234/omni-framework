@@ -343,7 +343,7 @@ func _on_assign_contract_button_pressed() -> void:
 		"faction_id": faction_id,
 		"assignee_entity_id": entity_id,
 		"owner_entity_id": str(_last_view_model.get("owner_entity_id", "player")),
-		"assignment_task_template_id": str(_last_view_model.get("assignment_task_template_id", "base:goto_location")),
+		"assignment_task_template_id": str(_last_view_model.get("assignment_task_template_id", "")),
 		"auto_dispatch_first_reach_location": true,
 		"return_to_owned_entities": true,
 		"screen_title": "Assign Contract",

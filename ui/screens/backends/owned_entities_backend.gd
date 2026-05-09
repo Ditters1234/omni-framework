@@ -5,7 +5,6 @@ class_name OmniOwnedEntitiesBackend
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const TASK_ACTIVITY_SUMMARY := preload("res://systems/task_activity_summary.gd")
-const DEFAULT_ASSIGNMENT_TASK_ID := "base:goto_location"
 const DEFAULT_SUMMARY_STAT_LIMIT := 4
 const FILTER_ALL := "all"
 const FILTER_IDLE := "idle"
@@ -109,7 +108,7 @@ func build_view_model() -> Dictionary:
 		"can_assign_contract": not _get_string_param(_params, "assignment_faction_id", "").is_empty() and not selected_row.is_empty(),
 		"has_assignable_destination": _has_enabled_location(locations),
 		"suggested_location_id": _suggested_location_id,
-		"assignment_task_template_id": _get_string_param(_params, "assignment_task_template_id", DEFAULT_ASSIGNMENT_TASK_ID),
+		"assignment_task_template_id": _get_string_param(_params, "assignment_task_template_id", _get_default_assignment_task_id()),
 		"assignment_faction_id": _get_string_param(_params, "assignment_faction_id", ""),
 		"assignment_provider_entity_id": _get_string_param(_params, "assignment_provider_entity_id", ""),
 		"owner_entity_id": _get_string_param(_params, "owner_entity_id", "player"),
@@ -149,7 +148,7 @@ func assign_selected_to_location(location_id: String) -> void:
 	if route_cost < 0:
 		_status_text = "No route is available from this entity's current location."
 		return
-	var task_id := _get_string_param(_params, "assignment_task_template_id", DEFAULT_ASSIGNMENT_TASK_ID)
+	var task_id := _get_string_param(_params, "assignment_task_template_id", _get_default_assignment_task_id())
 	if not DataManager.has_task(task_id):
 		_status_text = "Assignment task template '%s' is not registered." % task_id
 		return
@@ -547,6 +546,11 @@ func _normalize_sort(value: String) -> String:
 	if [SORT_NAME, SORT_LOCATION, SORT_TASK].has(normalized):
 		return normalized
 	return SORT_NAME
+
+
+func _get_default_assignment_task_id() -> String:
+	var value: Variant = DataManager.get_config_value("tasks.default_assignment_task_template_id", DataManager.get_config_value("tasks.default_travel_task_template_id", ""))
+	return str(value).strip_edges()
 
 
 func _read_string_array(value: Variant) -> Array[String]:

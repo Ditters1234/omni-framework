@@ -6,7 +6,7 @@ const SCREEN_MAIN_MENU := "main_menu"
 
 var target_entity_lookup_id: String = "player"
 var budget_entity_lookup_id: String = ""
-var budget_currency_id: String = "credits"
+var budget_currency_id: String = ""
 var payment_recipient_lookup_id: String = ""
 var option_source_entity_lookup_id: String = ""
 var option_tags: Array[String] = []
@@ -28,7 +28,7 @@ var confirm_label: String = "Confirm"
 func apply_params(params: Dictionary) -> void:
 	target_entity_lookup_id = _read_string(params, "target_entity_id", "player")
 	budget_entity_lookup_id = _read_string(params, "budget_entity_id", "")
-	budget_currency_id = _read_string(params, "budget_currency_id", "credits")
+	budget_currency_id = _read_string(params, "budget_currency_id", _read_default_budget_currency_id())
 	payment_recipient_lookup_id = _read_string(params, "payment_recipient_id", "")
 	option_source_entity_lookup_id = _read_string(params, "option_source_entity_id", "")
 	next_screen_id = _read_string(params, "next_screen_id", "")
@@ -110,6 +110,11 @@ static func _to_string_array(values: Variant) -> Array[String]:
 
 static func _read_string(params: Dictionary, field_name: String, default_value: String = "") -> String:
 	return str(params.get(field_name, default_value))
+
+
+static func _read_default_budget_currency_id() -> String:
+	var value: Variant = DataManager.get_config_value("economy.default_currency_id", DataManager.get_config_value("ui.default_budget_currency_id", ""))
+	return str(value).strip_edges()
 
 
 static func _read_bool(params: Dictionary, field_name: String, default_value: bool) -> bool:

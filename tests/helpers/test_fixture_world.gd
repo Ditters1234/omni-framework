@@ -212,6 +212,16 @@ static func _seed_config() -> void:
 				},
 			},
 		},
+		"economy": {
+			"default_currency_id": "credits",
+		},
+		"tasks": {
+			"default_assignment_task_template_id": "base:goto_location",
+			"default_travel_task_template_id": "base:goto_location",
+		},
+		"crafting": {
+			"default_task_template_id": "base:recipe_craft",
+		},
 		"ui": {
 			"main_menu": {
 				"title": "Fixture World",
@@ -224,12 +234,19 @@ static func _seed_config() -> void:
 				"quit_label": "Quit",
 			},
 			"time_advance_buttons": ["1 tick", "1 hour", "1 day"],
+			"stat_group_color_tokens": {
+				"combat": "warning",
+				"survival": "positive",
+			},
 		},
 		"stats": {
 			"groups": {
 				"combat": ["strength", "power"],
 				"survival": ["health", "health_max"]
 			}
+		},
+		"ai": {
+			"encounter_log_template_id": "base:encounter_log_flavor",
 		}
 	}
 

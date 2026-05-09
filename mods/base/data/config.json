@@ -42,6 +42,16 @@
       }
     }
   },
+  "economy": {
+    "default_currency_id": "credits"
+  },
+  "tasks": {
+    "default_assignment_task_template_id": "base:goto_location",
+    "default_travel_task_template_id": "base:goto_location"
+  },
+  "crafting": {
+    "default_task_template_id": "base:recipe_craft"
+  },
   "ui": {
     "main_menu": {
       "title": "Neon Threshold",
@@ -78,6 +88,30 @@
       "color_negative": "#f87171",
       "color_warning": "#fbbf24",
       "color_info": "#60a5fa"
+    },
+    "stat_group_color_tokens": {
+      "combat": "warning",
+      "survival": "positive",
+      "economy": "primary"
+    },
+    "default_sprites": {
+      "parts": {
+        "head": "res://mods/base/assets/images/fallbacks/generic_head.png",
+        "hair": "res://mods/base/assets/images/fallbacks/generic_hat.png",
+        "torso": "res://mods/base/assets/images/fallbacks/generic_torso.png",
+        "body_core": "res://mods/base/assets/images/fallbacks/generic_torso.png",
+        "arm": "res://mods/base/assets/images/fallbacks/generic_arm.png",
+        "wing": "res://mods/base/assets/images/fallbacks/generic_arm.png",
+        "leg": "res://mods/base/assets/images/fallbacks/generic_leg.png",
+        "tail": "res://mods/base/assets/images/fallbacks/generic_leg.png",
+        "hand": "res://mods/base/assets/images/fallbacks/generic_hand.png",
+        "foot": "res://mods/base/assets/images/fallbacks/generic_foot.png",
+        "nose_cone": "res://mods/base/assets/images/fallbacks/generic_cyberware.png",
+        "fin": "res://mods/base/assets/images/fallbacks/generic_cyberware.png",
+        "thruster": "res://mods/base/assets/images/fallbacks/generic_cyberware.png",
+        "vehicle_core": "res://mods/base/assets/images/fallbacks/generic_cyberware.png",
+        "rocket_core": "res://mods/base/assets/images/fallbacks/generic_cyberware.png"
+      }
     }
   },
   "stats": {
@@ -126,6 +160,7 @@
     "task_flavor_enabled": true,
     "lore_enabled": true,
     "encounter_log_flavor_enabled": true,
+    "encounter_log_template_id": "base:encounter_log_flavor",
     "world_gen_hooks": {
       "narration": "res://mods/base/scripts/ai_narration_hook.gd",
       "task_flavor": "res://mods/base/scripts/ai_task_flavor_hook.gd",

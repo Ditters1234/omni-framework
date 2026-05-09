@@ -4,7 +4,6 @@ class_name OmniCraftingBackend
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
-const RECIPE_CRAFT_TASK_ID := "base:recipe_craft"
 
 var _params: Dictionary = {}
 var _selected_recipe_id: String = ""
@@ -29,6 +28,7 @@ static func register_contract() -> void:
 			"next_screen_id",
 			"next_screen_params",
 			"pop_on_confirm",
+			"craft_task_template_id",
 		],
 		"field_types": {
 			"station_id": TYPE_STRING,
@@ -46,6 +46,7 @@ static func register_contract() -> void:
 			"next_screen_id": TYPE_STRING,
 			"next_screen_params": TYPE_DICTIONARY,
 			"pop_on_confirm": TYPE_BOOL,
+			"craft_task_template_id": TYPE_STRING,
 		},
 		"array_element_types": {
 			"recipe_tags": TYPE_STRING,
@@ -133,7 +134,8 @@ func confirm() -> Dictionary:
 		_status_text = "Crafting failed while consuming inputs."
 		return {}
 	if craft_time_ticks > 0:
-		var runtime_id := TimeKeeper.accept_task(RECIPE_CRAFT_TASK_ID, {
+		var craft_task_id := _resolve_craft_task_template_id(recipe)
+		var runtime_id := TimeKeeper.accept_task(craft_task_id, {
 			"entity_id": output_destination.entity_id,
 			"task_type": TaskRunner.TASK_TYPE_CRAFT,
 			"duration": craft_time_ticks,
@@ -201,13 +203,28 @@ func _recipe_matches_station(recipe: Dictionary, station_id: String) -> bool:
 func _can_start_timed_craft(craft_time_ticks: int) -> bool:
 	if craft_time_ticks <= 0:
 		return true
-	if not DataManager.has_task(RECIPE_CRAFT_TASK_ID):
+	var craft_task_id := _resolve_craft_task_template_id(DataManager.get_recipe(_selected_recipe_id))
+	if craft_task_id.is_empty():
+		_status_text = "Timed crafting is unavailable because no craft task template is configured."
+		return false
+	if not DataManager.has_task(craft_task_id):
 		_status_text = "Timed crafting is unavailable because the craft task template is not registered."
 		return false
 	if TimeKeeper == null:
 		_status_text = "Timed crafting is unavailable because the time keeper is not ready."
 		return false
 	return true
+
+
+func _resolve_craft_task_template_id(recipe: Dictionary) -> String:
+	var recipe_task_id := str(recipe.get("craft_task_template_id", "")).strip_edges()
+	if not recipe_task_id.is_empty():
+		return recipe_task_id
+	var param_task_id := str(_params.get("craft_task_template_id", "")).strip_edges()
+	if not param_task_id.is_empty():
+		return param_task_id
+	var config_value: Variant = DataManager.get_config_value("crafting.default_task_template_id", "")
+	return str(config_value).strip_edges()
 
 
 func _build_recipe_rows(crafter: EntityInstance, input_source: EntityInstance) -> Array[Dictionary]:

@@ -210,7 +210,7 @@ Rules:
 - `max_rounds_outcome` and `cancel_outcome` must reference declared outcomes when present.
 - Encounter-local stats may share names with real stats, but this should stay intentional because the runtime keeps them in a separate context namespace.
 - `opponent_strategy` must be an object when present. The only supported production kind is `weighted_random`; advanced strategy kinds are reserved for later work.
-- Optional AI encounter log flavor uses `ai.encounter_log_flavor_enabled` plus an AI template. The default template id is `base:encounter_log_flavor`, but encounter templates and `EncounterBackend` payloads may provide `ai_log_template_id`; non-empty values must reference known AI templates. This text is presentation-only and must not affect encounter mechanics. When AI flavor is active, authored log text is retained as fallback and only displayed if generation fails; requests use `AIManager`'s global queue to avoid provider concurrency failures. While one or more encounter log rows are waiting on AI text, player actions are disabled until the pending line resolves or falls back.
+- Optional AI encounter log flavor uses `ai.encounter_log_flavor_enabled` plus an AI template. Encounter templates and `EncounterBackend` payloads may provide `ai_log_template_id`; otherwise `ai.encounter_log_template_id` from config is used when present. Non-empty values must reference known AI templates. This text is presentation-only and must not affect encounter mechanics. When AI flavor is active, authored log text is retained as fallback and only displayed if generation fails; requests use `AIManager`'s global queue to avoid provider concurrency failures. While one or more encounter log rows are waiting on AI text, player actions are disabled until the pending line resolves or falls back.
 
 ### Achievements
 
@@ -219,7 +219,10 @@ Rules:
 
 ### Config
 
-- Validate known subtrees strictly: `game`, `balance`, `ui`, `stats`, `entity_lifecycle`, `ai`
+- Validate known subtrees strictly: `game`, `balance`, `economy`, `tasks`, `crafting`, `ui`, `stats`, `entity_lifecycle`, `ai`
+- `economy.default_currency_id` must reference a known currency when present.
+- `tasks.default_assignment_task_template_id`, `tasks.default_travel_task_template_id`, and `crafting.default_task_template_id` must reference known task templates when present.
+- `ai.encounter_log_template_id` must reference a known AI template when present.
 - Unknown keys inside strict subtrees should warn or error depending on maturity of the schema.
 - Config should remain more permissive than gameplay template files, but not unbounded.
 

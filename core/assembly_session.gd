@@ -17,7 +17,7 @@ var payer_entity: EntityInstance = null
 ## Initialises the session from source_entity.
 ## If payer is provided, the budget is read from payer's currency instead of
 ## source_entity's — useful for entity-to-entity scenarios (ripperdoc, shipyard).
-func initialize_from_entity(source_entity: EntityInstance, preferred_currency_id: String = "credits", payer: EntityInstance = null) -> void:
+func initialize_from_entity(source_entity: EntityInstance, preferred_currency_id: String = "", payer: EntityInstance = null) -> void:
 	original_entity = _clone_entity(source_entity)
 	draft_entity = _clone_entity(source_entity)
 	var budget_source := payer if payer != null else source_entity

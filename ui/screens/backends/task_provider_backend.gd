@@ -91,13 +91,16 @@ func confirm() -> Dictionary:
 		return {}
 	var assignee_lookup := str(_params.get("assignee_entity_id", "player"))
 	var owner_lookup := str(_params.get("owner_entity_id", "player"))
-	if not GameState.start_quest(quest_id, {
+	var start_params := {
 		"assignee_entity_id": assignee_lookup,
 		"owner_entity_id": owner_lookup,
 		"reward_recipient_entity_id": owner_lookup,
-		"assignment_task_template_id": str(_params.get("assignment_task_template_id", "base:goto_location")),
 		"auto_dispatch_first_reach_location": bool(_params.get("auto_dispatch_first_reach_location", false)),
-	}):
+	}
+	var assignment_task_id := str(_params.get("assignment_task_template_id", _get_default_assignment_task_id())).strip_edges()
+	if not assignment_task_id.is_empty():
+		start_params["assignment_task_template_id"] = assignment_task_id
+	if not GameState.start_quest(quest_id, start_params):
 		_status_text = "That contract could not be accepted right now."
 		return {}
 	var accept_sound := str(_params.get("accept_sound", ""))
@@ -350,7 +353,7 @@ func _build_post_confirm_action(assignee_lookup: String, target_location_id: Str
 	var params := {
 		"owner_entity_id": str(_params.get("owner_entity_id", "player")),
 		"selected_entity_id": _resolve_entity_id_for_params(assignee_lookup),
-		"assignment_task_template_id": str(_params.get("assignment_task_template_id", "base:goto_location")),
+		"assignment_task_template_id": str(_params.get("assignment_task_template_id", _get_default_assignment_task_id())),
 		"assignment_faction_id": str(_params.get("faction_id", "")),
 		"assignment_provider_entity_id": str(_params.get("provider_entity_id", "")),
 		"suggested_location_id": target_location_id,
@@ -377,6 +380,11 @@ func _get_location_display_name(location_id: String) -> String:
 		return ""
 	var location := DataManager.get_location(location_id)
 	return str(location.get("display_name", BACKEND_HELPERS.humanize_id(location_id)))
+
+
+func _get_default_assignment_task_id() -> String:
+	var value: Variant = DataManager.get_config_value("tasks.default_assignment_task_template_id", DataManager.get_config_value("tasks.default_travel_task_template_id", ""))
+	return str(value).strip_edges()
 
 
 func _read_dictionary(value: Variant) -> Dictionary:

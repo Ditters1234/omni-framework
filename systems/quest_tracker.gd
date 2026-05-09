@@ -185,7 +185,8 @@ func _create_quest_instance(template: Dictionary, runtime_id: String, params: Di
 	}
 	if bool(params.get("auto_dispatch_first_reach_location", false)):
 		quest_instance["auto_dispatch_first_reach_location"] = true
-		quest_instance["assignment_task_template_id"] = str(params.get("assignment_task_template_id", "base:goto_location"))
+		var assignment_task_id := str(params.get("assignment_task_template_id", _get_default_assignment_task_id())).strip_edges()
+		quest_instance["assignment_task_template_id"] = assignment_task_id if not assignment_task_id.is_empty() else _get_default_assignment_task_id()
 	GameState.active_quests[runtime_id] = quest_instance
 
 
@@ -351,7 +352,7 @@ func _dispatch_current_stage_assignment_if_needed(runtime_id: String) -> void:
 	if route_cost < 0:
 		_record_assignment_dispatch_status(runtime_id, "unreachable", assignee_entity.entity_id, target_location_id)
 		return
-	var assignment_task_id := str(quest_instance.get("assignment_task_template_id", "base:goto_location"))
+	var assignment_task_id := str(quest_instance.get("assignment_task_template_id", _get_default_assignment_task_id()))
 	if not DataManager.has_task(assignment_task_id):
 		_record_assignment_dispatch_status(runtime_id, "missing_task", assignee_entity.entity_id, target_location_id, assignment_task_id)
 		return
@@ -369,6 +370,11 @@ func _dispatch_current_stage_assignment_if_needed(runtime_id: String) -> void:
 		_record_assignment_dispatch_status(runtime_id, "failed", assignee_entity.entity_id, target_location_id)
 		return
 	_record_assignment_dispatch_status(runtime_id, "dispatched", assignee_entity.entity_id, target_location_id, "", task_runtime_id)
+
+
+func _get_default_assignment_task_id() -> String:
+	var value: Variant = DataManager.get_config_value("tasks.default_assignment_task_template_id", DataManager.get_config_value("tasks.default_travel_task_template_id", ""))
+	return str(value).strip_edges()
 
 
 func _resolve_stage_reach_location_for_assignee(stage: Dictionary, quest_instance: Dictionary, assignee_entity: EntityInstance) -> String:

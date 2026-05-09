@@ -467,7 +467,7 @@ Current status: final polish complete. The repository now has `recipes.json`, `R
 
 1. New data type: `recipes.json` schema + `RecipeRegistry` loader + `DataManager.get_recipe` / `query_recipes` / `query_recipes_by_tag`. Done.
 2. `CraftingBackend` + `crafting_screen` + `recipe_card` integration. Done.
-3. Timed-craft task type wired through `TaskRunner` for `craft_time_ticks > 0`. Done via the generic `base:recipe_craft` task shell and runtime reward overrides.
+3. Timed-craft task type wired through `TaskRunner` for `craft_time_ticks > 0`. Done via a config-selected `CRAFT` task shell and runtime reward overrides.
 4. Base mod ships at least one example recipe and one crafting station on a test location for the integration test. Done with the diagnostic crafting bench.
 
 ### Phase 7 — World Map (~2 days)

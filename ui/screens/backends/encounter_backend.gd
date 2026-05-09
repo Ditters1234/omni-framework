@@ -6,7 +6,6 @@ const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_regis
 const BACKEND_HELPERS := preload("res://ui/screens/backends/backend_helpers.gd")
 const ENCOUNTER_RUNTIME := preload("res://systems/encounter_runtime.gd")
 
-const DEFAULT_AI_LOG_TEMPLATE_ID := "base:encounter_log_flavor"
 const AI_LOG_SYSTEM_PROMPT := "You rewrite resolved encounter actions for a game log. Preserve the supplied mechanical result and stat changes. Return exactly one short sentence."
 const AI_LOG_MAX_LENGTH := 180
 const AI_LOG_PENDING_TEXT := "Resolving action..."
@@ -683,8 +682,12 @@ func _get_ai_log_template_id() -> String:
 	var param_template_id := str(param_template_value).strip_edges()
 	if not param_template_id.is_empty():
 		return param_template_id
-	var template_value: Variant = _template.get("ai_log_template_id", DEFAULT_AI_LOG_TEMPLATE_ID)
-	return str(template_value).strip_edges()
+	var template_value: Variant = _template.get("ai_log_template_id", "")
+	var template_id := str(template_value).strip_edges()
+	if not template_id.is_empty():
+		return template_id
+	var config_value: Variant = DataManager.get_config_value("ai.encounter_log_template_id", "")
+	return str(config_value).strip_edges()
 
 
 func _enqueue_ai_log_request(ai_request: Dictionary) -> void:

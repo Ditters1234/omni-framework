@@ -850,7 +850,7 @@ func _on_open_assembly_button_pressed() -> void:
 	var params := {
 		"target_entity_id": "player",
 		"budget_entity_id": "player",
-		"budget_currency_id": "credits",
+		"budget_currency_id": _resolve_player_budget_currency_id(),
 		"option_source_entity_id": "player",
 		"screen_title": "Manage Equipment",
 		"screen_description": "Equip carried parts and preview stat changes before committing.",
@@ -861,6 +861,19 @@ func _on_open_assembly_button_pressed() -> void:
 	if _opened_from_gameplay_shell and UIRouter.open_in_gameplay_shell(SCREEN_ASSEMBLY_EDITOR, params):
 		return
 	UIRouter.push(SCREEN_ASSEMBLY_EDITOR, params)
+
+
+func _resolve_player_budget_currency_id() -> String:
+	var configured_value: Variant = DataManager.get_config_value("economy.default_currency_id", DataManager.get_config_value("ui.default_budget_currency_id", ""))
+	var configured_id := str(configured_value).strip_edges()
+	var player := GameState.player as EntityInstance
+	if player != null and not configured_id.is_empty() and player.currencies.has(configured_id):
+		return configured_id
+	if player == null or player.currencies.is_empty():
+		return configured_id
+	var currency_keys: Array = player.currencies.keys()
+	currency_keys.sort()
+	return str(currency_keys[0])
 
 
 func _on_equip_item_button_pressed() -> void:

@@ -224,23 +224,6 @@ func _resolve_sprite_path(part_template: Variant, default_sprite_paths: Dictiona
 	var configured_sprite := _resolve_configured_default_sprite(tags, default_sprite_paths)
 	if not configured_sprite.is_empty():
 		return configured_sprite
-	if "head" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_head.png"
-	if "hair" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_hat.png"
-	if "torso" in tags or "body_core" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_torso.png"
-	if "arm" in tags or "wing" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_arm.png"
-	if "leg" in tags or "tail" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_leg.png"
-	if "hand" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_hand.png"
-	if "foot" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_foot.png"
-	if "nose_cone" in tags or "fin" in tags or "thruster" in tags or "vehicle_core" in tags or "rocket_core" in tags:
-		return "res://mods/base/assets/images/fallbacks/generic_cyberware.png"
-
 	return ROOT_FALLBACK
 
 
