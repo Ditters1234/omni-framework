@@ -103,6 +103,15 @@ layout_mode = 2
 autowrap_mode = 3
 text = ""
 
+[node name="TaskQueueLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox"]
+layout_mode = 2
+text = "Task Queue"
+
+[node name="TaskQueueContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
 [node name="DestinationRow" type="HFlowContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox"]
 layout_mode = 2
 size_flags_horizontal = 3

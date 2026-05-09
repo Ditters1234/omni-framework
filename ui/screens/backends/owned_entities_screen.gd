@@ -16,6 +16,8 @@ const STACKED_LAYOUT_WIDTH := 760.0
 @onready var _selected_title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/SelectedTitleLabel
 @onready var _selected_description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/SelectedDescriptionLabel
 @onready var _selected_meta_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/SelectedMetaLabel
+@onready var _task_queue_label: Label = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/TaskQueueLabel
+@onready var _task_queue_container: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/TaskQueueContainer
 @onready var _destination_button: OptionButton = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/DestinationRow/DestinationButton
 @onready var _assign_location_button: Button = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/DestinationRow/AssignLocationButton
 @onready var _inspect_button: Button = $MarginContainer/PanelContainer/VBoxContainer/MainContent/DetailPanel/DetailBox/ActionRow/InspectButton
@@ -158,6 +160,7 @@ func _render_selected(row: Dictionary) -> void:
 		_selected_title_label.text = "Select an entity"
 		_selected_description_label.text = ""
 		_selected_meta_label.text = ""
+		_render_task_queue([])
 		return
 	_selected_title_label.text = str(row.get("display_name", row.get("entity_id", "Entity")))
 	_selected_description_label.text = str(row.get("description", ""))
@@ -174,6 +177,40 @@ func _render_selected(row: Dictionary) -> void:
 		str(int(row.get("equipped_count", 0))),
 		str(int(row.get("inventory_count", 0))),
 	]
+	_render_task_queue(_read_dictionary_array(row.get("task_rows", [])))
+
+
+func _render_task_queue(rows: Array[Dictionary]) -> void:
+	_clear_children(_task_queue_container)
+	_task_queue_label.visible = not rows.is_empty()
+	_task_queue_container.visible = not rows.is_empty()
+	if rows.is_empty():
+		return
+	for row in rows:
+		var task_row := HBoxContainer.new()
+		task_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var label := Label.new()
+		label.text = str(row.get("display_text", "Task"))
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		task_row.add_child(label)
+		var runtime_id := str(row.get("runtime_id", ""))
+		var up_button := Button.new()
+		up_button.text = "Up"
+		up_button.disabled = not bool(row.get("can_move_up", false))
+		up_button.pressed.connect(_on_move_task_pressed.bind(runtime_id, -1))
+		task_row.add_child(up_button)
+		var down_button := Button.new()
+		down_button.text = "Down"
+		down_button.disabled = not bool(row.get("can_move_down", false))
+		down_button.pressed.connect(_on_move_task_pressed.bind(runtime_id, 1))
+		task_row.add_child(down_button)
+		var cancel_button := Button.new()
+		cancel_button.text = "Cancel"
+		cancel_button.disabled = not bool(row.get("can_cancel", false))
+		cancel_button.pressed.connect(_on_cancel_task_pressed.bind(runtime_id))
+		task_row.add_child(cancel_button)
+		_task_queue_container.add_child(task_row)
 
 
 func _render_locations(rows: Array[Dictionary]) -> void:
@@ -261,6 +298,16 @@ func _on_recall_button_pressed() -> void:
 	_refresh_state()
 
 
+func _on_move_task_pressed(runtime_id: String, direction: int) -> void:
+	_backend.move_queued_task(runtime_id, direction)
+	_refresh_state()
+
+
+func _on_cancel_task_pressed(runtime_id: String) -> void:
+	_backend.cancel_task(runtime_id)
+	_refresh_state()
+
+
 func _on_inspect_button_pressed() -> void:
 	var entity_id := _get_selected_entity_id()
 	if entity_id.is_empty():
@@ -339,6 +386,12 @@ func _connect_runtime_signals() -> void:
 	var task_completed_callback := Callable(self, "_on_runtime_state_changed")
 	if GameEvents.has_signal("task_completed") and not GameEvents.is_connected("task_completed", task_completed_callback):
 		GameEvents.task_completed.connect(_on_runtime_state_changed)
+	var task_abandoned_callback := Callable(self, "_on_runtime_state_changed")
+	if GameEvents.has_signal("task_abandoned") and not GameEvents.is_connected("task_abandoned", task_abandoned_callback):
+		GameEvents.task_abandoned.connect(_on_runtime_state_changed)
+	var task_queue_callback := Callable(self, "_on_runtime_state_changed")
+	if GameEvents.has_signal("task_queue_changed") and not GameEvents.is_connected("task_queue_changed", task_queue_callback):
+		GameEvents.task_queue_changed.connect(_on_runtime_state_changed)
 	var location_callback := Callable(self, "_on_runtime_state_changed")
 	if GameEvents.has_signal("location_changed") and not GameEvents.is_connected("location_changed", location_callback):
 		GameEvents.location_changed.connect(_on_runtime_state_changed)
@@ -355,6 +408,10 @@ func _disconnect_runtime_signals() -> void:
 		GameEvents.task_started.disconnect(_on_runtime_state_changed)
 	if GameEvents.has_signal("task_completed") and GameEvents.is_connected("task_completed", callback):
 		GameEvents.task_completed.disconnect(_on_runtime_state_changed)
+	if GameEvents.has_signal("task_abandoned") and GameEvents.is_connected("task_abandoned", callback):
+		GameEvents.task_abandoned.disconnect(_on_runtime_state_changed)
+	if GameEvents.has_signal("task_queue_changed") and GameEvents.is_connected("task_queue_changed", callback):
+		GameEvents.task_queue_changed.disconnect(_on_runtime_state_changed)
 	if GameEvents.has_signal("location_changed") and GameEvents.is_connected("location_changed", callback):
 		GameEvents.location_changed.disconnect(_on_runtime_state_changed)
 	if GameEvents.has_signal("tick_advanced") and GameEvents.is_connected("tick_advanced", callback):

@@ -52,6 +52,8 @@ const SIGNAL_CATALOG := {
 		{"name": "quest_failed", "args": ["quest_id"]},
 		{"name": "task_started", "args": ["task_id", "entity_id"]},
 		{"name": "task_completed", "args": ["task_id", "entity_id"]},
+		{"name": "task_abandoned", "args": ["task_id", "entity_id"]},
+		{"name": "task_queue_changed", "args": ["entity_id"]},
 		{"name": "dialogue_started", "args": ["entity_id", "dialogue_resource"]},
 		{"name": "dialogue_ended", "args": ["entity_id", "dialogue_resource"]},
 	],
@@ -151,6 +153,8 @@ signal quest_completed(quest_id: String)
 signal quest_failed(quest_id: String)
 signal task_started(task_id: String, entity_id: String)
 signal task_completed(task_id: String, entity_id: String)
+signal task_abandoned(task_id: String, entity_id: String)
+signal task_queue_changed(entity_id: String)
 signal dialogue_started(entity_id: String, dialogue_resource: String)
 signal dialogue_ended(entity_id: String, dialogue_resource: String)
 

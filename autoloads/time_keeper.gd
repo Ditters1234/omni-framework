@@ -163,6 +163,12 @@ func abandon_task(runtime_id: String) -> void:
 	_task_runner.abandon_task(runtime_id)
 
 
+func move_queued_task(runtime_id: String, direction: int) -> bool:
+	if _task_runner == null:
+		return false
+	return _task_runner.move_queued_task(runtime_id, direction)
+
+
 func sync_from_game_state() -> void:
 	var ticks_per_day := _get_ticks_per_day()
 	_normalize_game_state_time(ticks_per_day)

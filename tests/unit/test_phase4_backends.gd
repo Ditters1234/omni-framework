@@ -898,6 +898,83 @@ func test_owned_entities_backend_can_queue_assignment_behind_active_task() -> vo
 	assert_eq(active_travel_count, 1)
 
 
+func test_owned_entities_backend_can_reorder_and_cancel_entity_tasks() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	DataManager.tasks["base:test_queue_wait"] = {
+		"template_id": "base:test_queue_wait",
+		"display_name": "Wait",
+		"type": "WAIT",
+		"duration": 5,
+		"repeatable": true,
+	}
+	DataManager.tasks["base:test_queue_travel"] = {
+		"template_id": "base:test_queue_travel",
+		"display_name": "Travel",
+		"type": "TRAVEL",
+		"repeatable": true,
+	}
+	var drone_template := {
+		"entity_id": "base:test_queue_editor_drone",
+		"display_name": "Queue Editor Drone",
+		"description": "Queue editing fixture.",
+		"location_id": TEST_FIXTURE_WORLD.starting_location_id(),
+		"stats": {"power": 1},
+		"inventory": [],
+	}
+	DataManager.entities["base:test_queue_editor_drone"] = drone_template.duplicate(true)
+	var drone := EntityInstance.from_template(drone_template)
+	GameState.commit_entity_instance(drone, "base:test_queue_editor_drone")
+	player.owned_entity_ids = ["base:test_queue_editor_drone"]
+	var active_runtime_id := TimeKeeper.accept_task("base:test_queue_wait", {
+		"entity_id": "base:test_queue_editor_drone",
+		"allow_duplicate": true,
+	})
+	var first_queued_runtime_id := TimeKeeper.accept_task("base:test_queue_travel", {
+		"entity_id": "base:test_queue_editor_drone",
+		"target": TEST_FIXTURE_WORLD.connected_location_id(),
+		"queue_if_busy": true,
+		"allow_duplicate": true,
+	})
+	var second_queued_runtime_id := TimeKeeper.accept_task("base:test_queue_wait", {
+		"entity_id": "base:test_queue_editor_drone",
+		"queue_if_busy": true,
+		"allow_duplicate": true,
+	})
+	assert_false(active_runtime_id.is_empty())
+	assert_false(first_queued_runtime_id.is_empty())
+	assert_false(second_queued_runtime_id.is_empty())
+	var backend: RefCounted = OWNED_ENTITIES_BACKEND.new()
+	backend.initialize({
+		"owner_entity_id": "player",
+		"selected_entity_id": "base:test_queue_editor_drone",
+	})
+
+	backend.move_queued_task(second_queued_runtime_id, -1)
+
+	var reordered_view: Dictionary = backend.build_view_model()
+	var selected_value: Variant = reordered_view.get("selected_entity", {})
+	assert_true(selected_value is Dictionary)
+	var selected: Dictionary = selected_value if selected_value is Dictionary else {}
+	var queue_rows := _read_dictionary_array(selected.get("queue_rows", []))
+	assert_eq(queue_rows.size(), 2)
+	if queue_rows.size() >= 2:
+		assert_eq(str(queue_rows[0].get("runtime_id", "")), second_queued_runtime_id)
+		assert_eq(str(queue_rows[1].get("runtime_id", "")), first_queued_runtime_id)
+
+	backend.cancel_task(active_runtime_id)
+
+	assert_false(GameState.active_tasks.has(active_runtime_id))
+	assert_true(GameState.active_tasks.has(second_queued_runtime_id))
+	var promoted_value: Variant = GameState.active_tasks.get(second_queued_runtime_id, {})
+	assert_true(promoted_value is Dictionary)
+	if promoted_value is Dictionary:
+		var promoted_task: Dictionary = promoted_value
+		assert_eq(str(promoted_task.get("status", "")), "active")
+
+
 func test_owned_entity_task_completion_notifies_player_owner() -> void:
 	var player := GameState.player as EntityInstance
 	assert_not_null(player)

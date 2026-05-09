@@ -108,7 +108,42 @@ func complete_task(runtime_id: String) -> bool:
 
 ## Abandons an active task instance.
 func abandon_task(runtime_id: String) -> void:
+	var task_instance := get_task_instance(runtime_id)
+	var entity_id := str(task_instance.get("entity_id", ""))
+	var was_active := str(task_instance.get("status", TASK_STATUS_ACTIVE)) != TASK_STATUS_QUEUED
 	GameState.active_tasks.erase(runtime_id)
+	if not entity_id.is_empty():
+		GameEvents.task_abandoned.emit(runtime_id, entity_id)
+		GameEvents.task_queue_changed.emit(entity_id)
+		if was_active:
+			_start_next_queued_task_for_entity(entity_id)
+
+
+func move_queued_task(runtime_id: String, direction: int) -> bool:
+	if direction == 0:
+		return false
+	var task_instance := get_task_instance(runtime_id)
+	if task_instance.is_empty():
+		return false
+	if str(task_instance.get("status", TASK_STATUS_ACTIVE)) != TASK_STATUS_QUEUED:
+		return false
+	var entity_id := str(task_instance.get("entity_id", ""))
+	var queued_tasks := _get_queued_tasks_for_entity(entity_id)
+	var current_index := -1
+	for index in range(queued_tasks.size()):
+		if str(queued_tasks[index].get("runtime_id", "")) == runtime_id:
+			current_index = index
+			break
+	if current_index < 0:
+		return false
+	var target_index := clampi(current_index + direction, 0, queued_tasks.size() - 1)
+	if target_index == current_index:
+		return false
+	var moved_task: Dictionary = queued_tasks.pop_at(current_index)
+	queued_tasks.insert(target_index, moved_task)
+	_write_queue_order(entity_id, queued_tasks)
+	GameEvents.task_queue_changed.emit(entity_id)
+	return true
 
 
 ## Returns the active task instance dict for a runtime_id, or empty dict.
@@ -251,6 +286,39 @@ func _start_next_queued_task_for_entity(entity_id: String) -> void:
 	if template.is_empty():
 		return
 	_start_task_instance(next_runtime_id, next_task, template, entity)
+
+
+func _get_queued_tasks_for_entity(entity_id: String) -> Array[Dictionary]:
+	var queued_tasks: Array[Dictionary] = []
+	for runtime_id_value in GameState.active_tasks.keys():
+		var runtime_id := str(runtime_id_value)
+		var task_instance_data: Variant = GameState.active_tasks.get(runtime_id, {})
+		if not task_instance_data is Dictionary:
+			continue
+		var task_instance: Dictionary = task_instance_data
+		if str(task_instance.get("entity_id", "")) != entity_id:
+			continue
+		if str(task_instance.get("status", TASK_STATUS_ACTIVE)) != TASK_STATUS_QUEUED:
+			continue
+		var queued_task := task_instance.duplicate(true)
+		queued_task["runtime_id"] = runtime_id
+		queued_tasks.append(queued_task)
+	var sort_callable := func(a: Dictionary, b: Dictionary) -> bool:
+		return _is_queued_before(a, b)
+	queued_tasks.sort_custom(sort_callable)
+	return queued_tasks
+
+
+func _write_queue_order(entity_id: String, queued_tasks: Array[Dictionary]) -> void:
+	for index in range(queued_tasks.size()):
+		var task_instance := queued_tasks[index].duplicate(true)
+		var runtime_id := str(task_instance.get("runtime_id", ""))
+		if runtime_id.is_empty() or not GameState.active_tasks.has(runtime_id):
+			continue
+		task_instance["queued_at_tick"] = GameState.current_tick
+		task_instance["queued_order"] = index
+		task_instance["entity_id"] = entity_id
+		GameState.active_tasks[runtime_id] = task_instance
 
 
 func _is_queued_before(candidate: Dictionary, current: Dictionary) -> bool:

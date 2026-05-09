@@ -191,6 +191,29 @@ func recall_selected() -> void:
 	assign_selected_to_location(owner.location_id)
 
 
+func cancel_task(runtime_id: String) -> void:
+	var task := _get_selected_task(runtime_id)
+	if task.is_empty():
+		_status_text = "Select one of this entity's tasks first."
+		return
+	var label := _get_task_display_text(task)
+	TimeKeeper.abandon_task(runtime_id)
+	_status_text = "Cancelled %s." % label
+	if GameEvents:
+		GameEvents.ui_notification_requested.emit(_status_text, "info")
+
+
+func move_queued_task(runtime_id: String, direction: int) -> void:
+	var task := _get_selected_task(runtime_id)
+	if task.is_empty() or str(task.get("status", "active")) != "queued":
+		_status_text = "Select a queued task first."
+		return
+	if TimeKeeper.move_queued_task(runtime_id, direction):
+		_status_text = "Updated queue order."
+		return
+	_status_text = "That queued task cannot move further."
+
+
 func _resolve_owner() -> EntityInstance:
 	return BACKEND_HELPERS.resolve_entity_lookup(_get_string_param(_params, "owner_entity_id", "player"))
 
@@ -224,6 +247,11 @@ func _build_rows(owner: EntityInstance) -> Array[Dictionary]:
 			"active_task_text": str(activity.get("active_task_text", "Idle")),
 			"queued_task_count": queued_task_count,
 			"queue_text": str(activity.get("queue_text", "")),
+			"queue_rows": _build_task_rows(_read_dictionary_array(activity.get("queued_tasks", []))),
+			"task_rows": _build_task_rows(_merge_task_arrays(
+				_read_dictionary_array(activity.get("active_tasks", [])),
+				_read_dictionary_array(activity.get("queued_tasks", []))
+			)),
 			"activity_detail_text": str(activity.get("detail_text", "Idle")),
 			"stat_preview_text": _build_stat_preview_text(entity),
 			"inventory_count": _count_loose_inventory(entity),
@@ -309,6 +337,74 @@ func _abandon_active_tasks_for_entity(entity_id: String) -> void:
 			runtime_ids.append(runtime_id)
 	for runtime_id in runtime_ids:
 		TimeKeeper.abandon_task(runtime_id)
+
+
+func _get_selected_task(runtime_id: String) -> Dictionary:
+	if runtime_id.is_empty():
+		return {}
+	var selected_entity := _resolve_selected_entity()
+	if selected_entity == null:
+		return {}
+	var task_value: Variant = GameState.active_tasks.get(runtime_id, {})
+	if not task_value is Dictionary:
+		return {}
+	var task: Dictionary = task_value
+	if str(task.get("entity_id", "")) != selected_entity.entity_id:
+		return {}
+	return task.duplicate(true)
+
+
+func _build_task_rows(tasks: Array[Dictionary]) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for index in range(tasks.size()):
+		var task := tasks[index]
+		var status := str(task.get("status", "active"))
+		rows.append({
+			"runtime_id": str(task.get("runtime_id", "")),
+			"template_id": str(task.get("template_id", "")),
+			"status": status,
+			"display_text": _get_task_display_text(task),
+			"can_cancel": true,
+			"can_move_up": status == "queued" and index > 0,
+			"can_move_down": status == "queued" and index < tasks.size() - 1,
+		})
+	return rows
+
+
+func _merge_task_arrays(active_tasks: Array[Dictionary], queued_tasks: Array[Dictionary]) -> Array[Dictionary]:
+	var merged: Array[Dictionary] = []
+	for task in active_tasks:
+		merged.append(task)
+	for task in queued_tasks:
+		merged.append(task)
+	return merged
+
+
+func _get_task_display_text(task: Dictionary) -> String:
+	var status := str(task.get("status", "active"))
+	var label := _get_task_label(task)
+	if status == "queued":
+		return "%s, queued" % label
+	return "%s, %s" % [label, _format_remaining_ticks(int(task.get("remaining_ticks", 0)))]
+
+
+func _get_task_label(task: Dictionary) -> String:
+	var template_id := str(task.get("template_id", ""))
+	var template := DataManager.get_task(template_id)
+	var label := str(template.get("display_name", BACKEND_HELPERS.humanize_id(template_id)))
+	var target := str(task.get("target", "")).strip_edges()
+	if target.is_empty():
+		return label
+	var target_label := _get_location_display_name(target) if DataManager.has_location(target) else BACKEND_HELPERS.humanize_id(target)
+	return "%s to %s" % [label, target_label]
+
+
+func _format_remaining_ticks(remaining_ticks: int) -> String:
+	if remaining_ticks <= 0:
+		return "finishing now"
+	if remaining_ticks == 1:
+		return "1 tick remaining"
+	return "%d ticks remaining" % remaining_ticks
 
 
 func _get_assignment_start_mode() -> String:
@@ -462,6 +558,18 @@ func _read_string_array(value: Variant) -> Array[String]:
 		var entry := str(entry_value).strip_edges()
 		if not entry.is_empty() and not result.has(entry):
 			result.append(entry)
+	return result
+
+
+func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if not value is Array:
+		return result
+	var values: Array = value
+	for item in values:
+		if item is Dictionary:
+			var dictionary_item: Dictionary = item
+			result.append(dictionary_item.duplicate(true))
 	return result
 
 
