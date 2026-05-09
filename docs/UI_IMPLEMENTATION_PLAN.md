@@ -140,7 +140,7 @@ These do not use `backend_class` because they do not interact with mod data. The
 |---|---|---|
 | `main_menu` | Boot landing, new game / continue / load / quit / settings / credits | Implemented with continue/load routing through the current save surfaces |
 | `settings` | Audio volumes, AI connection setup, resolution, keybinds, accessibility | Writes to `user://settings.cfg` via `ConfigFile`, independent of mod `config.json`; AI provider ownership lives here rather than in mod data |
-| `save_slot_list` | Autosave + manual save/load/delete with playtime/day/location preview | Uses `SaveManager.get_slot_info(slot)` for engine autosave plus manual slots; destructive actions should require an in-screen confirmation step |
+| `save_slot_list` | Autosave + manual save/load/delete with playtime/day/location preview | Uses `SaveManager.get_slot_info(slot)` and `get_slot_diagnostics(slot)` for engine autosave plus manual slots; delete and manual overwrite actions require in-screen confirmation |
 | `pause_menu` | In-game pause overlay (Resume / Settings / Save / Main Menu) | Listens to an `Escape` action binding; emits `game_paused` / `game_resumed` |
 | `credits` | Attribution + mod list | Pulls from `ModLoader.loaded_mods` so loaded mods show up automatically |
 | `gameplay_shell` | Persistent gameplay hub for time controls, autosave, loadout, and exploration routing | Implemented as the current post-load/post-new-game shell; now consumes shared components for profile, currencies, stats, and loadout snapshots |

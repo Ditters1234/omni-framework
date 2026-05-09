@@ -11,6 +11,8 @@ res://tests/unit/test_engine_owned_ui_behaviors.gd
 * test_main_menu_new_game_opens_character_creator_surface_without_crashing
 * test_global_notification_popup_renders_above_routed_screens
 * test_save_slot_list_delete_requires_confirmation_before_removing_slot
+* test_save_slot_list_requires_confirmation_before_overwrite
+* test_save_slot_list_surfaces_incompatible_save_reason
 * test_settings_back_persists_dirty_changes_and_pops_to_previous_route
 * test_settings_ai_button_toggles_to_disconnect_after_connection
 * test_settings_ai_chat_controls_persist_history_window_and_streaming_speed
@@ -26,7 +28,7 @@ res://tests/unit/test_engine_owned_ui_behaviors.gd
 * test_gameplay_shell_hosts_default_location_surface
 * test_location_surface_hides_depleted_loot_cache
 * test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_after_travel_signal
-19/19 passed.
+21/21 passed.
 
 
 
@@ -38,23 +40,12 @@ res://tests/unit/test_engine_owned_ui_behaviors.gd
 Totals
 ------
 Scripts               1
-Tests                19
-Passing Tests        19
-Asserts             222
-Time              1.977s
+Tests                21
+Passing Tests        21
+Asserts             246
+Time              2.023s
 
 
 Ran Scripts matching "test_engine_owned_ui_behaviors"
----- All tests passed! ----
-
---
-Scripts               1
-Tests                24
-Passing Tests        24
-Asserts             188
-Time              0.863s
-
-
-Ran Scripts matching "test_phase4_backends"
 ---- All tests passed! ----
 

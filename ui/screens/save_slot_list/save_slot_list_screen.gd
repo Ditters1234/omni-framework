@@ -14,6 +14,7 @@ const MODE_SAVE := "save"
 var _mode: String = MODE_LOAD
 var _close_on_save: bool = true
 var _pending_delete_slot: int = -1
+var _pending_overwrite_slot: int = -1
 var _last_view_model: Dictionary = {}
 
 
@@ -46,19 +47,26 @@ func _refresh() -> void:
 
 	var slot_snapshots: Array[Dictionary] = []
 	for slot in SaveManager.get_visible_slots():
-		var slot_info := SaveManager.get_slot_info(slot)
+		var diagnostics := SaveManager.get_slot_diagnostics(slot)
+		var slot_info := _read_dictionary(diagnostics.get("slot_info", {}))
 		slot_snapshots.append({
 			"slot": slot,
-			"occupied": not slot_info.is_empty(),
+			"occupied": bool(diagnostics.get("occupied", false)),
+			"loadable": bool(diagnostics.get("loadable", false)),
+			"slot_status": str(diagnostics.get("status", "empty")),
+			"reason": str(diagnostics.get("reason", "")),
 			"slot_info": slot_info.duplicate(true),
 			"delete_pending": _pending_delete_slot == slot,
+			"overwrite_pending": _pending_overwrite_slot == slot,
 		})
-		var slot_entry := _build_slot_entry(slot, slot_info)
+		var slot_entry := _build_slot_entry(slot, diagnostics)
 		_slots_container.add_child(slot_entry)
 
 	_back_button.text = "Back"
 	if _pending_delete_slot >= 1:
 		_status_label.text = "Press Delete again on slot %d to permanently remove it." % _pending_delete_slot
+	elif _pending_overwrite_slot >= 1:
+		_status_label.text = "Press Overwrite again on slot %d to replace that save." % _pending_overwrite_slot
 	elif _mode == MODE_LOAD and _first_available_slot() < 0:
 		_status_label.text = "No save slots are currently available."
 	elif _mode == MODE_SAVE:
@@ -70,13 +78,16 @@ func _refresh() -> void:
 		"mode": _mode,
 		"close_on_save": _close_on_save,
 		"pending_delete_slot": _pending_delete_slot,
+		"pending_overwrite_slot": _pending_overwrite_slot,
 		"slots": slot_snapshots,
 		"status_text": _status_label.text,
 	}
 
 
-func _build_slot_entry(slot: int, slot_info: Dictionary) -> Control:
-	var is_occupied := not slot_info.is_empty()
+func _build_slot_entry(slot: int, diagnostics: Dictionary) -> Control:
+	var is_occupied := bool(diagnostics.get("occupied", false))
+	var is_loadable := bool(diagnostics.get("loadable", false))
+	var slot_info := _read_dictionary(diagnostics.get("slot_info", {}))
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
@@ -92,7 +103,7 @@ func _build_slot_entry(slot: int, slot_info: Dictionary) -> Control:
 
 	var slot_button := Button.new()
 	slot_button.text = _get_slot_button_label(slot, is_occupied)
-	slot_button.disabled = _mode == MODE_LOAD and not is_occupied
+	slot_button.disabled = _mode == MODE_LOAD and not is_loadable
 	slot_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slot_button.pressed.connect(func() -> void:
 		_pending_delete_slot = -1
@@ -112,7 +123,7 @@ func _build_slot_entry(slot: int, slot_info: Dictionary) -> Control:
 	var details_label := Label.new()
 	details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	details_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	details_label.text = _build_slot_summary(slot, slot_info)
+	details_label.text = _build_slot_summary(slot, diagnostics)
 	content.add_child(details_label)
 
 	return panel
@@ -134,7 +145,16 @@ func _get_slot_button_label(slot: int, is_occupied: bool) -> String:
 	return "Slot %d Empty" % slot
 
 
-func _build_slot_summary(slot: int, slot_info: Dictionary) -> String:
+func _build_slot_summary(slot: int, diagnostics: Dictionary) -> String:
+	var slot_info := _read_dictionary(diagnostics.get("slot_info", {}))
+	var status := str(diagnostics.get("status", "empty"))
+	var reason := str(diagnostics.get("reason", ""))
+	if status != "loadable" and bool(diagnostics.get("occupied", false)):
+		var slot_label := str(diagnostics.get("slot_label", SaveManager.get_slot_label(slot)))
+		return "%s contains a save file that cannot be loaded.\n%s" % [
+			slot_label,
+			reason if not reason.is_empty() else "The save file failed validation.",
+		]
 	if slot_info.is_empty():
 		if slot == SaveManager.AUTOSAVE_SLOT:
 			return "Autosave is empty. Use Quick Autosave from the gameplay shell or write one here."
@@ -182,6 +202,7 @@ func _first_available_slot() -> int:
 
 
 func _on_slot_selected(slot: int) -> void:
+	_pending_delete_slot = -1
 	if _mode == MODE_SAVE:
 		_save_to_slot(slot)
 		return
@@ -189,13 +210,21 @@ func _on_slot_selected(slot: int) -> void:
 
 
 func _save_to_slot(slot: int) -> void:
+	var diagnostics := SaveManager.get_slot_diagnostics(slot)
+	if slot != SaveManager.AUTOSAVE_SLOT and bool(diagnostics.get("occupied", false)) and _pending_overwrite_slot != slot:
+		_pending_overwrite_slot = slot
+		_refresh()
+		return
+	_pending_overwrite_slot = -1
 	SaveManager.save_game(slot)
 	var summary: Dictionary = SaveManager.last_operation_summary
 	if str(summary.get("status", "")) != "ok":
 		_status_label.text = str(summary.get("reason", "Unable to save slot %d." % slot))
+		GameEvents.ui_notification_requested.emit(_status_label.text, "warning")
 		return
 	_refresh()
 	_status_label.text = "Saved to %s." % SaveManager.get_slot_label(slot)
+	GameEvents.ui_notification_requested.emit(_status_label.text, "info")
 	if _close_on_save and UIRouter.stack_depth() > 1:
 		UIRouter.pop()
 
@@ -204,14 +233,17 @@ func _load_from_slot(slot: int) -> void:
 	if not SaveManager.load_game(slot):
 		var summary: Dictionary = SaveManager.last_operation_summary
 		_status_label.text = str(summary.get("reason", "Unable to load slot %d." % slot))
+		GameEvents.ui_notification_requested.emit(_status_label.text, "warning")
 		return
 	_status_label.text = "Loaded %s." % SaveManager.get_slot_label(slot)
+	GameEvents.ui_notification_requested.emit(_status_label.text, "info")
 	UIRouter.replace_all(SCREEN_GAMEPLAY_SHELL)
 
 
 func _on_delete_pressed(slot: int) -> void:
 	if _pending_delete_slot != slot:
 		_pending_delete_slot = slot
+		_pending_overwrite_slot = -1
 		_refresh()
 		return
 	if not SaveManager.delete_game(slot):
@@ -245,3 +277,10 @@ func _on_back_button_pressed() -> void:
 
 func get_debug_snapshot() -> Dictionary:
 	return _last_view_model.duplicate(true)
+
+
+func _read_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary_value: Dictionary = value
+		return dictionary_value.duplicate(true)
+	return {}

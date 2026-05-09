@@ -65,6 +65,8 @@ Compatibility note:
 - Playtime
 - Optional screenshot or location preview later
 
+The save browser also uses `SaveManager.get_slot_diagnostics(slot)` before presenting a slot. Diagnostics distinguish empty slots from occupied-but-unloadable files, including corrupt JSON, future schema versions, and current-schema payloads that fail required-field validation. This keeps mod/content or schema mismatch recovery explicit: the player sees that a save file exists and why it cannot be loaded, rather than having the slot silently appear empty.
+
 ## What Belongs In Save Data
 
 - Runtime entity instances
@@ -159,4 +161,11 @@ Recommended policy:
 - Missing optional presentation assets: recover with fallback
 - Missing mod content referenced by save state: fail with a clear "missing dependency mod" message unless a migrator explicitly handles it
 - Failed loads should roll back to the previous live `GameState` snapshot instead of clearing the session
-- Runtime validation should run before save as well as af
+- Runtime validation should run before save as well as after load.
+
+## Save UX Rules
+
+- Autosave writes should surface a visible UI notification on success or failure.
+- Manual save overwrites should require an explicit confirmation step before replacing an occupied slot.
+- Incompatible or corrupt save files should remain visible in the save browser with the validation reason and a delete option.
+- Load failures should report `SaveManager.last_operation_summary.reason` in the initiating UI and should not mutate the current live session.

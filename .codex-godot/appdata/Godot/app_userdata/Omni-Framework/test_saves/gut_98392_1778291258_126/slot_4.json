@@ -1,0 +1,156 @@
+{
+	"created_at": "2026-05-09 01:47:38",
+	"engine_version": "0.1.0",
+	"game_state": {
+		"achievement_stats": {
+
+		},
+		"active_quests": {
+
+		},
+		"active_status_effects": {
+
+		},
+		"active_tasks": {
+
+		},
+		"ai_lore_cache": {
+
+		},
+		"completed_quests": [],
+		"completed_task_templates": [],
+		"current_day": 52,
+		"current_location_id": "base:start",
+		"current_tick": 1234,
+		"discovered_recipes": [],
+		"entity_instances": {
+			"base:fixture_vendor": {
+				"currencies": {
+					"credits": 500
+				},
+				"discovered_locations": [],
+				"entity_id": "base:fixture_vendor",
+				"equipped": {
+
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+
+						},
+						"equipped_slot": "",
+						"flags": {
+
+						},
+						"instance_id": "fixture_vendor_implant_001",
+						"is_equipped": false,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:optic_implant"
+					}
+				],
+				"location_id": "base:field",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"health": 50.0,
+					"health_max": 50.0,
+					"power": 0.0,
+					"strength": 0.0
+				},
+				"template_id": "base:fixture_vendor"
+			},
+			"base:player": {
+				"currencies": {
+					"credits": 400
+				},
+				"discovered_locations": [
+					"base:start",
+					"base:field"
+				],
+				"entity_id": "base:player",
+				"equipped": {
+					"head": {
+						"custom_values": {
+							"eye_color": "green",
+							"hair_color": "black"
+						},
+						"equipped_slot": "head",
+						"flags": {
+
+						},
+						"instance_id": "player_head_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_head"
+					}
+				},
+				"flags": {
+
+				},
+				"inventory": [
+					{
+						"custom_values": {
+							"eye_color": "green",
+							"hair_color": "black"
+						},
+						"equipped_slot": "head",
+						"flags": {
+
+						},
+						"instance_id": "player_head_001",
+						"is_equipped": true,
+						"stat_overrides": {
+
+						},
+						"template_id": "base:human_head"
+					}
+				],
+				"location_id": "base:start",
+				"owned_entity_ids": [],
+				"reputation": {
+
+				},
+				"stats": {
+					"health": 50.0,
+					"health_max": 50.0,
+					"power": 1.0,
+					"strength": 2.0
+				},
+				"template_id": "base:player"
+			}
+		},
+		"event_history": [],
+		"faction_reputations": {
+
+		},
+		"flags": {
+
+		},
+		"player_id": "base:player",
+		"runtime_state_buckets": {
+
+		},
+		"unlocked_achievements": []
+	},
+	"save_schema_version": 1,
+	"slot_metadata": {
+		"day": 52,
+		"display_name": "Day 52",
+		"location_id": "base:start",
+		"location_name": "Fixture Start",
+		"playtime_seconds": 4442400,
+		"slot_kind": "manual",
+		"slot_label": "Slot 4",
+		"tick": 1234
+	},
+	"updated_at": "2026-05-09 01:47:38"
+}

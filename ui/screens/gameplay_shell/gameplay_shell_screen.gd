@@ -394,9 +394,11 @@ func _on_quick_autosave_button_pressed() -> void:
 	var summary := SaveManager.last_operation_summary
 	if str(summary.get("status", "")) != "ok":
 		_status_message = str(summary.get("reason", "Unable to write autosave."))
+		GameEvents.ui_notification_requested.emit(_status_message, "warning")
 		_refresh()
 		return
 	_status_message = "Autosave updated."
+	GameEvents.ui_notification_requested.emit(_status_message, "info")
 	_refresh()
 
 

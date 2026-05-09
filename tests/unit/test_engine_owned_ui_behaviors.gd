@@ -170,6 +170,78 @@ func test_save_slot_list_delete_requires_confirmation_before_removing_slot() -> 
 	assert_true(status_label.text.contains("Deleted"))
 
 
+func test_save_slot_list_requires_confirmation_before_overwrite() -> void:
+	GameState.new_game()
+	SaveManager.save_game(1)
+	assert_true(SaveManager.slot_exists(1))
+	var original_info := SaveManager.get_slot_info(1)
+	var original_updated_at := str(original_info.get("updated_at", ""))
+
+	var instance_value: Variant = SAVE_SLOT_LIST_SCENE.instantiate()
+	assert_true(instance_value is Control)
+	var screen: Control = instance_value
+	_spawned_nodes.append(screen)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(screen)
+	screen.call("initialize", {"mode": "save", "close_on_save": false})
+	await get_tree().process_frame
+
+	screen.call("_on_slot_selected", 1)
+	await get_tree().process_frame
+
+	var pending_snapshot_value: Variant = screen.call("get_debug_snapshot")
+	assert_true(pending_snapshot_value is Dictionary)
+	var pending_snapshot: Dictionary = pending_snapshot_value
+	assert_eq(int(pending_snapshot.get("pending_overwrite_slot", -1)), 1)
+	assert_eq(str(SaveManager.get_slot_info(1).get("updated_at", "")), original_updated_at)
+
+	screen.call("_on_slot_selected", 1)
+	await get_tree().process_frame
+
+	var final_snapshot_value: Variant = screen.call("get_debug_snapshot")
+	assert_true(final_snapshot_value is Dictionary)
+	var final_snapshot: Dictionary = final_snapshot_value
+	assert_eq(int(final_snapshot.get("pending_overwrite_slot", -1)), -1)
+	assert_true(SaveManager.slot_exists(1))
+
+
+func test_save_slot_list_surfaces_incompatible_save_reason() -> void:
+	GameState.new_game()
+	var payload := SaveManager._build_save_payload({}, 1)
+	payload["save_schema_version"] = SaveManager.SCHEMA_VERSION + 1
+	var file := FileAccess.open(SaveManager.get_slot_path(1), FileAccess.WRITE)
+	assert_not_null(file)
+	if file != null:
+		file.store_string(JSON.stringify(payload, "\t"))
+		file.close()
+
+	var instance_value: Variant = SAVE_SLOT_LIST_SCENE.instantiate()
+	assert_true(instance_value is Control)
+	var screen: Control = instance_value
+	_spawned_nodes.append(screen)
+	assert_not_null(_test_viewport)
+	_test_viewport.add_child(screen)
+	screen.call("initialize", {"mode": "load"})
+	await get_tree().process_frame
+
+	var snapshot_value: Variant = screen.call("get_debug_snapshot")
+	assert_true(snapshot_value is Dictionary)
+	var snapshot: Dictionary = snapshot_value
+	var slot_value: Variant = _find_slot_snapshot(_read_dictionary_array(snapshot.get("slots", [])), 1)
+	assert_true(slot_value is Dictionary)
+	if slot_value is Dictionary:
+		var slot: Dictionary = slot_value
+		assert_true(bool(slot.get("occupied", false)))
+		assert_false(bool(slot.get("loadable", true)))
+		assert_eq(str(slot.get("slot_status", "")), "incompatible")
+		assert_true(str(slot.get("reason", "")).contains("newer than supported"))
+	var load_button := _find_button_with_text(screen, "Load Slot 1")
+	assert_not_null(load_button)
+	if load_button != null:
+		assert_true(load_button.disabled)
+	assert_not_null(_find_label_containing_text(screen, "newer than supported"))
+
+
 func test_settings_back_persists_dirty_changes_and_pops_to_previous_route() -> void:
 	_screen_container = CanvasLayer.new()
 	_spawned_nodes.append(_screen_container)
@@ -1027,6 +1099,13 @@ func _screen_rows_contain_tab(rows: Array, tab_id: String) -> bool:
 		if str(row.get("tab_id", "")) == tab_id:
 			return true
 	return false
+
+
+func _find_slot_snapshot(rows: Array[Dictionary], slot: int) -> Variant:
+	for row in rows:
+		if int(row.get("slot", -1)) == slot:
+			return row
+	return null
 
 
 func _find_entity_row(rows: Array, entity_id: String) -> Variant:

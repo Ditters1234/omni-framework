@@ -46,7 +46,7 @@ WARNING: TimeKeeper: resynchronized GameState.current_day from 1 to 52 using cur
    GDScript backtrace (most recent call first):
        [0] _normalize_game_state_time (res://autoloads/time_keeper.gd:275)
        [1] sync_from_game_state (res://autoloads/time_keeper.gd:168)
-       [2] _sync_timekeeper_from_game_state (res://autoloads/save_manager.gd:617)
+       [2] _sync_timekeeper_from_game_state (res://autoloads/save_manager.gd:660)
        [3] save_game (res://autoloads/save_manager.gd:182)
        [4] test_load_game_resynchronizes_tick_position_within_day (res://tests/integration/test_save_manager_time_sync.gd:12)
        [5] _run_test (res://addons/gut/gut.gd:615)
@@ -354,6 +354,8 @@ res://tests/unit/test_engine_owned_ui_behaviors.gd
 * test_main_menu_new_game_opens_character_creator_surface_without_crashing
 * test_global_notification_popup_renders_above_routed_screens
 * test_save_slot_list_delete_requires_confirmation_before_removing_slot
+* test_save_slot_list_requires_confirmation_before_overwrite
+* test_save_slot_list_surfaces_incompatible_save_reason
 * test_settings_back_persists_dirty_changes_and_pops_to_previous_route
 * test_settings_ai_button_toggles_to_disconnect_after_connection
 * test_settings_ai_chat_controls_persist_history_window_and_streaming_speed
@@ -369,7 +371,7 @@ res://tests/unit/test_engine_owned_ui_behaviors.gd
 * test_gameplay_shell_hosts_default_location_surface
 * test_location_surface_hides_depleted_loot_cache
 * test_gameplay_shell_top_menu_opens_world_map_with_full_graph_and_keeps_map_after_travel_signal
-19/19 passed.
+21/21 passed.
 
 
 res://tests/unit/test_entity_instance_equipping.gd
@@ -423,7 +425,7 @@ WARNING: TimeKeeper: resynchronized GameState.current_day from 2 to 1 using curr
    GDScript backtrace (most recent call first):
        [0] _normalize_game_state_time (res://autoloads/time_keeper.gd:275)
        [1] sync_from_game_state (res://autoloads/time_keeper.gd:168)
-       [2] _sync_timekeeper_from_game_state (res://autoloads/save_manager.gd:617)
+       [2] _sync_timekeeper_from_game_state (res://autoloads/save_manager.gd:660)
        [3] save_game (res://autoloads/save_manager.gd:182)
        [4] test_save_and_load_flow_matches_boot_suites (res://tests/unit/test_game_events_contracts.gd:224)
        [5] _run_test (res://addons/gut/gut.gd:615)
@@ -715,10 +717,10 @@ res://tests/unit/test_world_map_graph.gd
 Totals
 ------
 Scripts              48
-Tests               290
-Passing Tests       290
-Asserts            2036
-Time              5.447s
+Tests               292
+Passing Tests       292
+Asserts            2057
+Time              5.195s
 
 
 ---- All tests passed! ----

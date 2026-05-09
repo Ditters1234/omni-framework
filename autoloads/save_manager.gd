@@ -376,6 +376,49 @@ func get_slot_info(slot: int) -> Dictionary:
 	return {}
 
 
+func get_slot_diagnostics(slot: int) -> Dictionary:
+	_enforce_test_save_isolation()
+	var slot_label := get_slot_label(slot) if _is_valid_slot(slot) else "Invalid Slot"
+	var result := {
+		"slot": slot,
+		"slot_label": slot_label,
+		"occupied": false,
+		"loadable": false,
+		"status": "empty",
+		"reason": "",
+		"slot_info": {},
+	}
+	if not _is_valid_slot(slot):
+		result["status"] = "invalid"
+		result["reason"] = _get_invalid_slot_reason()
+		return result
+	var path := _slot_path(slot)
+	if not FileAccess.file_exists(path):
+		return result
+	result["occupied"] = true
+	var raw_data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not raw_data is Dictionary:
+		result["status"] = "corrupt"
+		result["reason"] = "Save file is invalid JSON."
+		return result
+	var raw_payload: Dictionary = raw_data
+	var load_error := _validate_raw_payload_for_load(raw_payload)
+	if not load_error.is_empty():
+		result["status"] = "incompatible"
+		result["reason"] = load_error
+		return result
+	var migrated := _migrate_if_needed(raw_payload.duplicate(true))
+	var payload_error := _validate_raw_payload(migrated)
+	if not payload_error.is_empty():
+		result["status"] = "incompatible"
+		result["reason"] = payload_error
+		return result
+	result["loadable"] = true
+	result["status"] = "loadable"
+	result["slot_info"] = get_slot_info(slot)
+	return result
+
+
 ## Returns true if the given slot contains a valid save file.
 func slot_exists(slot: int) -> bool:
 	_enforce_test_save_isolation()

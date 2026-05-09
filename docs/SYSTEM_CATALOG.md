@@ -159,7 +159,7 @@ These are **always available**, navigation-owned by the engine.
 | World Map | `world_map` | `ui/screens/backends/world_map_screen.tscn` | Shell top-menu surface for zoomable, pannable location graph navigation and fast travel. |
 | Pause Menu | `pause_menu` | `ui/screens/pause_menu/` | Layered pause overlay with continue/settings/quit. |
 | Settings | `settings` | `ui/screens/settings/` | Audio, graphics, accessibility options, and engine-owned AI connect/disconnect controls. |
-| Save/Load Browser | `save_slot_list` | `ui/screens/save_slot_list/` | Autosave + manual save/load/delete. |
+| Save/Load Browser | `save_slot_list` | `ui/screens/save_slot_list/` | Autosave + manual save/load/delete with overwrite confirmation and incompatible-save diagnostics. |
 | Credits & Loaded Mods | `credits` | `ui/screens/credits/` | Attribution and mod manifest. |
 
 ### Backend-Driven Screens (Modular)
