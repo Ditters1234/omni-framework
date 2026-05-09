@@ -4,7 +4,7 @@
 ##   "display_name": String,
 ##   "current_stage": Variant,
 ##   "objectives": Array[Dictionary],
-##   "rewards": Variant
+##   "reward_summary": String
 ## }
 extends PanelContainer
 
@@ -43,7 +43,7 @@ func _apply_view_model(view_model: Dictionary) -> void:
 	_quest_id_label.visible = not _quest_id_label.text.is_empty()
 	_stage_label.text = _format_stage_label(view_model.get("current_stage", null))
 	_render_objectives(view_model.get("objectives", []))
-	_rewards_label.text = _format_rewards(view_model.get("rewards", null))
+	_rewards_label.text = _format_rewards(view_model)
 	_rewards_label.visible = not _rewards_label.text.is_empty()
 	_flavor_label.text = _format_flavor_text(view_model.get("flavor_text", ""))
 	_flavor_label.visible = not _flavor_label.text.is_empty()
@@ -96,13 +96,12 @@ func _format_stage_label(current_stage_value: Variant) -> String:
 		return extra
 	return "Current Stage: %s%s" % [current_stage_text, " • %s" % extra if not extra.is_empty() else ""]
 
-func _format_rewards(rewards_value: Variant) -> String:
-	if rewards_value is Dictionary:
-		var reward_summary := RewardService.build_reward_summary(rewards_value, "")
-		if reward_summary.is_empty():
-			return ""
+func _format_rewards(view_model: Dictionary) -> String:
+	var reward_summary := str(view_model.get("reward_summary", "")).strip_edges()
+	if not reward_summary.is_empty():
 		return "Rewards: %s" % reward_summary
-	if rewards_value == null:
+	var rewards_value: Variant = view_model.get("rewards", null)
+	if rewards_value == null or rewards_value is Dictionary:
 		return ""
 	var rewards_text := str(rewards_value)
 	return "" if rewards_text.is_empty() else "Rewards: %s" % rewards_text

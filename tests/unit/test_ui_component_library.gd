@@ -148,7 +148,7 @@ func test_remaining_component_library_renders_sample_view_models() -> void:
 			{"label": "Find a weapon", "satisfied": true},
 			{"label": "Reach the safehouse", "satisfied": false},
 		],
-		"rewards": {"gold": 1000},
+		"reward_summary": "Gold +1000",
 	})
 
 	var recipe_card := _spawn_and_attach(RECIPE_CARD_SCENE)

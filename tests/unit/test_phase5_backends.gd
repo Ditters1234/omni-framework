@@ -31,6 +31,7 @@ func test_active_quest_log_backend_builds_quest_cards() -> void:
 		if not cards.is_empty() and cards[0] is Dictionary:
 			var card: Dictionary = cards[0]
 			assert_eq(str(card.get("quest_id", "")), "base:phase5_quest")
+			assert_false(str(card.get("reward_summary", "")).is_empty())
 
 
 func test_faction_reputation_backend_lists_seeded_faction() -> void:

@@ -180,7 +180,7 @@ Prioritized by number of downstream consumers. Build in this order.
 | `tab_panel` | `{tabs: Array[{id, label, content_scene}]}` | Future tabbed location surfaces, `entity_sheet`, modder-built multi-tab shops |
 | `notification_popup` | `{message, level, icon, duration_ms}` | Global — mounts under `ScreenLayer` in `main.tscn` |
 | `recipe_card` | `{recipe, input_status: [{template_id, required, have, satisfied}], output_template}` | `crafting` |
-| `quest_card` | `{quest_id, display_name, current_stage, objectives: [{label, satisfied}], rewards}` | `quest_log`, potentially `dialogue` inline |
+| `quest_card` | `{quest_id, display_name, current_stage, objectives: [{label, satisfied}], reward_summary}` | `quest_log`, potentially `dialogue` inline |
 | `faction_badge` | `{faction_id, emblem_path, reputation_tier, reputation_value, color}` | `faction_rep`, `entity_portrait`, `dialogue` |
 
 Each component gets a docstring at the top of its `.gd` file declaring its view model contract, matching the existing pattern in `currency_summary_panel.gd`.
@@ -432,7 +432,7 @@ Deliverable: full boot → menu → settings → save-slot → game shell loop u
 **Helper boundary for this phase:**
 
 - `backend_helpers.gd` is generic and can be used by any current or future backend.
-- Component view-model builders stay centralized in `backend_helpers.gd`; backends should use `build_part_card_view_model`, `build_quest_card_view_model`, `build_task_card_view_model`, `build_entity_portrait_view_model`, `build_stat_sheet_view_model`, and `build_faction_badge_view_model` instead of recreating those payload shapes locally.
+- Component view-model builders stay centralized in `backend_helpers.gd`; backends should use `build_part_card_view_model`, `build_quest_card_view_model`, `build_task_card_view_model`, `build_entity_portrait_view_model`, `build_stat_sheet_view_model`, and `build_faction_badge_view_model` instead of recreating those payload shapes locally. Reusable components render already-normalized view-model values and should not call runtime mutation/formatting helpers such as `ActionDispatcher`, `RewardService`, or `TransactionService` directly.
 - Shared display-name utilities such as `humanize_id()` also belong in `backend_helpers.gd`; components should call the shared helper instead of duplicating local formatting functions.
 - `assembly_editor_config.gd` — Configuration and state management helper.
 - `assembly_editor_option_provider.gd` — Part option sourcing and filtering logic.

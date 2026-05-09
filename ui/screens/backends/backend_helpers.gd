@@ -391,6 +391,7 @@ static func build_task_card_view_model(task_template: Dictionary) -> Dictionary:
 			},
 		],
 		"rewards": _duplicate_dictionary(task_template.get("reward", {})),
+		"reward_summary": RewardService.build_reward_summary(task_template.get("reward", {}), ""),
 	}
 
 
@@ -443,6 +444,7 @@ static func build_quest_card_view_model(quest_template: Dictionary, stage_index:
 		"stage_label": stage_label,
 		"objectives": objectives,
 		"rewards": _duplicate_dictionary(quest_template.get("reward", {})),
+		"reward_summary": RewardService.build_reward_summary(quest_template.get("reward", {}), ""),
 		"flavor_text": str(quest_template.get("description", "")),
 	}
 
