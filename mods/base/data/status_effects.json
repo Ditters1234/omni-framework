@@ -8,6 +8,20 @@
       "tick_interval": 1,
       "max_stacks": 1,
       "stack_mode": "refresh",
+      "apply_condition": {
+        "type": "stat_check",
+        "entity_id": "context:entity",
+        "stat": "health",
+        "op": "<",
+        "value_stat": "health_max"
+      },
+      "tick_condition": {
+        "type": "stat_check",
+        "entity_id": "context:entity",
+        "stat": "health",
+        "op": "<",
+        "value_stat": "health_max"
+      },
       "tags": [
         "recovery"
       ],

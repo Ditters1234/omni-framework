@@ -459,6 +459,61 @@ func test_entity_sheet_direct_equip_button_commits_selected_inventory_part() -> 
 	assert_null(updated_player.get_inventory_part("engine_ui_spare_hair"))
 
 
+func test_entity_sheet_lock_prevents_discard_and_can_be_toggled() -> void:
+	GameState.new_game()
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var hair_part := PartInstance.from_template(DataManager.get_part("base:body_hair_long"))
+	hair_part.template_id = "base:body_hair_long"
+	hair_part.instance_id = "engine_ui_lock_hair"
+	player.add_part(hair_part)
+
+	var screen_scene := load(ENTITY_SHEET_SCENE_PATH) as PackedScene
+	assert_not_null(screen_scene)
+	if screen_scene == null:
+		return
+	var screen_value: Variant = screen_scene.instantiate()
+	assert_true(screen_value is Control)
+	if not screen_value is Control:
+		return
+	var screen: Control = screen_value
+	_spawned_nodes.append(screen)
+	assert_not_null(_test_viewport)
+	if _test_viewport == null:
+		return
+	_test_viewport.add_child(screen)
+	screen.call("initialize", {"target_entity_id": "player"})
+	await get_tree().process_frame
+
+	screen.call("_on_inventory_row_selected", "inventory:base:body_hair_long")
+	await get_tree().process_frame
+	screen.call("_on_lock_item_button_pressed")
+	await get_tree().process_frame
+	screen.call("_on_discard_item_button_pressed")
+	await get_tree().process_frame
+
+	var locked_player := GameState.player as EntityInstance
+	assert_not_null(locked_player)
+	if locked_player == null:
+		return
+	var locked_part := locked_player.get_inventory_part("engine_ui_lock_hair")
+	assert_not_null(locked_part)
+	if locked_part != null:
+		assert_true(bool(locked_part.flags.get("inventory_locked", false)))
+
+	screen.call("_on_lock_item_button_pressed")
+	await get_tree().process_frame
+	screen.call("_on_discard_item_button_pressed")
+	await get_tree().process_frame
+
+	var updated_player := GameState.player as EntityInstance
+	assert_not_null(updated_player)
+	if updated_player != null:
+		assert_null(updated_player.get_inventory_part("engine_ui_lock_hair"))
+
+
 func test_entity_sheet_surfaces_active_status_effects() -> void:
 	DataManager.status_effects["base:fixture_focus"] = {
 		"status_effect_id": "base:fixture_focus",

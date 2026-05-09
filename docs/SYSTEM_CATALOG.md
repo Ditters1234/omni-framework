@@ -51,7 +51,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
 | `ActionDispatcher` | `ActionDispatcher` | `systems/action_dispatcher.gd` | DataManager | Executes JSON action blocks from quests/tasks: `give_currency`, `travel`, `spawn_entity`, `start_quest`, `apply_status_effect`, `learn_recipe`, `modify_reputation`, etc. See [`modding_guide.md`](modding_guide.md) for schema. |
-| `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic. See [`modding_guide.md`](modding_guide.md) for syntax. |
+| `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic, status effects, and lifecycle rules. See [`modding_guide.md`](modding_guide.md) for syntax. |
 | `StatManager` | `StatManager` | `systems/stat_manager.gd` | DataManager | Calculates stat modifiers, applies stat changes, enforces clamping rules. See [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md). |
 | `EncounterRuntime` | `EncounterRuntime` | `systems/encounter_runtime.gd` | ConditionEvaluator | Stateless encounter helper for weighted opponent action selection, encounter condition context, local-stat clamping, and JSON-native effect delta math. |
 | `BackendContractRegistry` | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | — | Validates `backend_class` IDs and their payload schemas. Locked after `ModLoader`. |
@@ -67,7 +67,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 | `QuestTracker` | `QuestTracker` | `systems/quest_tracker.gd` | GameState, DataManager | Quest HSM built on LimboAI. Drives quest stages, objectives, and completion. |
 | `TaskRunner` | `TaskRunner` | `systems/task_runner.gd` | GameState, DataManager | Tick-driven task execution, queued task promotion, completion checking, and data-authored task completion actions. |
 | `TaskActivitySummary` | `TaskActivitySummary` | `systems/task_activity_summary.gd` | GameState, DataManager | Shared formatter for active/queued entity task visibility, including target labels and remaining tick text. |
-| `StatusEffectRunner` | `StatusEffectRunner` | `systems/status_effect_runner.gd` | GameState, DataManager | Tick-driven status effect application, stacking, per-tick actions, stat modifiers, and expiration. |
+| `StatusEffectRunner` | `StatusEffectRunner` | `systems/status_effect_runner.gd` | GameState, DataManager | Tick-driven status effect application, conditional apply/tick/expire checks, stacking, per-tick actions, stat modifiers, and expiration. |
 | `EntityLifecycleRunner` | `EntityLifecycleRunner` | `systems/entity_lifecycle_runner.gd` | GameState, DataManager | Evaluates config-authored lifecycle rules when entity stats change, sets state flags, dispatches actions, emits lifecycle events, and surfaces notifications. |
 | `TaskRoutineRunner` | `OmniTaskRoutineRunner` | `systems/task_routine_runner.gd` | GameState, DataManager, TaskRunner | Starts task templates from daily time windows for scheduled NPC/entity movement. Autoload singleton. |
 | `LocationAccessService` | `LocationAccessService` | `systems/location_access_service.gd` | DataManager, ConditionEvaluator | Shared travel/entry gate checks using `entry_condition` and `entry_conditions` on locations. |

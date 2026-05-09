@@ -103,6 +103,25 @@
           "screen_title": "Theta's Clinic"
         },
         {
+          "tab_id": "market_recovery",
+          "display_name": "Field Treatment",
+          "description": "Patch yourself up with clinic supplies. Recovery only ticks while the target can still recover.",
+          "backend_class": "ChallengeBackend",
+          "target_entity_id": "player",
+          "portrait_entity_id": "base:npc_theta",
+          "required_stat": "health_max",
+          "required_value": 1.0,
+          "confirm_label": "Treat",
+          "screen_title": "Field Treatment",
+          "screen_description": "Apply a data-authored recovery effect. The effect's own conditions decide whether it can apply and continue ticking.",
+          "success_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
+          "action_payload": {
+            "type": "apply_status_effect",
+            "status_effect_id": "base:field_repair",
+            "entity_id": "player"
+          }
+        },
+        {
           "tab_id": "market_inventory",
           "display_name": "Check Inventory",
           "description": "See what you're carrying.",

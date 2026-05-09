@@ -225,6 +225,12 @@ func _build_inventory_result(entity: EntityInstance) -> Dictionary:
 		var instance_ids := _read_string_array(entry.get("instance_ids", []))
 		if not part.instance_id.is_empty():
 			instance_ids.append(part.instance_id)
+		var locked_count := int(entry.get("locked_count", 0))
+		if bool(part.flags.get("inventory_locked", false)):
+			locked_count += 1
+		var favorite_count := int(entry.get("favorite_count", 0))
+		if bool(part.flags.get("favorite", false)):
+			favorite_count += 1
 		entry["template_id"] = part.template_id
 		entry["instance_ids"] = instance_ids
 		entry["template"] = template.duplicate(true)
@@ -232,6 +238,8 @@ func _build_inventory_result(entity: EntityInstance) -> Dictionary:
 		entry["display_name"] = str(template.get("display_name", part.template_id))
 		entry["description"] = str(template.get("description", ""))
 		entry["count"] = count
+		entry["locked_count"] = locked_count
+		entry["favorite_count"] = favorite_count
 		entry["stat_summary"] = _build_part_stat_summary(template, {})
 		entry["custom_summary"] = _build_inventory_custom_summary(template, entry.get("instance_ids", []), entity)
 		entry["is_equipped"] = false

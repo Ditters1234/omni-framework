@@ -13,6 +13,8 @@ const INVENTORY_SORT_NAME := "name"
 const INVENTORY_SORT_COUNT := "count"
 const INVENTORY_SORT_CATEGORY := "category"
 const INVENTORY_STACKED_WIDTH := 760.0
+const INVENTORY_FLAG_FAVORITE := "favorite"
+const INVENTORY_FLAG_LOCKED := "inventory_locked"
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -40,6 +42,8 @@ const INVENTORY_STACKED_WIDTH := 760.0
 @onready var _open_assembly_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/OpenAssemblyButton
 @onready var _equip_item_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/EquipItemButton
 @onready var _use_item_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/UseItemButton
+@onready var _favorite_item_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/FavoriteItemButton
+@onready var _lock_item_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/LockItemButton
 @onready var _discard_item_button: Button = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox/DiscardItemButton
 @onready var _quest_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Quests/QuestRows
 @onready var _reputation_rows: VBoxContainer = $MarginContainer/PanelContainer/VBoxContainer/TabContainer/Reputation/ReputationRows
@@ -332,6 +336,10 @@ func _sort_inventory_rows(rows: Array[Dictionary]) -> void:
 	match _inventory_sort_mode:
 		INVENTORY_SORT_COUNT:
 			rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				var favorite_a := int(a.get("favorite_count", 0))
+				var favorite_b := int(b.get("favorite_count", 0))
+				if favorite_a != favorite_b:
+					return favorite_a > favorite_b
 				var count_a := int(a.get("count", 1))
 				var count_b := int(b.get("count", 1))
 				if count_a != count_b:
@@ -340,6 +348,10 @@ func _sort_inventory_rows(rows: Array[Dictionary]) -> void:
 			)
 		INVENTORY_SORT_CATEGORY:
 			rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				var favorite_a := int(a.get("favorite_count", 0))
+				var favorite_b := int(b.get("favorite_count", 0))
+				if favorite_a != favorite_b:
+					return favorite_a > favorite_b
 				var category_a := _read_primary_category(a)
 				var category_b := _read_primary_category(b)
 				if category_a != category_b:
@@ -348,6 +360,10 @@ func _sort_inventory_rows(rows: Array[Dictionary]) -> void:
 			)
 		_:
 			rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				var favorite_a := int(a.get("favorite_count", 0))
+				var favorite_b := int(b.get("favorite_count", 0))
+				if favorite_a != favorite_b:
+					return favorite_a > favorite_b
 				return str(a.get("display_name", "")).naturalnocasecmp_to(str(b.get("display_name", ""))) < 0
 			)
 
@@ -403,6 +419,8 @@ func _render_inventory_detail(rows: Array[Dictionary]) -> void:
 		_equip_item_button.visible = false
 		_use_item_button.text = "Use Item"
 		_use_item_button.visible = false
+		_favorite_item_button.visible = false
+		_lock_item_button.visible = false
 		_discard_item_button.visible = false
 		return
 	var display_name := str(selected.get("display_name", selected.get("template_id", "Unknown")))
@@ -420,6 +438,12 @@ func _render_inventory_detail(rows: Array[Dictionary]) -> void:
 	_use_item_button.text = str(template.get("use_label", "Use Item"))
 	_use_item_button.visible = _is_player_sheet()
 	_use_item_button.disabled = not _can_use_inventory_row(selected)
+	_favorite_item_button.visible = _is_player_sheet() and not bool(selected.get("is_equipped", false))
+	_favorite_item_button.disabled = _read_first_instance_id(selected).is_empty()
+	_favorite_item_button.text = "Unfavorite Item" if _is_selected_inventory_flag_set(selected, INVENTORY_FLAG_FAVORITE) else "Favorite Item"
+	_lock_item_button.visible = _is_player_sheet() and not bool(selected.get("is_equipped", false))
+	_lock_item_button.disabled = _read_first_instance_id(selected).is_empty()
+	_lock_item_button.text = "Unlock Item" if _is_selected_inventory_flag_set(selected, INVENTORY_FLAG_LOCKED) else "Lock Item"
 	_discard_item_button.visible = _is_player_sheet()
 	_discard_item_button.disabled = not _can_discard_inventory_row(selected)
 
@@ -443,6 +467,13 @@ func _build_inventory_detail_meta(row: Dictionary) -> String:
 		for tag in tags:
 			labels.append(_humanize_id(tag))
 		parts.append(", ".join(labels))
+	var favorite_count := int(row.get("favorite_count", 0))
+	var locked_count := int(row.get("locked_count", 0))
+	var count := maxi(int(row.get("count", 1)), 1)
+	if favorite_count > 0:
+		parts.append("Favorited" if favorite_count == count else "Favorited %s/%s" % [str(favorite_count), str(count)])
+	if locked_count > 0:
+		parts.append("Locked" if locked_count == count else "Locked %s/%s" % [str(locked_count), str(count)])
 	return " | ".join(parts)
 
 
@@ -454,6 +485,10 @@ func _build_inventory_detail_stats(row: Dictionary) -> String:
 	var custom_summary := str(row.get("custom_summary", ""))
 	if not custom_summary.is_empty():
 		lines.append(custom_summary)
+	var favorite_count := int(row.get("favorite_count", 0))
+	var locked_count := int(row.get("locked_count", 0))
+	if favorite_count > 0 or locked_count > 0:
+		lines.append("Inventory flags: %s favorited, %s locked." % [str(favorite_count), str(locked_count)])
 	var instance_ids := _read_string_array(row.get("instance_ids", []))
 	if not instance_ids.is_empty():
 		lines.append("Instances: %s" % ", ".join(instance_ids))
@@ -770,6 +805,14 @@ func _connect_inventory_controls() -> void:
 		var use_callback := Callable(self, "_on_use_item_button_pressed")
 		if not _use_item_button.is_connected("pressed", use_callback):
 			_use_item_button.pressed.connect(_on_use_item_button_pressed)
+	if _favorite_item_button != null:
+		var favorite_callback := Callable(self, "_on_favorite_item_button_pressed")
+		if not _favorite_item_button.is_connected("pressed", favorite_callback):
+			_favorite_item_button.pressed.connect(_on_favorite_item_button_pressed)
+	if _lock_item_button != null:
+		var lock_callback := Callable(self, "_on_lock_item_button_pressed")
+		if not _lock_item_button.is_connected("pressed", lock_callback):
+			_lock_item_button.pressed.connect(_on_lock_item_button_pressed)
 	if _discard_item_button != null:
 		var discard_callback := Callable(self, "_on_discard_item_button_pressed")
 		if not _discard_item_button.is_connected("pressed", discard_callback):
@@ -848,7 +891,8 @@ func _on_use_item_button_pressed() -> void:
 		return
 	var display_name := str(row.get("display_name", "item"))
 	var template := _read_dictionary(row.get("template", {}))
-	var instance_id := _read_first_instance_id(row)
+	var consumes_item := bool(template.get("consume_on_use", false))
+	var instance_id := _read_first_unlocked_instance_id(row) if consumes_item else _read_first_instance_id(row)
 	var actions := _read_use_actions(template)
 	for action in actions:
 		var action_payload := action.duplicate(true)
@@ -861,7 +905,7 @@ func _on_use_item_button_pressed() -> void:
 		if not action_payload.has("part_id"):
 			action_payload["part_id"] = str(row.get("template_id", ""))
 		ActionDispatcher.dispatch(action_payload)
-	if bool(template.get("consume_on_use", false)):
+	if consumes_item:
 		ActionDispatcher.dispatch({
 			"type": "consume",
 			"entity_id": "player",
@@ -872,12 +916,20 @@ func _on_use_item_button_pressed() -> void:
 	_refresh_state()
 
 
+func _on_favorite_item_button_pressed() -> void:
+	_toggle_selected_inventory_flag(INVENTORY_FLAG_FAVORITE, "favorited")
+
+
+func _on_lock_item_button_pressed() -> void:
+	_toggle_selected_inventory_flag(INVENTORY_FLAG_LOCKED, "locked")
+
+
 func _on_discard_item_button_pressed() -> void:
 	var row := _find_inventory_row(_last_inventory_rows, _selected_inventory_key)
 	if row.is_empty() or not _can_discard_inventory_row(row):
 		return
 	var display_name := str(row.get("display_name", "item"))
-	var instance_id := _read_first_instance_id(row)
+	var instance_id := _read_first_unlocked_instance_id(row)
 	ActionDispatcher.dispatch({
 		"type": "consume",
 		"entity_id": "player",
@@ -892,7 +944,11 @@ func _can_use_inventory_row(row: Dictionary) -> bool:
 	if bool(row.get("is_equipped", false)):
 		return false
 	var template := _read_dictionary(row.get("template", {}))
-	return not _read_use_actions(template).is_empty()
+	if _read_use_actions(template).is_empty():
+		return false
+	if bool(template.get("consume_on_use", false)):
+		return not _read_first_unlocked_instance_id(row).is_empty()
+	return true
 
 
 func _can_equip_inventory_row(row: Dictionary) -> bool:
@@ -906,7 +962,44 @@ func _can_equip_inventory_row(row: Dictionary) -> bool:
 func _can_discard_inventory_row(row: Dictionary) -> bool:
 	if bool(row.get("is_equipped", false)):
 		return false
-	return not _read_first_instance_id(row).is_empty() or not str(row.get("template_id", "")).is_empty()
+	return not _read_first_unlocked_instance_id(row).is_empty()
+
+
+func _toggle_selected_inventory_flag(flag_id: String, label: String) -> void:
+	var row := _find_inventory_row(_last_inventory_rows, _selected_inventory_key)
+	if row.is_empty() or bool(row.get("is_equipped", false)):
+		return
+	var instance_id := _read_first_instance_id(row)
+	if instance_id.is_empty():
+		return
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return
+	var part := player.get_inventory_part(instance_id)
+	if part == null:
+		return
+	var next_value := not bool(part.flags.get(flag_id, false))
+	if next_value:
+		part.flags[flag_id] = true
+	else:
+		part.flags.erase(flag_id)
+	var display_name := str(row.get("display_name", "item"))
+	var action_label := label.capitalize() if next_value else "un%s" % label
+	GameEvents.ui_notification_requested.emit("%s %s." % [action_label, display_name], "info")
+	_refresh_state()
+
+
+func _is_selected_inventory_flag_set(row: Dictionary, flag_id: String) -> bool:
+	var instance_id := _read_first_instance_id(row)
+	if instance_id.is_empty():
+		return false
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return false
+	var part := player.get_inventory_part(instance_id)
+	if part == null:
+		return false
+	return bool(part.flags.get(flag_id, false))
 
 
 func _read_use_actions(template: Dictionary) -> Array[Dictionary]:
@@ -931,6 +1024,24 @@ func _read_first_instance_id(row: Dictionary) -> String:
 	if not instance_ids.is_empty():
 		return instance_ids[0]
 	return str(row.get("instance_id", ""))
+
+
+func _read_first_unlocked_instance_id(row: Dictionary) -> String:
+	var player := GameState.player as EntityInstance
+	if player == null:
+		return ""
+	var instance_ids := _read_string_array(row.get("instance_ids", []))
+	if instance_ids.is_empty():
+		var instance_id := str(row.get("instance_id", ""))
+		if not instance_id.is_empty():
+			instance_ids.append(instance_id)
+	for instance_id in instance_ids:
+		var part := player.get_inventory_part(instance_id)
+		if part == null:
+			continue
+		if not bool(part.flags.get(INVENTORY_FLAG_LOCKED, false)):
+			return instance_id
+	return ""
 
 
 func _duplicate_dictionary_array(rows: Array[Dictionary]) -> Array[Dictionary]:

@@ -939,6 +939,20 @@ Status effects are data-authored timed runtime modifiers. They can represent buf
       "stack_mode": "refresh",
       "stat_modifiers": {},
       "tags": ["recovery"],
+      "apply_condition": {
+        "type": "stat_check",
+        "entity_id": "context:entity",
+        "stat": "health",
+        "op": "<",
+        "value_stat": "health_max"
+      },
+      "tick_condition": {
+        "type": "stat_check",
+        "entity_id": "context:entity",
+        "stat": "health",
+        "op": "<",
+        "value_stat": "health_max"
+      },
       "on_tick": [
         { "type": "modify_stat", "stat": "health", "delta": 2 }
       ]
@@ -954,6 +968,7 @@ Supported fields:
 - `max_stacks` defaults to 1.
 - `stack_mode` is `refresh`, `replace`, `add_duration`, or `stack`.
 - `stat_modifiers` is a dictionary of additive effective-stat modifiers multiplied by stack count.
+- `apply_condition`, `tick_condition`, and `expire_condition` are optional `ConditionEvaluator` dictionaries. The affected entity is available as `context:entity`; the runtime status-effect instance is available as `status_effect`; and the source template is available as `status_effect_template`. Failed `apply_condition` prevents the effect from being added, failed `tick_condition` skips that tick's actions, and failed `expire_condition` skips `on_expire` actions while still removing the expired runtime instance.
 - `on_apply`, `on_tick`, and `on_expire` are arrays of normal `ActionDispatcher` action dictionaries. The runner injects `entity_id`, `status_effect_id`, `status_effect_runtime_id`, and `stacks` when omitted.
 
 Runtime instances live in `GameState.active_status_effects` and persist through saves. `StatManager.compute_effective_stats()` includes active status-effect modifiers alongside equipped part modifiers.
@@ -1430,7 +1445,7 @@ Quest objectives are evaluated by `ConditionEvaluator`. Each objective in the `o
 - `reach_location` — entity is at the given location. Fields: `location_id`, optional `entity_id`.
 - `has_part` — entity owns a specific part template. Fields: `template_id`, `count` (default 1), optional `entity_id`.
 - `has_flag` — flag is set. Fields: `flag_id`, optional `entity_id` (default `"global"`), optional `value` (default `true`).
-- `stat_check` — stat comparison. Fields: `stat`, `op` (`>=`, `>`, `<=`, `<`, `==`, `!=`), `value`, optional `entity_id`.
+- `stat_check` — stat comparison. Fields: `stat`, `op` (`>=`, `>`, `<=`, `<`, `==`, `!=`), `value`, optional `entity_id`. Use `value_stat` instead of `value` to compare against another stat on the same resolved entity, or provide `value_entity_id` to compare against another context entity.
 - `stat_greater_than` — shorthand for stat > value. Fields: `stat`, `value`.
 - `stat_less_than` — shorthand for stat < value. Fields: `stat`, `value`.
 - `has_currency` — entity has at least the given currency amount. Fields: `currency_id` (or `key`), `amount`, optional `entity_id`.
@@ -1716,7 +1731,9 @@ No required params. Common useful optional fields:
 - `inventory_limit`
 - `status_effect_empty_label`
 
-The current entity sheet exposes stats, active status effects, currency balances, equipped parts, inventory summaries, faction standing, data-authored inventory use actions, direct equip for loose inventory parts, discard actions for loose inventory, and handoff into equipment management. Status effect rows are derived from `GameState.active_status_effects` and the referenced `status_effects.json` templates, including display names, descriptions, remaining duration, stacks, tags, and data-authored stat modifiers. Direct equip is still data-driven: the backend derives compatible and recommended slots from the target entity's `provides_sockets`, part `tags`, and `required_tags`; no slot ids or item categories are hardcoded by the UI.
+The current entity sheet exposes stats, active status effects, currency balances, equipped parts, inventory summaries, faction standing, data-authored inventory use actions, direct equip for loose inventory parts, discard actions for loose inventory, per-instance favorite/lock flags, and handoff into equipment management. Status effect rows are derived from `GameState.active_status_effects` and the referenced `status_effects.json` templates, including display names, descriptions, remaining duration, stacks, tags, and data-authored stat modifiers. Direct equip is still data-driven: the backend derives compatible and recommended slots from the target entity's `provides_sockets`, part `tags`, and `required_tags`; no slot ids or item categories are hardcoded by the UI.
+
+Inventory favorite and lock controls write to `PartInstance.flags` on the selected runtime item. `favorite` affects presentation order in the character menu. `inventory_locked` protects that specific item instance from character-menu consume/discard flows. These are runtime flags, not template categories, so mods do not need to change their item schemas to benefit from the controls.
 
 #### `OwnedEntitiesBackend`
 No required params. Common useful optional fields:

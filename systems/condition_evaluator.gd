@@ -46,7 +46,7 @@ static func _check_stat(stat_check: Dictionary, context: Dictionary = {}) -> boo
 		return false
 	var stat_key := str(stat_check.get("stat", ""))
 	var op := str(stat_check.get("op", ">="))
-	var required := float(stat_check.get("value", 0))
+	var required := _resolve_stat_check_value(stat_check, entity, context)
 	var actual := entity.effective_stat(stat_key)
 	match op:
 		">=": return actual >= required
@@ -56,6 +56,17 @@ static func _check_stat(stat_check: Dictionary, context: Dictionary = {}) -> boo
 		"==": return actual == required
 		"!=": return actual != required
 	return false
+
+
+static func _resolve_stat_check_value(stat_check: Dictionary, entity: EntityInstance, context: Dictionary = {}) -> float:
+	var value_stat := str(stat_check.get("value_stat", "")).strip_edges()
+	if value_stat.is_empty():
+		return float(stat_check.get("value", 0))
+	var value_entity_id := str(stat_check.get("value_entity_id", stat_check.get("entity_id", "player")))
+	var value_entity := _resolve_entity(value_entity_id, context)
+	if value_entity == null:
+		value_entity = entity
+	return value_entity.effective_stat(value_stat)
 
 
 static func _check_flag(flag_check: Variant, context: Dictionary = {}) -> bool:

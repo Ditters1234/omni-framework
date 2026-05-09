@@ -188,7 +188,9 @@ Rules:
 - `stack_mode` must be `refresh`, `replace`, `add_duration`, or `stack`.
 - `stat_modifiers` keys must reference known stat definitions.
 - `tags` must be an array of non-empty strings when present.
+- `apply_condition`, `tick_condition`, and `expire_condition` must be valid `ConditionEvaluator` dictionaries when present.
 - `on_apply`, `on_tick`, and `on_expire` must be arrays of normal `ActionDispatcher` action objects when present.
+- `stat_check` conditions may use `value_stat` instead of numeric `value`; the referenced stat must exist on the resolved entity definition context when this can be validated statically.
 
 ### Encounters
 

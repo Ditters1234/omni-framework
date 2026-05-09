@@ -27,6 +27,29 @@ func before_each() -> void:
 			{"type": "set_flag", "flag_id": "regen_expired", "value": true}
 		],
 	}
+	DataManager.status_effects["base:test_conditional_regen"] = {
+		"status_effect_id": "base:test_conditional_regen",
+		"display_name": "Test Conditional Regen",
+		"duration": 2,
+		"tick_interval": 1,
+		"apply_condition": {
+			"type": "stat_check",
+			"entity_id": "context:entity",
+			"stat": "health",
+			"op": "<",
+			"value_stat": "health_max",
+		},
+		"tick_condition": {
+			"type": "stat_check",
+			"entity_id": "context:entity",
+			"stat": "health",
+			"op": "<",
+			"value_stat": "health_max",
+		},
+		"on_tick": [
+			{"type": "modify_stat", "stat": "health", "delta": 30}
+		],
+	}
 
 
 func test_status_effect_stat_modifiers_stack_and_expire_on_ticks() -> void:
@@ -83,3 +106,24 @@ func test_action_dispatcher_applies_and_removes_status_effects() -> void:
 		"entity_id": "player",
 	})
 	assert_eq(GameState.active_status_effects.size(), 0)
+
+
+func test_status_effect_conditions_gate_apply_and_tick_actions() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	player.set_stat("health", 50.0)
+
+	var blocked_runtime_id := GameState.apply_status_effect("base:test_conditional_regen", "player")
+	assert_true(blocked_runtime_id.is_empty())
+	assert_eq(GameState.active_status_effects.size(), 0)
+
+	player.set_stat("health", 10.0)
+	var runtime_id := GameState.apply_status_effect("base:test_conditional_regen", "player")
+	assert_false(runtime_id.is_empty())
+	TimeKeeper.advance_tick()
+	assert_eq(player.get_stat("health"), 40.0)
+	TimeKeeper.advance_tick()
+	assert_eq(player.get_stat("health"), 50.0)
+	assert_false(GameState.active_status_effects.has(runtime_id))

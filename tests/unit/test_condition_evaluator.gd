@@ -63,6 +63,23 @@ func test_stat_check_evaluates_effective_stat() -> void:
 	}))
 
 
+func test_stat_check_can_compare_against_another_stat() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	player.set_stat("health", 40.0)
+	player.set_stat("health_max", 50.0)
+
+	assert_true(ConditionEvaluator.evaluate({
+		"type": "stat_check",
+		"entity_id": "context:entity",
+		"stat": "health",
+		"op": "<",
+		"value_stat": "health_max",
+	}, {"entity": player}))
+
+
 func test_has_currency_checks_player_balance() -> void:
 	# Fixture player has credits: 400
 	assert_true(ConditionEvaluator.evaluate({

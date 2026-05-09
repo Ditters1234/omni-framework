@@ -1111,6 +1111,40 @@ func test_entity_sheet_inventory_rows_report_data_driven_equip_slots() -> void:
 	assert_true(found_hair)
 
 
+func test_entity_sheet_inventory_rows_report_instance_flags() -> void:
+	var player := GameState.player as EntityInstance
+	assert_not_null(player)
+	if player == null:
+		return
+	var hair_part := PartInstance.from_template(DataManager.get_part("base:body_hair_long"))
+	hair_part.template_id = "base:body_hair_long"
+	hair_part.instance_id = "phase4_flagged_hair"
+	hair_part.flags["favorite"] = true
+	hair_part.flags["inventory_locked"] = true
+	player.add_part(hair_part)
+
+	var backend: RefCounted = ENTITY_SHEET_BACKEND.new()
+	backend.initialize({"target_entity_id": "player"})
+	var view_model: Dictionary = backend.build_view_model()
+	var inventory_rows_value: Variant = view_model.get("inventory_rows", [])
+	assert_true(inventory_rows_value is Array)
+	if not inventory_rows_value is Array:
+		return
+	var inventory_rows: Array = inventory_rows_value
+	var found_hair := false
+	for row_value in inventory_rows:
+		if not row_value is Dictionary:
+			continue
+		var row: Dictionary = row_value
+		if str(row.get("template_id", "")) != "base:body_hair_long":
+			continue
+		found_hair = true
+		assert_eq(int(row.get("favorite_count", 0)), 1)
+		assert_eq(int(row.get("locked_count", 0)), 1)
+		break
+	assert_true(found_hair)
+
+
 func _inventory_has_instance(entity: EntityInstance, instance_id: String) -> bool:
 	if entity == null:
 		return false

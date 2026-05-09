@@ -229,6 +229,16 @@ layout_mode = 2
 focus_mode = 2
 text = "Use Item"
 
+[node name="FavoriteItemButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox"]
+layout_mode = 2
+focus_mode = 2
+text = "Favorite Item"
+
+[node name="LockItemButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox"]
+layout_mode = 2
+focus_mode = 2
+text = "Lock Item"
+
 [node name="DiscardItemButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/TabContainer/Inventory/InventoryBox/InventoryContent/InventoryDetailPanel/DetailBox"]
 layout_mode = 2
 focus_mode = 2

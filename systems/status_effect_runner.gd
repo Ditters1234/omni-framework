@@ -24,6 +24,8 @@ func apply_status_effect(effect_id: String, entity_id: String = "player", params
 	var entity := _resolve_entity(entity_id)
 	if entity == null:
 		return ""
+	if not _condition_matches(template, "apply_condition", entity, {}):
+		return ""
 
 	var existing_runtime_id := _find_existing_runtime_id(entity.entity_id, effect_id)
 	if not existing_runtime_id.is_empty():
@@ -96,12 +98,16 @@ func _advance_effect(runtime_id: String) -> void:
 	if template.is_empty():
 		GameState.active_status_effects.erase(runtime_id)
 		return
+	var entity := _resolve_entity(str(instance.get("entity_id", "player")))
+	if entity == null:
+		GameState.active_status_effects.erase(runtime_id)
+		return
 	var remaining_ticks := int(instance.get("remaining_ticks", 0)) - 1
 	var elapsed_ticks := int(instance.get("elapsed_ticks", 0)) + 1
 	instance["remaining_ticks"] = remaining_ticks
 	instance["elapsed_ticks"] = elapsed_ticks
 	var tick_interval := maxi(int(instance.get("tick_interval", DEFAULT_TICK_INTERVAL)), DEFAULT_TICK_INTERVAL)
-	if elapsed_ticks % tick_interval == 0:
+	if elapsed_ticks % tick_interval == 0 and _condition_matches(template, "tick_condition", entity, instance):
 		_dispatch_actions(template, "on_tick", instance)
 		GameEvents.status_effect_ticked.emit(str(instance.get("entity_id", "")), str(instance.get("status_effect_id", "")), runtime_id)
 	if remaining_ticks <= 0:
@@ -117,6 +123,8 @@ func _apply_to_existing(runtime_id: String, template: Dictionary, entity: Entity
 		return ""
 	var instance: Dictionary = instance_value
 	var duration := _resolve_duration(template, params)
+	if not _condition_matches(template, "apply_condition", entity, instance):
+		return ""
 	var max_stacks := _resolve_max_stacks(template)
 	var stack_mode := str(params.get("stack_mode", template.get("stack_mode", STACK_MODE_REFRESH)))
 	match stack_mode:
@@ -151,7 +159,8 @@ func _remove_runtime_id(runtime_id: String, expire: bool) -> void:
 	var entity_id := str(instance.get("entity_id", ""))
 	if expire:
 		var template := DataManager.get_status_effect(effect_id)
-		if not template.is_empty():
+		var entity := _resolve_entity(entity_id)
+		if not template.is_empty() and entity != null and _condition_matches(template, "expire_condition", entity, instance):
 			_dispatch_actions(template, "on_expire", instance)
 	GameState.active_status_effects.erase(runtime_id)
 	if expire:
@@ -209,6 +218,20 @@ func _resolve_entity(entity_id: String) -> EntityInstance:
 	if entity_id == "player" or entity_id.is_empty():
 		return GameState.player as EntityInstance
 	return GameState.get_entity_instance(entity_id)
+
+
+func _condition_matches(template: Dictionary, field_name: String, entity: EntityInstance, instance: Dictionary) -> bool:
+	var condition_value: Variant = template.get(field_name, {})
+	if not condition_value is Dictionary:
+		return true
+	var condition: Dictionary = condition_value
+	if condition.is_empty():
+		return true
+	return ConditionEvaluator.evaluate(condition, {
+		"entity": entity,
+		"status_effect": instance,
+		"status_effect_template": template,
+	})
 
 
 func _generate_runtime_id() -> String:
