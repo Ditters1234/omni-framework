@@ -2,6 +2,7 @@ extends Control
 
 const ENTITY_SHEET_BACKEND := preload("res://ui/screens/backends/entity_sheet_backend.gd")
 const ACTIVE_QUEST_LOG_BACKEND := preload("res://ui/screens/backends/active_quest_log_backend.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn")
 const STAT_SHEET_SCENE := preload("res://ui/components/stat_sheet.tscn")
 const FACTION_BADGE_SCENE := preload("res://ui/components/faction_badge.tscn")
@@ -149,8 +150,8 @@ func _refresh_state() -> void:
 	_render_inventory_section(view_model)
 	_render_quest_section()
 	_render_reputation_section(view_model)
-	_render_progress_section()
-	_render_activity_section()
+	_render_progress_section(view_model)
+	_render_activity_section(view_model)
 
 	var ai_lore := str(view_model.get("ai_lore", "")).strip_edges()
 	_ai_lore_template_id = str(view_model.get("ai_lore_template_id", ""))
@@ -182,17 +183,7 @@ func _render_stat_sheet(view_model: Dictionary) -> void:
 
 
 func _render_overview_section(view_model: Dictionary) -> void:
-	var visible_inventory_rows := _build_visible_inventory_rows(view_model)
-	var rows: Array[Dictionary] = []
-	rows.append({"display_name": "Currency Balances", "stat_summary": str(view_model.get("currency_rows", []).size())})
-	rows.append({"display_name": "Equipped Parts", "stat_summary": str(view_model.get("equipped_rows", []).size())})
-	rows.append({"display_name": "Loose Inventory Items", "stat_summary": str(_count_inventory_row_instances(visible_inventory_rows))})
-	rows.append({"display_name": "Loose Inventory Stacks", "stat_summary": str(visible_inventory_rows.size())})
-	rows.append({"display_name": "Active Effects", "stat_summary": str(view_model.get("status_effect_rows", []).size())})
-	rows.append({"display_name": "Active Quests", "stat_summary": str(GameState.active_quests.size())})
-	rows.append({"display_name": "Completed Quests", "stat_summary": str(GameState.completed_quests.size())})
-	rows.append({"display_name": "Unlocked Achievements", "stat_summary": str(GameState.unlocked_achievements.size())})
-	rows.append({"display_name": "Discovered Recipes", "stat_summary": str(GameState.discovered_recipes.size())})
+	var rows := _read_dictionary_array(view_model.get("overview_rows", []))
 	_render_text_rows(_overview_rows, rows, "No character summary is available.", "")
 
 
@@ -535,37 +526,14 @@ func _render_reputation_section(view_model: Dictionary) -> void:
 			_add_wrapped_label(_reputation_rows, description)
 
 
-func _render_progress_section() -> void:
-	var rows: Array[Dictionary] = []
-	rows.append({"display_name": "Unlocked Achievements", "stat_summary": _join_string_array(GameState.unlocked_achievements, "None")})
-	rows.append({"display_name": "Discovered Recipes", "stat_summary": _join_string_array(GameState.discovered_recipes, "None")})
-	rows.append({"display_name": "Completed Quests", "stat_summary": _join_string_array(GameState.completed_quests, "None")})
-	rows.append({"display_name": "Completed Tasks", "stat_summary": _join_string_array(GameState.completed_task_templates, "None")})
-	var flag_keys: Array = GameState.flags.keys()
-	flag_keys.sort()
-	rows.append({"display_name": "Flags", "stat_summary": _join_variant_array(flag_keys, "None")})
+func _render_progress_section(view_model: Dictionary) -> void:
+	var rows := _read_dictionary_array(view_model.get("progress_rows", []))
 	_render_text_rows(_progress_rows, rows, "No progress has been recorded.", "")
 
 
-func _render_activity_section() -> void:
-	_clear_children(_activity_rows)
-	if GameState.event_history.is_empty():
-		_add_wrapped_label(_activity_rows, "No event history has been recorded.")
-		return
-	var start_index := maxi(GameState.event_history.size() - 25, 0)
-	for index in range(GameState.event_history.size() - 1, start_index - 1, -1):
-		var event_value: Variant = GameState.event_history[index]
-		if not event_value is Dictionary:
-			continue
-		var event_entry: Dictionary = event_value
-		var event_type := str(event_entry.get("event_type", "event"))
-		var day := int(event_entry.get("day", 0))
-		var tick := int(event_entry.get("tick", 0))
-		var payload_text := _summarize_payload(_read_dictionary(event_entry.get("payload", {})))
-		var text := "Day %s, Tick %s — %s" % [str(day), str(tick), event_type]
-		if not payload_text.is_empty():
-			text = "%s\n%s" % [text, payload_text]
-		_add_wrapped_label(_activity_rows, text)
+func _render_activity_section(view_model: Dictionary) -> void:
+	var rows := _read_dictionary_array(view_model.get("activity_rows", []))
+	_render_text_rows(_activity_rows, rows, "No event history has been recorded.", "")
 
 
 func _build_visible_inventory_rows(view_model: Dictionary) -> Array[Dictionary]:
@@ -687,9 +655,9 @@ func _on_refresh_button_pressed() -> void:
 
 func _on_back_button_pressed() -> void:
 	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_surface()
+		BACKEND_NAVIGATION_HELPER.close_surface()
 		return
-	UIRouter.pop()
+	BACKEND_NAVIGATION_HELPER.go_back(false)
 
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
@@ -739,11 +707,7 @@ func _humanize_id(value: String) -> String:
 
 
 func _is_player_sheet() -> bool:
-	var player := GameState.player as EntityInstance
-	if player == null:
-		return false
-	var target_entity_id := str(_last_view_model.get("target_entity_id", ""))
-	return target_entity_id == player.entity_id or target_entity_id == "player"
+	return bool(_last_view_model.get("is_player_sheet", false))
 
 
 func _connect_runtime_signals() -> void:
@@ -847,9 +811,7 @@ func _on_inventory_row_selected(selection_key: String) -> void:
 
 func _on_open_assembly_button_pressed() -> void:
 	var params: Dictionary = _backend.build_equipment_management_params()
-	if _opened_from_gameplay_shell and UIRouter.open_in_gameplay_shell(SCREEN_ASSEMBLY_EDITOR, params):
-		return
-	UIRouter.push(SCREEN_ASSEMBLY_EDITOR, params)
+	BACKEND_NAVIGATION_HELPER.open_screen(SCREEN_ASSEMBLY_EDITOR, params, _opened_from_gameplay_shell)
 
 
 func _on_equip_item_button_pressed() -> void:
@@ -919,36 +881,6 @@ func _on_event_narrated(source_signal: String, source_key: String, _narration: S
 	if _ai_lore_template_id.is_empty() or source_key != _ai_lore_template_id:
 		return
 	_refresh_state()
-
-
-func _join_string_array(values: Array, empty_label: String) -> String:
-	if values.is_empty():
-		return empty_label
-	var parts: Array[String] = []
-	for value in values:
-		parts.append(str(value))
-	return ", ".join(parts)
-
-
-func _join_variant_array(values: Array, empty_label: String) -> String:
-	if values.is_empty():
-		return empty_label
-	var parts: Array[String] = []
-	for value in values:
-		parts.append(str(value))
-	return ", ".join(parts)
-
-
-func _summarize_payload(payload: Dictionary) -> String:
-	if payload.is_empty():
-		return ""
-	var keys: Array = payload.keys()
-	keys.sort()
-	var parts: Array[String] = []
-	for key_value in keys:
-		var key := str(key_value)
-		parts.append("%s: %s" % [key, str(payload.get(key_value, ""))])
-	return ", ".join(parts)
 
 
 func _grab_default_focus() -> void:

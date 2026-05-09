@@ -1,9 +1,7 @@
 extends Control
 
 const OWNED_ENTITIES_BACKEND := preload("res://ui/screens/backends/owned_entities_backend.gd")
-const SCREEN_ENTITY_SHEET := "entity_sheet"
-const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
-const SCREEN_TASK_PROVIDER := "task_provider"
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 const STACKED_LAYOUT_WIDTH := 760.0
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
@@ -309,51 +307,15 @@ func _on_cancel_task_pressed(runtime_id: String) -> void:
 
 
 func _on_inspect_button_pressed() -> void:
-	var entity_id := _get_selected_entity_id()
-	if entity_id.is_empty():
-		return
-	_open_screen(SCREEN_ENTITY_SHEET, {
-		"target_entity_id": entity_id,
-		"screen_title": "Entity Status",
-	})
+	_open_backend_action(_backend.build_inspect_action())
 
 
 func _on_manage_equipment_button_pressed() -> void:
-	var entity_id := _get_selected_entity_id()
-	if entity_id.is_empty():
-		return
-	_open_screen(SCREEN_ASSEMBLY_EDITOR, {
-		"target_entity_id": entity_id,
-		"budget_entity_id": "player",
-		"option_source_entity_id": entity_id,
-		"screen_title": "Manage Owned Entity",
-		"screen_description": "Equip carried parts and preview stat changes before committing.",
-		"cancel_label": "Back",
-		"confirm_label": "Apply",
-		"pop_on_confirm": true,
-	})
+	_open_backend_action(_backend.build_equipment_action())
 
 
 func _on_assign_contract_button_pressed() -> void:
-	var entity_id := _get_selected_entity_id()
-	var faction_id := str(_last_view_model.get("assignment_faction_id", ""))
-	if entity_id.is_empty() or faction_id.is_empty():
-		return
-	var params := {
-		"faction_id": faction_id,
-		"assignee_entity_id": entity_id,
-		"owner_entity_id": str(_last_view_model.get("owner_entity_id", "player")),
-		"assignment_task_template_id": str(_last_view_model.get("assignment_task_template_id", "")),
-		"auto_dispatch_first_reach_location": true,
-		"return_to_owned_entities": true,
-		"screen_title": "Assign Contract",
-		"screen_description": "Pick a contract for the selected owned entity. Reach-location contracts can dispatch immediately.",
-		"cancel_label": "Back",
-	}
-	var provider_entity_id := str(_last_view_model.get("assignment_provider_entity_id", ""))
-	if not provider_entity_id.is_empty():
-		params["provider_entity_id"] = provider_entity_id
-	_open_screen(SCREEN_TASK_PROVIDER, params)
+	_open_backend_action(_backend.build_contract_assignment_action())
 
 
 func _on_refresh_button_pressed() -> void:
@@ -365,16 +327,15 @@ func _on_runtime_state_changed(_arg0: Variant = null, _arg1: Variant = null) -> 
 
 
 func _on_back_button_pressed() -> void:
-	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_screen()
-		return
-	UIRouter.pop()
+	BACKEND_NAVIGATION_HELPER.go_back(_opened_from_gameplay_shell)
 
 
-func _open_screen(screen_id: String, params: Dictionary) -> void:
-	if _opened_from_gameplay_shell and UIRouter.open_in_gameplay_shell(screen_id, params):
+func _open_backend_action(action: Dictionary) -> void:
+	var screen_id := str(action.get("screen_id", "")).strip_edges()
+	if screen_id.is_empty():
 		return
-	UIRouter.push(screen_id, params)
+	var params: Dictionary = _read_dictionary(action.get("params", {}))
+	BACKEND_NAVIGATION_HELPER.open_screen(screen_id, params, _opened_from_gameplay_shell)
 
 
 func _connect_runtime_signals() -> void:
@@ -416,11 +377,6 @@ func _disconnect_runtime_signals() -> void:
 		GameEvents.location_changed.disconnect(_on_runtime_state_changed)
 	if GameEvents.has_signal("tick_advanced") and GameEvents.is_connected("tick_advanced", callback):
 		GameEvents.tick_advanced.disconnect(_on_runtime_state_changed)
-
-
-func _get_selected_entity_id() -> String:
-	var row := _read_dictionary(_last_view_model.get("selected_entity", {}))
-	return str(row.get("entity_id", ""))
 
 
 func _get_option_metadata(button: OptionButton) -> String:

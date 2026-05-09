@@ -107,6 +107,7 @@ systems/
 `systems/encounter_runtime.gd` provides encounter condition context, weighted opponent action selection, encounter-local stat clamping, and JSON-native effect delta math.
 `systems/status_effect_runner.gd` advances data-authored timed status effects stored in `GameState.active_status_effects`, applying stat modifiers and evaluating optional apply/tick/expire conditions before dispatching lifecycle actions.
 `systems/entity_lifecycle_runner.gd` evaluates config-authored lifecycle rules for live entities, setting state flags and dispatching normal actions when authored conditions enter or exit.
+`systems/location_presence_service.gd` resolves gameplay location presence rows and empty-loot visibility from location templates, entity templates, and runtime entity instances, keeping that model assembly out of the shell surface UI.
 `systems/task_activity_summary.gd` formats active and queued task instances into shared entity activity summaries for owned-entity management and gameplay location presence rows.
 `systems/ai/` now also includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies ahead of the dialogue-layer UI work.
 `systems/ai/` also now includes `bt_action_ai_query.gd` and `bt_condition_ai_check.gd`, two LimboAI custom tasks for AI-driven behavior-tree decisions, plus `bt_ai_utils.gd`, the shared prompt-token and response-parser helper those tasks use.
@@ -118,6 +119,7 @@ All of the following service scripts are fully implemented and should not be omi
 - `backend_contract_registry.gd`
 - `entity_lifecycle_runner.gd`
 - `location_access_service.gd`
+- `location_presence_service.gd`
 - `reward_service.gd`
 - `script_hook_service.gd`
 - `status_effect_runner.gd`
@@ -217,6 +219,7 @@ The UI layer includes:
 - `LootBackend` powers entity-backed loot/container review. Containers, caches, and loot piles remain normal entities with inventory and currency balances; the backend transfers selected loose part instances or all available contents to a destination entity, closes by default when depleted, and gameplay location surfaces hide empty loot entries unless data opts out.
 - `RewardReviewBackend` powers reward history review from `GameState.event_history`, showing quest and encounter completion reward summaries without coupling the UI to a specific reward schema.
 - Rest/recovery loops use existing entities, tasks, actions, status effects, and location/entity interactions rather than a separate world-object layer. Data-authored time buttons can start task templates before advancing time, task completion actions can apply recovery, repair, charging, fatigue removal, or other effects through `ActionDispatcher`, and location screens can expose clinic/repair/rest affordances through normal backend payloads.
+- Gameplay location presence is resolved by `LocationPresenceService`; the shell-owned surface renders the resulting rows and buttons rather than querying runtime entity state directly.
 - `ui/screens/backends/` also includes the world map implementation trio: `world_map_backend.gd`, `world_map_graph.gd`, and `world_map_screen.gd`
 - Dialogue, encounter, world map, and settings screens use responsive container layouts so backend-driven screens remain usable in narrow/mobile-sized viewports.
 - A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts

@@ -1,5 +1,7 @@
 extends GutTest
 
+const LOCATION_PRESENCE_SERVICE := preload("res://systems/location_presence_service.gd")
+
 
 func before_each() -> void:
 	DataManager.clear_all()
@@ -27,15 +29,10 @@ func test_static_player_template_id_is_filtered_from_present_entity_ids() -> voi
 	GameState.player = player
 	GameState.entity_instances[player.entity_id] = player
 
-	var surface := GameplayLocationSurface.new()
-	surface.set("_location_id", "test:room")
-	surface.set("_location_template", DataManager.locations["test:room"])
-
-	var ids: Array[String] = surface.call("_get_present_entity_ids")
+	var ids: Array[String] = LOCATION_PRESENCE_SERVICE.get_present_entity_ids("test:room", DataManager.locations["test:room"])
 
 	assert_false(ids.has("test:player"))
 	assert_true(ids.has("test:npc"))
-	surface.free()
 
 
 func test_runtime_player_instance_is_filtered_from_present_entity_ids() -> void:
@@ -59,12 +56,7 @@ func test_runtime_player_instance_is_filtered_from_present_entity_ids() -> void:
 	GameState.entity_instances[player.entity_id] = player
 	GameState.entity_instances[npc.entity_id] = npc
 
-	var surface := GameplayLocationSurface.new()
-	surface.set("_location_id", "test:room")
-	surface.set("_location_template", DataManager.locations["test:room"])
-
-	var ids: Array[String] = surface.call("_get_present_entity_ids")
+	var ids: Array[String] = LOCATION_PRESENCE_SERVICE.get_present_entity_ids("test:room", DataManager.locations["test:room"])
 
 	assert_false(ids.has("test:player"))
 	assert_true(ids.has("test:npc"))
-	surface.free()

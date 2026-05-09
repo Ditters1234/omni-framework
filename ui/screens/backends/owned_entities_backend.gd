@@ -17,6 +17,9 @@ const SORT_TASK := "task"
 const START_MODE_REPLACE := "replace"
 const START_MODE_QUEUE := "queue"
 const START_MODE_PARALLEL := "parallel"
+const SCREEN_ENTITY_SHEET := "entity_sheet"
+const SCREEN_ASSEMBLY_EDITOR := "assembly_editor"
+const SCREEN_TASK_PROVIDER := "task_provider"
 
 var _params: Dictionary = {}
 var _selected_entity_id: String = ""
@@ -131,6 +134,63 @@ func set_roster_controls(search_text: String, status_filter: String, sort_mode: 
 	_status_filter = _normalize_filter(status_filter)
 	_sort_mode = _normalize_sort(sort_mode)
 	_status_text = ""
+
+
+func build_inspect_action() -> Dictionary:
+	var entity_id := _selected_entity_id.strip_edges()
+	if entity_id.is_empty():
+		return {}
+	return {
+		"screen_id": SCREEN_ENTITY_SHEET,
+		"params": {
+			"target_entity_id": entity_id,
+			"screen_title": "Entity Status",
+		},
+	}
+
+
+func build_equipment_action() -> Dictionary:
+	var entity_id := _selected_entity_id.strip_edges()
+	if entity_id.is_empty():
+		return {}
+	return {
+		"screen_id": SCREEN_ASSEMBLY_EDITOR,
+		"params": {
+			"target_entity_id": entity_id,
+			"budget_entity_id": "player",
+			"option_source_entity_id": entity_id,
+			"screen_title": "Manage Owned Entity",
+			"screen_description": "Equip carried parts and preview stat changes before committing.",
+			"cancel_label": "Back",
+			"confirm_label": "Apply",
+			"pop_on_confirm": true,
+		},
+	}
+
+
+func build_contract_assignment_action() -> Dictionary:
+	var entity_id := _selected_entity_id.strip_edges()
+	var faction_id := _get_string_param(_params, "assignment_faction_id", "")
+	if entity_id.is_empty() or faction_id.is_empty():
+		return {}
+	var params: Dictionary = {
+		"faction_id": faction_id,
+		"assignee_entity_id": entity_id,
+		"owner_entity_id": _get_string_param(_params, "owner_entity_id", "player"),
+		"assignment_task_template_id": _get_string_param(_params, "assignment_task_template_id", _get_default_assignment_task_id()),
+		"auto_dispatch_first_reach_location": true,
+		"return_to_owned_entities": true,
+		"screen_title": "Assign Contract",
+		"screen_description": "Pick a contract for the selected owned entity. Reach-location contracts can dispatch immediately.",
+		"cancel_label": "Back",
+	}
+	var provider_entity_id := _get_string_param(_params, "assignment_provider_entity_id", "")
+	if not provider_entity_id.is_empty():
+		params["provider_entity_id"] = provider_entity_id
+	return {
+		"screen_id": SCREEN_TASK_PROVIDER,
+		"params": params,
+	}
 
 
 func assign_selected_to_location(location_id: String) -> void:

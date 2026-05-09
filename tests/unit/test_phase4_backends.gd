@@ -741,6 +741,19 @@ func test_owned_entities_backend_lists_owned_entities_and_assigns_travel_task() 
 		if rows.size() > 0 and rows[0] is Dictionary:
 			var row: Dictionary = rows[0]
 			assert_eq(str(row.get("entity_id", "")), "base:test_drone")
+	var inspect_action: Dictionary = backend.build_inspect_action()
+	var equipment_action: Dictionary = backend.build_equipment_action()
+	assert_eq(str(inspect_action.get("screen_id", "")), "entity_sheet")
+	assert_eq(str(equipment_action.get("screen_id", "")), "assembly_editor")
+	var inspect_params_value: Variant = inspect_action.get("params", {})
+	var equipment_params_value: Variant = equipment_action.get("params", {})
+	assert_true(inspect_params_value is Dictionary)
+	assert_true(equipment_params_value is Dictionary)
+	if inspect_params_value is Dictionary and equipment_params_value is Dictionary:
+		var inspect_params: Dictionary = inspect_params_value
+		var equipment_params: Dictionary = equipment_params_value
+		assert_eq(str(inspect_params.get("target_entity_id", "")), "base:test_drone")
+		assert_eq(str(equipment_params.get("option_source_entity_id", "")), "base:test_drone")
 
 	backend.assign_selected_to_location(TEST_FIXTURE_WORLD.connected_location_id())
 

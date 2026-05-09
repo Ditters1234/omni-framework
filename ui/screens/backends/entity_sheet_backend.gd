@@ -227,6 +227,9 @@ func build_view_model() -> Dictionary:
 			"inventory_rows": [],
 			"status_effect_rows": [],
 			"reputation_rows": [],
+			"overview_rows": [],
+			"progress_rows": _build_progress_rows(),
+			"activity_rows": _build_activity_rows(),
 			"show_currencies": show_currencies,
 			"show_equipped": show_equipped,
 			"show_inventory": show_inventory,
@@ -247,6 +250,7 @@ func build_view_model() -> Dictionary:
 			"inventory_total_stacks": 0,
 			"inventory_shown_stacks": 0,
 			"target_entity_id": "",
+			"is_player_sheet": false,
 		}
 
 	var currency_rows := _build_currency_rows(target_entity)
@@ -255,6 +259,7 @@ func build_view_model() -> Dictionary:
 	var inventory_rows := _read_dictionary_rows(inventory_result.get("rows", []))
 	var status_effect_rows := _build_status_effect_rows(target_entity)
 	var reputation_rows := _build_reputation_rows(target_entity)
+	var overview_rows := _build_overview_rows(currency_rows, equipped_rows, inventory_result, status_effect_rows)
 	var entity_template := BACKEND_HELPERS.get_entity_template(target_entity)
 	var ai_lore_template_id := str(entity_template.get("entity_id", ""))
 	var ai_lore := ScriptHookService.request_entity_lore(entity_template, {
@@ -270,6 +275,9 @@ func build_view_model() -> Dictionary:
 		"inventory_rows": inventory_rows,
 		"status_effect_rows": status_effect_rows,
 		"reputation_rows": reputation_rows,
+		"overview_rows": overview_rows,
+		"progress_rows": _build_progress_rows(),
+		"activity_rows": _build_activity_rows(),
 		"show_currencies": show_currencies,
 		"show_equipped": show_equipped,
 		"show_inventory": show_inventory,
@@ -290,11 +298,17 @@ func build_view_model() -> Dictionary:
 		"inventory_total_stacks": int(inventory_result.get("total_stacks", 0)),
 		"inventory_shown_stacks": int(inventory_result.get("shown_stacks", 0)),
 		"target_entity_id": target_entity.entity_id,
+		"is_player_sheet": _is_player_entity(target_entity),
 	}
 
 
 func _resolve_target_entity() -> EntityInstance:
 	return BACKEND_HELPERS.resolve_entity_lookup(_get_string_param(_params, "target_entity_id", "player"))
+
+
+func _is_player_entity(entity: EntityInstance) -> bool:
+	var player := GameState.player as EntityInstance
+	return player != null and entity != null and entity.entity_id == player.entity_id
 
 
 func _build_equipped_rows(entity: EntityInstance) -> Array[Dictionary]:
@@ -342,6 +356,52 @@ func _build_currency_rows(entity: EntityInstance) -> Array[Dictionary]:
 			"currency_id": currency_id,
 			"display_name": BACKEND_HELPERS.humanize_id(currency_id),
 			"stat_summary": _format_currency_amount(currency_symbol, entity.get_currency(currency_id)),
+		})
+	return rows
+
+
+func _build_overview_rows(currency_rows: Array[Dictionary], equipped_rows: Array[Dictionary], inventory_result: Dictionary, status_effect_rows: Array[Dictionary]) -> Array[Dictionary]:
+	return [
+		{"display_name": "Currency Balances", "stat_summary": str(currency_rows.size())},
+		{"display_name": "Equipped Parts", "stat_summary": str(equipped_rows.size())},
+		{"display_name": "Loose Inventory Items", "stat_summary": str(int(inventory_result.get("total_instances", 0)))},
+		{"display_name": "Loose Inventory Stacks", "stat_summary": str(int(inventory_result.get("total_stacks", 0)))},
+		{"display_name": "Active Effects", "stat_summary": str(status_effect_rows.size())},
+		{"display_name": "Active Quests", "stat_summary": str(GameState.active_quests.size())},
+		{"display_name": "Completed Quests", "stat_summary": str(GameState.completed_quests.size())},
+		{"display_name": "Unlocked Achievements", "stat_summary": str(GameState.unlocked_achievements.size())},
+		{"display_name": "Discovered Recipes", "stat_summary": str(GameState.discovered_recipes.size())},
+	]
+
+
+func _build_progress_rows() -> Array[Dictionary]:
+	var flag_keys: Array = GameState.flags.keys()
+	flag_keys.sort()
+	return [
+		{"display_name": "Unlocked Achievements", "stat_summary": _join_string_array(GameState.unlocked_achievements, "None")},
+		{"display_name": "Discovered Recipes", "stat_summary": _join_string_array(GameState.discovered_recipes, "None")},
+		{"display_name": "Completed Quests", "stat_summary": _join_string_array(GameState.completed_quests, "None")},
+		{"display_name": "Completed Tasks", "stat_summary": _join_string_array(GameState.completed_task_templates, "None")},
+		{"display_name": "Flags", "stat_summary": _join_variant_array(flag_keys, "None")},
+	]
+
+
+func _build_activity_rows() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if GameState.event_history.is_empty():
+		return rows
+	var start_index := maxi(GameState.event_history.size() - 25, 0)
+	for index in range(GameState.event_history.size() - 1, start_index - 1, -1):
+		var event_value: Variant = GameState.event_history[index]
+		if not event_value is Dictionary:
+			continue
+		var event_entry: Dictionary = event_value
+		var event_type := str(event_entry.get("event_type", "event"))
+		var day := int(event_entry.get("day", 0))
+		var tick := int(event_entry.get("tick", 0))
+		rows.append({
+			"display_name": "Day %s, Tick %s - %s" % [str(day), str(tick), event_type],
+			"stat_summary": _summarize_payload(_read_dictionary(event_entry.get("payload", {}))),
 		})
 	return rows
 
@@ -796,6 +856,37 @@ func _read_string_array(value: Variant) -> Array[String]:
 			continue
 		results.append(text)
 	return results
+
+
+func _join_string_array(values: Array, empty_label: String) -> String:
+	if values.is_empty():
+		return empty_label
+	var labels: Array[String] = []
+	for value in values:
+		labels.append(str(value))
+	return ", ".join(labels)
+
+
+func _join_variant_array(values: Array, empty_label: String) -> String:
+	if values.is_empty():
+		return empty_label
+	var labels: Array[String] = []
+	for value in values:
+		labels.append(str(value))
+	return ", ".join(labels)
+
+
+func _summarize_payload(payload: Dictionary) -> String:
+	var parts: Array[String] = []
+	var keys: Array = payload.keys()
+	keys.sort()
+	for key_value in keys:
+		var key := str(key_value)
+		var value: Variant = payload.get(key, null)
+		if value is Dictionary or value is Array:
+			continue
+		parts.append("%s: %s" % [BACKEND_HELPERS.humanize_id(key), str(value)])
+	return ", ".join(parts)
 
 
 func _format_currency_amount(symbol: String, amount: float) -> String:

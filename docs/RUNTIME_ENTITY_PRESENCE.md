@@ -27,4 +27,4 @@ NPCs that travel via task routines or `TRAVEL` tasks should **not** be listed in
 
 ## Implementation
 
-See `ui/screens/gameplay_shell/gameplay_location_surface.gd` method `_get_present_entity_ids()` for the merge logic.
+See `systems/location_presence_service.gd`; `LocationPresenceService.get_present_entity_ids()` owns the merge logic, and the gameplay location surface only renders the resulting presence rows.

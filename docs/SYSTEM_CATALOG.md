@@ -71,6 +71,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 | `EntityLifecycleRunner` | `EntityLifecycleRunner` | `systems/entity_lifecycle_runner.gd` | GameState, DataManager | Evaluates config-authored lifecycle rules when entity stats change, sets state flags, dispatches actions, emits lifecycle events, and surfaces notifications. |
 | `TaskRoutineRunner` | `OmniTaskRoutineRunner` | `systems/task_routine_runner.gd` | GameState, DataManager, TaskRunner | Starts task templates from daily time windows for scheduled NPC/entity movement. Autoload singleton. |
 | `LocationAccessService` | `LocationAccessService` | `systems/location_access_service.gd` | DataManager, ConditionEvaluator | Shared travel/entry gate checks using `entry_condition` and `entry_conditions` on locations. |
+| `LocationPresenceService` | `LocationPresenceService` | `systems/location_presence_service.gd` | GameState, DataManager, TaskActivitySummary | Resolves location presence rows and empty-loot visibility for the gameplay location surface. |
 | `ScriptHookLoader` | `ScriptHookLoader` | `systems/script_hook_loader.gd` | ModLoader | Loads and caches GDScript mod hooks for lifecycle callbacks. |
 
 ### UI & Persistence Utilities
