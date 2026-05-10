@@ -1709,6 +1709,7 @@ Common fields:
 - `ai.encounter_log_template_id` defines the optional default AI template for encounter action-log rewriting. Encounter templates and backend routes can override it; leaving all values empty disables AI rewriting for encounter logs.
 - `ui.default_sprites.parts` maps part tags to fallback sprite paths or configured image ids. Keep body-part, vehicle, equipment, or other taxonomy-specific fallbacks here rather than in engine code.
 - `ui.stat_group_color_tokens` maps stat `ui_group` ids to semantic theme color tokens for generic stat displays.
+- `ui.activity_category_labels` and `ui.activity_category_colors` optionally customize ActivityBoard category display names and color tokens.
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when provided
 - `ui.time_advance_buttons` must be an array of labels ending in `tick(s)`, `hour(s)`, or `day(s)`, or objects with `label` plus `ticks`/`time`. Object entries may include `task_template_id`, `entity_id`, `completion_actions`, `reward`, and `status_text`; the base `"Rest"` button starts `base:downtime`, advances four ticks, and lets that task apply recovery through data-authored completion actions.
 - `entity_lifecycle.rules` is an optional array of lifecycle rules evaluated for every live entity when matching stats change. Use it for incapacitation, defeat, morale breaks, shutdown, unconsciousness, or any other threshold state without hardcoding a stat in engine code.
@@ -1745,6 +1746,8 @@ The current loader registers these backend classes:
 - `ListBackend`
 - `ChallengeBackend`
 - `TaskProviderBackend`
+- `ActivityBoardBackend`
+- `ScheduleBackend`
 - `CatalogListBackend`
 - `CraftingBackend`
 - `DialogueBackend`
@@ -1792,6 +1795,59 @@ Notes:
 - When `return_to_owned_entities` is `true`, confirmation returns to `OwnedEntitiesBackend` with the assignee selected, the first objective destination highlighted, and a status message describing the assignment/dispatch result.
 - Rows always include the static quest `description`.
 - When `ai.enable_world_gen` is on, AI is available, `config.json` enables `ai.task_flavor_enabled`, and `ai.world_gen_hooks.task_flavor` points at a valid hook, the backend may append a cached AI flavor line below the static description and into the selected contract card's `flavor_text`.
+
+#### `ActivityBoardBackend`
+Required:
+- none
+
+Useful optional fields:
+- `screen_title`
+- `screen_description`
+- `categories`
+- `tags`
+- `tags_all`
+- `location_filter` - use a location id, `"current"`, `"all"`, or omit it
+- `show_locked`
+- `show_hidden`
+- `show_upcoming`
+- `max_upcoming_days`
+- `max_upcoming_slots`
+- `allow_auto_travel`
+- `empty_label`
+- `confirm_label`
+- `cancel_label`
+
+Notes:
+- Rows are built from `DataManager.query_activities()` and `ActivityService.get_activity_status()`.
+- Available rows can be started with the confirm button. Locked, hidden, and upcoming rows are display-only.
+- `show_locked` includes requirement/repeat/cooldown/location-blocked rows. `show_hidden` includes rows that fail `visible_if`. `show_upcoming` adds deterministic future schedule rows from `ActivityScheduleService`.
+- `allow_auto_travel: false` keeps auto-travel activities display-only when starting them would require travel.
+- Row metadata includes category labels/colors from `ui.activity_category_labels` and `ui.activity_category_colors`, location/provider names, duration text, optional `ui.preview_effects`, and cached `activity_flavor` text when available.
+- Confirming an activity calls `ActivityService.execute_activity()` and refreshes the board immediately. Activity `completion_actions` still execute through normal `ActionDispatcher` paths.
+
+#### `ScheduleBackend`
+Required:
+- none
+
+Useful optional fields:
+- `screen_title`
+- `view_mode` - `"day"`, `"range"`, `"week"`, or `"month"`; defaults to `"day"`
+- `day_range` - number of days for range view
+- `categories`
+- `tags`
+- `tags_all`
+- `location_filter` - use a location id, `"current"`, `"all"`, or omit it
+- `show_past`
+- `group_by` - `"day"`, `"category"`, `"location"`, `"status"`, or `"none"`
+- `empty_label`
+- `cancel_label`
+
+Notes:
+- Schedule rows are read-only. Use `ActivityBoardBackend` for starting activities.
+- The backend expands slots through `ActivityScheduleService` and labels them as `elapsed`, `active`, `upcoming`, or `locked` using current activity status.
+- Hidden activities are omitted from schedule views.
+- Week view uses `calendar.weekdays`; month view uses the current configured calendar month length.
+- Empty activity schedules are treated as all-day availability for projection.
 
 #### `DialogueBackend`
 Required in practical use:

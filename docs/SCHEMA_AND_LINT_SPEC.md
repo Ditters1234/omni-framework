@@ -272,6 +272,8 @@ Minimum required contracts:
 - `AssemblyEditorBackend`: no required fields; optional params are type-checked at load time
 - `ExchangeBackend`: `source_inventory`, `destination_inventory`, `currency_id`
 - `TaskProviderBackend`: `faction_id`; optional entity/task reference fields are cross-checked against registries
+- `ActivityBoardBackend`: no required fields; optional filters and display flags are type-checked at load time
+- `ScheduleBackend`: no required fields; optional filters, view mode, grouping, and display flags are type-checked at load time
 - `DialogueBackend`: `dialogue_resource`
 - `ChallengeBackend`: `required_stat`, `required_value`
 - `CatalogListBackend`: `data_source`, `action_payload`

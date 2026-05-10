@@ -65,6 +65,20 @@ const SCREEN_CASES := [
 		},
 	},
 	{
+		"scene_path": UI_ROUTE_CATALOG.ACTIVITY_BOARD_SCENE,
+		"params": {
+			"screen_title": "Smoke Activities",
+			"show_locked": true,
+		},
+	},
+	{
+		"scene_path": UI_ROUTE_CATALOG.SCHEDULE_SCENE,
+		"params": {
+			"screen_title": "Smoke Schedule",
+			"view_mode": "day",
+		},
+	},
+	{
 		"scene_path": UI_ROUTE_CATALOG.DIALOGUE_SCENE,
 		"params": {
 			"dialogue_resource": "res://tests/fixtures/dialogue/fixture_dialogue_resource.tres",
@@ -265,6 +279,26 @@ func _seed_backend_screen_runtime() -> void:
 		],
 		"reward": {"credits": 1},
 		"repeatable": true,
+	}
+	DataManager.activities["base:screen_smoke_activity"] = {
+		"activity_id": "base:screen_smoke_activity",
+		"display_name": "Smoke Activity",
+		"description": "Used by backend screen smoke tests.",
+		"category": "smoke",
+		"duration_ticks": 0,
+		"location_id": GameState.current_location_id,
+		"travel_policy": "must_be_present",
+		"schedule": {},
+		"visible_if": [],
+		"requirements": [],
+		"start_actions": [],
+		"completion_actions": [],
+		"failure_actions": [],
+		"outcomes": [],
+		"repeat": {"rule": "always"},
+		"tags": ["smoke"],
+		"ui": {},
+		"ai": {},
 	}
 	DataManager.recipes["base:screen_smoke_recipe"] = {
 		"recipe_id": "base:screen_smoke_recipe",

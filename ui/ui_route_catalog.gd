@@ -14,6 +14,8 @@ const SCREEN_EXCHANGE := "exchange"
 const SCREEN_LIST_VIEW := "list_view"
 const SCREEN_CHALLENGE := "challenge"
 const SCREEN_TASK_PROVIDER := "task_provider"
+const SCREEN_ACTIVITY_BOARD := "activity_board"
+const SCREEN_SCHEDULE := "schedule"
 const SCREEN_CATALOG_LIST := "catalog_list"
 const SCREEN_CRAFTING := "crafting"
 const SCREEN_DIALOGUE := "dialogue"
@@ -39,6 +41,8 @@ const EXCHANGE_SCENE := "res://ui/screens/backends/exchange_screen.tscn"
 const LIST_VIEW_SCENE := "res://ui/screens/backends/list_screen.tscn"
 const CHALLENGE_SCENE := "res://ui/screens/backends/challenge_screen.tscn"
 const TASK_PROVIDER_SCENE := "res://ui/screens/backends/task_provider_screen.tscn"
+const ACTIVITY_BOARD_SCENE := "res://ui/screens/backends/activity_board_screen.tscn"
+const SCHEDULE_SCENE := "res://ui/screens/backends/schedule_screen.tscn"
 const CATALOG_LIST_SCENE := "res://ui/screens/backends/catalog_list_screen.tscn"
 const CRAFTING_SCENE := "res://ui/screens/backends/crafting_screen.tscn"
 const DIALOGUE_SCENE := "res://ui/screens/backends/dialogue_screen.tscn"
@@ -66,6 +70,8 @@ const ENGINE_SCREEN_IDS := [
 	SCREEN_LIST_VIEW,
 	SCREEN_CHALLENGE,
 	SCREEN_TASK_PROVIDER,
+	SCREEN_ACTIVITY_BOARD,
+	SCREEN_SCHEDULE,
 	SCREEN_CATALOG_LIST,
 	SCREEN_CRAFTING,
 	SCREEN_DIALOGUE,
@@ -87,6 +93,8 @@ const BACKEND_SCREEN_MAP := {
 	"ListBackend": "list_view",
 	"ChallengeBackend": "challenge",
 	"TaskProviderBackend": "task_provider",
+	"ActivityBoardBackend": "activity_board",
+	"ScheduleBackend": "schedule",
 	"CatalogListBackend": "catalog_list",
 	"CraftingBackend": "crafting",
 	"DialogueBackend": "dialogue",
@@ -115,6 +123,8 @@ const RUNTIME_SCREEN_REGISTRY := {
 	SCREEN_LIST_VIEW: LIST_VIEW_SCENE,
 	SCREEN_CHALLENGE: CHALLENGE_SCENE,
 	SCREEN_TASK_PROVIDER: TASK_PROVIDER_SCENE,
+	SCREEN_ACTIVITY_BOARD: ACTIVITY_BOARD_SCENE,
+	SCREEN_SCHEDULE: SCHEDULE_SCENE,
 	SCREEN_CATALOG_LIST: CATALOG_LIST_SCENE,
 	SCREEN_CRAFTING: CRAFTING_SCENE,
 	SCREEN_DIALOGUE: DIALOGUE_SCENE,

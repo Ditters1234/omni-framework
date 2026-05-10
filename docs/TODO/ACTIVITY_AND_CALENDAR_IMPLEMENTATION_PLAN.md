@@ -29,10 +29,11 @@ Search anchors:
 - `Phase 3 - Activity history and save/load`
 - `Phase 6 - Activity execution core`
 - `Phase 12 - Activity board UI`
+- `Phase 13 - Schedule UI`
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 11 complete; Phase 12 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
+Current implementation status: Phase 1 through Phase 13 complete; Phase 14 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
 
 ## 1. Purpose
 
@@ -1328,7 +1329,9 @@ BACKEND_CONTRACT_REGISTRY.register("ScheduleBackend", {
     "tags_all",
     "location_filter",
     "show_past",
-    "group_by"
+    "group_by",
+    "empty_label",
+    "cancel_label"
   ],
   "field_types": {
     "screen_title": TYPE_STRING,
@@ -1339,7 +1342,14 @@ BACKEND_CONTRACT_REGISTRY.register("ScheduleBackend", {
     "tags_all": TYPE_ARRAY,
     "location_filter": TYPE_STRING,
     "show_past": TYPE_BOOL,
-    "group_by": TYPE_STRING
+    "group_by": TYPE_STRING,
+    "empty_label": TYPE_STRING,
+    "cancel_label": TYPE_STRING
+  },
+  "array_element_types": {
+    "categories": TYPE_STRING,
+    "tags": TYPE_STRING,
+    "tags_all": TYPE_STRING
   }
 })
 ```
@@ -1367,8 +1377,19 @@ BACKEND_CONTRACT_REGISTRY.register("ScheduleBackend", {
 
 ```gdscript
 {
+  "slot_id": "",
   "activity_id": "",
+  "display_name": "",
+  "description": "",
+  "category": "",
+  "category_label": "",
+  "kind": "",
+  "location_id": "",
+  "location_name": "",
+  "provider_entity_id": "",
+  "provider_name": "",
   "absolute_day": 0,
+  "raw_day": 0,
   "date_text": "",
   "weekday": "",
   "month_id": "",
@@ -1376,18 +1397,21 @@ BACKEND_CONTRACT_REGISTRY.register("ScheduleBackend", {
   "day_of_month": 0,
   "start_tick": -1,
   "end_tick": -1,
+  "absolute_tick": 0,
+  "end_absolute_tick": 0,
   "time_text": "",
+  "duration_ticks": 0,
+  "duration_text": "",
   "status": "upcoming",
   "reason": "",
+  "selected": false,
   "raw_activity": {}
 }
 ```
 
 ### 21.6 Important behavior
 
-Schedule rows should be read-only by default.
-
-Clicking a schedule row may optionally navigate to `ActivityBoardBackend` with filters, but `ScheduleBackend` should not execute activities directly.
+Schedule rows are read-only. Clicking a schedule row selects it for inspection, but `ScheduleBackend` does not execute activities directly.
 
 ---
 
@@ -1562,32 +1586,32 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 12 - Activity board UI
 
-- [ ] Add `ActivityBoardBackend`.
-- [ ] Add activity board screen script.
-- [ ] Add activity board scene.
-- [ ] Register backend contract.
-- [ ] Add backend preload and contract registration in `ModLoader._register_backend_contracts()`.
-- [ ] Add route catalog entry.
-- [ ] Add backend/screen tests.
+- [x] Add `ActivityBoardBackend`.
+- [x] Add activity board screen script.
+- [x] Add activity board scene.
+- [x] Register backend contract.
+- [x] Add backend preload and contract registration in `ModLoader._register_backend_contracts()`.
+- [x] Add route catalog entry.
+- [x] Add backend/screen tests.
 
 ### Phase 13 - Schedule UI
 
-- [ ] Add `ScheduleBackend`.
-- [ ] Add schedule screen script.
-- [ ] Add schedule scene.
-- [ ] Register backend contract.
-- [ ] Add backend preload and contract registration in `ModLoader._register_backend_contracts()`.
-- [ ] Add route catalog entry.
-- [ ] Add schedule projection tests.
+- [x] Add `ScheduleBackend`.
+- [x] Add schedule screen script.
+- [x] Add schedule scene.
+- [x] Register backend contract.
+- [x] Add backend preload and contract registration in `ModLoader._register_backend_contracts()`.
+- [x] Add route catalog entry.
+- [x] Add schedule projection tests.
 
 ### Phase 14 - Documentation alignment
 
-- [ ] Update `docs/PROJECT_STRUCTURE.md`.
-- [ ] Update `docs/SYSTEM_CATALOG.md`.
-- [ ] Update `docs/modding_guide.md`.
+- [x] Update `docs/PROJECT_STRUCTURE.md`.
+- [x] Update `docs/SYSTEM_CATALOG.md`.
+- [x] Update `docs/modding_guide.md`.
 - [ ] Update `docs/GAME_EVENTS_TAXONOMY.md`.
 - [ ] Update `docs/SAVE_SCHEMA_AND_MIGRATION.md`.
-- [ ] Update any schema/lint docs affected by activity data, calendar config, conditions, actions, or backend contracts.
+- [x] Update any schema/lint docs affected by activity data, calendar config, conditions, actions, or backend contracts.
 
 ### Phase 15 - Content-agnostic validation
 
@@ -1675,14 +1699,14 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.8 Backend tests
 
-- [ ] Activity board renders available rows.
-- [ ] Activity board renders locked rows.
-- [ ] Activity board executes selected activity.
-- [ ] Activity board refreshes after execution.
-- [ ] Schedule day view works.
-- [ ] Schedule range view works.
-- [ ] Schedule week view uses configured week length.
-- [ ] Schedule month view uses configured month length.
+- [x] Activity board renders available rows.
+- [x] Activity board renders locked rows.
+- [x] Activity board executes selected activity.
+- [x] Activity board refreshes after execution.
+- [x] Schedule day view works.
+- [x] Schedule range view works.
+- [x] Schedule week view uses configured week length.
+- [x] Schedule month view uses configured month length.
 
 ### 24.9 Save/load tests
 
@@ -1709,8 +1733,8 @@ The implementation is complete when:
 - [ ] Activities can use location policy without duplicating route or entry logic.
 - [x] Activities can open encounters without owning encounter resolution.
 - [x] AI flavor/narration is optional and non-blocking.
-- [ ] Activity board UI can execute activities.
-- [ ] Schedule UI can project upcoming activities.
+- [x] Activity board UI can execute activities.
+- [x] Schedule UI can project upcoming activities.
 - [ ] Tests cover time, loading, execution, save/load, quest integration, location integration, encounter handoff, AI no-op behavior, and backend rendering.
 - [ ] Base docs describe the implemented activity/calendar systems as current behavior.
 - [ ] No engine code depends on specific content, setting names, location names, NPCs, factions, campaigns, or sample scenarios.
