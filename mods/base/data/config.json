@@ -48,7 +48,8 @@
     ],
     "months": [
       {
-        "name": "Term",
+        "month_id": "term",
+        "display_name": "Term",
         "days": 28,
         "tags": [
           "academic"
