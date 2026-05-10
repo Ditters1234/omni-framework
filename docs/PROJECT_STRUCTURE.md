@@ -229,6 +229,16 @@ The UI layer includes:
 - Debug overlay at `ui/debug/dev_debug_overlay.gd`
 - Theme system: `omni_theme.tres` + `theme_applier.gd`
 
+### Current Scope Boundaries
+
+These are intentional constraints, not missing foundation work:
+
+- **World objects** should remain normal entities unless a concrete future requirement proves the entity + interaction/backend/action model cannot express them. Containers, terminals, doors, harvest nodes, loot piles, switches, and traps should start as entities.
+- **Inventory stack splitting** is deferred until stack semantics become a first-class runtime model. Current inventory uses distinct `PartInstance` objects grouped for display.
+- **Owned-entity bulk operations and priority presets** are deferred until larger roster content proves they are needed. Current queue controls cover single-entity assignment, reorder, recall, and cancellation without fixed job categories.
+- **Save repair flows** should be added only when a migration can recover a specific broken reference. Current diagnostics are intentionally explicit about why a slot cannot load.
+- **AI chat history** is session-scoped. Persisting freeform conversation history would require a first-class save schema and A2J registration.
+
 ## Core
 
 `core/` contains shared runtime classes separated from autoloads and systems:
@@ -264,12 +274,7 @@ Tests are dev-only and must be excluded from release export presets.
 
 ## Documentation Guidance
 
-Two distinct doc types exist in this repo:
-
-1. **Current-reference docs** — should match what is implemented now.
-2. **Planning docs** — should describe target architecture and future rollout.
-
-### Rules for current-reference docs
+Docs in this repo should be current references. Completed rollout plans, historical audits, and finished TODO lists should be deleted or folded into the canonical docs instead of kept around as stale context.
 
 - Prefer observed repository structure over roadmap language
 - Clearly mark any unimplemented item as planned or proposed

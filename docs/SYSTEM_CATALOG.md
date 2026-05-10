@@ -150,7 +150,7 @@ Defined in `GameEvents` (see [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md
 
 ## UI Framework & Backend System
 
-All screens are managed by `UIRouter` (see [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md)).
+All screens are managed by `UIRouter`. This section is the current backend/screen catalog; modder-facing backend payload contracts live in [`modding_guide.md`](modding_guide.md).
 
 ### Engine-Owned Screens (Routed)
 
@@ -196,8 +196,6 @@ These are **data-driven**. A JSON `backend_class` field in locations or NPCs rou
 2. `BackendContractRegistry` validates that the backend exists and the config matches its contract.
 3. At runtime, `UIRouter` instantiates the backend screen and passes the config.
 4. The backend renders its UI and handles user interactions.
-
-See [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) for detailed backend catalog and phased implementation roadmap.
 
 ### Shared UI Components
 
@@ -431,7 +429,7 @@ See [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for full architectural guardr
 | **All autoloads and their roles** | This doc → [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) section "Autoload Systems" |
 | **Every runtime helper system** | This doc → "Runtime Helper Systems" section |
 | **Data registries and loaders** | This doc → "Data Loaders & Registries" section |
-| **All UI screens and backends** | This doc → "UI Framework" section → [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) |
+| **All UI screens and backends** | This doc -> "UI Framework" section and [`modding_guide.md`](modding_guide.md) |
 | **Game events and signals** | [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) → `autoloads/game_events.gd` |
 | **Stat math and validation** | [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) |
 | **Schema rules and lint** | [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) |
@@ -448,7 +446,6 @@ See [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for full architectural guardr
 SYSTEM_CATALOG.md (this file)
   ├─→ PROJECT_STRUCTURE.md        (Complete folder layout, system descriptions)
   ├─→ AGENTS.md                   (Boot sequence, architecture rules)
-  ├─→ UI_IMPLEMENTATION_PLAN.md    (UI rollout, backend catalog, components)
   ├─→ TASK_ROUTINES.md             (Daily routine runner for scheduled entity movement)
   ├─→ LOCATION_ACCESS.md           (Location entry gating with conditions)
   ├─→ RUNTIME_ENTITY_PRESENCE.md   (How entities appear at locations)

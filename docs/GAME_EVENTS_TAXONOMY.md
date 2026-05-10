@@ -57,7 +57,7 @@ The event surface should stay grouped by domain. The authoritative catalog lives
 - `all_mods_loaded()`
 - `mod_load_error(mod_id, message)`
 
-Note: `data_validation_failed` is described in earlier planning docs but is not currently declared in the signal catalog. Use `mod_load_error` for validation issues until that signal is added.
+Note: `data_validation_failed` is not currently declared in the signal catalog. Use `mod_load_error` for validation issues until a dedicated validation signal is added.
 
 ### Time
 

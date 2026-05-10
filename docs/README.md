@@ -5,7 +5,7 @@
 
 Omni-Framework is a data-driven, genre-agnostic game engine built on Godot 4.
 
-This folder is the documentation home for Omni-Framework. `PROJECT_STRUCTURE.md` is the current implementation snapshot; the other docs are domain references or planning notes as described below.
+This folder is the documentation home for Omni-Framework. Keep docs here as current references; completed rollout plans and historical audits should be removed or folded into canonical references.
 
 ## Documents
 
@@ -16,7 +16,6 @@ This folder is the documentation home for Omni-Framework. `PROJECT_STRUCTURE.md`
 | [`TASK_ROUTINES.md`](TASK_ROUTINES.md) | Daily task routine runner for scheduled NPC/entity movement through `TaskRunner` and `LocationGraph` route costs |
 | [`LOCATION_ACCESS.md`](LOCATION_ACCESS.md) | Location entry gating with `entry_condition`, `entry_conditions`, and `locked_message` through `LocationAccessService` |
 | [`RUNTIME_ENTITY_PRESENCE.md`](RUNTIME_ENTITY_PRESENCE.md) | How the gameplay surface resolves which entities appear at a location from static, template, and runtime sources |
-| [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) | UI rollout plan: backend catalog, engine-owned screens, component library, and phased implementation priorities |
 | [`modding_guide.md`](modding_guide.md) | The modder-facing contract: data schemas, patching rules, backend requirements, config keys, and safe extension patterns |
 | [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) | Canonical stat-pair rules, clamping behavior, validation requirements, and implementation patterns |
 | [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) | Load-time validation rules, per-system schema expectations, patch validation, and content lint severity guidance |
@@ -31,7 +30,7 @@ This folder is the documentation home for Omni-Framework. `PROJECT_STRUCTURE.md`
 1. Read [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) to understand the current repository layout before making structural changes.
 2. Read [`TASK_ROUTINES.md`](TASK_ROUTINES.md) before adding scheduled NPC/entity movement.
 3. Read [`LOCATION_ACCESS.md`](LOCATION_ACCESS.md) before gating locations behind conditions.
-4. Read [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) before expanding the routed UI surface, adding a backend, or introducing engine-owned screens.
+4. Read [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) and [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) before expanding the routed UI surface, adding a backend, or introducing engine-owned screens.
 5. Read [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) before building the first loaders, registries, or autoload orchestration.
 6. Read [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) before implementing validation or patch application.
 7. Read [`modding_guide.md`](modding_guide.md) when authoring JSON, patches, assets, or script hooks.
@@ -42,14 +41,13 @@ This folder is the documentation home for Omni-Framework. `PROJECT_STRUCTURE.md`
 
 ## Current Documentation Policy
 
-Each doc below has an explicit scope. Prefer `PROJECT_STRUCTURE.md` for what exists today, and use planning docs for intended future work.
+Each doc below has an explicit scope. Prefer `SYSTEM_CATALOG.md` for discovery and `PROJECT_STRUCTURE.md` for what exists today.
 
 - [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) — complete inventory of all systems, subsystems, and their relationships; entry point for system discovery.
 - [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) - current repo snapshot and implementation structure.
 - [`TASK_ROUTINES.md`](TASK_ROUTINES.md) — implemented daily task routine runner for scheduled entity movement.
 - [`LOCATION_ACCESS.md`](LOCATION_ACCESS.md) — implemented location entry gating through `LocationAccessService`.
 - [`RUNTIME_ENTITY_PRESENCE.md`](RUNTIME_ENTITY_PRESENCE.md) — how entity presence at locations is resolved from static, template, and runtime sources.
-- [`UI_IMPLEMENTATION_PLAN.md`](UI_IMPLEMENTATION_PLAN.md) — backend catalog, engine-owned screen catalog, component rollout, and UI build order.
 - [`modding_guide.md`](modding_guide.md) — the contracts modders must satisfy, even where enforcement is still being implemented.
 - [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) — stat invariants and validation rules.
 - [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) — content validation behavior.
