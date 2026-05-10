@@ -165,6 +165,68 @@ func test_reputation_threshold_checks_faction_standing() -> void:
 	}))
 
 
+func test_activity_history_conditions_use_game_state_history() -> void:
+	DataManager.activities["base:study"] = {
+		"activity_id": "base:study",
+		"display_name": "Study",
+		"category": "learning",
+		"duration_ticks": 1,
+	}
+	DataManager.activities["base:train"] = {
+		"activity_id": "base:train",
+		"display_name": "Train",
+		"category": "fitness",
+		"duration_ticks": 1,
+	}
+	GameState.current_tick = 0
+	GameState.current_day = 1
+	GameState.record_activity_completed("base:study", {"outcome_id": "insight"})
+	GameState.record_activity_completed("base:study")
+
+	assert_true(ConditionEvaluator.evaluate({"type": "activity_completed", "activity_id": "base:study"}))
+	assert_true(ConditionEvaluator.evaluate({"type": "activity_not_completed", "activity_id": "base:train"}))
+	assert_true(ConditionEvaluator.evaluate({"type": "activity_count_at_least", "activity_id": "base:study", "count": 2}))
+	assert_true(ConditionEvaluator.evaluate({"type": "activity_count_less_than", "activity_id": "base:train", "count": 1}))
+	assert_true(ConditionEvaluator.evaluate({"type": "activity_completed_today", "activity_id": "base:study"}))
+	assert_true(ConditionEvaluator.evaluate({"type": "activity_not_completed_today", "activity_id": "base:train"}))
+	assert_true(ConditionEvaluator.evaluate({"type": "activity_category_count_at_least", "category": "learning", "count": 2}))
+	assert_true(ConditionEvaluator.evaluate({"type": "last_activity_outcome_is", "activity_id": "base:study", "outcome_id": "insight"}))
+	assert_false(ConditionEvaluator.evaluate({"type": "activity_count_at_least", "activity_id": "base:study", "count": 3}))
+
+
+func test_time_conditions_use_time_model() -> void:
+	DataManager.config["game"] = {"ticks_per_day": 10}
+	DataManager.config["calendar"] = {
+		"weekdays": ["Mon", "Tue"],
+		"months": [
+			{"month_id": "spring", "display_name": "Spring", "days": 2, "tags": ["green"]},
+			{"month_id": "winter", "display_name": "Winter", "days": 3, "tags": ["cold"]},
+		],
+		"starting_absolute_day": 1,
+		"starting_year": 1,
+	}
+	GameState.current_tick = 12
+	GameState.current_day = 2
+	TimeKeeper.sync_from_game_state()
+
+	assert_true(ConditionEvaluator.evaluate({"type": "weekday_is", "weekday": "Tue"}))
+	assert_true(ConditionEvaluator.evaluate({"type": "weekday_in", "weekdays": ["Sun", "Tue"]}))
+	assert_true(ConditionEvaluator.evaluate({"type": "tick_after", "tick": 1}))
+	assert_true(ConditionEvaluator.evaluate({"type": "tick_before", "tick": 3}))
+	assert_true(ConditionEvaluator.evaluate({"type": "tick_between", "start": 1, "end": 3}))
+	assert_true(ConditionEvaluator.evaluate({"type": "month_is", "month": "spring"}))
+	assert_true(ConditionEvaluator.evaluate({"type": "month_in", "months": ["spring", "summer"]}))
+	assert_true(ConditionEvaluator.evaluate({"type": "month_tag_is", "tag": "green"}))
+	assert_true(ConditionEvaluator.evaluate({"type": "month_tag_in", "tags": ["red", "green"]}))
+	assert_true(ConditionEvaluator.evaluate({"type": "day_of_month_is", "day": 2}))
+	assert_true(ConditionEvaluator.evaluate({"type": "day_of_month_between", "start": 1, "end": 2}))
+	assert_true(ConditionEvaluator.evaluate({"type": "absolute_day_after", "day": 1}))
+	assert_true(ConditionEvaluator.evaluate({"type": "absolute_day_before", "day": 3}))
+	assert_true(ConditionEvaluator.evaluate({"type": "absolute_tick_after", "tick": 11}))
+	assert_true(ConditionEvaluator.evaluate({"type": "absolute_tick_before", "tick": 13}))
+	assert_false(ConditionEvaluator.evaluate({"type": "weekday_is", "weekday": "Mon"}))
+
+
 # ---------------------------------------------------------------------------
 # Logic blocks
 # ---------------------------------------------------------------------------

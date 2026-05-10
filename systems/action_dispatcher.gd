@@ -5,6 +5,8 @@ extends RefCounted
 
 class_name ActionDispatcher
 
+const TIME_MODEL := preload("res://systems/time_model.gd")
+
 
 ## Dispatches an array of action blocks in order.
 static func dispatch_all(actions: Array) -> void:
@@ -41,6 +43,10 @@ static func dispatch(action: Dictionary) -> void:
 		"reward":           _action_reward(action)
 		"unlock_achievement": _action_unlock_achievement(action)
 		"emit_signal":      _action_emit_signal(action)
+		"advance_time":     _action_advance_time(action)
+		"advance_to_time":  _action_advance_to_time(action)
+		"advance_to_next_weekday": _action_advance_to_next_weekday(action)
+		"record_event":     _action_record_event(action)
 		"push_screen":      _action_push_screen(action)
 		"pop_screen":       _action_pop_screen(action)
 		"replace_all_screens": _action_replace_all_screens(action)
@@ -300,6 +306,56 @@ static func _action_emit_signal(action: Dictionary) -> void:
 	GameEvents.emit_dynamic(signal_name, args)
 
 
+static func _action_advance_time(action: Dictionary) -> void:
+	var ticks := maxi(_int_value(action.get("ticks", 0), 0), 0)
+	TimeKeeper.advance_ticks(ticks)
+
+
+static func _action_advance_to_time(action: Dictionary) -> void:
+	var current_absolute_tick := TIME_MODEL.get_current_absolute_tick()
+	var current_day := TIME_MODEL.get_day_for_absolute_tick(current_absolute_tick)
+	var day_offset := _int_value(action.get("day_offset", 0), 0)
+	var target_day := maxi(current_day + day_offset, 1)
+	var target_tick := _clamped_tick(action.get("tick_of_day", 0))
+	var target_absolute_tick := TIME_MODEL.get_absolute_tick(target_day, target_tick)
+	while target_absolute_tick <= current_absolute_tick:
+		target_day += 1
+		target_absolute_tick = TIME_MODEL.get_absolute_tick(target_day, target_tick)
+	TimeKeeper.advance_ticks(target_absolute_tick - current_absolute_tick)
+
+
+static func _action_advance_to_next_weekday(action: Dictionary) -> void:
+	var weekday := str(action.get("weekday", "")).strip_edges()
+	if weekday.is_empty():
+		push_warning("ActionDispatcher: advance_to_next_weekday requires weekday.")
+		return
+	var days_until := TIME_MODEL.days_until_weekday(weekday)
+	if days_until < 0:
+		push_warning("ActionDispatcher: advance_to_next_weekday references unknown weekday '%s'." % weekday)
+		return
+	var target_day := TIME_MODEL.get_display_day() + days_until
+	var target_tick := _clamped_tick(action.get("tick_of_day", 0))
+	var current_absolute_tick := TIME_MODEL.get_current_absolute_tick()
+	var target_absolute_tick := TIME_MODEL.get_absolute_tick(target_day, target_tick)
+	while target_absolute_tick <= current_absolute_tick:
+		target_day += TIME_MODEL.get_week_length()
+		target_absolute_tick = TIME_MODEL.get_absolute_tick(target_day, target_tick)
+	TimeKeeper.advance_ticks(target_absolute_tick - current_absolute_tick)
+
+
+static func _action_record_event(action: Dictionary) -> void:
+	var event_type := str(action.get("event_type", "")).strip_edges()
+	if event_type.is_empty():
+		push_warning("ActionDispatcher: record_event requires event_type.")
+		return
+	var payload_value: Variant = action.get("payload", {})
+	if not payload_value is Dictionary:
+		push_warning("ActionDispatcher: record_event payload must be a dictionary.")
+		return
+	var payload: Dictionary = payload_value
+	GameState.record_event(event_type, payload.duplicate(true))
+
+
 static func _action_push_screen(action: Dictionary) -> void:
 	var router := UIRouter as OmniUIRouter
 	if router == null:
@@ -350,3 +406,17 @@ static func _read_params(action: Dictionary) -> Dictionary:
 		var raw_params: Dictionary = params_data
 		return raw_params.duplicate(true)
 	return {}
+
+
+static func _clamped_tick(value: Variant) -> int:
+	return clampi(_int_value(value, 0), 0, TIME_MODEL.get_ticks_per_day() - 1)
+
+
+static func _int_value(value: Variant, default_value: int) -> int:
+	if value is int:
+		return value
+	if value is float:
+		return int(value)
+	if value is String and str(value).is_valid_int():
+		return int(str(value))
+	return default_value

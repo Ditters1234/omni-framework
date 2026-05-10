@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 6 complete; Phase 7 is next. The weighted choice helper and activity outcome dispatch are also implemented because activity execution uses them.
+Current implementation status: Phase 1 through Phase 7 complete; Phase 8 is next. The weighted choice helper and activity outcome dispatch are also implemented because activity execution uses them.
 
 ## 1. Purpose
 
@@ -1517,13 +1517,13 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 7 - Conditions and actions
 
-- [ ] Add activity-aware conditions to `ConditionEvaluator`.
-- [ ] Add time-aware conditions to `ConditionEvaluator`.
-- [ ] Add `advance_time` action.
-- [ ] Add `advance_to_time` action.
-- [ ] Add `advance_to_next_weekday` action.
-- [ ] Add `record_event` action.
-- [ ] Add condition/action tests.
+- [x] Add activity-aware conditions to `ConditionEvaluator`.
+- [x] Add time-aware conditions to `ConditionEvaluator`.
+- [x] Add `advance_time` action.
+- [x] Add `advance_to_time` action.
+- [x] Add `advance_to_next_weekday` action.
+- [x] Add `record_event` action.
+- [x] Add condition/action tests.
 
 ### Phase 8 - Quest integration
 

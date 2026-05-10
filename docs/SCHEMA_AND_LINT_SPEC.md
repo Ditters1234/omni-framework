@@ -201,6 +201,12 @@ Rules:
 - `start_actions`, `completion_actions`, `failure_actions`, and outcome `actions` entries must be normal `ActionDispatcher` action objects.
 - Outcome entries must be objects with unique, non-empty `outcome_id` values. Outcome `weight` must be numeric and greater than or equal to 0 when present.
 
+### Shared Conditions and Actions
+
+- Activity-history conditions may reference known activity ids and categories: `activity_completed`, `activity_not_completed`, `activity_count_at_least`, `activity_count_less_than`, `activity_completed_today`, `activity_not_completed_today`, `activity_category_count_at_least`, and `last_activity_outcome_is`.
+- Time-aware conditions are valid shared condition payloads and must be interpreted through `TimeModel`: `weekday_is`, `weekday_in`, `tick_after`, `tick_before`, `tick_between`, `month_is`, `month_in`, `month_tag_is`, `month_tag_in`, `day_of_month_is`, `day_of_month_between`, `absolute_day_after`, `absolute_day_before`, `absolute_tick_after`, and `absolute_tick_before`.
+- Time and event actions are valid normal `ActionDispatcher` action objects: `advance_time`, `advance_to_time`, `advance_to_next_weekday`, and `record_event`.
+
 ### Status Effects
 
 - Required: `status_effect_id`, `display_name`

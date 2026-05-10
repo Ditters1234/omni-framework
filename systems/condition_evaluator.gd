@@ -14,6 +14,8 @@ extends RefCounted
 
 class_name ConditionEvaluator
 
+const TIME_MODEL := preload("res://systems/time_model.gd")
+
 
 ## Evaluates a condition dictionary against the current GameState.
 ## Returns true only if ALL conditions in the block are satisfied.
@@ -251,6 +253,52 @@ static func _evaluate_typed_condition(condition: Dictionary, context: Dictionary
 			return _check_encounter_stat(condition, context)
 		"has_encounter_tag":
 			return _check_encounter_tag(condition, context)
+		"activity_completed":
+			return _check_activity_completed(condition)
+		"activity_not_completed":
+			return _check_activity_not_completed(condition)
+		"activity_count_at_least":
+			return _check_activity_count_at_least(condition)
+		"activity_count_less_than":
+			return _check_activity_count_less_than(condition)
+		"activity_completed_today":
+			return _check_activity_completed_today(condition)
+		"activity_not_completed_today":
+			return _check_activity_not_completed_today(condition)
+		"activity_category_count_at_least":
+			return _check_activity_category_count_at_least(condition)
+		"last_activity_outcome_is":
+			return _check_last_activity_outcome_is(condition)
+		"weekday_is":
+			return _check_weekday_is(condition, context)
+		"weekday_in":
+			return _check_weekday_in(condition, context)
+		"tick_after":
+			return int(_time_snapshot(context).get("tick_of_day", 0)) > _int_value(condition.get("tick", 0), 0)
+		"tick_before":
+			return int(_time_snapshot(context).get("tick_of_day", 0)) < _int_value(condition.get("tick", 0), 0)
+		"tick_between":
+			return _check_tick_between(condition, context)
+		"month_is":
+			return _check_month_is(condition, context)
+		"month_in":
+			return _check_month_in(condition, context)
+		"month_tag_is":
+			return _check_month_tag_is(condition, context)
+		"month_tag_in":
+			return _check_month_tag_in(condition, context)
+		"day_of_month_is":
+			return int(_time_snapshot(context).get("day_of_month", 0)) == _int_value(condition.get("day", 0), 0)
+		"day_of_month_between":
+			return _check_day_of_month_between(condition, context)
+		"absolute_day_after":
+			return int(_time_snapshot(context).get("display_day", 1)) > _int_value(condition.get("day", 1), 1)
+		"absolute_day_before":
+			return int(_time_snapshot(context).get("display_day", 1)) < _int_value(condition.get("day", 1), 1)
+		"absolute_tick_after":
+			return int(_time_snapshot(context).get("absolute_tick", 0)) > _int_value(condition.get("tick", 0), 0)
+		"absolute_tick_before":
+			return int(_time_snapshot(context).get("absolute_tick", 0)) < _int_value(condition.get("tick", 0), 0)
 		_:
 			push_warning("ConditionEvaluator: unknown condition type '%s'" % condition_type)
 			return false
@@ -375,6 +423,172 @@ static func _check_encounter_tag(condition: Dictionary, context: Dictionary = {}
 	if tag_id.is_empty() or not role_tags.has(tag_id):
 		return false
 	return int(role_tags.get(tag_id, 0)) > 0
+
+
+static func _check_activity_completed(condition: Dictionary) -> bool:
+	var activity_id := str(condition.get("activity_id", "")).strip_edges()
+	if activity_id.is_empty():
+		return false
+	return GameState.get_activity_completion_count(activity_id) > 0
+
+
+static func _check_activity_not_completed(condition: Dictionary) -> bool:
+	var activity_id := str(condition.get("activity_id", "")).strip_edges()
+	if activity_id.is_empty():
+		return false
+	return GameState.get_activity_completion_count(activity_id) == 0
+
+
+static func _check_activity_count_at_least(condition: Dictionary) -> bool:
+	var activity_id := str(condition.get("activity_id", "")).strip_edges()
+	if activity_id.is_empty():
+		return false
+	return GameState.get_activity_completion_count(activity_id) >= _int_value(condition.get("count", 1), 1)
+
+
+static func _check_activity_count_less_than(condition: Dictionary) -> bool:
+	var activity_id := str(condition.get("activity_id", "")).strip_edges()
+	if activity_id.is_empty():
+		return false
+	return GameState.get_activity_completion_count(activity_id) < _int_value(condition.get("count", 1), 1)
+
+
+static func _check_activity_completed_today(condition: Dictionary) -> bool:
+	var activity_id := str(condition.get("activity_id", "")).strip_edges()
+	if activity_id.is_empty():
+		return false
+	return GameState.was_activity_completed_today(activity_id)
+
+
+static func _check_activity_not_completed_today(condition: Dictionary) -> bool:
+	var activity_id := str(condition.get("activity_id", "")).strip_edges()
+	if activity_id.is_empty():
+		return false
+	return not GameState.was_activity_completed_today(activity_id)
+
+
+static func _check_activity_category_count_at_least(condition: Dictionary) -> bool:
+	var category := str(condition.get("category", "")).strip_edges()
+	if category.is_empty():
+		return false
+	return GameState.get_activity_category_completion_count(category) >= _int_value(condition.get("count", 1), 1)
+
+
+static func _check_last_activity_outcome_is(condition: Dictionary) -> bool:
+	var activity_id := str(condition.get("activity_id", "")).strip_edges()
+	var outcome_id := str(condition.get("outcome_id", "")).strip_edges()
+	if activity_id.is_empty() or outcome_id.is_empty():
+		return false
+	return GameState.get_last_activity_outcome(activity_id) == outcome_id
+
+
+static func _check_weekday_is(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var expected_weekday := str(condition.get("weekday", "")).strip_edges()
+	if expected_weekday.is_empty():
+		return false
+	return str(_time_snapshot(context).get("weekday", "")) == expected_weekday
+
+
+static func _check_weekday_in(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var weekdays := _string_array(condition.get("weekdays", []))
+	return not weekdays.is_empty() and weekdays.has(str(_time_snapshot(context).get("weekday", "")))
+
+
+static func _check_tick_between(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var tick := int(_time_snapshot(context).get("tick_of_day", 0))
+	var start_tick := clampi(_int_value(condition.get("start", 0), 0), 0, TIME_MODEL.get_ticks_per_day() - 1)
+	var end_tick := clampi(_int_value(condition.get("end", 0), 0), 0, TIME_MODEL.get_ticks_per_day() - 1)
+	if start_tick <= end_tick:
+		return tick >= start_tick and tick <= end_tick
+	return tick >= start_tick or tick <= end_tick
+
+
+static func _check_month_is(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var expected_month := str(condition.get("month", condition.get("month_id", ""))).strip_edges()
+	if expected_month.is_empty():
+		return false
+	var snapshot := _time_snapshot(context)
+	return expected_month == str(snapshot.get("month_id", "")) or expected_month == str(snapshot.get("month_name", ""))
+
+
+static func _check_month_in(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var months := _string_array(condition.get("months", []))
+	if months.is_empty():
+		return false
+	var snapshot := _time_snapshot(context)
+	return months.has(str(snapshot.get("month_id", ""))) or months.has(str(snapshot.get("month_name", "")))
+
+
+static func _check_month_tag_is(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var tag := str(condition.get("tag", "")).strip_edges()
+	if tag.is_empty():
+		return false
+	return _string_array(_time_snapshot(context).get("month_tags", [])).has(tag)
+
+
+static func _check_month_tag_in(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var tags := _string_array(condition.get("tags", []))
+	if tags.is_empty():
+		return false
+	var current_tags := _string_array(_time_snapshot(context).get("month_tags", []))
+	for tag in tags:
+		if current_tags.has(tag):
+			return true
+	return false
+
+
+static func _check_day_of_month_between(condition: Dictionary, context: Dictionary = {}) -> bool:
+	var day_of_month := int(_time_snapshot(context).get("day_of_month", 0))
+	var start_day := _int_value(condition.get("start", 1), 1)
+	var end_day := _int_value(condition.get("end", start_day), start_day)
+	var min_day := mini(start_day, end_day)
+	var max_day := maxi(start_day, end_day)
+	return day_of_month >= min_day and day_of_month <= max_day
+
+
+static func _time_snapshot(context: Dictionary = {}) -> Dictionary:
+	var absolute_tick := _int_value(context.get("absolute_tick", TIME_MODEL.get_current_absolute_tick()), TIME_MODEL.get_current_absolute_tick())
+	var tick_of_day := clampi(
+		_int_value(context.get("tick_of_day", TIME_MODEL.get_tick_of_day(absolute_tick)), TIME_MODEL.get_tick_of_day(absolute_tick)),
+		0,
+		TIME_MODEL.get_ticks_per_day() - 1
+	)
+	var raw_day := _int_value(context.get("raw_day", TIME_MODEL.get_day_for_absolute_tick(absolute_tick)), TIME_MODEL.get_day_for_absolute_tick(absolute_tick))
+	var display_day := _int_value(context.get("day", TIME_MODEL.get_display_day(raw_day, tick_of_day)), TIME_MODEL.get_display_day(raw_day, tick_of_day))
+	var date := TIME_MODEL.absolute_day_to_date(display_day)
+	return {
+		"absolute_tick": absolute_tick,
+		"tick_of_day": tick_of_day,
+		"raw_day": raw_day,
+		"display_day": display_day,
+		"weekday": str(date.get("weekday", "")),
+		"month_id": str(date.get("month_id", "")),
+		"month_name": str(date.get("month_name", "")),
+		"month_tags": _string_array(date.get("month_tags", [])),
+		"day_of_month": int(date.get("day_of_month", 0)),
+	}
+
+
+static func _string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not value is Array:
+		return result
+	var values: Array = value
+	for entry in values:
+		var normalized := str(entry).strip_edges()
+		if not normalized.is_empty():
+			result.append(normalized)
+	return result
+
+
+static func _int_value(value: Variant, default_value: int) -> int:
+	if value is int:
+		return value
+	if value is float:
+		return int(value)
+	if value is String and str(value).is_valid_int():
+		return int(str(value))
+	return default_value
 
 
 static func _resolve_entity(entity_id: String, context: Dictionary = {}) -> EntityInstance:

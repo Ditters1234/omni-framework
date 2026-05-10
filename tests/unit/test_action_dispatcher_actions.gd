@@ -208,3 +208,69 @@ func test_reward_action_delegates_to_reward_service() -> void:
 		},
 	})
 	assert_eq(player.get_currency("credits"), before + 75.0)
+
+
+# ---------------------------------------------------------------------------
+# Time and event actions
+# ---------------------------------------------------------------------------
+
+func test_advance_time_action_advances_ticks_and_clamps_negative_values() -> void:
+	_use_ten_tick_days()
+	GameState.current_tick = 0
+	GameState.current_day = 1
+	TimeKeeper.sync_from_game_state()
+
+	ActionDispatcher.dispatch({"type": "advance_time", "ticks": 3})
+	ActionDispatcher.dispatch({"type": "advance_time", "ticks": -4})
+
+	assert_eq(GameState.current_tick, 3)
+
+
+func test_advance_to_time_action_rolls_forward_without_rewinding() -> void:
+	_use_ten_tick_days()
+	GameState.current_tick = 2
+	GameState.current_day = 1
+	TimeKeeper.sync_from_game_state()
+
+	ActionDispatcher.dispatch({"type": "advance_to_time", "day_offset": 0, "tick_of_day": 5})
+	assert_eq(GameState.current_tick, 5)
+
+	ActionDispatcher.dispatch({"type": "advance_to_time", "day_offset": 0, "tick_of_day": 5})
+	assert_eq(GameState.current_tick, 15)
+
+
+func test_advance_to_next_weekday_action_uses_configured_weekdays() -> void:
+	_use_ten_tick_days()
+	DataManager.config["calendar"] = {
+		"weekdays": ["Mon", "Tue", "Wed"],
+		"starting_absolute_day": 1,
+	}
+	GameState.current_tick = 2
+	GameState.current_day = 1
+	TimeKeeper.sync_from_game_state()
+
+	ActionDispatcher.dispatch({"type": "advance_to_next_weekday", "weekday": "Tue", "tick_of_day": 4})
+
+	assert_eq(GameState.current_tick, 14)
+
+
+func test_record_event_action_routes_through_game_state() -> void:
+	ActionDispatcher.dispatch({
+		"type": "record_event",
+		"event_type": "action_test_event",
+		"payload": {"value": 42},
+	})
+
+	assert_eq(GameState.event_history.size(), 1)
+	if GameState.event_history[0] is Dictionary:
+		var event_entry: Dictionary = GameState.event_history[0]
+		assert_eq(str(event_entry.get("event_type", "")), "action_test_event")
+		var payload_value: Variant = event_entry.get("payload", {})
+		assert_true(payload_value is Dictionary)
+		if payload_value is Dictionary:
+			var payload: Dictionary = payload_value
+			assert_eq(int(payload.get("value", 0)), 42)
+
+
+func _use_ten_tick_days() -> void:
+	DataManager.config["game"] = {"ticks_per_day": 10}

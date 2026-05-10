@@ -1557,8 +1557,22 @@ Quest objectives are evaluated by `ConditionEvaluator`. Each objective in the `o
 - `has_currency` — entity has at least the given currency amount. Fields: `currency_id` (or `key`), `amount`, optional `entity_id`.
 - `reputation_threshold` — faction reputation check. Fields: `faction_id`, `threshold`, `comparison` (default `>=`), optional `entity_id`.
 - `quest_complete` — a quest has been completed. Fields: `quest_id`.
+- `activity_completed` / `activity_not_completed` - activity completion history check. Fields: `activity_id`.
+- `activity_count_at_least` / `activity_count_less_than` - activity completion count check. Fields: `activity_id`, `count`.
+- `activity_completed_today` / `activity_not_completed_today` - current display-day activity check. Fields: `activity_id`.
+- `activity_category_count_at_least` - completion count for all activities in a category. Fields: `category`, `count`.
+- `last_activity_outcome_is` - most recent completed outcome for an activity. Fields: `activity_id`, `outcome_id`.
+- `weekday_is` / `weekday_in` - current configured weekday check. Fields: `weekday` or `weekdays`.
+- `tick_after` / `tick_before` / `tick_between` - current tick-of-day check. Fields: `tick`, or `start` and `end` for ranges. Ranges may cross midnight.
+- `month_is` / `month_in` - current configured month id or name check. Fields: `month` or `months`.
+- `month_tag_is` / `month_tag_in` - current configured month tag check. Fields: `tag` or `tags`.
+- `day_of_month_is` / `day_of_month_between` - configured calendar date check. Fields: `day`, or `start` and `end` for ranges.
+- `absolute_day_after` / `absolute_day_before` - current display day check. Fields: `day`.
+- `absolute_tick_after` / `absolute_tick_before` - current absolute tick check. Fields: `tick`.
 
 Objectives also support logic blocks for compound conditions: `AND` (array, all must pass), `OR` (array, any must pass), `NOT` (single condition, must fail). These can be nested.
+
+Time-aware conditions use `TimeModel`, so they follow `game.ticks_per_day`, configured weekdays, configured months, and display-day offsets.
 
 Legacy dict-key conditions (without `"type"`) are also supported for backward compatibility — see `ConditionEvaluator` source for details.
 
@@ -2066,6 +2080,16 @@ Actions are side-effect operations dispatched from quest stages, task rewards, c
 | `unlock_location` | `location_id`, optional `entity_id` | Adds to discovered locations |
 | `spawn_entity` | `template_id` (or `entity_template_id`), optional `location_id` | Instantiates a new entity |
 | `learn_recipe` | `recipe_id`, optional `entity_id` | Sets `learned:<recipe_id>` flag |
+| `unlock_achievement` | `achievement_id` | |
+| `reward` | `reward` (or inline reward fields) | Delegates to `RewardService` |
+| `emit_signal` | `signal_name`, optional `args` | Emits on `GameEvents` |
+| `advance_time` | `ticks` | Advances by a non-negative number of ticks |
+| `advance_to_time` | `tick_of_day`, optional `day_offset` | Advances to the next matching tick-of-day and never rewinds |
+| `advance_to_next_weekday` | `weekday`, optional `tick_of_day` | Advances to the next configured weekday and never rewinds |
+| `record_event` | `event_type`, optional `payload` | Records an event in `GameState.event_history` |
+| `push_screen` | `screen_id`, optional `params` | |
+| `pop_screen` | (none) | |
+| `replace_all_screens` | `screen_id`, optional `params` | |
 
 ### `spawn_entity` details
 
@@ -2095,12 +2119,36 @@ The `travel` action also accepts an optional `travel_ticks` field. If `travel_ti
   "travel_ticks": 3
 }
 ```
-| `unlock_achievement` | `achievement_id` | |
-| `reward` | `reward` (or inline reward fields) | Delegates to `RewardService` |
-| `emit_signal` | `signal_name`, optional `args` | Emits on `GameEvents` |
-| `push_screen` | `screen_id`, optional `params` | |
-| `pop_screen` | (none) | |
-| `replace_all_screens` | `screen_id`, optional `params` | |
+
+### Time and event action details
+
+`advance_time` consumes a direct number of ticks:
+
+```json
+{ "type": "advance_time", "ticks": 2 }
+```
+
+`advance_to_time` and `advance_to_next_weekday` use `TimeModel` calendar rules and always roll forward if the requested target has already passed.
+
+```json
+{ "type": "advance_to_time", "tick_of_day": 8 }
+```
+
+```json
+{ "type": "advance_to_next_weekday", "weekday": "Mon", "tick_of_day": 4 }
+```
+
+`record_event` writes a custom history entry through `GameState.record_event()`:
+
+```json
+{
+  "type": "record_event",
+  "event_type": "my_name:my_mod:custom_event",
+  "payload": {
+    "source": "my_name:my_mod:activity"
+  }
+}
+```
 
 ### Example
 
