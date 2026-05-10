@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 4 complete; Phase 5 not started.
+Current implementation status: Phase 1 through Phase 5 complete; Phase 6 not started.
 
 ## 1. Purpose
 
@@ -1490,15 +1490,15 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 5 - Schedule projection core
 
-- [ ] Add `systems/activity_schedule_service.gd`.
-- [ ] Implement empty schedule behavior.
-- [ ] Implement weekday checks.
-- [ ] Implement start/end tick windows.
-- [ ] Implement cross-midnight windows.
-- [ ] Implement must-fit window logic.
-- [ ] Implement absolute day and date/month filters.
-- [ ] Implement slot expansion.
-- [ ] Add schedule tests.
+- [x] Add `systems/activity_schedule_service.gd`.
+- [x] Implement empty schedule behavior.
+- [x] Implement weekday checks.
+- [x] Implement start/end tick windows.
+- [x] Implement cross-midnight windows.
+- [x] Implement must-fit window logic.
+- [x] Implement absolute day and date/month filters.
+- [x] Implement slot expansion.
+- [x] Add schedule tests.
 
 ### Phase 6 - Activity execution core
 
@@ -1626,14 +1626,14 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.3 ActivityScheduleService tests
 
-- [ ] Empty schedule is always scheduled.
-- [ ] Weekday filters work.
-- [ ] Tick windows work.
-- [ ] Cross-midnight windows work.
-- [ ] Must-fit windows block invalid starts.
-- [ ] Month filters work.
-- [ ] Month tag filters work.
-- [ ] Slot expansion is deterministic.
+- [x] Empty schedule is always scheduled.
+- [x] Weekday filters work.
+- [x] Tick windows work.
+- [x] Cross-midnight windows work.
+- [x] Must-fit windows block invalid starts.
+- [x] Month filters work.
+- [x] Month tag filters work.
+- [x] Slot expansion is deterministic.
 
 ### 24.4 ActivityService tests
 

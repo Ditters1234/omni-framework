@@ -1020,6 +1020,8 @@ Supported patch operations:
 
 `DataManager.query_activities()` supports filtering by `activity_ids` or `template_ids`, `category`, `categories`, `tags`, `tags_all`, `location_id`, `provider_entity_id`, and `kind`. Returned activity dictionaries are deep copies.
 
+Activity schedules are projected by `ActivityScheduleService`. The service treats an omitted or empty `schedule` as always scheduled, applies schedule keys with AND logic, supports weekday/day/month/month-tag/day-of-month filters, supports normal and cross-midnight tick windows, and can expand deterministic upcoming slots. It does not check visibility, requirements, repeat/cooldown state, location policy, or actions; those belong to activity execution.
+
 ---
 
 ## 11.2 `status_effects.json`
