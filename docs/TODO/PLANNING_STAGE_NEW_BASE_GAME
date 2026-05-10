@@ -82,3 +82,150 @@ The Industrial Ward: High-physicality jobs (Warehouse, Construction). This is th
 The High Street (Shopping): Contains the Alchemist/Occult Shop (buying ritual components) and General Stores (clothing/food).
 
 The Nightlife District: Leisure options to reduce "Stress" or meet non-student NPCs.
+
+-----------
+Planning Review - Engine Fit
+
+This pitch fits the current framework well if the first version is treated as a fresh base content pack, not a new gameplay subsystem. The existing starter data can be deleted and replaced; it is useful only as a schema/example reference while authoring the new files.
+
+Use existing systems as follows:
+
+- Body transformation: `AssemblyEditorBackend`, entity `provides_sockets`, part `required_tags`, part stat modifiers, and starter inventory/catalog options.
+- Daily university pressure: `activities.json` for classes, jobs, study sessions, leisure, social events, and scheduled availability.
+- Stat checks: `ChallengeBackend` for immediate checks, activity requirements/outcomes for time-spending checks, and `EncounterBackend` for richer debates, exams, or tense social scenes.
+- Mana and fatigue: authored resource stats with paired capacity stats, plus rest/sleep actions through `ui.time_advance_buttons`, tasks, status effects, or activities.
+- Grades, money, reputation, and unlocks: currencies, faction reputation, quest objectives, achievements, and activity history.
+- Tutorial/modder value: each first content slice should demonstrate one data pattern future modders can copy.
+
+Avoid for the first version:
+
+- Do not add a new "ritual circle state" system. Make the ritual circle a dorm location interaction that opens `AssemblyEditorBackend`.
+- Do not hardcode academic stats or body slots in engine code. Define them in `definitions.json`, `entities.json`, and `parts.json`.
+- Do not build a custom calendar UI first. Use activities, schedules, and existing time controls until the content proves a missing UX.
+- Do not start with a large part library. The important proof is meaningful tradeoffs, not volume.
+
+-----------
+Minimum Viable Base Game
+
+Goal: one playable week at Vanguard University with a small but complete loop.
+
+Player loop:
+
+1. Wake in the dorm.
+2. Choose whether to spend mana changing body parts at the ritual circle.
+3. Spend time on one or two scheduled activities.
+4. Earn or lose grades, cash, stress, reputation, knowledge, and unlocks.
+5. Sleep to restore mana and advance the day.
+
+Core stats:
+
+- `strength`, `dexterity`, `endurance`
+- `intelligence`, `willpower`, `perception`
+- `charisma`, `intimidation`, `normalcy`
+- `stress` + `stress_max`
+- `mana` + `mana_max`
+- Optional: keep `health` + `health_max` only if encounters can injure the player in v1.
+
+Core currencies / progress values:
+
+- `cash` for tuition pressure, jobs, and shopping.
+- `credits` should be replaced or renamed for this setting if the current starter data is converted.
+- `knowledge` can be a currency if it is spendable on blueprint unlocks, or a stat/progress flag if it is only a gate.
+- `grades` can be a currency/progress bucket for simplicity, or split into course-specific flags later.
+
+Core sockets:
+
+- `cognitive`
+- `sensory`
+- `manipulator`
+- `locomotion`
+- `framework`
+
+Start with 2-3 parts per socket:
+
+- Human baseline part in every socket with high normalcy and balanced stats.
+- Primal set: strength/endurance/intimidation up, intelligence/normalcy down.
+- Fae set: charisma/perception up, endurance/normalcy down.
+- Arcane/clockwork set can wait for the first expansion mod unless needed for tutorial coverage.
+
+Core locations:
+
+- `base:dorm_room`
+- `base:dorm_common_area`
+- `base:lecture_hall`
+- `base:library`
+- `base:student_union`
+- `base:industrial_ward`
+- `base:high_street`
+- `base:nightlife_district`
+
+Minimum activities:
+
+- Attend Lecture: rewards grades/knowledge, wants intelligence or normalcy.
+- Study at Library: rewards knowledge, costs stress/stamina or time.
+- Warehouse Shift: rewards cash, wants strength/endurance, may increase stress.
+- Student Mixer: rewards reputation/relationship flags, wants charisma/normalcy.
+- Nightlife Decompression: lowers stress, may cost cash or time.
+- Sleep: restores mana and reduces stress; use a data-authored time button or activity.
+
+Minimum NPCs:
+
+- Roommate / occult-aware guide in the common area.
+- Professor or TA at lecture hall.
+- Occult shopkeeper at High Street.
+- Job foreman in Industrial Ward.
+
+Minimum quests:
+
+- Orientation: visit key campus locations and use the ritual circle once.
+- First Assignment: pass or fail a lecture/study loop based on build.
+- Rent/Tuition Pressure: earn enough cash by a deadline or accept a consequence.
+
+-----------
+Implementation Milestones
+
+Milestone 1 - Fresh Content Skeleton
+
+- Delete the existing starter content from the base data files and rebuild around Vanguard University.
+- Set base game identity to Vanguard University in `mod.json`, `README.md`, and `config.json`.
+- Create new stat/currency definitions with the Vanguard set.
+- Create a new player template with the five body slots.
+- Create the dorm/campus/city location graph from scratch.
+- Keep gameplay booting to an initial assembly editor screen if that still teaches body configuration well.
+
+Milestone 2 - Body Loadout Prototype
+
+- Add one baseline part for each socket.
+- Add one themed alternate set that creates obvious tradeoffs.
+- Configure the dorm ritual circle interaction to open `AssemblyEditorBackend`.
+- Add a first-pass economy/mana cost model for swapping parts.
+- Add content tests that the player can equip all required starting slots.
+
+Milestone 3 - Daily Activity Loop
+
+- Populate `activities.json` with lecture, study, warehouse work, social mixer, nightlife, and sleep/rest.
+- Add schedule windows so campus/city choices differ by time of day.
+- Use activity outcomes to reward cash, knowledge, grade progress, stress changes, and reputation.
+- Add an activity board interaction to relevant locations.
+
+Milestone 4 - Tutorial Quest Chain
+
+- Add orientation quest and first assignment quest.
+- Use quest objectives that demonstrate travel, activity completion, stat check consequences, and rewards.
+- Add at least one branching outcome where a non-optimal body loadout still advances but changes rewards.
+
+Milestone 5 - Modder Teaching Pass
+
+- Keep base content small and readable.
+- Add comments in docs, not JSON, explaining which files demonstrate each pattern.
+- Create the first extension mod plan: a new transformation lineage, a new class/job chain, or a new NPC relationship.
+- Validate that the base game remains playable without that extension mod.
+
+-----------
+Open Planning Questions
+
+- Should part swapping spend `mana`, `cash`, ritual components, or a mix?
+- Is `normalcy` mostly a social stat, a risk meter, or both?
+- Are grades a single global progress value for v1, or should each course track separately?
+- Does sleep simply restore mana, or does it also lock in consequences from the day?
+- Should transformation parts be bought directly, crafted from components, unlocked by study, or all three in staged layers?
