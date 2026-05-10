@@ -27,8 +27,8 @@ These are **engine-owned global singletons** initialized during engine boot in t
 | `GameEvents` | `OmniGameEvents` | `autoloads/game_events.gd` | **1st** | Signal bus — ALL cross-system communication. See [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) for all events. |
 | `ModLoader` | `OmniModLoader` | `autoloads/mod_loader.gd` | **2nd** | Discovers, orders, and two-phase loads mods. Calls `register_backend_contracts()`. |
 | `DataManager` | `OmniDataManager` | `autoloads/data_manager.gd` | **3rd** | Central template registry. Instantiates and populates all data loaders. |
-| `GameState` | `OmniGameState` | `autoloads/game_state.gd` | **4th** | Runtime state container: active player, current location, tick clock reference. |
-| `SaveManager` | `OmniSaveManager` | `autoloads/save_manager.gd` | **5th** | JSON save/load via A2J. Loads or boots new games to `user://saves/`. |
+| `GameState` | `OmniGameState` | `autoloads/game_state.gd` | **4th** | Runtime state container: active player, current location, tick clock reference, activity history, and persistent runtime buckets. |
+| `SaveManager` | `OmniSaveManager` | `autoloads/save_manager.gd` | **5th** | Schema v2 JSON save/load via A2J. Loads or boots new games to `user://saves/`. |
 | `TimeKeeper` | `OmniTimeKeeper` | `autoloads/time_keeper.gd` | **6th** | Tick clock. Dispatches `tick_advanced` and `day_advanced` signals every frame. |
 | `TaskRoutineRunner` | `OmniTaskRoutineRunner` | `systems/task_routine_runner.gd` | **7th** | System-level autoload that starts scheduled task templates from daily time windows. |
 | `AudioManager` | `OmniAudioManager` | `autoloads/audio_manager.gd` | **8th** | SFX pools and music playback control. |
@@ -322,7 +322,7 @@ Never use A2J for templates. Never use plain JSON for save data.
 
 - **Format:** Lossless, typed round-trip via A2J
 - **Location:** `user://saves/` (platform-dependent)
-- **Versioning:** Explicit version markers + migration points
+- **Versioning:** Explicit version markers + migration points. Current development schema is v2.
 - **Migration:** See [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md)
 
 See [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md) for schema design, versioning strategy, and migration order.

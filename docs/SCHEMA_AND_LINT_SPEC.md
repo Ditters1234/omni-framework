@@ -59,7 +59,7 @@ Errors block the mod or boot sequence for the affected content:
 - Invalid stat pair metadata
 - Unknown `backend_class`
 - Patch target missing after phase one
-- Invalid save schema version with no migrator
+- Invalid or unsupported save schema version
 
 ### Warnings
 

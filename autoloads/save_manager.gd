@@ -11,7 +11,7 @@ const TEST_SAVE_DIR_PREFIX := "user://test_saves/"
 const TEST_RUN_MARKERS := ["gut_cmdln.gd", "-gexit", "-gdir=", "--test", "res://tests"]
 const AUTOSAVE_SLOT := 0
 const MAX_SAVE_SLOTS := 5
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2
 const REQUIRED_SAVE_FIELDS := ["game_state"]
 const OPTIONAL_SAVE_FIELDS := ["save_schema_version", "created_at", "updated_at", "slot_metadata"]
 const REQUIRED_RUNTIME_CLASSES := ["EntityInstance", "PartInstance"]
@@ -33,6 +33,7 @@ const REQUIRED_GAME_STATE_FIELDS := [
 	"discovered_recipes",
 	"ai_lore_cache",
 	"event_history",
+	"activity_history",
 	"runtime_state_buckets",
 ]
 const SLOT_KIND_AUTOSAVE := "autosave"
@@ -516,26 +517,16 @@ func _enforce_test_save_isolation() -> void:
 	_save_dir_ready = _ensure_save_dir()
 
 
-## Checks schema version and runs any needed migrations before loading.
-## Current public baseline is v1. Future schema bumps should add one-step
-## migrations here, e.g.:
-##
-##     if version == 1:
-##         data = _migrate_v1_to_v2(data)
-##         version = 2
-##
+## Checks schema version before loading. During development, old schemas are
+## intentionally rejected instead of migrated because save data can be deleted.
 ## Load flow intentionally validates in two phases:
 ## 1. _validate_raw_payload_for_load() confirms the file is readable and not newer.
-## 2. _validate_raw_payload() confirms the migrated payload matches the current schema.
+## 2. _validate_raw_payload() confirms the payload matches the current schema.
 func _migrate_if_needed(data: Dictionary) -> Dictionary:
 	var version := int(data.get("save_schema_version", 0))
 	while version < SCHEMA_VERSION:
-		match version:
-			_:
-				# No older production versions exist yet. This branch is deliberately
-				# kept as a hard failure until a real migration is added.
-				data["save_schema_version"] = version
-				return data
+		data["save_schema_version"] = version
+		return data
 	data["save_schema_version"] = version
 	return data
 
@@ -647,7 +638,9 @@ func _validate_raw_payload(data: Dictionary) -> String:
 		return load_error
 	var schema_version := int(data.get("save_schema_version", -1))
 	if schema_version != SCHEMA_VERSION:
-		return "Save file schema version %d must be migrated to current schema version %d." % [schema_version, SCHEMA_VERSION]
+		if schema_version < SCHEMA_VERSION:
+			return "Save file schema version %d is older than supported version %d." % [schema_version, SCHEMA_VERSION]
+		return "Save file schema version %d is newer than supported version %d." % [schema_version, SCHEMA_VERSION]
 	var state_data: Variant = data.get("game_state", null)
 	for state_field in REQUIRED_GAME_STATE_FIELDS:
 		if not (state_data as Dictionary).has(state_field):

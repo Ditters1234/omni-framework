@@ -25,7 +25,7 @@ Recommended top-level structure:
 
 ```json
 {
-  "save_schema_version": 1,
+  "save_schema_version": 2,
   "engine_version": "0.1.0",
   "created_at": "2026-04-16T20:30:00Z",
   "updated_at": "2026-04-16T22:14:00Z",
@@ -74,6 +74,7 @@ The save browser also uses `SaveManager.get_slot_diagnostics(slot)` before prese
 - Inventory and assembly state
 - Quest progress
 - Task progress
+- Activity history and repeat/cooldown counters
 - Active timed status effects
 - Achievement runtime progress
 - Player location
@@ -95,6 +96,7 @@ Whenever possible, save runtime state by reference:
 - Save `template_id`, not the full part template
 - Save `entity_id` plus runtime overrides, not the original entity template dictionary
 - Save location IDs, faction IDs, and quest IDs rather than duplicating authored data
+- Save activity IDs in activity history rather than duplicating activity templates
 
 This keeps saves smaller and lets template migrations happen independently from runtime serialization.
 
@@ -116,6 +118,7 @@ func migrate_v1_to_v2(raw_save: Dictionary) -> Dictionary:
 
 Rules:
 
+- Current development builds reject older save schemas when no migration is implemented. It is acceptable to delete old local saves during active schema work.
 - Migrate one version step at a time.
 - Validate after each migration step.
 - Never mutate the original raw dictionary in hidden ways without documenting it.

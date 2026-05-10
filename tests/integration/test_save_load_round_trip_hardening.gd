@@ -34,6 +34,12 @@ func _build_minimal_save_fixture() -> void:
 	GameState.current_location_id = ""
 	GameState.current_tick = 12
 	GameState.current_day = 1
+	DataManager.activities["audit:activity"] = {
+		"activity_id": "audit:activity",
+		"display_name": "Audit Activity",
+		"category": "audit",
+		"duration_ticks": 1,
+	}
 
 
 func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
@@ -43,6 +49,8 @@ func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
 	GameState.track_achievement_stat("audit_counter", 3.0)
 	GameState.remember_ai_lore("audit:lore", {"text": "remember me", "score": 7})
 	GameState.record_event("audit_event", {"value": 42})
+	GameState.record_activity_started("audit:activity")
+	GameState.record_activity_completed("audit:activity", {"outcome_id": "kept"})
 	GameState.set_runtime_state("audit_bucket", "audit_key", {"nested": ["a", "b", "c"]})
 	DataManager.status_effects["audit:status"] = {
 		"status_effect_id": "audit:status",
@@ -65,6 +73,8 @@ func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
 	assert_eq(after.get("flags", {}).get("audit.flag", false), true)
 	assert_eq(float(after.get("achievement_stats", {}).get("audit_counter", 0.0)), 3.0)
 	assert_eq(after.get("ai_lore_cache", {}).get("audit:lore", {}).get("text", ""), "remember me")
+	assert_eq(after.get("activity_history", {}).get("audit:activity", {}).get("completion_count", 0), 1)
+	assert_eq(after.get("activity_history", {}).get("audit:activity", {}).get("last_outcome_id", ""), "kept")
 	assert_eq(after.get("runtime_state_buckets", {}).get("audit_bucket", {}).get("audit_key", {}).get("nested", []), ["a", "b", "c"])
 	assert_eq(after.get("active_status_effects", {}).get("audit_status", {}).get("remaining_ticks", 0), 2)
 	assert_gt(after.get("event_history", []).size(), 0)
@@ -91,6 +101,20 @@ func test_incomplete_current_schema_saves_are_rejected() -> void:
 	assert_false(SaveManager.slot_exists(SLOT), "Incomplete current-schema save should not be considered loadable.")
 	assert_false(SaveManager.load_game(SLOT), "Incomplete current-schema save should not load.")
 	assert_true(str(SaveManager.last_operation_summary.get("reason", "")).contains("missing required field"))
+
+
+func test_old_development_schema_saves_are_rejected() -> void:
+	var path := SaveManager.get_slot_path(SLOT)
+	var payload := SaveManager._build_save_payload({}, SLOT)
+	payload["save_schema_version"] = 1
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	assert_not_null(file)
+	file.store_string(JSON.stringify(payload, "\t"))
+	file.close()
+
+	assert_false(SaveManager.slot_exists(SLOT), "Old development save should not be considered loadable.")
+	assert_false(SaveManager.load_game(SLOT), "Old development save should not load.")
+	assert_true(str(SaveManager.last_operation_summary.get("reason", "")).contains("older than supported"))
 
 
 func test_future_schema_saves_are_rejected() -> void:

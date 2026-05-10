@@ -43,7 +43,8 @@ autoloads/
 
 - **`UIRouter`** — Requires a `CanvasLayer` container. `UIRouter.initialize()` will error if passed anything other than a `CanvasLayer`. Do not describe this as a generic screen container.
 - **`GameState`** — `new_game()` requires `game.starting_player_id` to be explicitly set in config. There is no runtime fallback to `base:player`; missing or empty config causes boot to abort with a warning.
-- **`SaveManager`** — Currently registers `EntityInstance` and `PartInstance` with A2J. Any new first-class runtime object that participates in save/load must also be registered here.
+- **`GameState`** — Stores `activity_history` as saved runtime state. Activity history records starts, completions, completion counts by display day, and the last activity outcome by `activity_id`.
+- **`SaveManager`** — Uses save schema v2 and currently registers `EntityInstance` and `PartInstance` with A2J. Any new first-class runtime object that participates in save/load must also be registered here.
 
 ### What this implies
 

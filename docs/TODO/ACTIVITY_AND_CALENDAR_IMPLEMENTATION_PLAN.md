@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 and Phase 2 complete; Phase 3 not started.
+Current implementation status: Phase 1, Phase 2, and Phase 3 complete; Phase 4 not started.
 
 ## 1. Purpose
 
@@ -599,38 +599,9 @@ Update:
 
 Save schema must move to version 2 because `activity_history` becomes a required `game_state` field.
 
-Required schema migration:
+During active development, old v1 saves are intentionally rejected instead of migrated. Local development saves can be deleted when schema-breaking runtime fields land.
 
-```gdscript
-const SCHEMA_VERSION := 2
-
-func _migrate_v1_to_v2(data: Dictionary) -> Dictionary:
-    var state: Dictionary = data.get("game_state", {})
-    if not state.has("activity_history"):
-        state["activity_history"] = {}
-    data["game_state"] = state
-    data["save_schema_version"] = 2
-    return data
-```
-
-Wire the migration into `SaveManager._migrate_if_needed()`:
-
-```gdscript
-func _migrate_if_needed(data: Dictionary) -> Dictionary:
-    var version := int(data.get("save_schema_version", 0))
-    while version < SCHEMA_VERSION:
-        match version:
-            1:
-                data = _migrate_v1_to_v2(data)
-                version = 2
-            _:
-                data["save_schema_version"] = version
-                return data
-    data["save_schema_version"] = version
-    return data
-```
-
-Activity history must survive save/load and must not break older saves.
+Activity history must survive save/load for schema v2 saves.
 
 ---
 
@@ -1502,14 +1473,14 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 3 - Activity history and save/load
 
-- [ ] Add `GameState.activity_history`.
-- [ ] Add GameState activity-history helpers.
-- [ ] Serialize `activity_history` in `GameState.to_dict()`.
-- [ ] Restore `activity_history` in `GameState.from_dict()`.
-- [ ] Add runtime validation.
-- [ ] Bump save schema to v2.
-- [ ] Add `_migrate_v1_to_v2()` and wire it into `SaveManager._migrate_if_needed()`.
-- [ ] Add save/load tests.
+- [x] Add `GameState.activity_history`.
+- [x] Add GameState activity-history helpers.
+- [x] Serialize `activity_history` in `GameState.to_dict()`.
+- [x] Restore `activity_history` in `GameState.from_dict()`.
+- [x] Add runtime validation.
+- [x] Bump save schema to v2.
+- [x] Reject older development save schemas without migration.
+- [x] Add save/load tests.
 
 ### Phase 4 - Activity events
 

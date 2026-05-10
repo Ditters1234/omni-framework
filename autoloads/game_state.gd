@@ -8,6 +8,7 @@ class_name OmniGameState
 
 const STATUS_EFFECT_RUNNER := preload("res://systems/status_effect_runner.gd")
 const ENTITY_LIFECYCLE_RUNNER := preload("res://systems/entity_lifecycle_runner.gd")
+const TIME_MODEL := preload("res://systems/time_model.gd")
 
 # ---------------------------------------------------------------------------
 # Runtime state
@@ -56,6 +57,7 @@ var faction_reputations: Dictionary = {}
 var discovered_recipes: Array[String] = []
 var ai_lore_cache: Dictionary = {}
 var event_history: Array[Dictionary] = []
+var activity_history: Dictionary = {}
 var runtime_state_buckets: Dictionary = {}
 
 const EVENT_HISTORY_LIMIT := 200
@@ -132,6 +134,7 @@ func reset() -> void:
 	discovered_recipes.clear()
 	ai_lore_cache.clear()
 	event_history.clear()
+	activity_history.clear()
 	runtime_state_buckets.clear()
 	ScriptHookService.reset_world_gen_state()
 	_sync_timekeeper()
@@ -191,6 +194,87 @@ func record_event(event_type: String, payload: Dictionary = {}) -> void:
 	})
 	while event_history.size() > EVENT_HISTORY_LIMIT:
 		event_history.pop_front()
+
+
+func get_activity_history(activity_id: String) -> Dictionary:
+	var normalized_id := activity_id.strip_edges()
+	if normalized_id.is_empty():
+		return {}
+	return _get_normalized_activity_history_entry(normalized_id).duplicate(true)
+
+
+func record_activity_started(activity_id: String, payload: Dictionary = {}) -> void:
+	var normalized_id := activity_id.strip_edges()
+	if normalized_id.is_empty():
+		return
+	var entry := _get_normalized_activity_history_entry(normalized_id)
+	entry["started_count"] = int(entry.get("started_count", 0)) + 1
+	var timing := _resolve_activity_history_timing(payload)
+	entry["last_started_tick"] = int(timing.get("tick_of_day", 0))
+	entry["last_started_day"] = int(timing.get("day", 1))
+	entry["last_started_absolute_tick"] = int(timing.get("absolute_tick", 0))
+	activity_history[normalized_id] = entry
+
+
+func record_activity_completed(activity_id: String, payload: Dictionary = {}) -> void:
+	var normalized_id := activity_id.strip_edges()
+	if normalized_id.is_empty():
+		return
+	var entry := _get_normalized_activity_history_entry(normalized_id)
+	entry["completion_count"] = int(entry.get("completion_count", 0)) + 1
+	var timing := _resolve_activity_history_timing(payload)
+	var day := int(timing.get("day", 1))
+	entry["last_completed_tick"] = int(timing.get("tick_of_day", 0))
+	entry["last_completed_day"] = day
+	entry["last_completed_absolute_tick"] = int(timing.get("absolute_tick", 0))
+	var completed_by_day := _dictionary_value(entry.get("completed_by_day", {}))
+	var day_key := str(day)
+	completed_by_day[day_key] = int(completed_by_day.get(day_key, 0)) + 1
+	entry["completed_by_day"] = completed_by_day
+	var outcome_id := _activity_payload_string(payload, "outcome_id", _activity_payload_string(payload, "last_outcome_id", ""))
+	if not outcome_id.is_empty():
+		entry["last_outcome_id"] = outcome_id
+	activity_history[normalized_id] = entry
+
+
+func get_activity_completion_count(activity_id: String) -> int:
+	var normalized_id := activity_id.strip_edges()
+	if normalized_id.is_empty():
+		return 0
+	var entry := _get_normalized_activity_history_entry(normalized_id)
+	return int(entry.get("completion_count", 0))
+
+
+func get_activity_category_completion_count(category: String) -> int:
+	var normalized_category := category.strip_edges()
+	if normalized_category.is_empty():
+		return 0
+	var total := 0
+	for activity_id_value in activity_history.keys():
+		var activity_id := str(activity_id_value)
+		var activity := DataManager.get_activity(activity_id)
+		if activity.is_empty() or str(activity.get("category", "")) != normalized_category:
+			continue
+		total += get_activity_completion_count(activity_id)
+	return total
+
+
+func was_activity_completed_today(activity_id: String) -> bool:
+	var normalized_id := activity_id.strip_edges()
+	if normalized_id.is_empty():
+		return false
+	var today_key := str(TIME_MODEL.get_display_day())
+	var entry := _get_normalized_activity_history_entry(normalized_id)
+	var completed_by_day := _dictionary_value(entry.get("completed_by_day", {}))
+	return int(completed_by_day.get(today_key, 0)) > 0
+
+
+func get_last_activity_outcome(activity_id: String) -> String:
+	var normalized_id := activity_id.strip_edges()
+	if normalized_id.is_empty():
+		return ""
+	var entry := _get_normalized_activity_history_entry(normalized_id)
+	return str(entry.get("last_outcome_id", ""))
 
 
 func set_runtime_state(bucket_name: String, key: String, value: Variant) -> void:
@@ -437,6 +521,7 @@ func to_dict() -> Dictionary:
 		"discovered_recipes": discovered_recipes.duplicate(),
 		"ai_lore_cache": ai_lore_cache.duplicate(true),
 		"event_history": event_history.duplicate(true),
+		"activity_history": activity_history.duplicate(true),
 		"runtime_state_buckets": runtime_state_buckets.duplicate(true),
 	}
 
@@ -478,6 +563,17 @@ func from_dict(data: Dictionary) -> void:
 		for event_value in event_history_data:
 			if event_value is Dictionary:
 				event_history.append((event_value as Dictionary).duplicate(true))
+	var activity_history_data: Variant = data.get("activity_history", {})
+	if activity_history_data is Dictionary:
+		activity_history.clear()
+		var activity_history_source: Dictionary = activity_history_data
+		for activity_id_value in activity_history_source.keys():
+			var activity_id := str(activity_id_value)
+			var history_value: Variant = activity_history_source.get(activity_id_value, {})
+			if not history_value is Dictionary:
+				continue
+			var history: Dictionary = history_value
+			activity_history[activity_id] = _normalize_activity_history_entry(history)
 	var runtime_state_buckets_data: Variant = data.get("runtime_state_buckets", {})
 	if runtime_state_buckets_data is Dictionary:
 		runtime_state_buckets = runtime_state_buckets_data.duplicate(true)
@@ -598,6 +694,24 @@ func _validate_persistent_runtime_buckets(issues: Array[String]) -> void:
 			issues.append("Event history contains an entry without event_type.")
 			break
 
+	for activity_id_value in activity_history.keys():
+		var activity_id := str(activity_id_value)
+		if activity_id.is_empty():
+			issues.append("Activity history contains an empty activity id.")
+			break
+		if not DataManager.has_activity(activity_id):
+			issues.append("Activity history references missing activity template '%s'." % activity_id)
+			break
+		var history_value: Variant = activity_history.get(activity_id_value, {})
+		if not history_value is Dictionary:
+			issues.append("Activity history for '%s' must be a dictionary." % activity_id)
+			break
+		var history: Dictionary = history_value
+		var completed_by_day_value: Variant = history.get("completed_by_day", {})
+		if not completed_by_day_value is Dictionary:
+			issues.append("Activity history for '%s' has invalid completed_by_day." % activity_id)
+			break
+
 
 func _check_achievement_unlocks(stat_name: String) -> void:
 	var current_value := float(achievement_stats.get(stat_name, 0.0))
@@ -629,6 +743,103 @@ func _to_string_array(values: Variant) -> Array[String]:
 	for value in values:
 		result.append(str(value))
 	return result
+
+
+func _get_normalized_activity_history_entry(activity_id: String) -> Dictionary:
+	var history_value: Variant = activity_history.get(activity_id, {})
+	if history_value is Dictionary:
+		var history: Dictionary = history_value
+		return _normalize_activity_history_entry(history)
+	return _make_empty_activity_history_entry()
+
+
+func _make_empty_activity_history_entry() -> Dictionary:
+	return {
+		"started_count": 0,
+		"completion_count": 0,
+		"last_started_tick": -1,
+		"last_completed_tick": -1,
+		"last_started_day": -1,
+		"last_completed_day": -1,
+		"last_started_absolute_tick": -1,
+		"last_completed_absolute_tick": -1,
+		"completed_by_day": {},
+		"last_outcome_id": "",
+	}
+
+
+func _normalize_activity_history_entry(history: Dictionary) -> Dictionary:
+	var normalized := _make_empty_activity_history_entry()
+	for field_name in [
+		"started_count",
+		"completion_count",
+		"last_started_tick",
+		"last_completed_tick",
+		"last_started_day",
+		"last_completed_day",
+		"last_started_absolute_tick",
+		"last_completed_absolute_tick",
+	]:
+		normalized[field_name] = _int_value(history.get(field_name, normalized.get(field_name, 0)), int(normalized.get(field_name, 0)))
+	normalized["completed_by_day"] = _normalize_activity_completed_by_day(history.get("completed_by_day", {}))
+	normalized["last_outcome_id"] = str(history.get("last_outcome_id", ""))
+	return normalized
+
+
+func _normalize_activity_completed_by_day(value: Variant) -> Dictionary:
+	var normalized: Dictionary = {}
+	if not value is Dictionary:
+		return normalized
+	var source: Dictionary = value
+	for day_value in source.keys():
+		var day_key := str(day_value)
+		if day_key.is_empty():
+			continue
+		var count := _int_value(source.get(day_value, 0), 0)
+		if count > 0:
+			normalized[day_key] = count
+	return normalized
+
+
+func _resolve_activity_history_timing(payload: Dictionary) -> Dictionary:
+	var absolute_tick := _activity_payload_int(payload, "absolute_tick", current_tick)
+	var tick_of_day := _activity_payload_int(payload, "tick_of_day", TIME_MODEL.get_tick_of_day(absolute_tick))
+	if not payload.has("tick_of_day"):
+		tick_of_day = _activity_payload_int(payload, "tick", tick_of_day)
+	var day := _activity_payload_int(payload, "day", TIME_MODEL.get_display_day(TIME_MODEL.get_day_for_absolute_tick(absolute_tick), tick_of_day))
+	return {
+		"absolute_tick": absolute_tick,
+		"tick_of_day": tick_of_day,
+		"day": day,
+	}
+
+
+func _activity_payload_int(payload: Dictionary, field_name: String, default_value: int) -> int:
+	return _int_value(payload.get(field_name, default_value), default_value)
+
+
+func _activity_payload_string(payload: Dictionary, field_name: String, default_value: String) -> String:
+	var value: Variant = payload.get(field_name, default_value)
+	if value is String:
+		return str(value).strip_edges()
+	return default_value
+
+
+func _dictionary_value(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary: Dictionary = value
+		return dictionary.duplicate(true)
+	return {}
+
+
+func _int_value(value: Variant, default_value: int) -> int:
+	if value is int:
+		return value
+	if value is float:
+		return int(value)
+	if value is String and str(value).is_valid_int():
+		return int(str(value))
+	return default_value
 
 
 func _collect_entity_validation_issues(entity: EntityInstance, issues: Array[String], seen_instance_ids: Dictionary) -> void:
