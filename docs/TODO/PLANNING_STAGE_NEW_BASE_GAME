@@ -1,0 +1,85 @@
+Purpose:
+Create a minimal base game and then mods to extend it. Each step should be focused in part on creating a real game but also as a tutorial for future modders.
+
+
+The Pitch:
+Vanguard University is an urban fantasy life-simulator where your greatest academic tool is your own physical identity. As a student at a college "awake" to the supernatural, you navigate the daily pressures of grades, finances, and relationships by using mana-fueled rituals to modularly transform your body. Using a deep, parts-based configuration system, you can swap limbs, senses, and frames to gain vital stat boosts for jobs or social encounters—but every transformation is a commitment. Whether you’re sacrificing logic for the strength of a primal form to pay your tuition, or trading human normalcy for fae intuition to ace an exam, you must strategically balance your magical "loadout" against the social and academic consequences of no longer being entirely human.
+
+Inspiration:
+https://courseoftemptation.com/
+https://degreesoflewdity.miraheze.org/wiki/Main_Page
+https://borrowed-lives.com/
+
+
+The Entity Architecture:
+Using your framework's strength, the Player is a container for these specific Slots:
+
+Cognitive (Brain/Mind)
+
+Sensory (Eyes/Ears)
+
+Manipulator (Hands/Arms)
+
+Locomotion (Legs/Feet)
+
+Framework (Torso/Size/Stance)
+
+The Stat Logic:
+Each Part in a slot doesn't just change a cosmetic; it applies a Modifier Stack to the Player’s base stats:
+
+Physical: Strength, Dexterity, Endurance.
+
+Mental: Intelligence, Willpower, Perception.
+
+Social: Charisma, Intimidation, "Normalcy" (how well you pass as a standard human).
+
+The Resource - Mana:
+Function: A "Remodeling Currency."
+
+Constraint: You have a Max Mana pool. Swapping a part costs a flat chunk.
+
+Recovery: Mana refills during the "Sleep" cycle (End of Day). This prevents infinite swapping and forces you to live with your choices for the "game day."
+
+The Ritual Circle (The Interaction Point):
+This is the only "State" where the Player's configuration is unlocked.
+
+Outside the Circle: The Player's parts are "Locked."
+
+Inside the Circle: The framework enables the ReplacePart functions.
+
+The Interaction Loop (The "Uni" Pressure):
+This is how the design creates conflict:
+
+The Check: World events (Tests, Jobs, Conversations) query the Player’s Tags and Stats.
+
+The Result:
+
+High Strength/Low Intelligence = Good for a "Moving Boxes" job, bad for a "History Quiz."
+
+Low Normalcy = Unique dialogue with "Awake" NPCs, but negative modifiers for "Normal" social events (like a study group).
+
+-----------
+1. The Dormitory (The Anchor)
+This is your safe zone and the only place where your physical "Entity" can be modified.
+
+The Player Room: Contains the Ritual Circle (Part Swapping) and the Bed (Daily Reset/Mana Recovery).
+
+Common Area: A low-stakes social space to meet fellow student NPCs without major "Normalcy" penalties.
+
+2. The University Campus (The Stat/Grade Sink)
+This is where you spend your "Day" cycles. High-stakes for "Normalcy" and "Intelligence" stats.
+
+Lecture Hall: The primary location for "Course Work" tasks. Requires high Intelligence/Focus stats to succeed.
+
+The Library: A place to gain Knowledge (unlocking new Part blueprints) at the cost of high Stamina or Mana.
+
+Student Union: A hub for social networking and student-run organizations.
+
+3. The City: "Aethelgard District" (The Resource/Job Sink)
+The "Open" world where you convert your physical stats into Cash or Inventory.
+
+The Industrial Ward: High-physicality jobs (Warehouse, Construction). This is the best place to use "Primal/High-Strength" parts to earn maximum money.
+
+The High Street (Shopping): Contains the Alchemist/Occult Shop (buying ritual components) and General Stores (clothing/food).
+
+The Nightlife District: Leisure options to reduce "Stress" or meet non-student NPCs.
