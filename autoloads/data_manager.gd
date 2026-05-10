@@ -7,6 +7,7 @@ extends Node
 class_name OmniDataManager
 
 const BACKEND_CONTRACT_REGISTRY := preload("res://systems/backend_contract_registry.gd")
+const ACTIVITY_REGISTRY := preload("res://systems/loaders/activity_registry.gd")
 const AI_PERSONA_REGISTRY := preload("res://systems/loaders/ai_persona_registry.gd")
 const AI_TEMPLATE_REGISTRY := preload("res://systems/loaders/ai_template_registry.gd")
 const ENCOUNTER_REGISTRY := preload("res://systems/loaders/encounter_registry.gd")
@@ -33,6 +34,7 @@ var locations: Dictionary = {}         # location_id → location template
 var factions: Dictionary = {}          # faction_id → faction template
 var quests: Dictionary = {}            # quest_id → quest template
 var tasks: Dictionary = {}             # template_id → task template
+var activities: Dictionary = {}        # activity_id -> activity template
 var recipes: Dictionary = {}           # recipe_id → recipe template
 var status_effects: Dictionary = {}    # status_effect_id → status effect template
 var encounters: Dictionary = {}        # encounter_id -> encounter template
@@ -122,6 +124,14 @@ func register_additions(mod_id: String, mod_data_path: String) -> Array[Dictiona
 			task_entries = _get_array_field(tasks_data, "tasks", mod_id, tasks_path, LOAD_PHASE_ADDITIONS)
 		task_entries = _filter_valid_additions(task_entries, tasks, "tasks", "template_id", ["template_id", "type"], mod_id, tasks_path, LOAD_PHASE_ADDITIONS)
 		TaskRegistry.load_additions(task_entries)
+
+	var activities_path := mod_data_path.path_join(OmniConstants.DATA_ACTIVITIES)
+	var activities_data_value: Variant = _load_json_document(mod_id, activities_path, LOAD_PHASE_ADDITIONS)
+	if activities_data_value is Dictionary:
+		var activities_data: Dictionary = activities_data_value
+		var activity_entries: Array = _get_array_field(activities_data, "activities", mod_id, activities_path, LOAD_PHASE_ADDITIONS)
+		activity_entries = _filter_valid_additions(activity_entries, activities, "activities", "activity_id", ["activity_id", "display_name", "category", "duration_ticks"], mod_id, activities_path, LOAD_PHASE_ADDITIONS)
+		ACTIVITY_REGISTRY.load_additions(activity_entries)
 
 	var recipes_path := mod_data_path.path_join(OmniConstants.DATA_RECIPES)
 	var recipes_data_value: Variant = _load_json_document(mod_id, recipes_path, LOAD_PHASE_ADDITIONS)
@@ -257,6 +267,15 @@ func apply_patches(mod_id: String, mod_data_path: String) -> Array[Dictionary]:
 		_validate_patch_operations(task_patches, ["target", "set", "set_reward", "set_completion_actions"], "tasks", mod_id, tasks_path, LOAD_PHASE_PATCHES)
 		TaskRegistry.apply_patch(task_patches)
 
+	var activities_path := mod_data_path.path_join(OmniConstants.DATA_ACTIVITIES)
+	var activities_data_value: Variant = _load_json_document(mod_id, activities_path, LOAD_PHASE_PATCHES)
+	if activities_data_value is Dictionary:
+		var activities_data: Dictionary = activities_data_value
+		var activity_patches: Array = _get_array_field(activities_data, "patches", mod_id, activities_path, LOAD_PHASE_PATCHES)
+		_validate_patch_targets(activity_patches, activities, "activities", mod_id, activities_path, LOAD_PHASE_PATCHES)
+		_validate_patch_operations(activity_patches, ["target", "set", "set_schedule", "add_tags", "remove_tags", "add_requirements", "set_requirements", "add_visible_if", "set_visible_if", "add_start_actions", "set_start_actions", "add_completion_actions", "set_completion_actions", "add_failure_actions", "set_failure_actions", "add_outcomes", "set_outcomes", "set_repeat"], "activities", mod_id, activities_path, LOAD_PHASE_PATCHES)
+		ACTIVITY_REGISTRY.apply_patch(activity_patches)
+
 	var recipes_path := mod_data_path.path_join(OmniConstants.DATA_RECIPES)
 	var recipes_data_value: Variant = _load_json_document(mod_id, recipes_path, LOAD_PHASE_PATCHES)
 	if recipes_data_value is Dictionary:
@@ -349,6 +368,10 @@ func get_task(template_id: String) -> Dictionary:
 	return _duplicate_dictionary(tasks.get(template_id, {}))
 
 
+func get_activity(activity_id: String) -> Dictionary:
+	return _duplicate_dictionary(activities.get(activity_id, {}))
+
+
 func get_recipe(recipe_id: String) -> Dictionary:
 	return _duplicate_dictionary(recipes.get(recipe_id, {}))
 
@@ -399,6 +422,10 @@ func has_quest(quest_id: String) -> bool:
 
 func has_task(template_id: String) -> bool:
 	return tasks.has(template_id)
+
+
+func has_activity(activity_id: String) -> bool:
+	return activities.has(activity_id)
 
 
 func has_recipe(recipe_id: String) -> bool:
@@ -463,6 +490,43 @@ func query_entities(filters: Dictionary = {}) -> Array[Dictionary]:
 		if not location_id.is_empty() and str(entity.get("location_id", "")) != location_id:
 			continue
 		results.append(entity.duplicate(true))
+	return results
+
+
+func query_activities(filters: Dictionary = {}) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	var activity_ids := _variant_to_string_array(filters.get("activity_ids", filters.get("template_ids", [])))
+	var category_filter := str(filters.get("category", "")).strip_edges()
+	var category_filters := _variant_to_string_array(filters.get("categories", []))
+	var tag_any_filters := _variant_to_string_array(filters.get("tags", []))
+	var tag_all_filters := _variant_to_string_array(filters.get("tags_all", []))
+	var location_id := str(filters.get("location_id", "")).strip_edges()
+	var provider_entity_id := str(filters.get("provider_entity_id", "")).strip_edges()
+	var kind_filter := str(filters.get("kind", "")).strip_edges()
+	for activity_id_value in activities.keys():
+		var activity_id := str(activity_id_value)
+		if not activity_ids.is_empty() and not activity_ids.has(activity_id):
+			continue
+		var activity_value: Variant = activities.get(activity_id_value, {})
+		if not activity_value is Dictionary:
+			continue
+		var activity: Dictionary = activity_value
+		if not category_filter.is_empty() and str(activity.get("category", "")) != category_filter:
+			continue
+		if not category_filters.is_empty() and not category_filters.has(str(activity.get("category", ""))):
+			continue
+		if not location_id.is_empty() and str(activity.get("location_id", "")) != location_id:
+			continue
+		if not provider_entity_id.is_empty() and str(activity.get("provider_entity_id", "")) != provider_entity_id:
+			continue
+		if not kind_filter.is_empty() and str(activity.get("kind", "")) != kind_filter:
+			continue
+		var activity_tags := _variant_to_string_array(activity.get("tags", []))
+		if not tag_any_filters.is_empty() and not _contains_any_string(activity_tags, tag_any_filters):
+			continue
+		if not _contains_all_strings(activity_tags, tag_all_filters):
+			continue
+		results.append(activity.duplicate(true))
 	return results
 
 
@@ -607,6 +671,7 @@ func get_registry_counts() -> Dictionary:
 		"factions": factions.size(),
 		"quests": quests.size(),
 		"tasks": tasks.size(),
+		"activities": activities.size(),
 		"recipes": recipes.size(),
 		"status_effects": status_effects.size(),
 		"encounters": encounters.size(),
@@ -745,6 +810,13 @@ func _contains_all_strings(values: Array[String], required_values: Array[String]
 		if not values.has(required_value):
 			return false
 	return true
+
+
+func _contains_any_string(values: Array[String], candidate_values: Array[String]) -> bool:
+	for candidate_value in candidate_values:
+		if values.has(candidate_value):
+			return true
+	return false
 
 
 func _location_has_connection(location: Dictionary, target_location_id: String) -> bool:
@@ -956,6 +1028,7 @@ func _validate_template_schemas() -> void:
 	_validate_registry_required_fields(factions, OmniConstants.DATA_FACTIONS, "faction_id", ["faction_id", "display_name"])
 	_validate_registry_required_fields(quests, OmniConstants.DATA_QUESTS, "quest_id", ["quest_id", "display_name", "stages"])
 	_validate_registry_required_fields(tasks, OmniConstants.DATA_TASKS, "template_id", ["template_id", "type"])
+	_validate_registry_required_fields(activities, OmniConstants.DATA_ACTIVITIES, "activity_id", ["activity_id", "display_name", "category", "duration_ticks"])
 	_validate_registry_required_fields(recipes, OmniConstants.DATA_RECIPES, "recipe_id", ["recipe_id", "display_name", "output_template_id", "inputs"])
 	_validate_registry_required_fields(status_effects, OmniConstants.DATA_STATUS_EFFECTS, "status_effect_id", ["status_effect_id", "display_name"])
 	_validate_registry_required_fields(encounters, OmniConstants.DATA_ENCOUNTERS, "encounter_id", ["encounter_id", "participants", "actions", "resolution"])
@@ -991,6 +1064,12 @@ func _validate_template_schemas() -> void:
 			continue
 		var task: Dictionary = task_value
 		_validate_task_schema(task)
+
+	for activity_value in activities.values():
+		if not activity_value is Dictionary:
+			continue
+		var activity: Dictionary = activity_value
+		_validate_activity_schema(activity)
 
 	for recipe_value in recipes.values():
 		if not recipe_value is Dictionary:
@@ -2093,6 +2172,76 @@ func _validate_task_schema(task: Dictionary) -> void:
 	_validate_task_actions(task_id, task, "on_complete")
 
 
+func _validate_activity_schema(activity: Dictionary) -> void:
+	var activity_id := str(activity.get("activity_id", ""))
+	for issue in ACTIVITY_REGISTRY.validate_activity(activity):
+		_record_issue(activity_id, OmniConstants.DATA_ACTIVITIES, LOAD_PHASE_VALIDATION, "Activity '%s' %s." % [activity_id, issue])
+	var location_id := str(activity.get("location_id", "")).strip_edges()
+	if not location_id.is_empty() and not has_location(location_id):
+		_record_issue(activity_id, OmniConstants.DATA_ACTIVITIES, LOAD_PHASE_VALIDATION, "Activity '%s' location_id references unknown location '%s'." % [activity_id, location_id])
+	var provider_entity_id := str(activity.get("provider_entity_id", "")).strip_edges()
+	if not provider_entity_id.is_empty() and not has_entity(provider_entity_id):
+		_record_issue(activity_id, OmniConstants.DATA_ACTIVITIES, LOAD_PHASE_VALIDATION, "Activity '%s' provider_entity_id references unknown entity '%s'." % [activity_id, provider_entity_id])
+	_validate_activity_condition_list(activity_id, "visible_if", activity.get("visible_if", []))
+	_validate_activity_condition_list(activity_id, "requirements", activity.get("requirements", []))
+	_validate_activity_actions(activity_id, activity, "start_actions")
+	_validate_activity_actions(activity_id, activity, "completion_actions")
+	_validate_activity_actions(activity_id, activity, "failure_actions")
+	_validate_activity_outcomes(activity_id, activity.get("outcomes", []))
+
+
+func _validate_activity_condition_list(activity_id: String, field_name: String, value: Variant) -> void:
+	if not value is Array:
+		return
+	var conditions: Array = value
+	for index in range(conditions.size()):
+		var condition_value: Variant = conditions[index]
+		if not condition_value is Dictionary:
+			_record_issue(activity_id, OmniConstants.DATA_ACTIVITIES, LOAD_PHASE_VALIDATION, "Activity '%s' %s[%d] must be an object." % [activity_id, field_name, index])
+
+
+func _validate_activity_actions(activity_id: String, activity: Dictionary, field_name: String) -> void:
+	if not activity.has(field_name):
+		return
+	var actions_value: Variant = activity.get(field_name, [])
+	if not actions_value is Array:
+		return
+	var actions: Array = actions_value
+	for index in range(actions.size()):
+		var action_value: Variant = actions[index]
+		var field_path := "%s[%d]" % [field_name, index]
+		if not action_value is Dictionary:
+			_record_issue(activity_id, OmniConstants.DATA_ACTIVITIES, LOAD_PHASE_VALIDATION, "Activity '%s' %s must be an object." % [activity_id, field_path])
+			continue
+		_validate_action_payload(activity_id, OmniConstants.DATA_ACTIVITIES, action_value, field_path)
+
+
+func _validate_activity_outcomes(activity_id: String, value: Variant) -> void:
+	if not value is Array:
+		return
+	var outcomes: Array = value
+	for index in range(outcomes.size()):
+		var outcome_value: Variant = outcomes[index]
+		if not outcome_value is Dictionary:
+			continue
+		var outcome: Dictionary = outcome_value
+		var outcome_id := str(outcome.get("outcome_id", index)).strip_edges()
+		_validate_activity_condition_list(activity_id, "outcomes.%s.conditions" % outcome_id, outcome.get("conditions", []))
+		if not outcome.has("actions"):
+			continue
+		var actions_value: Variant = outcome.get("actions", [])
+		if not actions_value is Array:
+			continue
+		var actions: Array = actions_value
+		for action_index in range(actions.size()):
+			var action_value: Variant = actions[action_index]
+			var field_path := "outcomes.%s.actions[%d]" % [outcome_id, action_index]
+			if not action_value is Dictionary:
+				_record_issue(activity_id, OmniConstants.DATA_ACTIVITIES, LOAD_PHASE_VALIDATION, "Activity '%s' %s must be an object." % [activity_id, field_path])
+				continue
+			_validate_action_payload(activity_id, OmniConstants.DATA_ACTIVITIES, action_value, field_path)
+
+
 func _validate_task_actions(task_id: String, task: Dictionary, field_name: String) -> void:
 	if not task.has(field_name):
 		return
@@ -2352,6 +2501,7 @@ func clear_all() -> void:
 	factions.clear()
 	quests.clear()
 	tasks.clear()
+	activities.clear()
 	recipes.clear()
 	status_effects.clear()
 	encounters.clear()

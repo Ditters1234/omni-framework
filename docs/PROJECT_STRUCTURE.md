@@ -80,6 +80,7 @@ systems/
 |   `-- bt_condition_ai_check.gd
 |-- loaders/
 |   |-- achievement_registry.gd
+|   |-- activity_registry.gd
 |   |-- ai_persona_registry.gd
 |   |-- ai_template_registry.gd
 |   |-- config_loader.gd
@@ -114,7 +115,7 @@ systems/
 `-- transaction_service.gd
 ```
 
-The loader scripts above load JSON templates into `DataManager`, including `ai_personas.json`, `ai_templates.json`, `encounters.json`, and `status_effects.json`.
+The loader scripts above load JSON templates into `DataManager`, including `activities.json`, `ai_personas.json`, `ai_templates.json`, `encounters.json`, and `status_effects.json`.
 `systems/encounter_runtime.gd` provides encounter condition context, weighted opponent action selection, encounter-local stat clamping, and JSON-native effect delta math.
 `systems/status_effect_runner.gd` advances data-authored timed status effects stored in `GameState.active_status_effects`, applying stat modifiers and evaluating optional apply/tick/expire conditions before dispatching lifecycle actions.
 `systems/entity_lifecycle_runner.gd` evaluates config-authored lifecycle rules for live entities, setting state flags and dispatching normal actions when authored conditions enter or exit.

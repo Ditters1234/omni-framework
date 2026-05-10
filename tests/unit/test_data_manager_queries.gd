@@ -1,5 +1,7 @@
 extends GutTest
 
+const ACTIVITY_REGISTRY := preload("res://systems/loaders/activity_registry.gd")
+
 
 func before_each() -> void:
 	DataManager.clear_all()
@@ -78,6 +80,26 @@ func before_each() -> void:
 		"display_name": "Test Status",
 		"tags": ["buff", "mental"],
 	}
+	DataManager.activities["base:study"] = ACTIVITY_REGISTRY.normalize_activity({
+		"activity_id": "base:study",
+		"display_name": "Study",
+		"category": "learning",
+		"kind": "standard",
+		"duration_ticks": 2,
+		"location_id": "base:town",
+		"provider_entity_id": "base:vendor",
+		"tags": ["quiet", "mental"],
+	})
+	DataManager.activities["base:patrol"] = ACTIVITY_REGISTRY.normalize_activity({
+		"activity_id": "base:patrol",
+		"display_name": "Patrol",
+		"category": "security",
+		"kind": "location",
+		"duration_ticks": 1,
+		"location_id": "base:gate",
+		"provider_entity_id": "base:guard",
+		"tags": ["active", "security"],
+	})
 
 
 func test_query_parts_filters_by_tags_and_returns_copies() -> void:
@@ -99,6 +121,34 @@ func test_query_entities_filters_by_location() -> void:
 
 	assert_eq(results.size(), 1)
 	assert_eq(str(results[0].get("entity_id", "")), "base:vendor")
+
+
+func test_query_activities_filters_and_returns_copies() -> void:
+	var category_results := DataManager.query_activities({"category": "learning"})
+	assert_eq(category_results.size(), 1)
+	assert_eq(str(category_results[0].get("activity_id", "")), "base:study")
+
+	var provider_results := DataManager.query_activities({
+		"location_id": "base:gate",
+		"provider_entity_id": "base:guard",
+		"kind": "location",
+	})
+	assert_eq(provider_results.size(), 1)
+	assert_eq(str(provider_results[0].get("activity_id", "")), "base:patrol")
+
+	var tag_results := DataManager.query_activities({
+		"tags": ["quiet"],
+		"tags_all": ["quiet", "mental"],
+	})
+	assert_eq(tag_results.size(), 1)
+	assert_eq(str(tag_results[0].get("activity_id", "")), "base:study")
+
+	var id_results := DataManager.query_activities({"activity_ids": ["base:patrol"]})
+	assert_eq(id_results.size(), 1)
+	assert_eq(str(id_results[0].get("activity_id", "")), "base:patrol")
+
+	category_results[0]["display_name"] = "Mutated"
+	assert_eq(str(DataManager.activities["base:study"].get("display_name", "")), "Study")
 
 
 func test_query_recipes_filters_by_station_tags_and_returns_copies() -> void:

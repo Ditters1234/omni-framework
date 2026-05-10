@@ -187,6 +187,20 @@ Rules:
 - `target` must exist when the task type requires it.
 - Reward references and currencies must validate.
 
+### Activities
+
+- Required: `activity_id`, `display_name`, `category`, `duration_ticks`.
+- `duration_ticks` must be an integer greater than or equal to 0.
+- `location_id` must reference a known location when present.
+- `provider_entity_id` must reference a known entity when present.
+- `schedule` must be an object when present. Schedule arrays include `weekdays`, `days`, `months`, `month_tags`, and `day_of_month`; schedule integers include `start_tick`, `end_tick`, `start_grace_ticks`, `available_after_day`, and `available_until_day`.
+- `schedule.crosses_midnight` and `schedule.must_fit_window` must be booleans when present. `end_tick` cannot be less than `start_tick` unless `crosses_midnight` is true. `must_fit_window` requires both `start_tick` and `end_tick`.
+- `repeat` must be an object when present. `repeat.rule` must be `always`, `once`, `once_per_day`, `limited`, `limited_per_day`, or `cooldown`; repeat count and cooldown fields must be integers.
+- `visible_if`, `requirements`, `start_actions`, `completion_actions`, `failure_actions`, `outcomes`, and `tags` must be arrays when present.
+- `visible_if`, `requirements`, and outcome `conditions` entries must be condition objects.
+- `start_actions`, `completion_actions`, `failure_actions`, and outcome `actions` entries must be normal `ActionDispatcher` action objects.
+- Outcome entries must be objects with unique, non-empty `outcome_id` values. Outcome `weight` must be numeric and greater than or equal to 0 when present.
+
 ### Status Effects
 
 - Required: `status_effect_id`, `display_name`

@@ -100,6 +100,7 @@ These systems parse JSON templates and populate in-memory registries. All are in
 | `FactionRegistry` | `FactionRegistry` | `systems/loaders/faction_registry.gd` | `factions.json` | `faction_id` | Faction definitions, reputation tiers, task boards. |
 | `QuestRegistry` | `QuestRegistry` | `systems/loaders/quest_registry.gd` | `quests.json` | `quest_id` | Quest templates with branching objectives and rewards. |
 | `TaskRegistry` | `TaskRegistry` | `systems/loaders/task_registry.gd` | `tasks.json` | `template_id` | Repeatable tasks issued by factions; includes difficulty, reward, objectives. |
+| `ActivityRegistry` | `ActivityRegistry` | `systems/loaders/activity_registry.gd` | `activities.json` | `activity_id` | Data-authored player-facing activities with schedule, repeat, requirement, outcome, and action metadata. |
 | `RecipeRegistry` | `RecipeRegistry` | `systems/loaders/recipe_registry.gd` | `recipes.json` | `recipe_id` | Crafting recipes that consume inventory parts and produce part templates. |
 | `StatusEffectRegistry` | `StatusEffectRegistry` | `systems/loaders/status_effect_registry.gd` | `status_effects.json` | `status_effect_id` | Timed buffs/debuffs with data-authored stat modifiers and lifecycle actions. |
 | `EncounterRegistry` | `EncounterRegistry` | `systems/loaders/encounter_registry.gd` | `encounters.json` | `encounter_id` | Turn-based encounter templates with participants, player/opponent actions, encounter-local stats, and resolution outcomes. |

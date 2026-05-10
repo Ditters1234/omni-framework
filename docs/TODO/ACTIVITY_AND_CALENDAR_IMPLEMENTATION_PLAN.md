@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 complete; Phase 2 not started.
+Current implementation status: Phase 1 and Phase 2 complete; Phase 3 not started.
 
 ## 1. Purpose
 
@@ -1489,15 +1489,16 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 2 - Activity loading
 
-- [ ] Add `DATA_ACTIVITIES` constant.
-- [ ] Add `DataManager.activities`.
-- [ ] Add `get_activity()`, `has_activity()`, and `query_activities()`.
-- [ ] Add `systems/loaders/activity_registry.gd`.
-- [ ] Wire activity additions into `DataManager.register_additions()`.
-- [ ] Wire activity patches into `DataManager.apply_patches()`.
-- [ ] Add normalization.
-- [ ] Add validation.
-- [ ] Add loader tests.
+- [x] Add `DATA_ACTIVITIES` constant.
+- [x] Add base `mods/base/data/activities.json`.
+- [x] Add `DataManager.activities`.
+- [x] Add `get_activity()`, `has_activity()`, and `query_activities()`.
+- [x] Add `systems/loaders/activity_registry.gd`.
+- [x] Wire activity additions into `DataManager.register_additions()`.
+- [x] Wire activity patches into `DataManager.apply_patches()`.
+- [x] Add normalization.
+- [x] Add validation.
+- [x] Add loader tests.
 
 ### Phase 3 - Activity history and save/load
 
@@ -1643,14 +1644,14 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.2 ActivityRegistry tests
 
-- [ ] Loads valid activities.
-- [ ] Rejects missing IDs.
-- [ ] Rejects duplicates.
-- [ ] Normalizes defaults.
-- [ ] Preserves unknown metadata.
-- [ ] Applies patches.
-- [ ] Validates schedule shapes.
-- [ ] Validates referenced locations/entities.
+- [x] Loads valid activities.
+- [x] Rejects missing IDs.
+- [x] Rejects duplicates.
+- [x] Normalizes defaults.
+- [x] Preserves unknown metadata.
+- [x] Applies patches.
+- [x] Validates schedule shapes.
+- [x] Validates referenced locations/entities.
 
 ### 24.3 ActivityScheduleService tests
 

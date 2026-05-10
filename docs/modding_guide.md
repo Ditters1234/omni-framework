@@ -34,6 +34,7 @@ mods/<author_id>/<mod_id>/
 │   ├── locations.json
 │   ├── factions.json
 │   ├── tasks.json
+│   ├── activities.json
 │   ├── quests.json
 │   ├── recipes.json
 │   ├── encounters.json
@@ -150,6 +151,7 @@ The current base pack uses these files:
 - `locations.json`
 - `factions.json`
 - `tasks.json`
+- `activities.json`
 - `quests.json`
 - `recipes.json`
 - `encounters.json`
@@ -922,7 +924,105 @@ Use:
 
 ---
 
-## 11.1 `status_effects.json`
+## 11.1 `activities.json`
+
+Activities are data-authored, player-facing choices that describe an intentional use of time. `activities.json` templates are loaded into `DataManager.activities` through `ActivityRegistry`; runtime execution, history, and UI presentation are handled by higher-level systems rather than by the loader.
+
+```json
+{
+  "activities": [
+    {
+      "activity_id": "my_name:my_mod:study_at_library",
+      "display_name": "Study at the Library",
+      "description": "Spend focused time with the archives.",
+      "category": "learning",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "my_name:my_mod:library",
+      "provider_entity_id": "my_name:my_mod:librarian",
+      "travel_policy": "must_be_present",
+      "tags": ["quiet", "learning"],
+      "schedule": {
+        "weekdays": ["Mon", "Tue", "Wed"],
+        "start_tick": 8,
+        "end_tick": 16,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "cooldown",
+        "cooldown_ticks": 4
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [],
+      "completion_actions": [
+        { "type": "set_flag", "flag_id": "my_name:my_mod:studied_today", "value": true }
+      ],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "insight",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": []
+        }
+      ],
+      "ui": {},
+      "ai": {}
+    }
+  ]
+}
+```
+
+Required fields:
+- `activity_id`
+- `display_name`
+- `category`
+- `duration_ticks`
+
+Normalization defaults:
+- `description`: `""`
+- `kind`: `"standard"`
+- `schedule`: `{}`
+- `visible_if`, `requirements`, `start_actions`, `completion_actions`, `failure_actions`, `outcomes`, `tags`: `[]`
+- `repeat.rule`: `"always"`
+- `repeat.max_completions`, `repeat.max_completions_per_day`: `-1`
+- `repeat.cooldown_ticks`, `repeat.cooldown_days`: `0`
+- `travel_policy`: `"must_be_present"` when `location_id` is set, otherwise `"current_or_none"`
+- `script_path`: copied from `script_hook` when only the legacy alias is present
+
+Supported repeat rules:
+- `always`
+- `once`
+- `once_per_day`
+- `limited`
+- `limited_per_day`
+- `cooldown`
+
+Supported patch operations:
+- `set`
+- `set_schedule`
+- `set_repeat`
+- `add_tags`
+- `remove_tags`
+- `add_requirements`
+- `set_requirements`
+- `add_visible_if`
+- `set_visible_if`
+- `add_start_actions`
+- `set_start_actions`
+- `add_completion_actions`
+- `set_completion_actions`
+- `add_failure_actions`
+- `set_failure_actions`
+- `add_outcomes`
+- `set_outcomes`
+
+`DataManager.query_activities()` supports filtering by `activity_ids` or `template_ids`, `category`, `categories`, `tags`, `tags_all`, `location_id`, `provider_entity_id`, and `kind`. Returned activity dictionaries are deep copies.
+
+---
+
+## 11.2 `status_effects.json`
 
 Status effects are data-authored timed runtime modifiers. They can represent buffs, debuffs, recovery-over-time, fatigue, shields, damage-over-time, or any other temporary entity state without hardcoded genre names.
 
