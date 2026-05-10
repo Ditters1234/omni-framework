@@ -1,11 +1,11 @@
-# Omni Activity & Schedule Systems — Clean Implementation and Action Plan
+# Omni Activity & Schedule Systems - Clean Implementation and Action Plan
 
 ## 1. Purpose
 
 Implement two tightly integrated systems for Omni:
 
-1. **Activity System** — data-authored, player-facing actions that represent an intentional use of time.
-2. **Schedule / Calendar Projection** — read-only UI and backend projections that show when activities are available across day, range, week, and month views.
+1. **Activity System** - data-authored, player-facing actions that represent an intentional use of time.
+2. **Schedule / Calendar Projection** - read-only UI and backend projections that show when activities are available across day, range, week, and month views.
 
 The implementation must integrate cleanly with existing Omni systems, especially:
 
@@ -159,27 +159,15 @@ AI-disabled mode must remain fully functional.
 
 ```text
 mods/*/data/activities.json
-        │
-        ▼
-ActivityRegistry ───────────────► DataManager.activities
-        │                                  │
-        │                                  ▼
-        │                         ActivityService
-        │                                  │
-        ├──────────────► ActivityScheduleService
-        │                                  │
-        ▼                                  ▼
-ConditionEvaluator                 TimeKeeper.advance_ticks()
-        │                                  │
-        ▼                                  ▼
-GameState.activity_history ◄──── record started/completed
-        │                                  │
-        ▼                                  ▼
-GameEvents.activity_* ───────────► QuestTracker refresh
-        │
-        ├──────────────► ScriptHookService / optional AI
-        │
-        └──────────────► ActivityBoardBackend / ScheduleBackend
+  -> ActivityRegistry -> DataManager.activities
+                          -> ActivityService
+                          -> ActivityScheduleService
+
+ConditionEvaluator -> ActivityService -> TimeKeeper.advance_ticks()
+GameState.activity_history <- activity started/completed records
+GameEvents.activity_* -> QuestTracker refresh
+GameEvents.activity_* -> ScriptHookService / optional AI
+ActivityService -> ActivityBoardBackend / ScheduleBackend
 ```
 
 ---
@@ -191,7 +179,8 @@ GameEvents.activity_* ───────────► QuestTracker refresh
 Add a first-class activity data file:
 
 ```text
-mods/<mod_id>/data/activities.json
+mods/base/data/activities.json
+mods/<author_id>/<mod_id>/data/activities.json
 ```
 
 Top-level shape:
@@ -340,6 +329,8 @@ systems/time_model.gd
 It must not advance time.
 
 Time advancement remains owned by `TimeKeeper`.
+
+`GameState.current_tick` is the canonical absolute tick, and `GameState.current_day` is the canonical saved day normalized from that absolute tick by `TimeKeeper`. `calendar.day_start_tick` only affects display-day/date projection and schedule interpretation; it must not rewrite canonical saved time.
 
 ### 6.3 Config keys
 
@@ -572,7 +563,9 @@ Update:
 - `GameState.validate_runtime_state()`
 - `SaveManager.REQUIRED_GAME_STATE_FIELDS`
 
-Recommended schema migration:
+Save schema must move to version 2 because `activity_history` becomes a required `game_state` field.
+
+Required schema migration:
 
 ```gdscript
 const SCHEMA_VERSION := 2
@@ -583,6 +576,23 @@ func _migrate_v1_to_v2(data: Dictionary) -> Dictionary:
         state["activity_history"] = {}
     data["game_state"] = state
     data["save_schema_version"] = 2
+    return data
+```
+
+Wire the migration into `SaveManager._migrate_if_needed()`:
+
+```gdscript
+func _migrate_if_needed(data: Dictionary) -> Dictionary:
+    var version := int(data.get("save_schema_version", 0))
+    while version < SCHEMA_VERSION:
+        match version:
+            1:
+                data = _migrate_v1_to_v2(data)
+                version = 2
+            _:
+                data["save_schema_version"] = version
+                return data
+    data["save_schema_version"] = version
     return data
 ```
 
@@ -763,10 +773,10 @@ Use this exact order:
 7. Evaluate repeat/cooldown policy.
 8. Resolve location policy.
 9. Perform `auto_travel` if configured and valid.
-10. Invoke `on_activity_start` hook.
-11. Dispatch `start_actions`.
-12. Record activity started.
-13. Emit `GameEvents.activity_started`.
+10. Record activity started.
+11. Emit `GameEvents.activity_started`.
+12. Invoke `on_activity_start` hook.
+13. Dispatch `start_actions`.
 14. Advance duration through `TimeKeeper.advance_ticks(duration_ticks)`.
 15. Resolve optional outcome.
 16. Dispatch selected outcome actions or `completion_actions`.
@@ -829,7 +839,9 @@ execution_error
 
 If failure happens before activity start, do not dispatch `failure_actions`.
 
-If failure happens after `start_actions`, dispatch `failure_actions`, record a failure event, and emit `activity_failed`.
+After `activity_started` is recorded, failures should dispatch `failure_actions`, record a failure event, and emit `activity_failed`.
+
+`ActionDispatcher` is currently a void best-effort dispatcher. Activity execution should treat authored actions as side-effect commands and should not infer failure from warning output. Only explicit validation failures, failed location policy, failed requirements, failed schedule/repeat/cooldown checks, missing templates, script-hook errors, or future dispatcher result objects should produce an activity failure.
 
 ---
 
@@ -1408,11 +1420,20 @@ SCREEN_SCHEDULE: SCHEDULE_SCENE,
 
 Register backend contracts before `BackendContractRegistry.lock()` is called.
 
+Add preload constants for the new backend scripts in `autoloads/mod_loader.gd`, then call:
+
+```gdscript
+ACTIVITY_BOARD_BACKEND.register_contract()
+SCHEDULE_BACKEND.register_contract()
+```
+
+inside `_register_backend_contracts()` before `BACKEND_CONTRACT_REGISTRY.lock()`.
+
 ---
 
 ## 23. Implementation Sequence
 
-### Phase 1 — Time foundation
+### Phase 1 - Time foundation
 
 - [ ] Add `systems/time_model.gd`.
 - [ ] Add `calendar.*` config handling.
@@ -1422,7 +1443,7 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Add tests for arbitrary month/year structures.
 - [ ] Add tests for day-start offset.
 
-### Phase 2 — Activity loading
+### Phase 2 - Activity loading
 
 - [ ] Add `DATA_ACTIVITIES` constant.
 - [ ] Add `DataManager.activities`.
@@ -1434,24 +1455,24 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Add validation.
 - [ ] Add loader tests.
 
-### Phase 3 — Activity history and save/load
+### Phase 3 - Activity history and save/load
 
 - [ ] Add `GameState.activity_history`.
 - [ ] Add GameState activity-history helpers.
 - [ ] Serialize `activity_history` in `GameState.to_dict()`.
 - [ ] Restore `activity_history` in `GameState.from_dict()`.
 - [ ] Add runtime validation.
-- [ ] Bump save schema to v2 or add safe optional loading.
-- [ ] Add migration for older saves.
+- [ ] Bump save schema to v2.
+- [ ] Add `_migrate_v1_to_v2()` and wire it into `SaveManager._migrate_if_needed()`.
 - [ ] Add save/load tests.
 
-### Phase 4 — Activity events
+### Phase 4 - Activity events
 
 - [ ] Add activity signals to `GameEvents.SIGNAL_CATALOG`.
 - [ ] Add declared activity signals.
 - [ ] Add tests that signal catalog and declarations stay in sync.
 
-### Phase 5 — Schedule projection core
+### Phase 5 - Schedule projection core
 
 - [ ] Add `systems/activity_schedule_service.gd`.
 - [ ] Implement empty schedule behavior.
@@ -1463,7 +1484,7 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Implement slot expansion.
 - [ ] Add schedule tests.
 
-### Phase 6 — Activity execution core
+### Phase 6 - Activity execution core
 
 - [ ] Add `systems/activity_service.gd`.
 - [ ] Implement visibility checks.
@@ -1478,7 +1499,7 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Return stable result dictionaries.
 - [ ] Add execution tests.
 
-### Phase 7 — Conditions and actions
+### Phase 7 - Conditions and actions
 
 - [ ] Add activity-aware conditions to `ConditionEvaluator`.
 - [ ] Add time-aware conditions to `ConditionEvaluator`.
@@ -1488,7 +1509,7 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Add `record_event` action.
 - [ ] Add condition/action tests.
 
-### Phase 8 — Quest integration
+### Phase 8 - Quest integration
 
 - [ ] Connect `QuestTracker` to `GameEvents.activity_completed`.
 - [ ] Refresh active quests on activity completion.
@@ -1496,7 +1517,7 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Confirm `ActivityService` does not directly advance quest stages.
 - [ ] Add quest integration tests.
 
-### Phase 9 — Outcomes
+### Phase 9 - Outcomes
 
 - [ ] Add `systems/weighted_choice_service.gd`.
 - [ ] Implement outcome filtering.
@@ -1505,7 +1526,7 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Record `last_outcome_id`.
 - [ ] Add outcome tests.
 
-### Phase 10 — Encounter handoff
+### Phase 10 - Encounter handoff
 
 - [ ] Confirm activities can open encounter screen through `push_screen`.
 - [ ] Add test activity that routes to an encounter.
@@ -1513,7 +1534,7 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Confirm encounter rewards remain encounter-owned.
 - [ ] Add integration tests.
 
-### Phase 11 — AI and script hooks
+### Phase 11 - AI and script hooks
 
 - [ ] Add activity flavor cache/pending state to `ScriptHookService`.
 - [ ] Add `request_activity_flavor()`.
@@ -1523,25 +1544,36 @@ Register backend contracts before `BackendContractRegistry.lock()` is called.
 - [ ] Confirm AI-disabled mode is a complete no-op.
 - [ ] Add AI/hook tests.
 
-### Phase 12 — Activity board UI
+### Phase 12 - Activity board UI
 
 - [ ] Add `ActivityBoardBackend`.
 - [ ] Add activity board screen script.
 - [ ] Add activity board scene.
 - [ ] Register backend contract.
+- [ ] Add backend preload and contract registration in `ModLoader._register_backend_contracts()`.
 - [ ] Add route catalog entry.
 - [ ] Add backend/screen tests.
 
-### Phase 13 — Schedule UI
+### Phase 13 - Schedule UI
 
 - [ ] Add `ScheduleBackend`.
 - [ ] Add schedule screen script.
 - [ ] Add schedule scene.
 - [ ] Register backend contract.
+- [ ] Add backend preload and contract registration in `ModLoader._register_backend_contracts()`.
 - [ ] Add route catalog entry.
 - [ ] Add schedule projection tests.
 
-### Phase 14 — Content-agnostic validation
+### Phase 14 - Documentation alignment
+
+- [ ] Update `docs/PROJECT_STRUCTURE.md`.
+- [ ] Update `docs/SYSTEM_CATALOG.md`.
+- [ ] Update `docs/modding_guide.md`.
+- [ ] Update `docs/GAME_EVENTS_TAXONOMY.md`.
+- [ ] Update `docs/SAVE_SCHEMA_AND_MIGRATION.md`.
+- [ ] Update any schema/lint docs affected by activity data, calendar config, conditions, actions, or backend contracts.
+
+### Phase 15 - Content-agnostic validation
 
 - [ ] Add minimal fixture activities for tests only.
 - [ ] Confirm no engine code depends on specific setting names.
@@ -1661,4 +1693,5 @@ The implementation is complete when:
 - [ ] Activity board UI can execute activities.
 - [ ] Schedule UI can project upcoming activities.
 - [ ] Tests cover time, loading, execution, save/load, quest integration, location integration, encounter handoff, AI no-op behavior, and backend rendering.
+- [ ] Base docs describe the implemented activity/calendar systems as current behavior.
 - [ ] No engine code depends on specific content, setting names, location names, NPCs, factions, campaigns, or sample scenarios.
