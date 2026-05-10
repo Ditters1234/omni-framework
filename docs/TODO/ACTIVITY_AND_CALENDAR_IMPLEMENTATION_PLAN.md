@@ -1604,14 +1604,14 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.1 TimeModel tests
 
-- [ ] Tick-of-day resolves from absolute tick.
-- [ ] Day resolves from absolute tick.
-- [ ] Weekday cycle works with arbitrary weekday counts.
-- [ ] Month rollover works with arbitrary month counts and lengths.
-- [ ] Year rollover works.
-- [ ] Day-start offset changes display day correctly.
-- [ ] Date formatting uses config.
-- [ ] No hardcoded 24-hour, 7-day, 12-month, or 365-day assumptions.
+- [x] Tick-of-day resolves from absolute tick.
+- [x] Day resolves from absolute tick.
+- [x] Weekday cycle works with arbitrary weekday counts.
+- [x] Month rollover works with arbitrary month counts and lengths.
+- [x] Year rollover works.
+- [x] Day-start offset changes display day correctly.
+- [x] Date formatting uses config.
+- [x] No hardcoded 24-hour, 7-day, 12-month, or 365-day assumptions.
 
 ### 24.2 ActivityRegistry tests
 
