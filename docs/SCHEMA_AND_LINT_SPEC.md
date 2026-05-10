@@ -237,7 +237,7 @@ Each `backend_class` should have a contract definition with:
 
 Backend contract validation applies only to JSON-authored screens and interactions that carry a `backend_class`. Engine-owned routes such as `main_menu`, `settings`, `save_slot_list`, `pause_menu`, `credits`, and `gameplay_shell` are registered in code and should be covered by router smoke tests instead of content schema validation.
 
-Current implementation note: `BackendContractRegistry` is now a real engine system. Built-in contracts are registered at the start of `ModLoader.load_all_mods()`, and `DataManager.validate_loaded_content()` checks location screens and entity interactions against the registry before the boot sequence succeeds.
+Current implementation note: `BackendContractRegistry` is an engine system. Built-in contracts are registered at the start of `ModLoader.load_all_mods()`, and `DataManager.validate_loaded_content()` checks location screens and entity interactions against the registry before the boot sequence succeeds.
 
 Minimum required contracts:
 

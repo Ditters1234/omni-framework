@@ -5,7 +5,7 @@
 
 Omni-Framework is a data-driven, genre-agnostic game engine built on Godot 4.
 
-This folder is the documentation home for Omni-Framework. Keep docs here as current references; completed rollout plans and historical audits should be removed or folded into canonical references.
+This folder is the documentation home for Omni-Framework. Keep docs here as current references; outdated process notes should be removed or folded into canonical references.
 
 ## Documents
 
@@ -21,7 +21,7 @@ This folder is the documentation home for Omni-Framework. Keep docs here as curr
 | [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) | Load-time validation rules, per-system schema expectations, patch validation, and content lint severity guidance |
 | [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) | Event naming, domain grouping, payload design, and long-term signal-bus stability rules |
 | [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md) | Save-file shape, versioning, migration order, and post-load sanity expectations |
-| [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) | GDScript implementation habits, loader/autoload boundaries, and early anti-patterns to avoid |
+| [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) | GDScript implementation habits, loader/autoload boundaries, and current anti-patterns to avoid |
 | [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) | How to use `imgui-godot` and GUT for runtime inspection, automated coverage, and content invariants |
 
 ## Reading Order
@@ -31,7 +31,7 @@ This folder is the documentation home for Omni-Framework. Keep docs here as curr
 2. Read [`TASK_ROUTINES.md`](TASK_ROUTINES.md) before adding scheduled NPC/entity movement.
 3. Read [`LOCATION_ACCESS.md`](LOCATION_ACCESS.md) before gating locations behind conditions.
 4. Read [`SYSTEM_CATALOG.md`](SYSTEM_CATALOG.md) and [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) before expanding the routed UI surface, adding a backend, or introducing engine-owned screens.
-5. Read [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) before building the first loaders, registries, or autoload orchestration.
+5. Read [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) before changing loaders, registries, or autoload orchestration.
 6. Read [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) before implementing validation or patch application.
 7. Read [`modding_guide.md`](modding_guide.md) when authoring JSON, patches, assets, or script hooks.
 8. Read [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) before changing stat math, stat schema, or any system that touches resource pools.
@@ -48,12 +48,12 @@ Each doc below has an explicit scope. Prefer `SYSTEM_CATALOG.md` for discovery a
 - [`TASK_ROUTINES.md`](TASK_ROUTINES.md) — implemented daily task routine runner for scheduled entity movement.
 - [`LOCATION_ACCESS.md`](LOCATION_ACCESS.md) — implemented location entry gating through `LocationAccessService`.
 - [`RUNTIME_ENTITY_PRESENCE.md`](RUNTIME_ENTITY_PRESENCE.md) — how entity presence at locations is resolved from static, template, and runtime sources.
-- [`modding_guide.md`](modding_guide.md) — the contracts modders must satisfy, even where enforcement is still being implemented.
+- [`modding_guide.md`](modding_guide.md) — the contracts modders must satisfy, including load-time and runtime enforcement points.
 - [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md) — stat invariants and validation rules.
 - [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) — content validation behavior.
 - [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) — signal naming and event grouping.
 - [`SAVE_SCHEMA_AND_MIGRATION.md`](SAVE_SCHEMA_AND_MIGRATION.md) — persistence versioning and migration.
-- [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) — early implementation patterns.
+- [`CODING_STANDARDS_AND_LOADER_PATTERNS.md`](CODING_STANDARDS_AND_LOADER_PATTERNS.md) — current implementation patterns.
 - [`DEBUGGING_AND_TESTING_GUIDELINES.md`](DEBUGGING_AND_TESTING_GUIDELINES.md) — dev-only debug tooling and automated testing expectations.
 
 ## Contributing to Omni-Framework

@@ -2,7 +2,7 @@
 
 A single-player, data-driven, genre-agnostic game engine built on **Godot 4.6** using **GDScript**.
 
-The engine provides systems; JSON provides content. The same runtime is intended to support very different games by swapping mod data instead of rewriting engine code.
+The engine provides systems; JSON provides content. The runtime is structured to support very different games by swapping mod data instead of rewriting engine code.
 
 ## Current Repository Snapshot
 
@@ -10,7 +10,7 @@ This repository currently contains these top-level areas:
 
 - `autoloads/` — global singleton services registered in Godot
 - `core/` — shared runtime classes and low-level utilities
-- `docs/` — architecture and implementation notes
+- `docs/` — current architecture, contracts, and implementation references
 - `mods/` — mod content, including the required `base` mod
 - `systems/` — engine services such as stats, tasks, rewards, transactions, contracts, hooks, AI providers, and loaders
 - `tests/` — automated test coverage
@@ -37,7 +37,7 @@ The current repo structure shows these implemented high-level pieces:
 - **Autoload-driven boot flow** with dedicated managers for AI, audio, data, events, save/load, time, routing, game state, and mod loading.
 - **System layer** that includes action dispatching, stat evaluation, quest tracking, task running, rewards, transactions, script hook services, assembly commit support, backend contract registration, and loader/provider subfolders.
 - **UI layer** with `main.tscn`, `main.gd`, `ui_route_catalog.gd`, plus `components/`, `debug/`, `screens/`, and `theme/` folders.
-- **14 backend-driven screens** implemented across Phase 4 through Phase 7: Assembly Editor, Exchange, List, Challenge, Task Provider, Catalog List, Crafting, Dialogue, Entity Sheet, Active Quest Log, Faction Reputation, Achievement List, Event Log, and World Map.
+- **18 backend-driven screens:** Assembly Editor, Exchange, List, Challenge, Task Provider, Catalog List, Crafting, Dialogue, Encounter, Entity Sheet, Owned Entities, Loot, Reward Review, Active Quest Log, Faction Reputation, Achievement List, Event Log, and World Map.
 - **Mod-first content layout** under `mods/`, with the engine expecting a base mod to exist.
 
 ## Documentation
@@ -47,7 +47,7 @@ Start with `docs/README.md` for the full documentation map.
 - `docs/SYSTEM_CATALOG.md` — **start here** for a complete inventory of all systems and quick links
 - `docs/PROJECT_STRUCTURE.md` - current code-facing structure and implementation snapshot
 
-Other docs in `docs/` describe domain contracts, implementation guardrails, or planned work. Treat their stated scope as authoritative for that area, and prefer `PROJECT_STRUCTURE.md` when you need to know what exists in the repository today.
+Other docs in `docs/` describe current domain contracts and implementation guardrails. Treat their stated scope as authoritative for that area, and prefer `PROJECT_STRUCTURE.md` when you need to know what exists in the repository today.
 
 ## Testing
 

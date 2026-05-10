@@ -546,7 +546,7 @@ Unknown tokens are left in place and logged as warnings, so it is worth keeping 
 
 ### Engine-owned tuning
 
-Persona JSON does not control provider selection or connection details. The engine-owned settings screen now exposes:
+Persona JSON does not control provider selection or connection details. The engine-owned settings screen exposes:
 - `ai.chat_history_window` — how many recent turns each NPC keeps in memory
 - `ai.streaming_speed` — the dialogue-side token reveal cadence
 - `ai.enable_world_gen` — whether world-generation hooks may surface narrated event log text and task-board flavor
@@ -630,7 +630,7 @@ The engine does not execute templates on its own. A hook or backend must look th
 
 ## 8.3 Behavior tree AI tasks
 
-LimboAI behavior trees can now call the engine-owned AI layer directly through two custom tasks under `systems/ai/`.
+LimboAI behavior trees call the engine-owned AI layer directly through two custom tasks under `systems/ai/`.
 
 - `BTActionAIQuery` resolves `{blackboard_var}` placeholders inside `prompt_template`, sends the request through `AIManager`, and writes the parsed result to `result_var`.
 - `BTConditionAICheck` asks a yes/no question, appends a strict yes/no suffix to the prompt, and returns `SUCCESS` or `FAILURE` from the parsed answer.
@@ -665,7 +665,7 @@ The task automatically appends `Respond with only YES or NO.` unless the prompt 
 
 ### Example pattern
 
-Use these tasks the same way the AI integration plan recommends: AI branch first, static branch second.
+Use these tasks with an AI branch first and a static fallback branch second.
 
 ```text
 Selector
@@ -1115,7 +1115,7 @@ Recipes are inventory-driven crafting templates loaded by `RecipeRegistry` into 
 
 Supported discovery modes are `always`, `learned_on_flag`, and `auto_on_ingredient_owned`.
 
-`learned_on_flag` checks for the `learned:<recipe_id>` flag on the crafter or global `GameState`. `ActionDispatcher` now supports a dedicated `learn_recipe` action so authored content does not need to hand-roll that flag format with `set_flag`.
+`learned_on_flag` checks for the `learned:<recipe_id>` flag on the crafter or global `GameState`. `ActionDispatcher` supports a dedicated `learn_recipe` action so authored content does not need to hand-roll that flag format with `set_flag`.
 
 `required_stations`, `required_flags`, and `tags` must contain non-empty strings. `required_stats` values must be numeric so stat gates fail validation instead of becoming implicit zero-value requirements.
 
@@ -1493,7 +1493,7 @@ Common fields:
 
 `hidden: true` keeps an achievement out of `AchievementListBackend` rows until that achievement is unlocked. Once unlocked, the row becomes visible and still carries its `hidden` metadata in the backend view model.
 
-`unlock_vfx` is forwarded through the `achievement_unlocked` event payload and the runtime unlock stub so authored content can already declare which future VFX resource should play when the visual layer is added.
+`unlock_vfx` is forwarded through the `achievement_unlocked` event payload and the runtime unlock stub. The current runtime preserves the authored value but does not play a visual effect from it.
 
 ---
 
@@ -1701,7 +1701,7 @@ No required params. Common useful optional fields:
 - `show_travel_costs`
 - `discovered_only`
 
-The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location. The runtime screen also provides route lines, mouse-wheel zoom, drag panning, fit/current centering controls, and radial/horizontal/vertical orientation modes. The graph now declutters while zoomed out by shrinking nodes into compact pills or markers and hiding travel-cost badges until there is enough space to read them. Traveling from the map consumes the cheapest routed total `travel_cost` in ticks; unreachable destinations are rejected instead of free-teleporting.
+The map reads `locations.json` through `LocationGraph.get_all_locations()`. A location may optionally provide `map_position` as `{ "x": 0.5, "y": 0.5 }` or `[0.5, 0.5]` using normalized graph coordinates. If omitted, the screen places nodes in a deterministic circular layout. Node tint comes from a location's `faction_id` when present, or from the first faction whose `territory` includes that location. The runtime screen also provides route lines, mouse-wheel zoom, drag panning, fit/current centering controls, radial/horizontal/vertical orientation modes, zoomed-out decluttering, compact node pills/markers, and travel-cost badges that appear only when there is enough space to read them. Traveling from the map consumes the cheapest routed total `travel_cost` in ticks; unreachable destinations are rejected instead of free-teleporting.
 
 #### `EncounterBackend`
 Required:
@@ -1765,7 +1765,7 @@ No required params. Common useful optional fields:
 
 This backend reads the owner's `owned_entity_ids`, lists the live runtime entities, and provides inspect, equipment, location dispatch, recall, task queue editing, and contract-assignment handoffs. Roster filtering and sorting are generic (`idle`/`active`, here/away, name/location/task) and do not assume any genre-specific role tags. Roster stat previews are also data-driven: set `summary_stat_ids` when a route wants specific stats, or omit it to use the entity's defined non-capacity stats in loaded definition order. Activity text comes from the shared task summary formatter, so active work, queued work, destination labels, and remaining ticks stay consistent with other entity presence UI. The selected entity detail panel lists active and queued task runtime instances, allows queued tasks to move up/down, and can cancel active or queued tasks. Cancelling an active task promotes the next queued task for that entity through `TaskRunner`. Location dispatch starts a low-level `TRAVEL` task for the selected entity and emits a player-facing notification. `assignment_start_mode` controls whether dispatch replaces existing work, queues behind the current active task, or runs in parallel. Contract assignment starts a quest for the selected entity through `TaskProviderBackend` using `assignee_entity_id`; quest rewards still default to the player unless a caller overrides reward ownership at quest start. The backend builds the inspect/equipment/contract route action payloads, while the stock screen only opens the returned route. The built-in owned-entity screen passes `auto_dispatch_first_reach_location: true` so a selected contract can be accepted and the selected entity can be sent through assignee reach-location objectives as the quest advances.
 
-Load validation now checks that `owned_entity_ids` is an array of non-empty string ids, rejects duplicate/self references, and verifies that referenced entities exist. `OwnedEntitiesBackend` payloads validate `owner_entity_id`, `assignment_provider_entity_id`, `assignment_task_template_id`, `assignment_faction_id`, `summary_stat_ids`, supported initial filter/sort values, and supported `assignment_start_mode` values when those fields are present. `TaskProviderBackend` payloads validate direct-assignment fields including provider, assignee, owner, faction, and assignment task references.
+Load validation checks that `owned_entity_ids` is an array of non-empty string ids, rejects duplicate/self references, and verifies that referenced entities exist. `OwnedEntitiesBackend` payloads validate `owner_entity_id`, `assignment_provider_entity_id`, `assignment_task_template_id`, `assignment_faction_id`, `summary_stat_ids`, supported initial filter/sort values, and supported `assignment_start_mode` values when those fields are present. `TaskProviderBackend` payloads validate direct-assignment fields including provider, assignee, owner, faction, and assignment task references.
 
 #### `LootBackend`
 Required:

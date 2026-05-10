@@ -68,7 +68,7 @@ res://
 
 ## Autoloads
 
-Engine-owned autoloads live under `autoloads/`. Addon-provided autoloads such as `DialogueManager` and `ImGuiRoot` are declared in `project.godot` separately.
+Engine-owned autoload manager scripts mostly live under `autoloads/`. `TaskRoutineRunner` is the system-level autoload declared from `systems/task_routine_runner.gd`. Addon-provided autoloads such as `DialogueManager` and `ImGuiRoot` are declared in `project.godot` separately.
 
 | Name | File | Purpose |
 |---|---|---|
@@ -78,6 +78,7 @@ Engine-owned autoloads live under `autoloads/`. Addon-provided autoloads such as
 | `GameState` | `autoloads/game_state.gd` | Active runtime state (player, location, tick) |
 | `SaveManager` | `autoloads/save_manager.gd` | A2J-based JSON save/load to user://saves/ |
 | `TimeKeeper` | `autoloads/time_keeper.gd` | Tick clock, dispatches tick/day signals |
+| `TaskRoutineRunner` | `systems/task_routine_runner.gd` | Starts scheduled task templates from daily time windows |
 | `AudioManager` | `autoloads/audio_manager.gd` | SFX pools + music playback |
 | `UIRouter` | `autoloads/ui_router.gd` | Screen navigation stack |
 | `AIManager` | `autoloads/ai_manager.gd` | LLM abstraction over local/remote providers |
@@ -90,9 +91,10 @@ Engine-owned autoloads live under `autoloads/`. Addon-provided autoloads such as
 4. `GameState` — Initializes player, location, and active runtime state; calls `SaveManager` to load existing saves if present.
 5. `SaveManager` — Registers A2J runtime classes, loads autosave or boots a new game.
 6. `TimeKeeper` — Starts tick clock; dispatches tick signals every frame.
-7. `AudioManager` — Initializes SFX pools and music channels.
-8. `UIRouter` — Pushes initial screen (main menu or gameplay) onto the stack. Requires a `CanvasLayer` container — `UIRouter.initialize()` will error if passed anything other than a `CanvasLayer`.
-9. `AIManager` — Initializes configured AI provider (OpenAI, Anthropic, NobodyWho, or disabled).
+7. `TaskRoutineRunner` — Starts scheduled task templates from daily time windows.
+8. `AudioManager` — Initializes SFX pools and music channels.
+9. `UIRouter` — Pushes initial screen (main menu or gameplay) onto the stack. Requires a `CanvasLayer` container — `UIRouter.initialize()` will error if passed anything other than a `CanvasLayer`.
+10. `AIManager` — Initializes configured AI provider (OpenAI, Anthropic, NobodyWho, or disabled).
 
 **Helper systems availability:**
 - `ActionDispatcher`, `ConditionEvaluator`, `StatManager` — Stateless; available immediately after DataManager.
@@ -145,6 +147,9 @@ Each system has a JSON file in `mods/base/data/` and a registry in `systems/load
 | Factions | `factions.json` | `FactionRegistry` | `faction_id` |
 | Quests | `quests.json` | `QuestRegistry` | `quest_id` |
 | Tasks | `tasks.json` | `TaskRegistry` | `template_id` |
+| Recipes | `recipes.json` | `RecipeRegistry` | `recipe_id` |
+| Status Effects | `status_effects.json` | `StatusEffectRegistry` | `status_effect_id` |
+| Encounters | `encounters.json` | `EncounterRegistry` | `encounter_id` |
 | Achievements | `achievements.json` | `AchievementRegistry` | `achievement_id` |
 | AI Personas | `ai_personas.json` | `AIPersonaRegistry` | `persona_id` |
 | AI Templates | `ai_templates.json` | `AITemplateRegistry` | `template_id` |
@@ -167,7 +172,11 @@ Each `backend_class` value in JSON maps to a scene in `ui/screens/backends/`:
 | `TaskProviderBackend` | `task_provider_screen.tscn` | Faction job board |
 | `CatalogListBackend` | `catalog_list_screen.tscn` | Infinite template vendor |
 | `DialogueBackend` | `dialogue_screen.tscn` | NPC dialogue with optional AI chat mode (`hybrid`, `freeform`) |
-| `EntitySheetBackend` | `entity_sheet_screen.tscn` | Read-only entity stats/equipment/inventory |
+| `EncounterBackend` | `encounter_screen.tscn` | Data-authored turn-based encounters with real stat mutation and optional AI-flavored action log text |
+| `EntitySheetBackend` | `entity_sheet_screen.tscn` | Entity stats, status effects, equipment, data-driven inventory use/equip/discard actions, quests, progress, and reputation |
+| `OwnedEntitiesBackend` | `owned_entities_screen.tscn` | Owned-entity roster management, task queues, travel dispatch, recall, and contract assignment |
+| `LootBackend` | `loot_screen.tscn` | Entity-backed container/loot review and transfer surface |
+| `RewardReviewBackend` | `reward_review_screen.tscn` | Recent quest/encounter completion reward summaries from event history |
 | `ActiveQuestLogBackend` | `active_quest_log_screen.tscn` | Active quest cards with stages and objectives |
 | `FactionReputationBackend` | `faction_reputation_screen.tscn` | Faction badges and standing |
 | `AchievementListBackend` | `achievement_list_screen.tscn` | Achievement unlock state and progress |
@@ -220,18 +229,27 @@ These systems provide core runtime functionality but are not autoloads. They're 
 | `ActionDispatcher` | `systems/action_dispatcher.gd` | Executes JSON action blocks from quests/tasks (give_currency, travel, spawn_entity, start_quest, etc.) |
 | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | Central registry managing backend screen contracts; validates `backend_class` IDs and contract schemas |
 | `AssemblyCommitService` | `systems/assembly_commit_service.gd` | Handles assembly editor part attachment/detachment logic and state commits |
+| `EncounterRuntime` | `systems/encounter_runtime.gd` | Stateless encounter helper for weighted opponent selection, condition context, local-stat clamping, and JSON-native effect delta math |
 | `RewardService` | `systems/reward_service.gd` | Processes quest/task completion rewards and distributes currency, items, and unlocks |
 | `ScriptHookService` | `systems/script_hook_service.gd` | Manages lifecycle of mod script hooks and their execution callbacks |
+| `ScriptHookLoader` | `systems/script_hook_loader.gd` | Loads and caches GDScript mod hooks for lifecycle callbacks |
 | `TransactionService` | `systems/transaction_service.gd` | Handles currency exchanges and transaction validation (buy/sell, exchanges, trades) |
 | `ConditionEvaluator` | `systems/condition_evaluator.gd` | Evaluates JSON condition blocks (AND/OR trees) used in quests, tasks, and UI logic |
 | `StatManager` | `systems/stat_manager.gd` | Calculates stat modifiers, applies stat changes, and enforces clamping rules |
+| `QuestTracker` | `systems/quest_tracker.gd` | LimboAI-backed quest HSM for stages, objectives, and completion |
+| `TaskRunner` | `systems/task_runner.gd` | Tick-driven task execution, queue promotion, completion checks, and data-authored task completion actions |
+| `TaskActivitySummary` | `systems/task_activity_summary.gd` | Shared formatter for active and queued task visibility across owned entities and location presence |
+| `StatusEffectRunner` | `systems/status_effect_runner.gd` | Tick-driven status effect application, stacking, stat modifiers, and expiration actions |
+| `EntityLifecycleRunner` | `systems/entity_lifecycle_runner.gd` | Evaluates config-authored lifecycle rules when entity stats change and dispatches normal actions |
+| `LocationAccessService` | `systems/location_access_service.gd` | Shared travel and entry gate checks for location conditions |
+| `LocationPresenceService` | `systems/location_presence_service.gd` | Resolves gameplay location presence rows and empty-loot visibility |
 | `AIChatService` | `systems/ai/ai_chat_service.gd` | Persona-aware prompt builder with bounded conversation history, response validation, and fallback selection |
 | `BTActionAIQuery` | `systems/ai/bt_action_ai_query.gd` | LimboAI `BTAction`: async AI query with `text`/`enum`/`json` parsing, timeout, and fallback value |
 | `BTConditionAICheck` | `systems/ai/bt_condition_ai_check.gd` | LimboAI `BTCondition`: async yes/no AI check with configurable default result |
 | `BTAIUtils` | `systems/ai/bt_ai_utils.gd` | Shared `{blackboard_var}` prompt resolution, enum scoring, JSON unwrapping, yes/no parsing |
 
 **Helper utilities:**
-- `backend_helpers.gd` — Phase-neutral utility functions shared by backend screens (catalog, exchange, list, challenge, task provider, dialogue, and future reusable backend needs)
+- `backend_helpers.gd` — Phase-neutral utility functions shared by backend screens (catalog, exchange, list, challenge, task provider, dialogue, and shared backend needs)
 - `AppSettings` (`core/app_settings.gd`) — Persistent app-level settings (audio, graphics, accessibility)
 
 ---

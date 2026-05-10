@@ -20,7 +20,7 @@ See [`AGENTS.md`](../AGENTS.md) for architecture rules and [`PROJECT_STRUCTURE.m
 
 ## Autoload Systems (Boot Phase Sequence)
 
-These are **global singletons** initialized during engine boot in this order. All depend on `GameEvents` being available first.
+These are **engine-owned global singletons** initialized during engine boot in this order. Addon-provided autoloads (`DialogueManager` and `ImGuiRoot`) are declared in `project.godot` but are documented with the addon list rather than this engine-owned sequence.
 
 | Autoload | Class | File | Boot Order | Purpose |
 |---|---|---|---|---|
@@ -30,9 +30,10 @@ These are **global singletons** initialized during engine boot in this order. Al
 | `GameState` | `OmniGameState` | `autoloads/game_state.gd` | **4th** | Runtime state container: active player, current location, tick clock reference. |
 | `SaveManager` | `OmniSaveManager` | `autoloads/save_manager.gd` | **5th** | JSON save/load via A2J. Loads or boots new games to `user://saves/`. |
 | `TimeKeeper` | `OmniTimeKeeper` | `autoloads/time_keeper.gd` | **6th** | Tick clock. Dispatches `tick_advanced` and `day_advanced` signals every frame. |
-| `AudioManager` | `OmniAudioManager` | `autoloads/audio_manager.gd` | **7th** | SFX pools and music playback control. |
-| `UIRouter` | `OmniUIRouter` | `autoloads/ui_router.gd` | **8th** | Screen navigation stack. Pushes initial screen (menu or gameplay). |
-| `AIManager` | `OmniAIManager` | `autoloads/ai_manager.gd` | **9th** | AI provider abstraction. Routes to configured backend (OpenAI, Anthropic, NobodyWho, or disabled). |
+| `TaskRoutineRunner` | `OmniTaskRoutineRunner` | `systems/task_routine_runner.gd` | **7th** | System-level autoload that starts scheduled task templates from daily time windows. |
+| `AudioManager` | `OmniAudioManager` | `autoloads/audio_manager.gd` | **8th** | SFX pools and music playback control. |
+| `UIRouter` | `OmniUIRouter` | `autoloads/ui_router.gd` | **9th** | Screen navigation stack. Pushes initial screen (menu or gameplay). |
+| `AIManager` | `OmniAIManager` | `autoloads/ai_manager.gd` | **10th** | AI provider abstraction. Routes to configured backend (OpenAI, Anthropic, NobodyWho, or disabled). |
 
 **Availability timeline after boot:**
 - Immediately after `DataManager`: `ActionDispatcher`, `ConditionEvaluator`, `StatManager`
@@ -44,7 +45,7 @@ These are **global singletons** initialized during engine boot in this order. Al
 
 ## Runtime Helper Systems
 
-These **stateless utilities** are instantiated or called by autoloads, screens, and mod scripts. They are NOT autoloads.
+These utilities are instantiated or called by autoloads, screens, and mod scripts. Most are not autoloads; `TaskRoutineRunner` is the system-level autoload exception.
 
 ### Core Runtime Services
 
@@ -57,7 +58,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 | `BackendContractRegistry` | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | — | Validates `backend_class` IDs and their payload schemas. Locked after `ModLoader`. |
 | `RewardService` | `RewardService` | `systems/reward_service.gd` | GameState, SaveManager | Distributes currency, items, unlocks when quests/tasks complete. |
 | `TransactionService` | `TransactionService` | `systems/transaction_service.gd` | GameState, SaveManager | Handles buy/sell/exchange validation and currency movement. |
-| `ScriptHookService` | `ScriptHookService` | `systems/script_hook_service.gd` | DataManager | Lifecycle manager for mod script hooks, including Phase 6 global world-generation hooks and cached task flavor text. |
+| `ScriptHookService` | `ScriptHookService` | `systems/script_hook_service.gd` | DataManager | Lifecycle manager for mod script hooks, including global world-generation hooks and cached task flavor text. |
 | `AssemblyCommitService` | `AssemblyCommitService` | `systems/assembly_commit_service.gd` | GameState | Transactional part attachment/detachment for assembly editor. |
 
 ### AI & Quest Orchestration
@@ -103,7 +104,7 @@ These systems parse JSON templates and populate in-memory registries. All are in
 | `EncounterRegistry` | `EncounterRegistry` | `systems/loaders/encounter_registry.gd` | `encounters.json` | `encounter_id` | Turn-based encounter templates with participants, player/opponent actions, encounter-local stats, and resolution outcomes. |
 | `AchievementRegistry` | `AchievementRegistry` | `systems/loaders/achievement_registry.gd` | `achievements.json` | `achievement_id` | Achievements with unlock conditions and rewards. |
 | `ConfigLoader` | — | `systems/loaders/config_loader.gd` | `config.json` | — (deep-merged) | Engine-owned gameplay/UI defaults from mod data. AI provider ownership is intentionally excluded and lives in `AppSettings`. |
-| `AIPersonaRegistry` | `AIPersonaRegistry` | `systems/loaders/ai_persona_registry.gd` | `ai_personas.json` | `persona_id` | Mod-authored AI personas used by dialogue and future AI consumers. |
+| `AIPersonaRegistry` | `AIPersonaRegistry` | `systems/loaders/ai_persona_registry.gd` | `ai_personas.json` | `persona_id` | Mod-authored AI personas used by dialogue, behavior trees, world narration, lore, task flavor, and encounter logs. |
 | `AITemplateRegistry` | `AITemplateRegistry` | `systems/loaders/ai_template_registry.gd` | `ai_templates.json` | `template_id` | Mod-authored reusable AI prompt templates for world-generation hooks. |
 All loaders support **two-phase patching**:
 1. **Phase 1:** Additions — new entries added to the registry
@@ -132,9 +133,9 @@ The `AIManager` autoload routes all AI calls to one of four backends based on th
 
 **Usage:** Mod scripts call `AIManager.generate_async(prompt, context)` and listen to AI events. Always guard with `AIManager.is_available()`. Consumers should not call provider nodes directly or add their own provider-concurrency locks; `AIManager` owns request serialization and lifecycle tracking.
 
-`systems/ai/ai_chat_service.gd` now provides the first engine-owned AI consumer helper. It is a `RefCounted` prompt builder that resolves persona placeholders from `GameState` and `DataManager`, keeps a bounded role-tagged conversation history, assembles the `context` dictionary expected by `AIManager`, and validates or deflects responses before a UI screen consumes them.
+`systems/ai/ai_chat_service.gd` provides the engine-owned dialogue AI helper. It is a `RefCounted` prompt builder that resolves persona placeholders from `GameState` and `DataManager`, keeps a bounded role-tagged conversation history, assembles the `context` dictionary expected by `AIManager`, and validates or deflects responses before a UI screen consumes them.
 
-`systems/ai/bt_action_ai_query.gd` and `systems/ai/bt_condition_ai_check.gd` now provide the engine-owned LimboAI behavior-tree bridge for Phase 5. `BTActionAIQuery` resolves `{blackboard_var}` tokens, submits an async AI request, supports `"text"`, `"enum"`, and `"json"` parsing, and writes either the parsed value or a fallback value into the blackboard. `BTConditionAICheck` appends a yes/no instruction, waits asynchronously, and returns `SUCCESS` / `FAILURE` from the normalized answer while falling back to a configurable default result when AI is unavailable, times out, or responds ambiguously. Both tasks share `systems/ai/bt_ai_utils.gd` for prompt expansion and parser logic.
+`systems/ai/bt_action_ai_query.gd` and `systems/ai/bt_condition_ai_check.gd` provide the engine-owned LimboAI behavior-tree bridge. `BTActionAIQuery` resolves `{blackboard_var}` tokens, submits an async AI request, supports `"text"`, `"enum"`, and `"json"` parsing, and writes either the parsed value or a fallback value into the blackboard. `BTConditionAICheck` appends a yes/no instruction, waits asynchronously, and returns `SUCCESS` / `FAILURE` from the normalized answer while falling back to a configurable default result when AI is unavailable, times out, or responds ambiguously. Both tasks share `systems/ai/bt_ai_utils.gd` for prompt expansion and parser logic.
 
 See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`modding_guide.md`](modding_guide.md) for script hook examples.
 

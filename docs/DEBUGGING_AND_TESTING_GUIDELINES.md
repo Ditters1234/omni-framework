@@ -2,12 +2,12 @@
 
 > **See also:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for the systems and autoloads being tested, [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md) for event signal inspection, and [`SCHEMA_AND_LINT_SPEC.md`](SCHEMA_AND_LINT_SPEC.md) for content validation patterns.
 
-This document defines how Omni-Framework should use its development-time debugging and testing tools as implementation grows.
+This document defines Omni-Framework's current development-time debugging and testing workflow.
 
 The two core tools are:
 
 - the built-in dev overlay at `ui/debug/dev_debug_overlay.gd` for always-available runtime inspection
-- `imgui-godot` for richer future debug tooling where an immediate-mode workflow helps
+- `imgui-godot` for development-only debug panels where an immediate-mode workflow helps
 - GUT for automated tests in `tests/`
 
 These are not optional "nice to have" extras. They are part of how the engine stays debuggable as the data model, mod pipeline, and runtime systems get more complex.
@@ -31,7 +31,7 @@ Use the built-in dev overlay for:
 - Event stream inspection
 - Save/load result snapshots
 
-The current implementation is intentionally lightweight and ships as standard Godot UI so it remains easy to keep alive while the platform architecture is still moving.
+The overlay is intentionally lightweight and uses standard Godot UI so it remains easy to keep aligned with runtime systems.
 
 Current overlay behavior:
 
@@ -69,7 +69,7 @@ Use GUT for:
 Do not use GUT for:
 
 - Manual-only visual verification
-- Runtime debugging that belongs in ImGui panels
+- Runtime debugging that belongs in the dev overlay or ImGui panels
 - Testing editor plugin behavior unless there is a strong reason
 
 Headless command-line runs should use the checked-in `.gutconfig.json`.
@@ -104,7 +104,7 @@ The debug layer should help answer these questions fast:
 
 ## Recommended Debug Panels
 
-Whether a panel lives in the built-in overlay or a future ImGui tool, the initial debug surface should grow around a few stable panels.
+Debug panels should stay organized around a few stable domains, whether they live in the built-in overlay or an ImGui development panel.
 
 ### Boot / Mods
 
@@ -266,13 +266,16 @@ Whole-data-set checks for:
 
 ## Test Folder Conventions
 
-Recommended layout:
+Current layout:
 
 ```text
 tests/
-├── unit/
-├── integration/
-└── content/
+|-- unit/
+|-- integration/
+|-- content/
+|-- helpers/
+|-- fixtures/
+`-- doubles/
 ```
 
 Naming guidance:
@@ -284,7 +287,7 @@ Naming guidance:
 Examples:
 
 - `test_stat_manager_clamping.gd`
-- `test_mod_loader_phase_order.gd`
+- `test_mod_loader_load_order.gd`
 - `test_content_location_references.gd`
 
 ## When A Change Requires Tests
@@ -324,6 +327,6 @@ Add or update tests when you change:
 - Missing template references fail clearly
 - Invalid runtime state is rejected before writing a save
 - Failed loads restore the prior live session instead of wiping it
-- Save/load success and failure signals are covered by reg
+- Save/load success and failure signals are covered by regression tests
 
 Save and settings tests must not touch production `user://` persistence paths. GUT runs are isolated automatically: `SaveManager` writes to `user://test_saves/`, `AppSettings` writes to `user://test_settings/`, and ad hoc test scratch files should live under `user://test_scratch/` with teardown cleanup.

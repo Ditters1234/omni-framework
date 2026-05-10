@@ -1,6 +1,6 @@
 # Omni-Framework — Project Structure
 
-This document is a **current-structure reference** for the repository. It is intentionally grounded in the visible repository layout rather than mixing present implementation with future-state planning.
+This document is a **current-structure reference** for the repository. It is intentionally grounded in the visible repository layout and implemented behavior.
 
 ## What the Repository Clearly Contains
 
@@ -69,62 +69,59 @@ Notable current contents:
 
 ```text
 systems/
-├── ai/
-│   └── providers/
-│       ├── anthropic_provider.gd
-│       ├── nobodywho_provider.gd
-│       └── openai_provider.gd
-├── loaders/
-│   ├── achievement_registry.gd
-│   ├── config_loader.gd
-│   ├── definition_loader.gd
-│   ├── encounter_registry.gd
-│   ├── entity_registry.gd
-│   ├── faction_registry.gd
-│   ├── location_graph.gd
-│   ├── parts_registry.gd
-│   ├── quest_registry.gd
-│   ├── recipe_registry.gd
-│   └── task_registry.gd
-├── action_dispatcher.gd
-├── assembly_commit_service.gd
-├── backend_contract_registry.gd
-├── condition_evaluator.gd
-├── entity_lifecycle_runner.gd
-├── encounter_runtime.gd
-├── location_access_service.gd
-├── quest_tracker.gd
-├── reward_service.gd
-├── script_hook_loader.gd
-├── script_hook_service.gd
-├── stat_manager.gd
-├── task_routine_runner.gd
-├── task_runner.gd
-└── transaction_service.gd
+|-- ai/
+|   |-- providers/
+|   |   |-- anthropic_provider.gd
+|   |   |-- nobodywho_provider.gd
+|   |   `-- openai_provider.gd
+|   |-- ai_chat_service.gd
+|   |-- bt_action_ai_query.gd
+|   |-- bt_ai_utils.gd
+|   `-- bt_condition_ai_check.gd
+|-- loaders/
+|   |-- achievement_registry.gd
+|   |-- ai_persona_registry.gd
+|   |-- ai_template_registry.gd
+|   |-- config_loader.gd
+|   |-- definition_loader.gd
+|   |-- encounter_registry.gd
+|   |-- entity_registry.gd
+|   |-- faction_registry.gd
+|   |-- location_graph.gd
+|   |-- parts_registry.gd
+|   |-- quest_registry.gd
+|   |-- recipe_registry.gd
+|   |-- status_effect_registry.gd
+|   `-- task_registry.gd
+|-- action_dispatcher.gd
+|-- assembly_commit_service.gd
+|-- backend_contract_registry.gd
+|-- condition_evaluator.gd
+|-- encounter_runtime.gd
+|-- entity_lifecycle_runner.gd
+|-- location_access_service.gd
+|-- location_presence_service.gd
+|-- quest_tracker.gd
+|-- reward_service.gd
+|-- script_hook_loader.gd
+|-- script_hook_service.gd
+|-- stat_manager.gd
+|-- status_effect_runner.gd
+|-- task_activity_summary.gd
+|-- task_routine_runner.gd
+|-- task_runner.gd
+`-- transaction_service.gd
 ```
 
-`systems/loaders/` also includes `ai_persona_registry.gd`, `ai_template_registry.gd`, `encounter_registry.gd`, and `status_effect_registry.gd`, which load `ai_personas.json`, `ai_templates.json`, `encounters.json`, and `status_effects.json` into `DataManager`.
+The loader scripts above load JSON templates into `DataManager`, including `ai_personas.json`, `ai_templates.json`, `encounters.json`, and `status_effects.json`.
 `systems/encounter_runtime.gd` provides encounter condition context, weighted opponent action selection, encounter-local stat clamping, and JSON-native effect delta math.
 `systems/status_effect_runner.gd` advances data-authored timed status effects stored in `GameState.active_status_effects`, applying stat modifiers and evaluating optional apply/tick/expire conditions before dispatching lifecycle actions.
 `systems/entity_lifecycle_runner.gd` evaluates config-authored lifecycle rules for live entities, setting state flags and dispatching normal actions when authored conditions enter or exit.
 `systems/location_presence_service.gd` resolves gameplay location presence rows and empty-loot visibility from location templates, entity templates, and runtime entity instances, keeping that model assembly out of the shell surface UI.
 `systems/task_activity_summary.gd` formats active and queued task instances into shared entity activity summaries for owned-entity management and gameplay location presence rows.
-`systems/ai/` now also includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies ahead of the dialogue-layer UI work.
-`systems/ai/` also now includes `bt_action_ai_query.gd` and `bt_condition_ai_check.gd`, two LimboAI custom tasks for AI-driven behavior-tree decisions, plus `bt_ai_utils.gd`, the shared prompt-token and response-parser helper those tasks use.
-`script_hook_service.gd` now also owns the Phase 6 world-generation bridge: it resolves config-declared global AI hook paths, caches generated task flavor text, and dispatches event narration requests after quest, travel, and day-advance events are recorded.
-
-All of the following service scripts are fully implemented and should not be omitted from any architecture reference:
-
-- `assembly_commit_service.gd`
-- `backend_contract_registry.gd`
-- `entity_lifecycle_runner.gd`
-- `location_access_service.gd`
-- `location_presence_service.gd`
-- `reward_service.gd`
-- `script_hook_service.gd`
-- `status_effect_runner.gd`
-- `task_routine_runner.gd`
-- `transaction_service.gd`
+`systems/ai/` includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies for dialogue UI.
+`systems/ai/` includes `bt_action_ai_query.gd` and `bt_condition_ai_check.gd`, two LimboAI custom tasks for AI-driven behavior-tree decisions, plus `bt_ai_utils.gd`, the shared prompt-token and response-parser helper those tasks use.
+`script_hook_service.gd` owns the world-generation hook bridge: it resolves config-declared global AI hook paths, caches generated task flavor text, and dispatches event narration requests after quest, travel, and day-advance events are recorded.
 
 ## UI
 
@@ -212,8 +209,8 @@ The UI layer includes:
 
 - A root entry scene at `ui/main.tscn` and accompanying controller (`main.gd`)
 - A route catalog (`ui_route_catalog.gd`) — the shared catalog for `backend_class → screen_id` mapping and the runtime `screen_id → scene_path` registry
-- **18 backend-driven screens** (Phase 4 + Phase 5 complete, Phase 6 crafting complete, Phase 7 world map implemented, encounter v1 implemented, owned-entity assignment implemented, loot/reward review implemented): `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EncounterBackend`, `EntitySheetBackend`, `OwnedEntitiesBackend`, `LootBackend`, `RewardReviewBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`, `WorldMapBackend`
-- `DialogueBackend` now supports authored `.dialogue` trees plus optional `ai_mode` handoff (`hybrid` / `freeform`) using `systems/ai/ai_chat_service.gd` and `GameEvents.ai_token_received`
+- **18 backend-driven screens:** `AssemblyEditorBackend`, `ExchangeBackend`, `ListBackend`, `ChallengeBackend`, `TaskProviderBackend`, `CatalogListBackend`, `CraftingBackend`, `DialogueBackend`, `EncounterBackend`, `EntitySheetBackend`, `OwnedEntitiesBackend`, `LootBackend`, `RewardReviewBackend`, `ActiveQuestLogBackend`, `FactionReputationBackend`, `AchievementListBackend`, `EventLogBackend`, `WorldMapBackend`
+- `DialogueBackend` supports authored `.dialogue` trees plus optional `ai_mode` handoff (`hybrid` / `freeform`) using `systems/ai/ai_chat_service.gd` and `GameEvents.ai_token_received`
 - `EncounterBackend` runs data-authored, turn-based encounters from `encounters.json`, using real entity stat mutations plus encounter-local meters, outcome rewards/actions, and optional presentation-only AI flavor for action log entries.
 - `EntitySheetBackend` powers the character menu, including stats, active status effects, equipment, quests, reputation, progress, activity, a searchable/filterable inventory browser, data-authored usable inventory items, direct equip from data-derived socket/tag compatibility, discard actions for loose inventory, per-instance favorite/lock controls, and equipment handoff. Character-menu screens stay presentation-only; inventory use/equip/discard/flag operations are mediated by the backend so gameplay mutation remains scoped to backend/helper systems.
 - `OwnedEntitiesBackend` powers owner/companion management: it lists validated `owned_entity_ids`, supports generic roster search/filter/sort controls with data-configured stat previews, shows current location and shared activity summaries for active/queued work, can reorder/cancel the selected entity's runtime task queue, can send an entity to a known location through a `TRAVEL` task, can recall it to the owner, and can hand off to entity inspection, equipment management, or contract assignment. Contract assignment can accept a quest and auto-dispatch the owned entity through assignee reach-location objectives as the quest advances. Owned entity task completion surfaces a UI notification for the player owner.
@@ -231,12 +228,12 @@ The UI layer includes:
 
 ### Current Scope Boundaries
 
-These are intentional constraints, not missing foundation work:
+These are intentional current constraints, not missing foundation work:
 
-- **World objects** should remain normal entities unless a concrete future requirement proves the entity + interaction/backend/action model cannot express them. Containers, terminals, doors, harvest nodes, loot piles, switches, and traps should start as entities.
-- **Inventory stack splitting** is deferred until stack semantics become a first-class runtime model. Current inventory uses distinct `PartInstance` objects grouped for display.
-- **Owned-entity bulk operations and priority presets** are deferred until larger roster content proves they are needed. Current queue controls cover single-entity assignment, reorder, recall, and cancellation without fixed job categories.
-- **Save repair flows** should be added only when a migration can recover a specific broken reference. Current diagnostics are intentionally explicit about why a slot cannot load.
+- **World objects** are represented as normal entities. Containers, terminals, doors, harvest nodes, loot piles, switches, and traps use the entity + interaction/backend/action model.
+- **Inventory stack splitting** is not a runtime feature. Current inventory uses distinct `PartInstance` objects grouped for display.
+- **Owned-entity bulk operations and priority presets** are not implemented. Current queue controls cover single-entity assignment, reorder, recall, and cancellation without fixed job categories.
+- **Save repair flows** are not implemented. Current diagnostics are intentionally explicit about why a slot cannot load.
 - **AI chat history** is session-scoped. Persisting freeform conversation history would require a first-class save schema and A2J registration.
 
 ## Core
@@ -274,20 +271,9 @@ Tests are dev-only and must be excluded from release export presets.
 
 ## Documentation Guidance
 
-Docs in this repo should be current references. Completed rollout plans, historical audits, and finished TODO lists should be deleted or folded into the canonical docs instead of kept around as stale context.
+Docs in this repo should be current references focused on implemented behavior and visible repository structure.
 
-- Prefer observed repository structure over roadmap language
-- Clearly mark any unimplemented item as planned or proposed
-- Avoid describing future folders/files as if they already exist
-- Include newly added service files once they land in the repo
-
-### Confirmed Mismatches From Earlier Versions (Resolved)
-
-- Documents the actual clone target indirectly by matching the real repo owner/name
-- Updates the autoload list to match the visible repository listing
-- Updates the systems section to include all visible service files
-- Updates the UI section to include `main.gd`, `ui_route_catalog.gd`, and all Phase 4/5 backends
-- Notes `UIRouter` requires a `CanvasLayer` specifically
-- Notes `game.starting_player_id` is strictly required with no runtime fallback
-- Notes `A2J` registration requirement for new runtime classes
-- Reflects `ticks_per_hour` as an implemented config key used by `gameplay_shell_presenter.gd`
+- Prefer observed repository structure over intent statements
+- Describe non-goals as current constraints, not planned features
+- Avoid describing absent folders/files as if they already exist
+- Include service files that are present in the repo
