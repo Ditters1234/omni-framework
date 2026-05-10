@@ -2,6 +2,8 @@ extends Control
 
 const ASSEMBLY_SLOT_ROW_SCENE := preload("res://ui/components/assembly_slot_row.tscn")
 const ASSEMBLY_EDITOR_BACKEND := preload("res://ui/screens/backends/assembly_editor_backend.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
+const SCREEN_MAIN_MENU := "main_menu"
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -184,41 +186,16 @@ func _on_begin_button_pressed() -> void:
 	_execute_navigation_action(navigation_action, false)
 
 func _navigate_back() -> void:
-	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_screen()
-		return
-	UIRouter.pop()
+	BACKEND_NAVIGATION_HELPER.go_back(_opened_from_gameplay_shell)
 
 func _execute_navigation_action(action: Dictionary, is_cancel_action: bool = false) -> void:
-	var action_type := str(action.get("type", ""))
-	var screen_id := str(action.get("screen_id", ""))
-	var params := _read_dictionary(action.get("params", {}))
-	if _opened_from_gameplay_shell:
-		match action_type:
-			"pop":
-				if is_cancel_action:
-					UIRouter.replace_all("main_menu", {})
-				else:
-					UIRouter.close_gameplay_shell_screen()
-			"replace_all", "push":
-				if not screen_id.is_empty() and UIRouter.open_screen_in_gameplay_shell(screen_id, params):
-					return
-				if action_type == "replace_all":
-					UIRouter.replace_all(screen_id, params)
-				else:
-					UIRouter.push(screen_id, params)
-			_:
-				pass
-		return
-	match action_type:
-		"pop":
-			UIRouter.pop()
-		"replace_all":
-			UIRouter.replace_all(screen_id, params)
-		"push":
-			UIRouter.push(screen_id, params)
-		_:
-			pass
+	var fallback_screen_id := SCREEN_MAIN_MENU if is_cancel_action else ""
+	BACKEND_NAVIGATION_HELPER.execute_navigation_action(
+		action,
+		_opened_from_gameplay_shell,
+		fallback_screen_id,
+		{}
+	)
 
 func _read_row_view_models(view_model: Dictionary) -> Array[Dictionary]:
 	var rows_value: Variant = view_model.get("rows", [])

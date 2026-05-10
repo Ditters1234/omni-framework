@@ -2,6 +2,7 @@ extends Control
 
 const APP_SETTINGS := preload("res://core/app_settings.gd")
 const DIALOGUE_BACKEND := preload("res://ui/screens/backends/dialogue_backend.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 const ENTITY_PORTRAIT_SCENE := preload("res://ui/components/entity_portrait.tscn")
 const AI_MODE_DISABLED := "disabled"
 const AI_MODE_HYBRID := "hybrid"
@@ -318,10 +319,7 @@ func _on_back_button_pressed() -> void:
 	_navigate_back()
 
 func _navigate_back() -> void:
-	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_screen()
-		return
-	UIRouter.pop()
+	BACKEND_NAVIGATION_HELPER.go_back(_opened_from_gameplay_shell)
 
 func _read_line_character(line: RefCounted) -> String:
 	var character_value: Variant = line.get("character")

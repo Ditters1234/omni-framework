@@ -220,6 +220,7 @@ The UI layer includes:
 - `RewardReviewBackend` powers reward history review from `GameState.event_history`, showing quest and encounter completion reward summaries without coupling the UI to a specific reward schema.
 - Rest/recovery loops use existing entities, tasks, actions, status effects, and location/entity interactions rather than a separate world-object layer. Data-authored time buttons can start task templates before advancing time, task completion actions can apply recovery, repair, charging, fatigue removal, or other effects through `ActionDispatcher`, and location screens can expose clinic/repair/rest affordances through normal backend payloads.
 - Gameplay location presence is resolved by `LocationPresenceService`; the shell-owned surface renders the resulting rows and buttons rather than querying runtime entity state directly.
+- Backend-screen navigation is centralized in `backend_navigation_helper.gd`. Backend screens should route `push`, `replace_all`, `pop`, gameplay-shell surface opens/closes, and backend action dispatch through that helper rather than calling `UIRouter` directly.
 - `ui/screens/backends/` also includes the world map implementation trio: `world_map_backend.gd`, `world_map_graph.gd`, and `world_map_screen.gd`
 - Dialogue, encounter, world map, and settings screens use responsive container layouts so backend-driven screens remain usable in narrow/mobile-sized viewports.
 - A full shared component library: all components listed under `ui/components/` are implemented with `render(view_model: Dictionary)` contracts

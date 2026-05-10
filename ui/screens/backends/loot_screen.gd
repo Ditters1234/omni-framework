@@ -1,6 +1,7 @@
 extends Control
 
 const LOOT_BACKEND := preload("res://ui/screens/backends/loot_backend.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
@@ -126,20 +127,11 @@ func _on_back_button_pressed() -> void:
 
 
 func _navigate_back() -> void:
-	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_screen()
-		return
-	UIRouter.pop()
+	BACKEND_NAVIGATION_HELPER.go_back(_opened_from_gameplay_shell)
 
 
 func _execute_navigation_action(action: Dictionary) -> void:
-	var action_type := str(action.get("type", ""))
-	if action_type != "pop":
-		return
-	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_screen()
-		return
-	UIRouter.pop()
+	BACKEND_NAVIGATION_HELPER.execute_navigation_action(action, _opened_from_gameplay_shell)
 
 
 func _add_wrapped_label(host: VBoxContainer, text: String) -> Label:

@@ -80,6 +80,7 @@ These **stateless utilities** are instantiated or called by autoloads, screens, 
 |---|---|---|---|---|
 | `AppSettings` | `AppSettings` | `core/app_settings.gd` | — | Persistent app-level preferences (audio, graphics, and engine-owned AI connection/dialogue/world-generation settings such as `chat_history_window`, `streaming_speed`, and `enable_world_gen`). |
 | `BackendHelpers` | `OmniBackendHelpers` | `ui/screens/backends/backend_helpers.gd` | GameState, DataManager | Phase-neutral utilities shared by backend screens. |
+| `BackendNavigationHelper` | `OmniBackendNavigationHelper` | `ui/screens/backends/backend_navigation_helper.gd` | UIRouter, ActionDispatcher | Shared backend-screen navigation and action-dispatch boundary. Backend screens use it for `push`, `replace_all`, `pop`, gameplay-shell surface routing, and JSON action dispatch instead of calling `UIRouter` directly. |
 
 ---
 

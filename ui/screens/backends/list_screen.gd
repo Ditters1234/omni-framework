@@ -1,6 +1,7 @@
 extends Control
 
 const LIST_BACKEND := preload("res://ui/screens/backends/list_backend.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 const PART_CARD_SCENE := preload("res://ui/components/part_card.tscn")
 const QUEST_CARD_SCENE := preload("res://ui/components/quest_card.tscn")
 
@@ -125,39 +126,11 @@ func _on_back_button_pressed() -> void:
 	_navigate_back()
 
 func _navigate_back() -> void:
-	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_screen()
-		return
-	UIRouter.pop()
+	BACKEND_NAVIGATION_HELPER.go_back(_opened_from_gameplay_shell)
 
 
 func _execute_navigation_action(action: Dictionary) -> void:
-	var action_type := str(action.get("type", ""))
-	var screen_id := str(action.get("screen_id", ""))
-	var params := _read_dictionary(action.get("params", {}))
-	if _opened_from_gameplay_shell:
-		match action_type:
-			"pop":
-				UIRouter.close_gameplay_shell_screen()
-			"replace_all", "push":
-				if not screen_id.is_empty() and UIRouter.open_screen_in_gameplay_shell(screen_id, params):
-					return
-				if action_type == "replace_all":
-					UIRouter.replace_all(screen_id, params)
-				else:
-					UIRouter.push(screen_id, params)
-			_:
-				pass
-		return
-	match action_type:
-		"pop":
-			UIRouter.pop()
-		"replace_all":
-			UIRouter.replace_all(screen_id, params)
-		"push":
-			UIRouter.push(screen_id, params)
-		_:
-			pass
+	BACKEND_NAVIGATION_HELPER.execute_navigation_action(action, _opened_from_gameplay_shell)
 
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:

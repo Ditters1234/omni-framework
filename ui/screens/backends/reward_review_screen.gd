@@ -1,6 +1,7 @@
 extends Control
 
 const REWARD_REVIEW_BACKEND := preload("res://ui/screens/backends/reward_review_backend.gd")
+const BACKEND_NAVIGATION_HELPER := preload("res://ui/screens/backends/backend_navigation_helper.gd")
 
 @onready var _title_label: Label = $MarginContainer/PanelContainer/VBoxContainer/TitleLabel
 @onready var _description_label: Label = $MarginContainer/PanelContainer/VBoxContainer/DescriptionLabel
@@ -84,10 +85,7 @@ func _build_row_text(row: Dictionary) -> String:
 
 
 func _on_back_button_pressed() -> void:
-	if _opened_from_gameplay_shell:
-		UIRouter.close_gameplay_shell_screen()
-		return
-	UIRouter.pop()
+	BACKEND_NAVIGATION_HELPER.go_back(_opened_from_gameplay_shell)
 
 
 func _read_dictionary_array(value: Variant) -> Array[Dictionary]:
