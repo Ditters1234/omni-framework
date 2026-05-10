@@ -92,7 +92,7 @@ Optional in base only if the first loop needs it:
 - `base:nightlife_district`
 
 -----------
-Phase 0 - Preflight
+Phase 0 - Preflight - Complete
 
 Goal:
 Confirm the base game can be rebuilt cleanly without needing engine architecture work first.
@@ -101,9 +101,9 @@ Tasks:
 
 - Review `docs/modding_guide.md` sections for definitions, parts, entities, locations, activities, config, quests, exchanges, and assembly editor payloads.
 - Snapshot current base content if desired outside the active data files.
-- Decide exact ids for starter course progress and ritual component.
-- Define the first ritual component parts/items and their tags.
-- Decide whether `health` remains in base or waits for encounter-heavy addons.
+- Decide exact ids for starter course progress and ritual component. Complete: `arcana_101_grade` and `base:ritual_chalk`.
+- Define the first ritual component parts/items and their tags. Complete: `base:ritual_chalk` should use `ritual_component` and `ritual_basic`.
+- Decide whether `health` remains in base or waits for encounter-heavy addons. Complete: defer `health` until injury/death pressure is needed.
 
 Definition of done:
 
@@ -443,3 +443,6 @@ Decision Log
 - Grades/progress should ultimately be course-specific.
 - Sleep restores mana and locks in day-end consequences.
 - Parts can be bought, crafted, unlocked through study, or awarded by quests, with separate addons teaching those paths.
+- Starter course progress id is `arcana_101_grade`.
+- Starter ritual component is `base:ritual_chalk`, tagged `ritual_component` and `ritual_basic`.
+- `health` is deferred from base v1; the initial game should avoid death/injury pressure and use `stress` and `mana` instead.
