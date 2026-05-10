@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1, Phase 2, and Phase 3 complete; Phase 4 not started.
+Current implementation status: Phase 1 through Phase 4 complete; Phase 5 not started.
 
 ## 1. Purpose
 
@@ -1484,9 +1484,9 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 4 - Activity events
 
-- [ ] Add activity signals to `GameEvents.SIGNAL_CATALOG`.
-- [ ] Add declared activity signals.
-- [ ] Add tests that signal catalog and declarations stay in sync.
+- [x] Add activity signals to `GameEvents.SIGNAL_CATALOG`.
+- [x] Add declared activity signals.
+- [x] Add tests that signal catalog and declarations stay in sync.
 
 ### Phase 5 - Schedule projection core
 

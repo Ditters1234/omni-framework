@@ -63,6 +63,12 @@ const SIGNAL_CATALOG := {
 		{"name": "encounter_action_resolved", "args": ["payload"]},
 		{"name": "encounter_resolved", "args": ["payload"]},
 	],
+	"activities": [
+		{"name": "activity_started", "args": ["payload"]},
+		{"name": "activity_completed", "args": ["payload"]},
+		{"name": "activity_failed", "args": ["payload"]},
+		{"name": "activity_cancelled", "args": ["payload"]},
+	],
 	"achievements": [
 		{"name": "achievement_unlocked", "args": ["achievement_id", "unlock_vfx"]},
 	],
@@ -165,6 +171,14 @@ signal encounter_started(payload: Dictionary)
 signal encounter_round_advanced(encounter_id: String, round: int)
 signal encounter_action_resolved(payload: Dictionary)
 signal encounter_resolved(payload: Dictionary)
+
+# ---------------------------------------------------------------------------
+# Activities
+# ---------------------------------------------------------------------------
+signal activity_started(payload: Dictionary)
+signal activity_completed(payload: Dictionary)
+signal activity_failed(payload: Dictionary)
+signal activity_cancelled(payload: Dictionary)
 
 # ---------------------------------------------------------------------------
 # Achievements

@@ -112,6 +112,15 @@ Owned entity assignment does not introduce a separate event. Location dispatch u
 
 Encounter payload dictionaries include stable primitive fields such as `encounter_id`, `round`, `actor`, `action_id`, `success`, `outcome_id`, and `reason` depending on the signal.
 
+### Activities
+
+- `activity_started(payload)` when an activity starts and records its start state
+- `activity_completed(payload)` when an activity completes successfully and records completion state
+- `activity_failed(payload)` when an activity fails after start or during execution
+- `activity_cancelled(payload)` when an activity is intentionally cancelled
+
+Activity payload dictionaries use stable primitive fields such as `activity_id`, `category`, `location_id`, `provider_entity_id`, `entity_id`, `started_day`, `started_tick`, `completed_day`, `completed_tick`, `duration_ticks`, `travel_ticks`, `outcome_id`, `success`, `failure_code`, and `reason`.
+
 ### Achievements
 
 - `achievement_unlocked(achievement_id, unlock_vfx)`

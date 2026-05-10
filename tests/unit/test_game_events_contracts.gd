@@ -24,6 +24,8 @@ func test_signal_catalog_exposes_expected_domains_and_filters_deprecated_entries
 	assert_false(ui_signals_without_deprecated.has("screen_pushed"))
 	assert_eq(GameEvents.get_signal_domain("entity_currency_changed"), "economy")
 	assert_eq(GameEvents.get_signal_arg_names("task_completed"), ["task_id", "entity_id"])
+	assert_eq(GameEvents.get_signal_domain("activity_completed"), "activities")
+	assert_eq(GameEvents.get_signal_arg_names("activity_completed"), ["payload"])
 	assert_true(GameEvents.is_deprecated_signal("currency_changed"))
 
 
@@ -57,6 +59,59 @@ func test_emit_dynamic_rejects_unknown_signal_or_wrong_arity() -> void:
 	assert_push_warning("signal 'quest_started' expected 1 args but received 0")
 	assert_signal_not_emitted(GameEvents, "quest_started")
 	assert_eq(GameEvents.get_event_history().size(), 0)
+
+
+func test_activity_signals_emit_payloads_and_record_history() -> void:
+	watch_signals(GameEvents)
+	var payload := {
+		"activity_id": "base:study",
+		"category": "learning",
+		"entity_id": "player",
+		"started_day": 2,
+		"started_tick": 5,
+		"duration_ticks": 3,
+		"success": true,
+	}
+
+	GameEvents.activity_started.emit(payload)
+
+	assert_signal_emitted(GameEvents, "activity_started")
+	assert_eq(get_signal_parameters(GameEvents, "activity_started"), [payload])
+
+	var started_history := GameEvents.get_event_history(10, "activities", "activity_started")
+	assert_eq(started_history.size(), 1)
+	var started_args_value: Variant = started_history[0].get("args", [])
+	assert_true(started_args_value is Array)
+	if started_args_value is Array:
+		var started_args: Array = started_args_value
+		assert_eq(started_args.size(), 1)
+		assert_true(started_args[0] is Dictionary)
+		if started_args[0] is Dictionary:
+			var recorded_payload: Dictionary = started_args[0]
+			assert_eq(str(recorded_payload.get("activity_id", "")), "base:study")
+
+	payload["activity_id"] = "base:mutated_after_emit"
+	started_history = GameEvents.get_event_history(10, "activities", "activity_started")
+	started_args_value = started_history[0].get("args", [])
+	if started_args_value is Array:
+		var copied_started_args: Array = started_args_value
+		if copied_started_args[0] is Dictionary:
+			var copied_payload: Dictionary = copied_started_args[0]
+			assert_eq(str(copied_payload.get("activity_id", "")), "base:study")
+
+	var completed_payload := {
+		"activity_id": "base:study",
+		"category": "learning",
+		"entity_id": "player",
+		"completed_day": 2,
+		"completed_tick": 8,
+		"outcome_id": "insight",
+		"success": true,
+	}
+	assert_true(GameEvents.emit_dynamic("activity_completed", [completed_payload]))
+	assert_signal_emitted(GameEvents, "activity_completed")
+	assert_eq(get_signal_parameters(GameEvents, "activity_completed"), [completed_payload])
+	assert_eq(GameEvents.get_event_history(10, "activities", "activity_completed").size(), 1)
 
 
 func test_unlock_achievement_emits_unlock_vfx_metadata() -> void:
