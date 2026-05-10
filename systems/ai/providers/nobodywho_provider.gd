@@ -232,6 +232,10 @@ func _configure_chat_node() -> void:
 	if _chat_node == null:
 		return
 	_chat_node.set("model_node", _model_node)
+	
+	if _chat_node.has_method("start_worker"):
+		_chat_node.call("start_worker")
+		
 	_chat_node.set("system_prompt", _system_prompt)
 	_chat_node.set("context_length", _n_ctx)
 	_chat_node.set("allow_thinking", _allow_thinking)
@@ -249,8 +253,6 @@ func _configure_chat_node() -> void:
 	if _chat_node.has_signal("worker_failed"):
 		if not _chat_node.is_connected("worker_failed", Callable(self, "_on_worker_failed")):
 			_chat_node.connect("worker_failed", Callable(self, "_on_worker_failed"))
-	if _chat_node.has_method("start_worker"):
-		_chat_node.call("start_worker")
 
 
 func _apply_context(context: Dictionary) -> void:

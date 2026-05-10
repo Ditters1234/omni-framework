@@ -123,7 +123,12 @@ static func _matches_variant_type(value: Variant, expected_type: Variant.Type) -
 		return true
 	match expected_type:
 		TYPE_INT:
-			return value is int
+			if value is int:
+				return true
+			if value is float:
+				var numeric_value := float(value)
+				return is_equal_approx(numeric_value, roundf(numeric_value))
+			return false
 		TYPE_FLOAT:
 			return value is float or value is int
 		TYPE_STRING:
