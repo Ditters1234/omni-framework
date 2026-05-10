@@ -18,7 +18,7 @@ res://
 └── ui/
 ```
 
-Additional root-level project files currently include `project.godot`, `.gutconfig.json`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `icon.svg`, and `default_bus_layout.tres`. The tracked `.tmp_empty_project/` folder is a dev-only scratch Godot project, not part of the runtime architecture. Editor/runtime cache folders such as `.godot/` may also appear locally but are not source structure. Ad hoc debug or probe scripts should not live at `res://`; convert useful checks into GUT tests under `tests/`, or keep throwaway local scripts outside the project tree.
+Additional root-level project files currently include `project.godot`, `.gutconfig.json`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `icon.svg`, and `default_bus_layout.tres`. Editor/runtime cache folders such as `.godot/` may appear locally but are not source structure. Ad hoc debug, probe, temp, or backup files should not live at `res://`; convert useful checks into GUT tests under `tests/`, or keep throwaway local scripts outside the project tree.
 
 ## Autoloads
 

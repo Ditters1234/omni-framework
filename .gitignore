@@ -69,6 +69,17 @@ ehthumbs.db
 *~
 
 # -----------------------------------------------
+# Temp & Backup Files
+# -----------------------------------------------
+*.tmp
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+.tmp_*/
+
+# -----------------------------------------------
 # Windows File-Lock Artifacts
 # -----------------------------------------------
 # DLLs prefixed with ~ are created by Windows when a file is in use
