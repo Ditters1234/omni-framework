@@ -33,7 +33,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 13 complete; Phase 14 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
+Current implementation status: Phase 1 through Phase 14 complete; Phase 15 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
 
 ## 1. Purpose
 
@@ -1609,8 +1609,8 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 - [x] Update `docs/PROJECT_STRUCTURE.md`.
 - [x] Update `docs/SYSTEM_CATALOG.md`.
 - [x] Update `docs/modding_guide.md`.
-- [ ] Update `docs/GAME_EVENTS_TAXONOMY.md`.
-- [ ] Update `docs/SAVE_SCHEMA_AND_MIGRATION.md`.
+- [x] Update `docs/GAME_EVENTS_TAXONOMY.md`.
+- [x] Update `docs/SAVE_SCHEMA_AND_MIGRATION.md`.
 - [x] Update any schema/lint docs affected by activity data, calendar config, conditions, actions, or backend contracts.
 
 ### Phase 15 - Content-agnostic validation
@@ -1710,11 +1710,11 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.9 Save/load tests
 
-- [ ] Activity history persists.
+- [x] Activity history persists.
 - [ ] Repeat status survives reload.
 - [ ] Cooldown status survives reload.
-- [ ] Last outcome survives reload.
-- [ ] Older saves migrate cleanly.
+- [x] Last outcome survives reload.
+- [x] Older development saves are rejected cleanly.
 
 ---
 
@@ -1728,7 +1728,7 @@ The implementation is complete when:
 - [ ] Activity execution advances time only through `TimeKeeper`.
 - [ ] Activity execution applies side effects only through `ActionDispatcher` or existing service paths.
 - [ ] Activity requirements use `ConditionEvaluator`.
-- [ ] Activity history persists through save/load.
+- [x] Activity history persists through save/load.
 - [x] Quests can depend on activity history without `ActivityService` knowing quest internals.
 - [ ] Activities can use location policy without duplicating route or entry logic.
 - [x] Activities can open encounters without owning encounter resolution.
@@ -1736,5 +1736,5 @@ The implementation is complete when:
 - [x] Activity board UI can execute activities.
 - [x] Schedule UI can project upcoming activities.
 - [ ] Tests cover time, loading, execution, save/load, quest integration, location integration, encounter handoff, AI no-op behavior, and backend rendering.
-- [ ] Base docs describe the implemented activity/calendar systems as current behavior.
+- [x] Base docs describe the implemented activity/calendar systems as current behavior.
 - [ ] No engine code depends on specific content, setting names, location names, NPCs, factions, campaigns, or sample scenarios.

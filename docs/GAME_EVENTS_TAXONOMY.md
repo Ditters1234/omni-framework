@@ -75,6 +75,11 @@ Note: `data_validation_failed` is not currently declared in the signal catalog. 
 - `entity_stat_changed(entity_id, stat_key, old_value, new_value)` — preferred general form
 - `entity_reputation_changed(entity_id, faction_id, old_value, new_value)`
 - `flag_changed(entity_id, flag_id, value)`
+- `entity_lifecycle_state_changed(entity_id, rule_id, state_flag, active)`
+- `status_effect_applied(entity_id, status_effect_id, runtime_id)`
+- `status_effect_ticked(entity_id, status_effect_id, runtime_id)`
+- `status_effect_expired(entity_id, status_effect_id, runtime_id)`
+- `status_effect_removed(entity_id, status_effect_id, runtime_id)`
 
 ### Inventory And Assembly
 
@@ -98,6 +103,8 @@ Note: `data_validation_failed` is not currently declared in the signal catalog. 
 - `quest_failed(quest_id)`
 - `task_started(task_id, entity_id)`
 - `task_completed(task_id, entity_id)`
+- `task_abandoned(task_id, entity_id)`
+- `task_queue_changed(entity_id)`
 - `dialogue_started(entity_id, dialogue_resource)`
 - `dialogue_ended(entity_id, dialogue_resource)`
 
@@ -116,10 +123,10 @@ Encounter payload dictionaries include stable primitive fields such as `encounte
 
 - `activity_started(payload)` when an activity starts and records its start state
 - `activity_completed(payload)` when an activity completes successfully, records completion state, and lets `QuestTracker` refresh activity-history objectives
-- `activity_failed(payload)` when an activity fails after start or during execution
-- `activity_cancelled(payload)` when an activity is intentionally cancelled
+- `activity_failed(payload)` is the declared failure signal for an activity that fails after it has started
+- `activity_cancelled(payload)` is the declared cancellation signal for an intentionally cancelled activity
 
-Activity payload dictionaries use stable primitive fields such as `activity_id`, `category`, `location_id`, `provider_entity_id`, `entity_id`, `started_day`, `started_tick`, `completed_day`, `completed_tick`, `duration_ticks`, `travel_ticks`, `outcome_id`, `success`, `failure_code`, and `reason`.
+Activity payload dictionaries use stable primitive fields such as `success`, `activity_id`, `display_name`, `category`, `location_id`, `provider_entity_id`, `entity_id`, `started_day`, `started_tick`, `started_absolute_tick`, `completed_day`, `completed_tick`, `completed_absolute_tick`, `day`, `tick_of_day`, `absolute_tick`, `duration_ticks`, `travel_ticks`, `outcome_id`, `failure_code`, and `reason`. Successful completion payloads may include an `outcome` dictionary and `post_action` dictionary. Pre-start validation failures return an `ActivityService` result dictionary and do not emit `activity_started` or `activity_completed`.
 
 ### Achievements
 

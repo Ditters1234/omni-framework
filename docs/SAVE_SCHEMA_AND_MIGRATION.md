@@ -41,19 +41,21 @@ Recommended top-level structure:
 }
 ```
 
-## Required Top-Level Fields
+## Current Top-Level Fields
 
 - `save_schema_version`
+- `game_state`
 - `engine_version`
 - `created_at`
 - `updated_at`
 - `slot_metadata`
-- `game_state`
 
-Compatibility note:
+Load requirements:
 
-- Legacy saves that still contain `game_state` but are missing some metadata fields may be backfilled during migration.
-- A save with no `game_state` payload is always invalid.
+- `save_schema_version` is required and must match the current supported schema version.
+- `game_state` is required and must be a dictionary.
+- `engine_version`, `created_at`, `updated_at`, and `slot_metadata` are written by current saves and used by UI/diagnostics, but they are not the core runtime payload.
+- Older development schemas are intentionally rejected when no migration is implemented. Local development saves can be deleted during active schema work.
 
 ## Slot Metadata Purpose
 
@@ -82,6 +84,32 @@ The save browser also uses `SaveManager.get_slot_diagnostics(slot)` before prese
 - Flags and counters
 - Current time state
 
+## Required `game_state` Fields
+
+Current schema v2 saves require these `game_state` fields:
+
+- `player_id`
+- `entity_instances`
+- `current_location_id`
+- `current_tick`
+- `current_day`
+- `active_quests`
+- `active_tasks`
+- `active_status_effects`
+- `completed_quests`
+- `completed_task_templates`
+- `unlocked_achievements`
+- `flags`
+- `achievement_stats`
+- `faction_reputations`
+- `discovered_recipes`
+- `ai_lore_cache`
+- `event_history`
+- `activity_history`
+- `runtime_state_buckets`
+
+`activity_history` stores per-activity start counts, completion counts, latest start/completion timing, completion counts by display day, and the latest outcome id. Repeat limits, daily limits, cooldowns, activity-history quest objectives, and schedule/board availability derive from this saved activity history.
+
 ## What Does Not Belong In Save Data
 
 - Full template dictionaries from mods
@@ -109,7 +137,7 @@ This keeps saves smaller and lets template migrations happen independently from 
 
 ## Migration Rules
 
-Migrations should be explicit functions:
+Migrations should be explicit functions when they are implemented:
 
 ```gdscript
 func migrate_v1_to_v2(raw_save: Dictionary) -> Dictionary:
@@ -132,8 +160,8 @@ Recommended load order:
 1. Read raw file
 2. Validate required top-level save fields
 3. Check `save_schema_version`
-4. Run migrations until current
-5. Validate migrated payload
+4. Run migrations until current if a migration path exists
+5. Validate migrated/current payload
 6. Deserialize `game_state` with `A2J`
 7. Re-run runtime sanity checks
 
