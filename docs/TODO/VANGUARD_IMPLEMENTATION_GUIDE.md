@@ -66,7 +66,7 @@ Core stats:
 Base progress/currencies:
 
 - `cash`
-- one ritual component currency or item-like part category
+- ritual components as inventory parts/items, not currencies
 - one course-specific grade/progress value for the starter course
 
 Base sockets:
@@ -102,7 +102,7 @@ Tasks:
 - Review `docs/modding_guide.md` sections for definitions, parts, entities, locations, activities, config, quests, exchanges, and assembly editor payloads.
 - Snapshot current base content if desired outside the active data files.
 - Decide exact ids for starter course progress and ritual component.
-- Decide whether ritual components are currencies, parts, or both.
+- Define the first ritual component parts/items and their tags.
 - Decide whether `health` remains in base or waits for encounter-heavy addons.
 
 Definition of done:
@@ -437,7 +437,8 @@ Decision Log
 - Base game should be minimal, not content-complete.
 - Addons are the long-term content model.
 - Each addon is also a tutorial.
-- Part swapping spends mana and ritual components; cash is usually indirect through components.
+- Ritual components are inventory parts/items, not currencies, so the system can support many component types over time.
+- Part swapping spends mana and ritual components; cash is usually indirect through buying components.
 - `normalcy` is a social stat in v1, not a global risk meter.
 - Grades/progress should ultimately be course-specific.
 - Sleep restores mana and locks in day-end consequences.
