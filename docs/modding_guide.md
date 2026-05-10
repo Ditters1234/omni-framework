@@ -1026,6 +1026,8 @@ Activities execute through `ActivityService.execute_activity(activity_id, contex
 
 Activity outcomes use weighted selection after condition filtering. If `outcomes` is empty, `completion_actions` run. If eligible outcomes exist, the selected `outcome_id` is stored in activity history as `last_outcome_id` and included in the completion payload.
 
+Activities can route into encounters through normal `ActionDispatcher` screen actions. Put a `push_screen` action in `completion_actions` or an outcome `actions` list with `screen_id: "encounter"` and `params.encounter_id` set to the encounter template. `ActivityService` only performs the route; `EncounterBackend` owns encounter resolution, encounter-local stats, outcome rewards, and encounter completion events.
+
 ---
 
 ## 11.2 `status_effects.json`

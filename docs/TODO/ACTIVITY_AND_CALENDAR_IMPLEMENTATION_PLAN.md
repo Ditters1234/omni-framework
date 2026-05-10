@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 9 complete; Phase 10 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
+Current implementation status: Phase 1 through Phase 10 complete; Phase 11 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
 
 ## 1. Purpose
 
@@ -1544,11 +1544,11 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 10 - Encounter handoff
 
-- [ ] Confirm activities can open encounter screen through `push_screen`.
-- [ ] Add test activity that routes to an encounter.
-- [ ] Confirm activity does not resolve encounter state.
-- [ ] Confirm encounter rewards remain encounter-owned.
-- [ ] Add integration tests.
+- [x] Confirm activities can open encounter screen through `push_screen`.
+- [x] Add test activity that routes to an encounter.
+- [x] Confirm activity does not resolve encounter state.
+- [x] Confirm encounter rewards remain encounter-owned.
+- [x] Add integration tests.
 
 ### Phase 11 - AI and script hooks
 
@@ -1662,9 +1662,9 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.6 Encounter integration tests
 
-- [ ] Activity can open encounter screen through existing action paths.
-- [ ] Activity does not resolve encounter state.
-- [ ] Encounter rewards remain encounter-owned.
+- [x] Activity can open encounter screen through existing action paths.
+- [x] Activity does not resolve encounter state.
+- [x] Encounter rewards remain encounter-owned.
 
 ### 24.7 AI integration tests
 
@@ -1705,9 +1705,9 @@ The implementation is complete when:
 - [ ] Activity execution applies side effects only through `ActionDispatcher` or existing service paths.
 - [ ] Activity requirements use `ConditionEvaluator`.
 - [ ] Activity history persists through save/load.
-- [ ] Quests can depend on activity history without `ActivityService` knowing quest internals.
+- [x] Quests can depend on activity history without `ActivityService` knowing quest internals.
 - [ ] Activities can use location policy without duplicating route or entry logic.
-- [ ] Activities can open encounters without owning encounter resolution.
+- [x] Activities can open encounters without owning encounter resolution.
 - [ ] AI flavor/narration is optional and non-blocking.
 - [ ] Activity board UI can execute activities.
 - [ ] Schedule UI can project upcoming activities.
