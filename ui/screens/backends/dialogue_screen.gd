@@ -454,32 +454,12 @@ func _submit_ai_message(raw_message: String) -> void:
 	if not _ai_chat_active or _ai_chat_service == null:
 		return
 	_clear_ai_stream_state()
-	var turn := _ai_chat_service.begin_player_turn(raw_message)
-	var should_generate := bool(turn.get("should_generate", false))
-	var immediate_result_value: Variant = turn.get("result", {})
-	if not should_generate:
-		if immediate_result_value is Dictionary:
-			var immediate_result: Dictionary = immediate_result_value
-			_set_ai_response_text(str(immediate_result.get("response", "")))
-			var validation_value: Variant = immediate_result.get("validation", {})
-			if validation_value is Dictionary:
-				var validation: Dictionary = validation_value
-				_status_label.text = str(validation.get("reason", ""))
-			else:
-				_status_label.text = ""
-		_refresh_ai_widgets()
-		return
-
-	var prompt := str(turn.get("prompt", ""))
-	var request_context_value: Variant = turn.get("context", {})
-	if request_context_value is Dictionary:
-		_ai_request_context = (request_context_value as Dictionary).duplicate(true)
-	else:
-		_ai_request_context.clear()
-	_ai_request_id = AIManager.generate_streaming(prompt, _ai_request_context)
-	_ai_request_in_flight = not _ai_request_id.is_empty()
-	_set_ai_response_text("")
-	_status_label.text = "%s is thinking..." % _backend.get_speaker_display_name()
+	var turn := _backend.begin_streaming_ai_turn(raw_message)
+	_ai_request_context = _read_dictionary(turn.get("context", {}))
+	_ai_request_id = str(turn.get("request_id", ""))
+	_ai_request_in_flight = bool(turn.get("in_flight", false))
+	_set_ai_response_text(str(turn.get("response", "")))
+	_status_label.text = "%s is thinking..." % _backend.get_speaker_display_name() if _ai_request_in_flight else ""
 	_ai_input.text = ""
 	_refresh_ai_widgets()
 
@@ -533,7 +513,7 @@ func _on_ai_token_received(context_id: String, token: String) -> void:
 func _on_ai_response_received(context_id: String, response: String) -> void:
 	if context_id != _ai_request_id:
 		return
-	var result := _ai_chat_service.finalize_generated_response(response, _ai_request_context)
+	var result := _backend.finalize_streaming_ai_response(response, _ai_request_context)
 	_cancel_ai_request()
 	_set_ai_response_text(str(result.get("response", "")))
 	_status_label.text = ""
@@ -544,7 +524,7 @@ func _on_ai_response_received(context_id: String, response: String) -> void:
 func _on_ai_error(context_id: String, error_text: String) -> void:
 	if context_id != _ai_request_id:
 		return
-	var result := _ai_chat_service.finalize_failed_response("provider_error", _ai_request_context)
+	var result := _backend.finalize_streaming_ai_error("provider_error", _ai_request_context)
 	_cancel_ai_request()
 	_set_ai_response_text(str(result.get("response", "")))
 	_status_label.text = error_text

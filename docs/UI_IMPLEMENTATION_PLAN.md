@@ -66,7 +66,7 @@ Recap of what exists today, so later sections can reference specific facts rathe
 
 ### Planned but not yet implemented
 
-- No backend-driven screens from the current UI plan remain unimplemented. Combat remains deferred outside this UI rollout.
+- No backend-driven screens from the current UI plan remain unimplemented. Encounter play is implemented through `EncounterBackend`; future work should be tracked as polish or feature-specific follow-ups rather than as missing Phase 1-7 foundation work.
 
 ---
 
@@ -152,7 +152,7 @@ Rationale for keeping these out of the mod pipeline: they are about the applicat
 The gameplay shell is now the current engine-owned gameplay hub. Its current responsibilities are:
 
 - **Session summary:** current location, description, interaction count, player identity, currencies, stats, inventory, and equipped loadout snapshot.
-- **Location presence:** `LocationPresenceService` resolves present entities and empty-loot visibility from data/runtime state; the shell-owned location surface renders local screens, entity interaction buttons, and travel exits from those normalized rows.
+- **Location presence/actions:** `LocationPresenceService` resolves present entities and empty-loot visibility from data/runtime state; the shell-owned location surface renders local screens, entity interaction buttons, and travel exits from those normalized rows. Shell route opens and travel mutation go through `gameplay_location_action_service.gd`.
 - **Time controls:** current time string, buttons derived from `config.ui.time_advance_buttons`, and a quick autosave surface.
 - **Action hub:** "Explore Location", direct loadout access, world map access, save browser access, and pause routing.
 - **Responsive hosting:** the shell scrolls as a whole on short viewports, and embedded backend/location surfaces are hosted in a scrollable surface area so full-screen-style routed scenes do not clip their top or bottom chrome inside the shell.
@@ -478,7 +478,7 @@ Current status: interaction pass complete. `WorldMapBackend` builds a graph view
 
 Not built in this plan. When combat lands, it follows the same pattern as every other backend. See §6.
 
-**Remaining estimated effort for Phase 7: polish only.** The original Phase 1–7 foundation is now complete for the current UI rollout, so future estimates should focus on optional map features, visual polish, and the separately deferred combat placeholder.
+**Remaining estimated effort for Phase 7: polish only.** The original Phase 1–7 foundation is complete for the current UI rollout, so future estimates should focus on optional map features and visual polish.
 
 ---
 

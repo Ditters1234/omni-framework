@@ -3,6 +3,8 @@
 
 Date: 2026-04-18
 
+Status: Historical audit. The open items below have been resolved or folded into the canonical docs unless a later update note says otherwise. Keep this file as context, but use `PROJECT_STRUCTURE.md`, `SYSTEM_CATALOG.md`, and `modding_guide.md` as the current source of truth.
+
 Update: 2026-04-22 sanity check follow-up
 - `game.ticks_per_hour` is now used by `gameplay_shell_presenter.gd` as an optional UI time-step override.
 - `GameState.new_game()` now follows the strict `game.starting_player_id` contract instead of falling back to `base:player`.
@@ -27,7 +29,7 @@ It is based on the uploaded autoload scripts currently in the conversation.
 
 ## Executive Summary
 
-Confirmed items worth updating in docs or code:
+Confirmed items originally worth updating in docs or code:
 
 1. **Base mod dependencies are stricter than the guide implies**
    - `mods/base` cannot declare dependencies at all.
@@ -47,9 +49,8 @@ Confirmed items worth updating in docs or code:
 
 Also worth tracking:
 
-5. **`GameState` contains a fallback default for `game.starting_player_id`**
-   - Runtime behavior is looser than validation behavior.
-   - This can mask misconfiguration during testing.
+5. **`GameState` used to contain a fallback default for `game.starting_player_id`**
+   - Resolved: runtime and validation now both require explicit config.
 
 6. **`UIRouter` is narrower than a generic “screen container” abstraction**
    - It specifically requires a `CanvasLayer`.
@@ -159,12 +160,12 @@ Add a global backend note:
 
 ## Additional Runtime Assumptions Worth Documenting
 
-### 5) `GameState` defaults `starting_player_id` more loosely than validation does
+### 5) `GameState` used to default `starting_player_id` more loosely than validation did
 
 **File:** `game_state.gd`
 
 ```gdscript
-var player_template_id := str(DataManager.get_config_value("game.starting_player_id", "base:player"))
+var player_template_id := str(DataManager.get_config_value("game.starting_player_id", ""))
 ```
 
 **File:** `data_manager.gd`
@@ -176,17 +177,14 @@ if player_template_id.is_empty():
 ```
 
 ### Impact
-Validation requires explicit config.
-Gameplay fallback quietly supplies `base:player`.
+Validation and gameplay now both require explicit config. The older runtime fallback to `base:player` has been removed.
 
 That split can:
 - make testing feel inconsistent
 - hide missing config during manual runtime checks
 
 ### Recommendation
-Choose one policy:
-- strict everywhere, or
-- fallback everywhere
+No current action. Keep `game.starting_player_id` strict everywhere.
 
 For docs, prefer strict explicit config.
 
@@ -293,9 +291,8 @@ GameEvents.all_mods_loaded.connect(_on_all_mods_loaded)
    - be removed from docs
    - be treated as deprecated/reserved
 
-2. Consider unifying `starting_player_id` behavior:
-   - either validate + require it everywhere
-   - or make fallback behavior explicit and intentional
+2. `starting_player_id` behavior is unified:
+   - validation and gameplay both require explicit config
 
 3. If you want legacy location support:
    - add array-form `connections` parsing deliberately

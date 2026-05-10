@@ -6,6 +6,7 @@ class_name GameplayLocationSurface
 const UI_ROUTE_CATALOG := preload("res://ui/ui_route_catalog.gd")
 const LOCATION_ACCESS_SERVICE := preload("res://systems/location_access_service.gd")
 const LOCATION_PRESENCE_SERVICE := preload("res://systems/location_presence_service.gd")
+const LOCATION_ACTION_SERVICE := preload("res://ui/screens/gameplay_shell/gameplay_location_action_service.gd")
 const GLOBAL_SHELL_SURFACE_IDS := {
 	"entity_sheet": true,
 	"quest_log": true,
@@ -177,7 +178,7 @@ func _add_interaction_button(screen_entry: Dictionary) -> void:
 	if screen_id.is_empty():
 		button.disabled = true
 		button.tooltip_text += "\n[backend '%s' not mapped]" % backend_class
-	elif not UIRouter.is_registered(screen_id):
+	elif not LOCATION_ACTION_SERVICE.is_screen_available(screen_id):
 		button.disabled = true
 		button.tooltip_text += "\n[screen '%s' not yet built]" % screen_id
 	else:
@@ -264,7 +265,7 @@ func _add_entity_interaction_button(entity_id: String, interaction: Dictionary) 
 	if screen_id.is_empty():
 		button.disabled = true
 		button.tooltip_text += "\n[backend '%s' not mapped]" % backend_class
-	elif not UIRouter.is_registered(screen_id):
+	elif not LOCATION_ACTION_SERVICE.is_screen_available(screen_id):
 		button.disabled = true
 		button.tooltip_text += "\n[screen '%s' not yet built]" % screen_id
 	else:
@@ -316,16 +317,15 @@ func _refresh_current_location_if_visible() -> void:
 
 
 func _on_screen_button_pressed(screen_id: String, params: Dictionary) -> void:
-	UIRouter.open_in_gameplay_shell(screen_id, params)
+	LOCATION_ACTION_SERVICE.open_surface(screen_id, params)
 
 
 func _on_travel_button_pressed(dest_location_id: String, travel_cost: int) -> void:
-	var access_status := LOCATION_ACCESS_SERVICE.get_entry_status(dest_location_id)
-	if not bool(access_status.get("can_enter", false)):
-		_status_label.text = str(access_status.get("message", "You cannot enter this location right now."))
+	var result := LOCATION_ACTION_SERVICE.travel_to(dest_location_id, travel_cost)
+	if not bool(result.get("ok", false)):
+		_status_label.text = str(result.get("message", "You cannot enter this location right now."))
 		return
-	GameState.travel_to(dest_location_id, maxi(travel_cost, 0))
-	_location_id = dest_location_id
+	_location_id = str(result.get("location_id", dest_location_id))
 	_load_location()
 
 

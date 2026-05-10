@@ -138,6 +138,49 @@ func should_start_in_ai_chat() -> bool:
 	return get_ai_mode() == AI_MODE_FREEFORM and can_use_ai_chat()
 
 
+func begin_streaming_ai_turn(raw_message: String) -> Dictionary:
+	if _ai_chat_service == null:
+		return {
+			"request_id": "",
+			"in_flight": false,
+			"context": {},
+			"response": "",
+			"ok": false,
+		}
+	var turn := _ai_chat_service.begin_player_turn(raw_message)
+	var request_context := _read_dictionary(turn.get("context", {}))
+	if not bool(turn.get("should_generate", false)):
+		var immediate_result := _read_dictionary(turn.get("result", {}))
+		return {
+			"request_id": "",
+			"in_flight": false,
+			"context": request_context,
+			"response": str(immediate_result.get("response", "")),
+			"ok": true,
+		}
+	var prompt := str(turn.get("prompt", ""))
+	var request_id := AIManager.generate_streaming(prompt, request_context)
+	return {
+		"request_id": request_id,
+		"in_flight": not request_id.is_empty(),
+		"context": request_context,
+		"response": "",
+		"ok": not request_id.is_empty(),
+	}
+
+
+func finalize_streaming_ai_response(response: String, request_context: Dictionary) -> Dictionary:
+	if _ai_chat_service == null:
+		return {}
+	return _ai_chat_service.finalize_generated_response(response, request_context)
+
+
+func finalize_streaming_ai_error(reason: String, request_context: Dictionary) -> Dictionary:
+	if _ai_chat_service == null:
+		return {}
+	return _ai_chat_service.finalize_failed_response(reason, request_context)
+
+
 func _resolve_speaker_entity() -> EntityInstance:
 	return BACKEND_HELPERS.resolve_entity_lookup(str(_params.get("speaker_entity_id", "")))
 
@@ -165,3 +208,10 @@ func _initialize_ai_chat_service() -> void:
 	if not service.configure_for_entity(speaker_entity_id, history_window_turns):
 		return
 	_ai_chat_service = service
+
+
+func _read_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary_value: Dictionary = value
+		return dictionary_value.duplicate(true)
+	return {}
