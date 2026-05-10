@@ -115,7 +115,7 @@ Encounter payload dictionaries include stable primitive fields such as `encounte
 ### Activities
 
 - `activity_started(payload)` when an activity starts and records its start state
-- `activity_completed(payload)` when an activity completes successfully and records completion state
+- `activity_completed(payload)` when an activity completes successfully, records completion state, and lets `QuestTracker` refresh activity-history objectives
 - `activity_failed(payload)` when an activity fails after start or during execution
 - `activity_cancelled(payload)` when an activity is intentionally cancelled
 

@@ -172,6 +172,92 @@ func test_assigned_entity_can_complete_quest_objective_for_player_reward() -> vo
 	assert_eq(player.get_currency("credits"), credits_before + 25.0)
 
 
+func test_activity_completion_signal_refreshes_active_quests() -> void:
+	_seed_activity("base:study", "learning")
+	_seed_activity_quest("base:activity_completion_quest", {
+		"type": "activity_completed",
+		"activity_id": "base:study",
+	})
+	assert_true(GameState.start_quest("base:activity_completion_quest"))
+	assert_true(GameState.active_quests.has("base:activity_completion_quest"))
+	watch_signals(GameEvents)
+
+	GameState.record_activity_completed("base:study")
+	GameEvents.activity_completed.emit({"activity_id": "base:study"})
+
+	assert_signal_emitted(GameEvents, "quest_completed")
+	assert_true("base:activity_completion_quest" in GameState.completed_quests)
+	assert_false(GameState.active_quests.has("base:activity_completion_quest"))
+
+
+func test_activity_count_objective_completes_from_history() -> void:
+	_seed_activity("base:practice", "training")
+	_seed_activity_quest("base:activity_count_quest", {
+		"type": "activity_count_at_least",
+		"activity_id": "base:practice",
+		"count": 2,
+	})
+	assert_true(GameState.start_quest("base:activity_count_quest"))
+	watch_signals(GameEvents)
+
+	_record_activity_completion_event("base:practice")
+	assert_signal_not_emitted(GameEvents, "quest_completed")
+	assert_true(GameState.active_quests.has("base:activity_count_quest"))
+
+	_record_activity_completion_event("base:practice")
+	assert_signal_emitted(GameEvents, "quest_completed")
+	assert_true("base:activity_count_quest" in GameState.completed_quests)
+
+
+func test_activity_category_objective_completes_from_history() -> void:
+	_seed_activity("base:stretch", "fitness")
+	_seed_activity("base:sprint", "fitness")
+	_seed_activity_quest("base:activity_category_quest", {
+		"type": "activity_category_count_at_least",
+		"category": "fitness",
+		"count": 2,
+	})
+	assert_true(GameState.start_quest("base:activity_category_quest"))
+	watch_signals(GameEvents)
+
+	_record_activity_completion_event("base:stretch")
+	assert_signal_not_emitted(GameEvents, "quest_completed")
+
+	_record_activity_completion_event("base:sprint")
+	assert_signal_emitted(GameEvents, "quest_completed")
+	assert_true("base:activity_category_quest" in GameState.completed_quests)
+
+
+func test_activity_outcome_objective_completes_from_history() -> void:
+	_seed_activity("base:investigate", "research")
+	_seed_activity_quest("base:activity_outcome_quest", {
+		"type": "last_activity_outcome_is",
+		"activity_id": "base:investigate",
+		"outcome_id": "found_clue",
+	})
+	assert_true(GameState.start_quest("base:activity_outcome_quest"))
+	watch_signals(GameEvents)
+
+	_record_activity_completion_event("base:investigate", {"outcome_id": "dead_end"})
+	assert_signal_not_emitted(GameEvents, "quest_completed")
+
+	_record_activity_completion_event("base:investigate", {"outcome_id": "found_clue"})
+	assert_signal_emitted(GameEvents, "quest_completed")
+	assert_true("base:activity_outcome_quest" in GameState.completed_quests)
+
+
+func test_activity_service_does_not_directly_advance_quest_stages() -> void:
+	var file: FileAccess = FileAccess.open("res://systems/activity_service.gd", FileAccess.READ)
+	assert_not_null(file)
+	if file == null:
+		return
+	var source := file.get_as_text()
+
+	assert_false(source.contains("QuestTracker"))
+	assert_false(source.contains("advance_quest"))
+	assert_false(source.contains("complete_quest"))
+
+
 func test_manual_complete_moves_quest_to_completed() -> void:
 	assert_true(GameState.start_quest(TEST_QUEST_ID))
 	watch_signals(GameEvents)
@@ -191,3 +277,35 @@ func test_fail_quest_emits_signal_and_removes_from_active() -> void:
 	assert_signal_emitted(GameEvents, "quest_failed")
 	assert_false(GameState.active_quests.has(TEST_QUEST_ID))
 	assert_false(TEST_QUEST_ID in GameState.completed_quests)
+
+
+func _seed_activity(activity_id: String, category: String) -> void:
+	DataManager.activities[activity_id] = {
+		"activity_id": activity_id,
+		"display_name": activity_id.get_file(),
+		"category": category,
+		"duration_ticks": 0,
+	}
+
+
+func _seed_activity_quest(quest_id: String, objective: Dictionary) -> void:
+	DataManager.quests[quest_id] = {
+		"quest_id": quest_id,
+		"display_name": quest_id.get_file(),
+		"stages": [
+			{
+				"description": "Complete activity objective.",
+				"objectives": [
+					objective.duplicate(true),
+				],
+			}
+		],
+		"reward": {},
+	}
+
+
+func _record_activity_completion_event(activity_id: String, payload: Dictionary = {}) -> void:
+	var completion_payload := payload.duplicate(true)
+	completion_payload["activity_id"] = activity_id
+	GameState.record_activity_completed(activity_id, completion_payload)
+	GameEvents.activity_completed.emit(completion_payload)

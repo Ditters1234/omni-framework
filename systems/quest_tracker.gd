@@ -25,6 +25,7 @@ func _ready() -> void:
 	GameEvents.entity_stat_changed.connect(_on_entity_state_changed)
 	GameEvents.entity_currency_changed.connect(_on_entity_state_changed)
 	GameEvents.flag_changed.connect(_on_flag_changed)
+	GameEvents.activity_completed.connect(_on_activity_completed)
 
 
 # ---------------------------------------------------------------------------
@@ -211,6 +212,10 @@ func _on_entity_state_changed(_entity_id: String, _key: String, _old_value: floa
 
 
 func _on_flag_changed(_entity_id: String, _flag_id: String, _value: Variant) -> void:
+	_refresh_active_quests()
+
+
+func _on_activity_completed(_payload: Dictionary) -> void:
 	_refresh_active_quests()
 
 

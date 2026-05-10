@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 7 complete; Phase 8 is next. The weighted choice helper and activity outcome dispatch are also implemented because activity execution uses them.
+Current implementation status: Phase 1 through Phase 9 complete; Phase 10 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
 
 ## 1. Purpose
 
@@ -1527,11 +1527,11 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 8 - Quest integration
 
-- [ ] Connect `QuestTracker` to `GameEvents.activity_completed`.
-- [ ] Refresh active quests on activity completion.
-- [ ] Add quest objective fixture using activity history.
-- [ ] Confirm `ActivityService` does not directly advance quest stages.
-- [ ] Add quest integration tests.
+- [x] Connect `QuestTracker` to `GameEvents.activity_completed`.
+- [x] Refresh active quests on activity completion.
+- [x] Add quest objective fixture using activity history.
+- [x] Confirm `ActivityService` does not directly advance quest stages.
+- [x] Add quest integration tests.
 
 ### Phase 9 - Outcomes
 
@@ -1654,11 +1654,11 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.5 Quest integration tests
 
-- [ ] Activity completion refreshes active quests.
-- [ ] Activity-count objectives complete correctly.
-- [ ] Activity-category objectives complete correctly.
-- [ ] Activity outcome objectives complete correctly.
-- [ ] ActivityService does not directly advance quest stages.
+- [x] Activity completion refreshes active quests.
+- [x] Activity-count objectives complete correctly.
+- [x] Activity-category objectives complete correctly.
+- [x] Activity outcome objectives complete correctly.
+- [x] ActivityService does not directly advance quest stages.
 
 ### 24.6 Encounter integration tests
 

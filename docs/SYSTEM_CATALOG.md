@@ -69,7 +69,7 @@ These utilities are instantiated or called by autoloads, screens, and mod script
 
 | System | Class | File | Depends On | Purpose |
 |---|---|---|---|---|
-| `QuestTracker` | `QuestTracker` | `systems/quest_tracker.gd` | GameState, DataManager | Quest HSM built on LimboAI. Drives quest stages, objectives, and completion. |
+| `QuestTracker` | `QuestTracker` | `systems/quest_tracker.gd` | GameState, DataManager, GameEvents, ConditionEvaluator | Quest HSM built on LimboAI. Drives quest stages, objectives, completion, and event-driven refreshes including activity-history objectives. |
 | `TaskRunner` | `TaskRunner` | `systems/task_runner.gd` | GameState, DataManager | Tick-driven task execution, queued task promotion, completion checking, and data-authored task completion actions. |
 | `TaskActivitySummary` | `TaskActivitySummary` | `systems/task_activity_summary.gd` | GameState, DataManager | Shared formatter for active/queued entity task visibility, including target labels and remaining tick text. |
 | `StatusEffectRunner` | `StatusEffectRunner` | `systems/status_effect_runner.gd` | GameState, DataManager | Tick-driven status effect application, conditional apply/tick/expire checks, stacking, per-tick actions, stat modifiers, and expiration. |

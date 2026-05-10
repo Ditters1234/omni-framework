@@ -1574,6 +1574,8 @@ Objectives also support logic blocks for compound conditions: `AND` (array, all 
 
 Time-aware conditions use `TimeModel`, so they follow `game.ticks_per_day`, configured weekdays, configured months, and display-day offsets.
 
+`QuestTracker` refreshes active quests when `activity_completed` is emitted, so activity-history objectives complete immediately after `ActivityService` records completion. `ActivityService` does not directly advance quest stages.
+
 Legacy dict-key conditions (without `"type"`) are also supported for backward compatibility — see `ConditionEvaluator` source for details.
 
 When a quest completes, `QuestTracker` applies the quest-level `reward`, records a runtime completion entry, and emits a `ui_notification_requested` toast containing the quest name and formatted reward summary. Quest log screens can set `include_completed: true` to keep completed quest cards available for later reward review.
