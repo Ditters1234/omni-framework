@@ -1022,6 +1022,10 @@ Supported patch operations:
 
 Activity schedules are projected by `ActivityScheduleService`. The service treats an omitted or empty `schedule` as always scheduled, applies schedule keys with AND logic, supports weekday/day/month/month-tag/day-of-month filters, supports normal and cross-midnight tick windows, and can expand deterministic upcoming slots. It does not check visibility, requirements, repeat/cooldown state, location policy, or actions; those belong to activity execution.
 
+Activities execute through `ActivityService.execute_activity(activity_id, context)`. The service checks `visible_if`, current schedule status, `requirements`, repeat/cooldown history, and `travel_policy` before starting. `visible_if`, `requirements`, and outcome `conditions` are all AND lists. `auto_travel` uses `LocationAccessService.get_entry_status()`, `LocationGraph.get_route_travel_cost()`, and `GameState.travel_to()`; activities do not inspect connections or entry conditions directly. On success the service records start and completion history, emits `activity_started` and `activity_completed`, advances authored duration through `TimeKeeper.advance_ticks()`, dispatches `start_actions` before duration, then dispatches either the selected outcome `actions` or `completion_actions` after duration. Activity script hooks are invoked through `ScriptHookService.invoke_template_hook()` with `on_activity_start(activity, context)` and `on_activity_complete(activity, result)`.
+
+Activity outcomes use weighted selection after condition filtering. If `outcomes` is empty, `completion_actions` run. If eligible outcomes exist, the selected `outcome_id` is stored in activity history as `last_outcome_id` and included in the completion payload.
+
 ---
 
 ## 11.2 `status_effects.json`

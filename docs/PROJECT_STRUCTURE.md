@@ -97,6 +97,7 @@ systems/
 |   `-- task_registry.gd
 |-- action_dispatcher.gd
 |-- assembly_commit_service.gd
+|-- activity_service.gd
 |-- activity_schedule_service.gd
 |-- backend_contract_registry.gd
 |-- condition_evaluator.gd
@@ -114,7 +115,8 @@ systems/
 |-- task_routine_runner.gd
 |-- task_runner.gd
 |-- time_model.gd
-`-- transaction_service.gd
+|-- transaction_service.gd
+`-- weighted_choice_service.gd
 ```
 
 The loader scripts above load JSON templates into `DataManager`, including `activities.json`, `ai_personas.json`, `ai_templates.json`, `encounters.json`, and `status_effects.json`.
@@ -125,6 +127,8 @@ The loader scripts above load JSON templates into `DataManager`, including `acti
 `systems/task_activity_summary.gd` formats active and queued task instances into shared entity activity summaries for owned-entity management and gameplay location presence rows.
 `systems/time_model.gd` is a stateless helper for interpreting configured game time, weekdays, months, display dates, and formatted time strings. It reads `GameState.current_tick` and `calendar.*` config but never advances time.
 `systems/activity_schedule_service.gd` is a stateless helper for evaluating activity schedule rules and expanding deterministic upcoming slots. It reads activity templates and `TimeModel` projections but never executes activities or mutates runtime state.
+`systems/activity_service.gd` coordinates data-authored activity availability, board rows, execution, repeat/cooldown checks, location policy, lifecycle events, history writes, action dispatch, time advancement, and script hooks. It delegates gameplay mutation to existing runtime services.
+`systems/weighted_choice_service.gd` filters condition-gated weighted entries and picks one using `RandomNumberGenerator`; activity outcomes use it for completion branches.
 `systems/ai/` includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies for dialogue UI.
 `systems/ai/` includes `bt_action_ai_query.gd` and `bt_condition_ai_check.gd`, two LimboAI custom tasks for AI-driven behavior-tree decisions, plus `bt_ai_utils.gd`, the shared prompt-token and response-parser helper those tasks use.
 `script_hook_service.gd` owns the world-generation hook bridge: it resolves config-declared global AI hook paths, caches generated task flavor text, and dispatches event narration requests after quest, travel, and day-advance events are recorded.

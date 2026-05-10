@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 5 complete; Phase 6 not started.
+Current implementation status: Phase 1 through Phase 6 complete; Phase 7 is next. The weighted choice helper and activity outcome dispatch are also implemented because activity execution uses them.
 
 ## 1. Purpose
 
@@ -1502,18 +1502,18 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 6 - Activity execution core
 
-- [ ] Add `systems/activity_service.gd`.
-- [ ] Implement visibility checks.
-- [ ] Implement schedule checks.
-- [ ] Implement requirement checks.
-- [ ] Implement repeat/cooldown checks.
-- [ ] Implement location policy.
-- [ ] Implement duration advancement.
-- [ ] Implement action dispatch.
-- [ ] Implement activity started/completed history writes.
-- [ ] Emit activity lifecycle signals.
-- [ ] Return stable result dictionaries.
-- [ ] Add execution tests.
+- [x] Add `systems/activity_service.gd`.
+- [x] Implement visibility checks.
+- [x] Implement schedule checks.
+- [x] Implement requirement checks.
+- [x] Implement repeat/cooldown checks.
+- [x] Implement location policy.
+- [x] Implement duration advancement.
+- [x] Implement action dispatch.
+- [x] Implement activity started/completed history writes.
+- [x] Emit activity lifecycle signals.
+- [x] Return stable result dictionaries.
+- [x] Add execution tests.
 
 ### Phase 7 - Conditions and actions
 
@@ -1535,12 +1535,12 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 9 - Outcomes
 
-- [ ] Add `systems/weighted_choice_service.gd`.
-- [ ] Implement outcome filtering.
-- [ ] Implement weighted selection.
-- [ ] Dispatch selected outcome actions.
-- [ ] Record `last_outcome_id`.
-- [ ] Add outcome tests.
+- [x] Add `systems/weighted_choice_service.gd`.
+- [x] Implement outcome filtering.
+- [x] Implement weighted selection.
+- [x] Dispatch selected outcome actions.
+- [x] Record `last_outcome_id`.
+- [x] Add outcome tests.
 
 ### Phase 10 - Encounter handoff
 
@@ -1637,19 +1637,20 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.4 ActivityService tests
 
-- [ ] Hidden activities do not appear.
-- [ ] Locked activities appear only when configured.
-- [ ] Requirements block execution.
-- [ ] Repeat rules block correctly.
-- [ ] Cooldowns block correctly.
-- [ ] Location policies resolve correctly.
-- [ ] Auto-travel uses route cost.
-- [ ] Auto-travel respects location entry gates.
-- [ ] Duration advances time only through `TimeKeeper`.
-- [ ] Start actions dispatch before duration.
-- [ ] Completion actions dispatch after duration.
-- [ ] Activity history records starts/completions.
-- [ ] Activity events emit.
+- [x] Hidden activities do not appear.
+- [x] Locked activities appear only when configured.
+- [x] Requirements block execution.
+- [x] Schedule checks block execution.
+- [x] Repeat rules block correctly.
+- [x] Cooldowns block correctly.
+- [x] Location policies resolve correctly.
+- [x] Auto-travel uses route cost.
+- [x] Auto-travel respects location entry gates.
+- [x] Duration advances time only through `TimeKeeper`.
+- [x] Start actions dispatch before duration.
+- [x] Completion actions dispatch after duration.
+- [x] Activity history records starts/completions.
+- [x] Activity events emit.
 
 ### 24.5 Quest integration tests
 
