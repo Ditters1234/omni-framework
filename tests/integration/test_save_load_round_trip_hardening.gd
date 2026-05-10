@@ -1,5 +1,6 @@
 extends GutTest
 
+const ACTIVITY_SERVICE := preload("res://systems/activity_service.gd")
 const SLOT := 1
 
 var _original_save_dir := ""
@@ -40,6 +41,20 @@ func _build_minimal_save_fixture() -> void:
 		"category": "audit",
 		"duration_ticks": 1,
 	}
+	DataManager.activities["audit:once"] = {
+		"activity_id": "audit:once",
+		"display_name": "Audit Once",
+		"category": "audit",
+		"duration_ticks": 1,
+		"repeat": {"rule": "once"},
+	}
+	DataManager.activities["audit:cooldown"] = {
+		"activity_id": "audit:cooldown",
+		"display_name": "Audit Cooldown",
+		"category": "audit",
+		"duration_ticks": 1,
+		"repeat": {"rule": "cooldown", "cooldown_ticks": 5},
+	}
 
 
 func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
@@ -51,6 +66,8 @@ func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
 	GameState.record_event("audit_event", {"value": 42})
 	GameState.record_activity_started("audit:activity")
 	GameState.record_activity_completed("audit:activity", {"outcome_id": "kept"})
+	GameState.record_activity_completed("audit:once")
+	GameState.record_activity_completed("audit:cooldown")
 	GameState.set_runtime_state("audit_bucket", "audit_key", {"nested": ["a", "b", "c"]})
 	DataManager.status_effects["audit:status"] = {
 		"status_effect_id": "audit:status",
@@ -75,6 +92,8 @@ func test_runtime_state_buckets_survive_save_load_round_trip() -> void:
 	assert_eq(after.get("ai_lore_cache", {}).get("audit:lore", {}).get("text", ""), "remember me")
 	assert_eq(after.get("activity_history", {}).get("audit:activity", {}).get("completion_count", 0), 1)
 	assert_eq(after.get("activity_history", {}).get("audit:activity", {}).get("last_outcome_id", ""), "kept")
+	assert_eq(str(ACTIVITY_SERVICE.get_activity_status(DataManager.get_activity("audit:once")).get("failure_code", "")), "repeat_blocked")
+	assert_eq(str(ACTIVITY_SERVICE.get_activity_status(DataManager.get_activity("audit:cooldown")).get("failure_code", "")), "cooldown_active")
 	assert_eq(after.get("runtime_state_buckets", {}).get("audit_bucket", {}).get("audit_key", {}).get("nested", []), ["a", "b", "c"])
 	assert_eq(after.get("active_status_effects", {}).get("audit_status", {}).get("remaining_ticks", 0), 2)
 	assert_gt(after.get("event_history", []).size(), 0)

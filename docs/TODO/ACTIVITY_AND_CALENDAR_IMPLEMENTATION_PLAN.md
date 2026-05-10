@@ -31,9 +31,10 @@ Search anchors:
 - `Phase 12 - Activity board UI`
 - `Phase 13 - Schedule UI`
 - `Phase 14 - Documentation alignment`
+- `Phase 15 - Content-agnostic validation`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 14 complete; Phase 15 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
+Current implementation status: Phase 1 through Phase 15 complete. The activity and schedule implementation sequence is complete. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
 
 ## 1. Purpose
 
@@ -1615,10 +1616,10 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 15 - Content-agnostic validation
 
-- [ ] Add minimal fixture activities for tests only.
-- [ ] Confirm no engine code depends on specific setting names.
-- [ ] Confirm no engine code depends on specific location names.
-- [ ] Confirm no engine code depends on specific NPCs, factions, campaigns, or sample scenarios.
+- [x] Add minimal fixture activities for tests only.
+- [x] Confirm no engine code depends on specific setting names.
+- [x] Confirm no engine code depends on specific location names.
+- [x] Confirm no engine code depends on specific NPCs, factions, campaigns, or sample scenarios.
 
 ---
 
@@ -1711,8 +1712,8 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 ### 24.9 Save/load tests
 
 - [x] Activity history persists.
-- [ ] Repeat status survives reload.
-- [ ] Cooldown status survives reload.
+- [x] Repeat status survives reload.
+- [x] Cooldown status survives reload.
 - [x] Last outcome survives reload.
 - [x] Older development saves are rejected cleanly.
 
@@ -1722,19 +1723,19 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 The implementation is complete when:
 
-- [ ] Activities are loaded through the normal mod data pipeline.
-- [ ] Activities are queryable through `DataManager`.
-- [ ] Activity execution is fully data-authored.
-- [ ] Activity execution advances time only through `TimeKeeper`.
-- [ ] Activity execution applies side effects only through `ActionDispatcher` or existing service paths.
-- [ ] Activity requirements use `ConditionEvaluator`.
+- [x] Activities are loaded through the normal mod data pipeline.
+- [x] Activities are queryable through `DataManager`.
+- [x] Activity execution is fully data-authored.
+- [x] Activity execution advances time only through `TimeKeeper`.
+- [x] Activity execution applies side effects only through `ActionDispatcher` or existing service paths.
+- [x] Activity requirements use `ConditionEvaluator`.
 - [x] Activity history persists through save/load.
 - [x] Quests can depend on activity history without `ActivityService` knowing quest internals.
-- [ ] Activities can use location policy without duplicating route or entry logic.
+- [x] Activities can use location policy without duplicating route or entry logic.
 - [x] Activities can open encounters without owning encounter resolution.
 - [x] AI flavor/narration is optional and non-blocking.
 - [x] Activity board UI can execute activities.
 - [x] Schedule UI can project upcoming activities.
-- [ ] Tests cover time, loading, execution, save/load, quest integration, location integration, encounter handoff, AI no-op behavior, and backend rendering.
+- [x] Tests cover time, loading, execution, save/load, quest integration, location integration, encounter handoff, AI no-op behavior, and backend rendering.
 - [x] Base docs describe the implemented activity/calendar systems as current behavior.
-- [ ] No engine code depends on specific content, setting names, location names, NPCs, factions, campaigns, or sample scenarios.
+- [x] No engine code depends on specific content, setting names, location names, NPCs, factions, campaigns, or sample scenarios.
