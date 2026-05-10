@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: Phase 1 through Phase 10 complete; Phase 11 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
+Current implementation status: Phase 1 through Phase 11 complete; Phase 12 is next. Phase 9 was completed early because activity execution uses the weighted choice helper and activity outcome dispatch.
 
 ## 1. Purpose
 
@@ -1552,13 +1552,13 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 11 - AI and script hooks
 
-- [ ] Add activity flavor cache/pending state to `ScriptHookService`.
-- [ ] Add `request_activity_flavor()`.
-- [ ] Add `store_activity_flavor()`.
-- [ ] Add activity hook callbacks.
-- [ ] Invoke hooks through `ScriptHookService` only.
-- [ ] Confirm AI-disabled mode is a complete no-op.
-- [ ] Add AI/hook tests.
+- [x] Add activity flavor cache/pending state to `ScriptHookService`.
+- [x] Add `request_activity_flavor()`.
+- [x] Add `store_activity_flavor()`.
+- [x] Add activity hook callbacks.
+- [x] Invoke hooks through `ScriptHookService` only.
+- [x] Confirm AI-disabled mode is a complete no-op.
+- [x] Add AI/hook tests.
 
 ### Phase 12 - Activity board UI
 
@@ -1668,10 +1668,10 @@ Add or update tests next to the affected subsystem. Keep fixture data minimal an
 
 ### 24.7 AI integration tests
 
-- [ ] AI-disabled mode returns no flavor and does not error.
-- [ ] AI-enabled flavor can be cached.
-- [ ] Activity execution does not await flavor generation.
-- [ ] Completion narration is optional.
+- [x] AI-disabled mode returns no flavor and does not error.
+- [x] AI-enabled flavor can be cached.
+- [x] Activity execution does not await flavor generation.
+- [x] Completion narration is optional.
 
 ### 24.8 Backend tests
 
@@ -1708,7 +1708,7 @@ The implementation is complete when:
 - [x] Quests can depend on activity history without `ActivityService` knowing quest internals.
 - [ ] Activities can use location policy without duplicating route or entry logic.
 - [x] Activities can open encounters without owning encounter resolution.
-- [ ] AI flavor/narration is optional and non-blocking.
+- [x] AI flavor/narration is optional and non-blocking.
 - [ ] Activity board UI can execute activities.
 - [ ] Schedule UI can project upcoming activities.
 - [ ] Tests cover time, loading, execution, save/load, quest integration, location integration, encounter handoff, AI no-op behavior, and backend rendering.

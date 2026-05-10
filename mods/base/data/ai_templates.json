@@ -29,6 +29,13 @@
       "tags": ["world_gen", "task_board"]
     },
     {
+      "template_id": "base:activity_flavor",
+      "purpose": "activity_flavor",
+      "prompt_template": "Write one concise in-world activity completion sentence for '{display_name}' at {location_name}. Category: {category}. Provider: {provider_name}. Outcome: {outcome_id}. Keep it under 20 words.",
+      "fallback": "{display_name} leaves its mark at {location_name}.",
+      "tags": ["world_gen", "activity"]
+    },
+    {
       "template_id": "base:encounter_log_flavor",
       "purpose": "encounter_log_flavor",
       "prompt_template": "Rewrite this encounter log as one vivid in-world sentence under 22 words. Encounter: {encounter_name}. Actor: {actor_name}. Target: {target_name}. Action: {action_label}. Result: {result}. Mechanical changes: {stat_delta_summary}. Fallback line: {fallback_text}.",

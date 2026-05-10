@@ -65,6 +65,21 @@ func on_task_complete(_task_instance: Dictionary) -> void:
 	pass
 
 
+## Called when an activity with this hook starts.
+func on_activity_start(_activity: Dictionary, _context: Dictionary) -> void:
+	pass
+
+
+## Called when an activity with this hook completes.
+func on_activity_complete(_activity: Dictionary, _result: Dictionary) -> void:
+	pass
+
+
+## Called when an activity with this hook fails after it has started.
+func on_activity_fail(_activity: Dictionary, _result: Dictionary) -> void:
+	pass
+
+
 # ---------------------------------------------------------------------------
 # Utility helpers available to all hooks
 # ---------------------------------------------------------------------------

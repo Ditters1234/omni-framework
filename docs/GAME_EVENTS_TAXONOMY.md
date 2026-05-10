@@ -138,6 +138,7 @@ New consumers should use the `ui_`-prefixed forms. Deprecated signals remain dec
 
 ### AI
 
+- `event_narrated(source_signal, source_key, narration)` when optional world-generation text is stored. `source_signal` may be an event signal name such as `location_changed` or a generated-content channel such as `task_flavor`, `activity_flavor`, `entity_lore`, or `part_lore`.
 - `ai_response_received(context_id, response)`
 - `ai_token_received(context_id, token)`
 - `ai_error(context_id, error)`

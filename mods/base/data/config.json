@@ -158,12 +158,14 @@
   "ai": {
     "narration_enabled": true,
     "task_flavor_enabled": true,
+    "activity_flavor_enabled": true,
     "lore_enabled": true,
     "encounter_log_flavor_enabled": true,
     "encounter_log_template_id": "base:encounter_log_flavor",
     "world_gen_hooks": {
       "narration": "res://mods/base/scripts/ai_narration_hook.gd",
       "task_flavor": "res://mods/base/scripts/ai_task_flavor_hook.gd",
+      "activity_flavor": "res://mods/base/scripts/ai_activity_flavor_hook.gd",
       "lore": "res://mods/base/scripts/ai_lore_hook.gd"
     }
   }

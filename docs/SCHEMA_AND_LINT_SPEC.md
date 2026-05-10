@@ -249,6 +249,8 @@ Rules:
 - `economy.default_currency_id` must reference a known currency when present.
 - `tasks.default_assignment_task_template_id`, `tasks.default_travel_task_template_id`, and `crafting.default_task_template_id` must reference known task templates when present.
 - `ai.encounter_log_template_id` must reference a known AI template when present.
+- `ai.narration_enabled`, `ai.task_flavor_enabled`, `ai.activity_flavor_enabled`, `ai.lore_enabled`, and `ai.encounter_log_flavor_enabled` must be booleans when present.
+- `ai.world_gen_hooks` must be an object when present. Supported hook IDs are `narration`, `task_flavor`, `activity_flavor`, and `lore`; each value must be a non-empty script path.
 - Unknown keys inside strict subtrees should warn or error depending on maturity of the schema.
 - Config should remain more permissive than gameplay template files, but not unbounded.
 

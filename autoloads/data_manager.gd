@@ -1815,7 +1815,7 @@ func _validate_ai_config(ai_config: Dictionary) -> void:
 		elif not has_ai_template(str(encounter_log_template_value)):
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.encounter_log_template_id' references unknown AI template '%s'." % str(encounter_log_template_value))
 
-	for flag_key in ["narration_enabled", "task_flavor_enabled", "lore_enabled", "encounter_log_flavor_enabled"]:
+	for flag_key in ["narration_enabled", "task_flavor_enabled", "activity_flavor_enabled", "lore_enabled", "encounter_log_flavor_enabled"]:
 		if ai_config.has(flag_key) and not (ai_config.get(flag_key, false) is bool):
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.%s' must be a bool." % flag_key)
 
@@ -1828,7 +1828,7 @@ func _validate_ai_config(ai_config: Dictionary) -> void:
 	var world_gen_hooks: Dictionary = world_gen_hooks_value
 	for hook_key in world_gen_hooks.keys():
 		var hook_name := str(hook_key)
-		if not ["narration", "task_flavor", "lore"].has(hook_name):
+		if not ["narration", "task_flavor", "activity_flavor", "lore"].has(hook_name):
 			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'ai.world_gen_hooks.%s' is not a supported hook id." % hook_name)
 			continue
 		var path_value: Variant = world_gen_hooks.get(hook_key, "")

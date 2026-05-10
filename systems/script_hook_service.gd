@@ -7,10 +7,13 @@ class_name ScriptHookService
 const APP_SETTINGS := preload("res://core/app_settings.gd")
 const WORLD_GEN_HOOK_NARRATION := "narration"
 const WORLD_GEN_HOOK_TASK_FLAVOR := "task_flavor"
+const WORLD_GEN_HOOK_ACTIVITY_FLAVOR := "activity_flavor"
 const WORLD_GEN_HOOK_LORE := "lore"
 
 static var _task_flavor_cache: Dictionary = {}
 static var _pending_task_flavors: Dictionary = {}
+static var _activity_flavor_cache: Dictionary = {}
+static var _pending_activity_flavors: Dictionary = {}
 static var _entity_lore_cache: Dictionary = {}
 static var _pending_entity_lore: Dictionary = {}
 static var _part_lore_cache: Dictionary = {}
@@ -81,6 +84,22 @@ static func request_task_flavor(task_template: Dictionary, context: Dictionary =
 	return ""
 
 
+static func request_activity_flavor(activity_template: Dictionary, context: Dictionary = {}) -> String:
+	var activity_id := str(activity_template.get("activity_id", "")).strip_edges()
+	if activity_id.is_empty():
+		return ""
+	if _activity_flavor_cache.has(activity_id):
+		return str(_activity_flavor_cache.get(activity_id, ""))
+	if _pending_activity_flavors.has(activity_id) or not _can_run_world_gen("activity_flavor_enabled"):
+		return ""
+	var hook := _get_global_hook(WORLD_GEN_HOOK_ACTIVITY_FLAVOR)
+	if hook == null or not hook.has_method("queue_activity_flavor_generation"):
+		return ""
+	_pending_activity_flavors[activity_id] = true
+	hook.callv("queue_activity_flavor_generation", [activity_template.duplicate(true), context.duplicate(true)])
+	return ""
+
+
 static func can_run_world_gen(config_flag: String) -> bool:
 	return _can_run_world_gen(config_flag)
 
@@ -100,6 +119,23 @@ static func store_task_flavor(template_id: String, flavor_text: String) -> void:
 		GameEvents.emit_dynamic("event_narrated", ["task_flavor", normalized_template_id, normalized_flavor_text])
 		return
 	GameEvents.event_narrated.emit("task_flavor", normalized_template_id, normalized_flavor_text)
+
+
+static func store_activity_flavor(activity_id: String, flavor_text: String) -> void:
+	var normalized_activity_id := activity_id.strip_edges()
+	var normalized_flavor_text := flavor_text.strip_edges()
+	if normalized_activity_id.is_empty():
+		return
+	_pending_activity_flavors.erase(normalized_activity_id)
+	if normalized_flavor_text.is_empty():
+		return
+	_activity_flavor_cache[normalized_activity_id] = normalized_flavor_text
+	if GameEvents == null:
+		return
+	if GameEvents.has_method("emit_dynamic"):
+		GameEvents.emit_dynamic("event_narrated", ["activity_flavor", normalized_activity_id, normalized_flavor_text])
+		return
+	GameEvents.event_narrated.emit("activity_flavor", normalized_activity_id, normalized_flavor_text)
 
 
 static func request_entity_lore(entity_template: Dictionary, context: Dictionary = {}) -> String:
@@ -171,6 +207,8 @@ static func store_part_lore(template_id: String, lore_text: String) -> void:
 static func reset_world_gen_state() -> void:
 	_task_flavor_cache.clear()
 	_pending_task_flavors.clear()
+	_activity_flavor_cache.clear()
+	_pending_activity_flavors.clear()
 	_entity_lore_cache.clear()
 	_pending_entity_lore.clear()
 	_part_lore_cache.clear()

@@ -551,11 +551,11 @@ Unknown tokens are left in place and logged as warnings, so it is worth keeping 
 Persona JSON does not control provider selection or connection details. The engine-owned settings screen exposes:
 - `ai.chat_history_window` — how many recent turns each NPC keeps in memory
 - `ai.streaming_speed` — the dialogue-side token reveal cadence
-- `ai.enable_world_gen` — whether world-generation hooks may surface narrated event log text and task-board flavor
+- `ai.enable_world_gen` — whether world-generation hooks may surface narrated event log text, task-board flavor, activity flavor, and lore
 
 Those settings live in `user://settings.cfg`, not in mod data.
 
-All AI requests go through `AIManager`'s global FIFO queue. This means mod hooks, dialogue screens, behavior trees, lore generation, task flavor, event narration, and encounter logs can request AI at the same time without sending overlapping prompts to single-generation providers such as NobodyWho.
+All AI requests go through `AIManager`'s global FIFO queue. This means mod hooks, dialogue screens, behavior trees, lore generation, task flavor, activity flavor, event narration, and encounter logs can request AI at the same time without sending overlapping prompts to single-generation providers such as NobodyWho.
 
 NobodyWho model paths may be local (`res://`, `user://`, absolute filesystem paths) or remote references supported by the addon (`huggingface:`, `hf://`, `http://`, `https://`). Local paths are checked by the engine before use; remote references are handed to NobodyWho so the addon can download and cache the model.
 
@@ -1022,11 +1022,13 @@ Supported patch operations:
 
 Activity schedules are projected by `ActivityScheduleService`. The service treats an omitted or empty `schedule` as always scheduled, applies schedule keys with AND logic, supports weekday/day/month/month-tag/day-of-month filters, supports normal and cross-midnight tick windows, and can expand deterministic upcoming slots. It does not check visibility, requirements, repeat/cooldown state, location policy, or actions; those belong to activity execution.
 
-Activities execute through `ActivityService.execute_activity(activity_id, context)`. The service checks `visible_if`, current schedule status, `requirements`, repeat/cooldown history, and `travel_policy` before starting. `visible_if`, `requirements`, and outcome `conditions` are all AND lists. `auto_travel` uses `LocationAccessService.get_entry_status()`, `LocationGraph.get_route_travel_cost()`, and `GameState.travel_to()`; activities do not inspect connections or entry conditions directly. On success the service records start and completion history, emits `activity_started` and `activity_completed`, advances authored duration through `TimeKeeper.advance_ticks()`, dispatches `start_actions` before duration, then dispatches either the selected outcome `actions` or `completion_actions` after duration. Activity script hooks are invoked through `ScriptHookService.invoke_template_hook()` with `on_activity_start(activity, context)` and `on_activity_complete(activity, result)`.
+Activities execute through `ActivityService.execute_activity(activity_id, context)`. The service checks `visible_if`, current schedule status, `requirements`, repeat/cooldown history, and `travel_policy` before starting. `visible_if`, `requirements`, and outcome `conditions` are all AND lists. `auto_travel` uses `LocationAccessService.get_entry_status()`, `LocationGraph.get_route_travel_cost()`, and `GameState.travel_to()`; activities do not inspect connections or entry conditions directly. On success the service records start and completion history, emits `activity_started` and `activity_completed`, advances authored duration through `TimeKeeper.advance_ticks()`, dispatches `start_actions` before duration, then dispatches either the selected outcome `actions` or `completion_actions` after duration. Activity script hooks are invoked through `ScriptHookService.invoke_template_hook()` with `on_activity_start(activity, context)` and `on_activity_complete(activity, result)`. The base `ScriptHook` also exposes `on_activity_fail(activity, result)` for failures that happen after an activity has started.
 
 Activity outcomes use weighted selection after condition filtering. If `outcomes` is empty, `completion_actions` run. If eligible outcomes exist, the selected `outcome_id` is stored in activity history as `last_outcome_id` and included in the completion payload.
 
 Activities can route into encounters through normal `ActionDispatcher` screen actions. Put a `push_screen` action in `completion_actions` or an outcome `actions` list with `screen_id: "encounter"` and `params.encounter_id` set to the encounter template. `ActivityService` only performs the route; `EncounterBackend` owns encounter resolution, encounter-local stats, outcome rewards, and encounter completion events.
+
+On successful completion, `ActivityService` queues optional activity flavor through `ScriptHookService.request_activity_flavor(activity, result)`. The default base hook is configured at `ai.world_gen_hooks.activity_flavor` and uses the `base:activity_flavor` AI template. Generated flavor is cached by `activity_id` and emitted through `event_narrated("activity_flavor", activity_id, text)`. Activity execution never waits for this text; when AI or `ai.activity_flavor_enabled` is disabled, the request returns an empty string and gameplay continues normally.
 
 ---
 

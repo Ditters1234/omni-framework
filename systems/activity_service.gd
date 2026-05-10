@@ -278,6 +278,7 @@ static func execute_activity(activity_id: String, context: Dictionary = {}) -> D
 	GameState.record_event("activity_completed", result)
 	_emit_activity_event("activity_completed", result)
 	ScriptHookService.invoke_template_hook(activity, "on_activity_complete", [activity.duplicate(true), result.duplicate(true)])
+	ScriptHookService.request_activity_flavor(activity, result.duplicate(true))
 	ScriptHookService.invoke_world_event_narration("activity_completed", [result.duplicate(true)])
 	return result
 

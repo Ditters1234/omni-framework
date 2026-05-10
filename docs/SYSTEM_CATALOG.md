@@ -55,14 +55,14 @@ These utilities are instantiated or called by autoloads, screens, and mod script
 | `ConditionEvaluator` | `ConditionEvaluator` | `systems/condition_evaluator.gd` | DataManager | Evaluates JSON condition blocks (AND/OR trees) used by quests, tasks, UI logic, status effects, lifecycle rules, activity history, and calendar/time gates. See [`modding_guide.md`](modding_guide.md) for syntax. |
 | `TimeModel` | `TimeModel` | `systems/time_model.gd` | GameState, DataManager | Stateless helper for interpreting absolute ticks, configured weekdays/months, display-day offsets, date conversion, and time/date formatting. It never advances time; `TimeKeeper` owns mutation. |
 | `ActivityScheduleService` | `ActivityScheduleService` | `systems/activity_schedule_service.gd` | TimeModel, DataManager | Stateless activity schedule evaluator and deterministic slot expander. It never executes activities or mutates runtime state. |
-| `ActivityService` | `ActivityService` | `systems/activity_service.gd` | DataManager, GameState, TimeKeeper, ConditionEvaluator, ActivityScheduleService, ActionDispatcher, LocationAccessService, LocationGraph, ScriptHookService | Coordinates activity availability, board rows, execution, repeat/cooldown checks, location policy, lifecycle events, history writes, time advancement, script hooks, optional outcome branches, and screen handoffs such as encounter launches through normal actions. |
+| `ActivityService` | `ActivityService` | `systems/activity_service.gd` | DataManager, GameState, TimeKeeper, ConditionEvaluator, ActivityScheduleService, ActionDispatcher, LocationAccessService, LocationGraph, ScriptHookService | Coordinates activity availability, board rows, execution, repeat/cooldown checks, location policy, lifecycle events, history writes, time advancement, script hooks, optional AI flavor requests, optional outcome branches, and screen handoffs such as encounter launches through normal actions. |
 | `WeightedChoiceService` | `WeightedChoiceService` | `systems/weighted_choice_service.gd` | ConditionEvaluator | Filters condition-gated weighted entries and chooses an available entry; activity outcomes use it during completion. |
 | `StatManager` | `StatManager` | `systems/stat_manager.gd` | DataManager | Calculates stat modifiers, applies stat changes, enforces clamping rules. See [`STAT_SYSTEM_IMPLEMENTATION.md`](STAT_SYSTEM_IMPLEMENTATION.md). |
 | `EncounterRuntime` | `EncounterRuntime` | `systems/encounter_runtime.gd` | ConditionEvaluator | Stateless encounter helper for weighted opponent action selection, encounter condition context, local-stat clamping, and JSON-native effect delta math. |
 | `BackendContractRegistry` | `BackendContractRegistry` | `systems/backend_contract_registry.gd` | — | Validates `backend_class` IDs and their payload schemas. Locked after `ModLoader`. |
 | `RewardService` | `RewardService` | `systems/reward_service.gd` | GameState, SaveManager | Distributes currency, items, unlocks when quests/tasks complete. |
 | `TransactionService` | `TransactionService` | `systems/transaction_service.gd` | GameState, SaveManager | Handles buy/sell/exchange validation and currency movement. |
-| `ScriptHookService` | `ScriptHookService` | `systems/script_hook_service.gd` | DataManager | Lifecycle manager for mod script hooks, including global world-generation hooks and cached task flavor text. |
+| `ScriptHookService` | `ScriptHookService` | `systems/script_hook_service.gd` | DataManager | Lifecycle manager for mod script hooks, including global world-generation hooks and cached task flavor, activity flavor, and lore text. |
 | `AssemblyCommitService` | `AssemblyCommitService` | `systems/assembly_commit_service.gd` | GameState | Transactional part attachment/detachment for assembly editor. |
 
 ### AI & Quest Orchestration
@@ -109,7 +109,7 @@ These systems parse JSON templates and populate in-memory registries. All are in
 | `EncounterRegistry` | `EncounterRegistry` | `systems/loaders/encounter_registry.gd` | `encounters.json` | `encounter_id` | Turn-based encounter templates with participants, player/opponent actions, encounter-local stats, and resolution outcomes. |
 | `AchievementRegistry` | `AchievementRegistry` | `systems/loaders/achievement_registry.gd` | `achievements.json` | `achievement_id` | Achievements with unlock conditions and rewards. |
 | `ConfigLoader` | — | `systems/loaders/config_loader.gd` | `config.json` | — (deep-merged) | Engine-owned gameplay/UI defaults from mod data. AI provider ownership is intentionally excluded and lives in `AppSettings`. |
-| `AIPersonaRegistry` | `AIPersonaRegistry` | `systems/loaders/ai_persona_registry.gd` | `ai_personas.json` | `persona_id` | Mod-authored AI personas used by dialogue, behavior trees, world narration, lore, task flavor, and encounter logs. |
+| `AIPersonaRegistry` | `AIPersonaRegistry` | `systems/loaders/ai_persona_registry.gd` | `ai_personas.json` | `persona_id` | Mod-authored AI personas used by dialogue, behavior trees, world narration, lore, task flavor, activity flavor, and encounter logs. |
 | `AITemplateRegistry` | `AITemplateRegistry` | `systems/loaders/ai_template_registry.gd` | `ai_templates.json` | `template_id` | Mod-authored reusable AI prompt templates for world-generation hooks. |
 All loaders support **two-phase patching**:
 1. **Phase 1:** Additions — new entries added to the registry
@@ -123,7 +123,7 @@ All data IDs use **namespacing:** `author:mod:name`. Base game uses `base:` pref
 
 ## AI Systems
 
-The `AIManager` autoload routes all AI calls to one of four backends based on the AI provider setting in `user://settings.cfg`. AI provider configuration is engine-owned and not moddable via `config.json` — see [`modding_guide.md`](modding_guide.md) §3.10 ("AI Connection Ownership"). All `generate_async` and streaming requests pass through the manager's global FIFO queue so concurrent AI consumers do not overlap provider calls. This keeps single-generation providers such as NobodyWho safe while preserving one public API for dialogue, behavior trees, world narration, lore, task flavor, and encounter logs.
+The `AIManager` autoload routes all AI calls to one of four backends based on the AI provider setting in `user://settings.cfg`. AI provider configuration is engine-owned and not moddable via `config.json` — see [`modding_guide.md`](modding_guide.md) §3.10 ("AI Connection Ownership"). All `generate_async` and streaming requests pass through the manager's global FIFO queue so concurrent AI consumers do not overlap provider calls. This keeps single-generation providers such as NobodyWho safe while preserving one public API for dialogue, behavior trees, world narration, lore, task flavor, activity flavor, and encounter logs.
 
 ### AI Providers
 
@@ -147,7 +147,7 @@ See [`AGENTS.md`](../AGENTS.md) for architecture constraints and [`modding_guide
 ### AI Events
 
 Defined in `GameEvents` (see [`GAME_EVENTS_TAXONOMY.md`](GAME_EVENTS_TAXONOMY.md)):
-- `event_narrated(source_signal, source_key, narration)` — World-generation update emitted when narration or task flavor text is stored
+- `event_narrated(source_signal, source_key, narration)` — World-generation update emitted when event narration, task flavor, activity flavor, or lore text is stored
 - `ai_response_received(context_id, response)` — Full response ready
 - `ai_token_received(context_id, token)` — Streaming token (where supported)
 - `ai_error(context_id, error)` — Generation failed
