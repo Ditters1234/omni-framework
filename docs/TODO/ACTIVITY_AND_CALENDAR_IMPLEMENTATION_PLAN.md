@@ -1,5 +1,39 @@
 # Omni Activity & Schedule Systems - Clean Implementation and Action Plan
 
+## 0. Agent Usage Notes
+
+This document is the working implementation contract for activity and calendar work. Keep it easy for agents to search, patch, and resume.
+
+Formatting rules for this document:
+
+- Use ASCII punctuation only.
+- Keep headings stable and numbered.
+- Prefer simple lists over decorative diagrams.
+- Keep code blocks fenced with explicit language tags.
+- Mark checklist items as complete only after the code, tests, and current-state docs are updated.
+- Do not add historical notes, changelog language, or "future cleanup" commentary outside `docs/TODO/`.
+
+Agent workflow:
+
+1. Read `AGENTS.md` instructions, then this section, then the phase being implemented.
+2. Read the relevant current-state docs before editing architecture: `docs/PROJECT_STRUCTURE.md`, `docs/SYSTEM_CATALOG.md`, `docs/modding_guide.md`, `docs/SAVE_SCHEMA_AND_MIGRATION.md`, and any phase-specific docs.
+3. Implement one coherent phase or sub-phase at a time.
+4. Update this plan's checklist as work lands.
+5. Update base `docs/` files so they describe current behavior, not history.
+6. Run focused tests for the touched systems and record any test gaps in the final response.
+
+Search anchors:
+
+- `Phase 1 - Time foundation`
+- `Phase 2 - Activity loading`
+- `Phase 3 - Activity history and save/load`
+- `Phase 6 - Activity execution core`
+- `Phase 12 - Activity board UI`
+- `Phase 14 - Documentation alignment`
+- `Definition of Done`
+
+Current implementation status: not started.
+
 ## 1. Purpose
 
 Implement two tightly integrated systems for Omni:
@@ -1433,6 +1467,16 @@ inside `_register_backend_contracts()` before `BACKEND_CONTRACT_REGISTRY.lock()`
 
 ## 23. Implementation Sequence
 
+Work phases in order unless a later phase is explicitly needed to unblock tests for an earlier one. If a phase is split across multiple sessions, add short unchecked sub-items under that phase rather than creating a separate planning document.
+
+Status convention:
+
+- `[ ]` not started
+- `[~]` in progress
+- `[x]` complete
+
+Completion rule: a phase is complete only when its code, tests, and relevant current-state docs are done.
+
 ### Phase 1 - Time foundation
 
 - [ ] Add `systems/time_model.gd`.
@@ -1583,6 +1627,8 @@ inside `_register_backend_contracts()` before `BACKEND_CONTRACT_REGISTRY.lock()`
 ---
 
 ## 24. Testing Matrix
+
+Add or update tests next to the affected subsystem. Keep fixture data minimal and content-agnostic. Prefer targeted unit tests for pure helpers and integration tests for save/load, mod loading, quest refresh, backend routing, and UI contracts.
 
 ### 24.1 TimeModel tests
 
