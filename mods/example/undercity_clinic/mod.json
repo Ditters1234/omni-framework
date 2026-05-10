@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "schema_version": 1,
   "load_order": 30,
-  "enabled": true,
+  "enabled": false,
   "dependencies": ["base"],
-  "description": "Adds a hidden medical clinic in the Undercity run by Dr. Mira, a rogue combat medic. Includes new parts, recipes, a quest, and a gated location."
+  "description": "Legacy example mod for the previous starter base. Disabled while Vanguard University tutorial addons are rebuilt."
 }

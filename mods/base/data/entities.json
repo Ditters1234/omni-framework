@@ -2,404 +2,353 @@
   "entities": [
     {
       "entity_id": "base:player",
-      "display_name": "Operative",
-      "description": "Freshly assembled and dropped into the threshold. No history. No allegiance. Just parts and potential.",
-      "portrait": "res://mods/base/assets/entity_player.png",
-      "location_id": "base:apartment",
+      "display_name": "First-Year Student",
+      "description": "A new Vanguard student with a scholarship, a borrowed dorm room, and a body that can be revised if the ritual circle holds.",
+      "portrait": "res://mods/base/assets/vanguard/entities/player_student.png",
+      "location_id": "base:dorm_room",
       "currencies": {
-        "credits": 400,
-        "data_shards": 2
+        "cash": 60
       },
       "stats": {
-        "power": 1,
-        "armor": 0,
+        "strength": 1,
+        "dexterity": 1,
+        "endurance": 1,
+        "intelligence": 1,
+        "willpower": 1,
+        "perception": 1,
         "charisma": 1,
-        "luck": 0,
-        "health": 100,
-        "health_max": 100,
-        "stamina": 50,
-        "stamina_max": 50
+        "intimidation": 0,
+        "normalcy": 5,
+        "arcana_101_grade": 0,
+        "mana": 6,
+        "mana_max": 6,
+        "stress": 1,
+        "stress_max": 10
       },
       "flags": {
-        "tutorial_complete": false
+        "orientation_started": false,
+        "orientation_complete": false,
+        "first_sleep_complete": false
       },
       "discovered_locations": [
-        "base:apartment",
-        "base:market_row"
-      ],
-      "owned_entity_ids": [
-        "base:utility_drone"
+        "base:dorm_room",
+        "base:dorm_common_area",
+        "base:lecture_hall",
+        "base:library",
+        "base:student_union",
+        "base:high_street"
       ],
       "provides_sockets": [
         {
-          "id": "head",
+          "id": "cognitive",
           "accepted_tags": [
-            "head"
+            "cognitive"
           ],
-          "label": "Head"
+          "label": "Cognitive"
         },
         {
-          "id": "torso",
+          "id": "sensory",
           "accepted_tags": [
-            "torso"
+            "sensory"
           ],
-          "label": "Torso"
+          "label": "Sensory"
         },
         {
-          "id": "arms",
+          "id": "manipulator",
           "accepted_tags": [
-            "arms"
+            "manipulator"
           ],
-          "label": "Arms"
+          "label": "Manipulator"
         },
         {
-          "id": "legs",
+          "id": "locomotion",
           "accepted_tags": [
-            "legs"
+            "locomotion"
           ],
-          "label": "Legs"
+          "label": "Locomotion"
         },
         {
-          "id": "hands",
+          "id": "framework",
           "accepted_tags": [
-            "hands"
+            "framework"
           ],
-          "label": "Hands"
-        },
-        {
-          "id": "feet",
-          "accepted_tags": [
-            "feet"
-          ],
-          "label": "Feet"
+          "label": "Framework"
         }
       ],
       "inventory": [
         {
-          "instance_id": "p_head_001",
-          "template_id": "base:human_head_male",
+          "instance_id": "player_mind_001",
+          "template_id": "base:human_mind",
           "custom_values": {
-            "eye_color": "green",
-            "hair_color": "black"
+            "memory_anchor": "acceptance letter"
           }
         },
         {
-          "instance_id": "p_torso_001",
-          "template_id": "base:human_torso_male"
+          "instance_id": "player_senses_001",
+          "template_id": "base:human_senses",
+          "custom_values": {
+            "eye_color": "brown"
+          }
         },
         {
-          "instance_id": "p_arms_001",
-          "template_id": "base:human_arms_male"
+          "instance_id": "player_hands_001",
+          "template_id": "base:human_hands"
         },
         {
-          "instance_id": "p_legs_001",
-          "template_id": "base:human_legs_male"
+          "instance_id": "player_stride_001",
+          "template_id": "base:human_stride"
         },
         {
-          "instance_id": "p_hands_001",
-          "template_id": "base:human_hands_male"
+          "instance_id": "player_frame_001",
+          "template_id": "base:human_frame"
         },
         {
-          "instance_id": "p_feet_001",
-          "template_id": "base:human_feet_male"
+          "instance_id": "player_id_001",
+          "template_id": "base:student_id_lanyard"
         },
         {
-          "instance_id": "p_baton_001",
-          "template_id": "base:stun_baton"
+          "instance_id": "player_chalk_001",
+          "template_id": "base:ritual_chalk"
         },
         {
-          "instance_id": "p_chip_001",
-          "template_id": "base:salvage_chip"
+          "instance_id": "player_chalk_002",
+          "template_id": "base:ritual_chalk"
         },
         {
-          "instance_id": "p_chip_002",
-          "template_id": "base:salvage_chip"
-        },
-        {
-          "instance_id": "p_medkit_001",
-          "template_id": "base:field_medkit"
+          "instance_id": "player_voucher_001",
+          "template_id": "base:cafeteria_voucher"
         }
       ],
       "assembly_socket_map": {
-        "head": "p_head_001",
-        "torso": "p_torso_001",
-        "arms": "p_arms_001",
-        "legs": "p_legs_001",
-        "hands": "p_hands_001",
-        "feet": "p_feet_001"
+        "cognitive": "player_mind_001",
+        "sensory": "player_senses_001",
+        "manipulator": "player_hands_001",
+        "locomotion": "player_stride_001",
+        "framework": "player_frame_001",
+        "keepsake": "player_id_001"
       }
     },
     {
-      "entity_id": "base:utility_drone",
-      "display_name": "Utility Drone",
-      "description": "A compact field drone registered to the operative. It can travel independently, carry small parts, and take simple contract assignments.",
-      "portrait": "res://mods/base/assets/chip.png",
-      "location_id": "base:apartment",
+      "entity_id": "base:dorm_cache",
+      "display_name": "Dorm Desk Drawer",
+      "description": "A shallow drawer with the supplies Vanguard assumes every new student can somehow afford.",
+      "portrait": "res://mods/base/assets/vanguard/entities/dorm_cache.png",
+      "location_id": "base:dorm_room",
       "currencies": {},
-      "stats": {
-        "power": 1,
-        "armor": 1,
-        "health": 60,
-        "health_max": 60,
-        "stamina": 40,
-        "stamina_max": 40
-      },
-      "flags": {},
-      "provides_sockets": [
-        {
-          "id": "utility",
-          "accepted_tags": [
-            "arm_mod",
-            "weapon"
-          ],
-          "label": "Utility Mount"
-        }
-      ],
-      "inventory": [
-        {
-          "instance_id": "drone_chip_001",
-          "template_id": "base:salvage_chip"
-        },
-        {
-          "instance_id": "drone_grip_001",
-          "template_id": "base:diagnostic_grip"
-        }
-      ],
-      "assembly_socket_map": {}
-    },
-    {
-      "entity_id": "base:apartment_cache",
-      "display_name": "Apartment Cache",
-      "description": "A small stash of supplies left in the apartment for testing loot review and transfer flows.",
-      "location_id": "base:apartment",
-      "currencies": {
-        "credits": 35
-      },
       "stats": {},
       "flags": {},
       "inventory": [
         {
-          "instance_id": "cache_medkit_001",
-          "template_id": "base:field_medkit"
+          "instance_id": "cache_chalk_001",
+          "template_id": "base:ritual_chalk"
         },
         {
-          "instance_id": "cache_chip_001",
-          "template_id": "base:salvage_chip"
+          "instance_id": "cache_notes_001",
+          "template_id": "base:lecture_notes"
         }
       ],
       "interactions": []
     },
     {
-      "entity_id": "base:training_drone",
-      "display_name": "Training Drone",
-      "description": "A battered clinic sparring unit with padded arms and very little bedside manner.",
-      "location_id": "base:market_row",
+      "entity_id": "base:roommate_mara",
+      "display_name": "Mara Vale",
+      "description": "Your roommate, already far too comfortable with campus weirdness. She explains things like she has survived them twice.",
+      "ai_persona_id": "base:mara_persona",
+      "portrait": "res://mods/base/assets/vanguard/entities/mara_vale.png",
+      "dialogue_blip": "res://mods/base/assets/vanguard/audio/sfx_dialogue_mara.wav",
+      "location_id": "base:dorm_common_area",
       "currencies": {},
       "stats": {
-        "power": 1,
-        "armor": 1,
-        "health": 35,
-        "health_max": 35,
-        "stamina": 30,
-        "stamina_max": 30
+        "charisma": 3,
+        "intelligence": 2,
+        "normalcy": 4,
+        "stress": 0,
+        "stress_max": 10,
+        "mana": 6,
+        "mana_max": 6
+      },
+      "flags": {
+        "met_player": false
+      },
+      "inventory": [],
+      "interactions": [
+        {
+          "tab_id": "mara_orientation",
+          "label": "Ask About Orientation",
+          "description": "Get pointed toward the practical parts of surviving your first day.",
+          "backend_class": "ChallengeBackend",
+          "target_entity_id": "player",
+          "portrait_entity_id": "base:roommate_mara",
+          "required_stat": "normalcy",
+          "required_value": 1,
+          "screen_title": "Mara's Orientation Advice",
+          "screen_description": "Mara checks whether you can pass the front desk without causing paperwork.",
+          "confirm_label": "Listen",
+          "reward": {
+            "cash": 5,
+            "flags": {
+              "orientation_started": true
+            }
+          },
+          "action_payload": {
+            "type": "start_quest",
+            "quest_id": "base:orientation"
+          }
+        },
+        {
+          "tab_id": "mara_sheet",
+          "label": "Profile",
+          "description": "Review Mara as a normal entity-backed NPC.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "base:roommate_mara",
+          "screen_title": "Mara Vale"
+        }
+      ]
+    },
+    {
+      "entity_id": "base:professor_ilex",
+      "display_name": "Professor Ilex",
+      "description": "The Arcana 101 lecturer. Severe, dry, and visibly allergic to excuses.",
+      "ai_persona_id": "base:ilex_persona",
+      "portrait": "res://mods/base/assets/vanguard/entities/professor_ilex.png",
+      "dialogue_blip": "res://mods/base/assets/vanguard/audio/sfx_dialogue_ilex.wav",
+      "location_id": "base:lecture_hall",
+      "currencies": {},
+      "stats": {
+        "intelligence": 5,
+        "willpower": 4,
+        "normalcy": 5,
+        "stress": 0,
+        "stress_max": 10,
+        "mana": 8,
+        "mana_max": 8
       },
       "flags": {},
       "inventory": [],
       "interactions": [
         {
-          "tab_id": "training_brawl",
-          "label": "Spar",
-          "description": "Run a short training encounter.",
-          "backend_class": "EncounterBackend",
-          "encounter_id": "base:tutorial_brawl",
-          "opponent_entity_id": "entity:base:training_drone"
-        },
-        {
-          "tab_id": "training_endurance",
-          "label": "Endurance Trial",
-          "description": "A sustained pressure test. Manage your stamina.",
-          "backend_class": "EncounterBackend",
-          "encounter_id": "base:tutorial_endurance",
-          "opponent_entity_id": "entity:base:training_drone"
+          "tab_id": "ilex_quiz",
+          "label": "Take Diagnostic Quiz",
+          "description": "A short stat check that demonstrates immediate pass/fail academic pressure.",
+          "backend_class": "ChallengeBackend",
+          "target_entity_id": "player",
+          "portrait_entity_id": "base:professor_ilex",
+          "required_stat": "intelligence",
+          "required_value": 3,
+          "screen_title": "Arcana 101 Diagnostic",
+          "screen_description": "Professor Ilex asks for the three properties of a stable circle. Guessing loudly is not recommended.",
+          "confirm_label": "Answer",
+          "action_payload": {
+            "type": "modify_stat",
+            "stat": "arcana_101_grade",
+            "delta": 1
+          },
+          "failure_action_payload": {
+            "type": "modify_stat",
+            "stat": "stress",
+            "delta": 1
+          },
+          "success_sound": "res://mods/base/assets/vanguard/audio/sfx_challenge_success.wav",
+          "failure_sound": "res://mods/base/assets/vanguard/audio/sfx_challenge_failure.wav"
         }
       ]
     },
     {
-      "entity_id": "base:npc_theta",
-      "display_name": "Quartermaster Theta",
-      "description": "A heavily augmented ripperdoc who runs the clinic in Market Row. She'll sell you parts, install them, and only judge you a little.",
-      "ai_persona_id": "base:theta_persona",
-      "portrait": "res://mods/base/assets/entity_theta.png",
-      "dialogue_blip": "res://mods/base/assets/audio/sfx_dialogue_theta.wav",
-      "location_id": "base:market_row",
+      "entity_id": "base:foreman_briggs",
+      "display_name": "Foreman Briggs",
+      "description": "A campus-adjacent warehouse foreman who only asks two questions: can you lift it, and can you do it today?",
+      "portrait": "res://mods/base/assets/vanguard/entities/foreman_briggs.png",
+      "location_id": "base:industrial_ward",
       "currencies": {
-        "credits": 9999,
-        "data_shards": 50
+        "cash": 500
+      },
+      "stats": {
+        "strength": 4,
+        "endurance": 4,
+        "normalcy": 3,
+        "stress": 0,
+        "stress_max": 10,
+        "mana": 0,
+        "mana_max": 0
+      },
+      "flags": {},
+      "inventory": [],
+      "interactions": [
+        {
+          "tab_id": "briggs_work",
+          "label": "Ask For Work",
+          "description": "Open work activities filtered for the Industrial Ward.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Warehouse Work",
+          "categories": [
+            "work"
+          ],
+          "location_filter": "base:industrial_ward",
+          "show_locked": true,
+          "show_upcoming": true,
+          "confirm_label": "Start Shift"
+        }
+      ]
+    },
+    {
+      "entity_id": "base:shopkeeper_sel",
+      "display_name": "Sel",
+      "description": "The High Street shopkeeper who sells chalk, meal vouchers, and plausible deniability.",
+      "portrait": "res://mods/base/assets/vanguard/entities/shopkeeper_sel.png",
+      "location_id": "base:high_street",
+      "currencies": {
+        "cash": 1000
       },
       "stats": {
         "charisma": 4,
-        "power": 2,
-        "health": 150,
-        "health_max": 150
-      },
-      "flags": {
-        "met_player": false
-      },
-      "inventory": [
-        {
-          "instance_id": "theta_optic_001",
-          "template_id": "base:optic_implant"
-        },
-        {
-          "instance_id": "theta_armor_001",
-          "template_id": "base:kevlar_weave"
-        },
-        {
-          "instance_id": "theta_baton_001",
-          "template_id": "base:stun_baton"
-        },
-        {
-          "instance_id": "theta_reflex_001",
-          "template_id": "base:reflex_booster"
-        },
-        {
-          "instance_id": "theta_ceramic_001",
-          "template_id": "base:ceramic_plating"
-        },
-        {
-          "instance_id": "theta_mono_001",
-          "template_id": "base:mono_blade"
-        },
-        {
-          "instance_id": "theta_synth_head_001",
-          "template_id": "base:synth_head"
-        },
-        {
-          "instance_id": "theta_synth_torso_001",
-          "template_id": "base:synth_torso"
-        },
-        {
-          "instance_id": "theta_synth_arms_001",
-          "template_id": "base:synth_arms"
-        },
-        {
-          "instance_id": "theta_synth_legs_001",
-          "template_id": "base:synth_legs"
-        }
-      ],
-      "interactions": [
-        {
-          "tab_id": "theta_trade",
-          "label": "Browse Stock",
-          "description": "Buy augments, weapons, and body parts.",
-          "backend_class": "ExchangeBackend",
-          "source_inventory": "entity:base:npc_theta",
-          "destination_inventory": "player",
-          "currency_id": "credits",
-          "transaction_sound": "res://mods/base/assets/audio/sfx_trade.wav"
-        },
-        {
-          "tab_id": "theta_talk",
-          "label": "Talk",
-          "description": "Have a conversation.",
-          "backend_class": "DialogueBackend",
-          "dialogue_resource": "res://mods/base/dialogue/quartermaster_theta.dialogue",
-          "dialogue_start": "start",
-          "ai_mode": "freeform"
-        },
-        {
-          "tab_id": "theta_sheet",
-          "label": "Scan",
-          "description": "Run a bioscan on Theta.",
-          "backend_class": "EntitySheetBackend",
-          "target_entity_id": "base:npc_theta",
-          "screen_title": "Quartermaster Theta \u2014 Bioscan"
-        },
-        {
-          "tab_id": "theta_negotiate",
-          "label": "Negotiate",
-          "description": "Try to talk Theta into better supply terms.",
-          "backend_class": "EncounterBackend",
-          "encounter_id": "base:tutorial_negotiation",
-          "opponent_entity_id": "entity:base:npc_theta"
-        },
-        {
-          "tab_id": "theta_challenge",
-          "label": "Arm Wrestle",
-          "description": "Prove your power. Requires power 3 or higher.",
-          "backend_class": "ChallengeBackend",
-          "required_stat": "power",
-          "required_value": 3,
-          "success_sound": "res://mods/base/assets/audio/sfx_challenge_success.wav",
-          "failure_sound": "res://mods/base/assets/audio/sfx_challenge_failure.wav",
-          "action_payload": {
-            "type": "set_flag",
-            "entity_id": "base:npc_theta",
-            "flag_id": "respects_player",
-            "value": true
-          }
-        }
-      ]
-    },
-    {
-      "entity_id": "base:npc_fixer",
-      "display_name": "Kael",
-      "description": "A soft-spoken fixer who operates out of the old warehouse. Hands out contracts for the Threshold Syndicate and always pays on time.",
-      "ai_persona_id": "base:kael_persona",
-      "portrait": "res://mods/base/assets/entity_kael.png",
-      "dialogue_blip": "res://mods/base/assets/audio/sfx_dialogue_kael.wav",
-      "location_id": "base:warehouse",
-      "currencies": {
-        "credits": 5000
-      },
-      "stats": {
-        "charisma": 5,
-        "luck": 3,
-        "health": 80,
-        "health_max": 80
+        "perception": 3,
+        "normalcy": 5,
+        "stress": 0,
+        "stress_max": 10,
+        "mana": 3,
+        "mana_max": 3
       },
       "flags": {},
       "inventory": [
         {
-          "instance_id": "kael_charm_001",
-          "template_id": "base:lucky_charm"
+          "instance_id": "sel_chalk_001",
+          "template_id": "base:ritual_chalk"
         },
         {
-          "instance_id": "kael_medkit_001",
-          "template_id": "base:field_medkit"
+          "instance_id": "sel_chalk_002",
+          "template_id": "base:ritual_chalk"
         },
         {
-          "instance_id": "kael_medkit_002",
-          "template_id": "base:field_medkit"
+          "instance_id": "sel_chalk_003",
+          "template_id": "base:ritual_chalk"
+        },
+        {
+          "instance_id": "sel_voucher_001",
+          "template_id": "base:cafeteria_voucher"
+        },
+        {
+          "instance_id": "sel_notes_001",
+          "template_id": "base:lecture_notes"
         }
       ],
       "interactions": [
         {
-          "tab_id": "kael_trade",
+          "tab_id": "sel_trade",
           "label": "Buy Supplies",
-          "description": "Kael keeps a few useful items on hand.",
+          "description": "Buy exact inventory items from Sel's current stock.",
           "backend_class": "ExchangeBackend",
-          "source_inventory": "entity:base:npc_fixer",
+          "source_inventory": "entity:base:shopkeeper_sel",
           "destination_inventory": "player",
-          "currency_id": "credits",
-          "transaction_sound": "res://mods/base/assets/audio/sfx_trade.wav"
+          "currency_id": "cash",
+          "transaction_sound": "res://mods/base/assets/vanguard/audio/sfx_trade.wav"
         },
         {
-          "tab_id": "kael_talk",
-          "label": "Talk",
-          "description": "Speak with Kael.",
-          "backend_class": "DialogueBackend",
-          "dialogue_resource": "res://mods/base/dialogue/kael.dialogue",
-          "dialogue_start": "start",
-          "ai_mode": "hybrid"
-        },
-        {
-          "tab_id": "kael_sheet",
-          "label": "Read",
-          "description": "Size Kael up.",
+          "tab_id": "sel_profile",
+          "label": "Profile",
+          "description": "Review a vendor NPC through the generic entity sheet.",
           "backend_class": "EntitySheetBackend",
-          "target_entity_id": "base:npc_fixer",
-          "screen_title": "Kael \u2014 Street Profile"
+          "target_entity_id": "base:shopkeeper_sel",
+          "screen_title": "Sel"
         }
       ]
     }

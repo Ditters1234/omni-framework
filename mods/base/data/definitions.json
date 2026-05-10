@@ -1,20 +1,43 @@
 {
   "currencies": [
-    "credits",
-    "data_shards"
+    "cash"
   ],
   "stats": [
     {
-      "id": "power",
+      "id": "strength",
       "kind": "flat",
       "default_value": 0,
-      "ui_group": "combat"
+      "ui_group": "physical"
     },
     {
-      "id": "armor",
+      "id": "dexterity",
       "kind": "flat",
       "default_value": 0,
-      "ui_group": "combat"
+      "ui_group": "physical"
+    },
+    {
+      "id": "endurance",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "physical"
+    },
+    {
+      "id": "intelligence",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "mental"
+    },
+    {
+      "id": "willpower",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "mental"
+    },
+    {
+      "id": "perception",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "mental"
     },
     {
       "id": "charisma",
@@ -23,44 +46,56 @@
       "ui_group": "social"
     },
     {
-      "id": "luck",
+      "id": "intimidation",
       "kind": "flat",
       "default_value": 0,
       "ui_group": "social"
     },
     {
-      "id": "health",
+      "id": "normalcy",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "social"
+    },
+    {
+      "id": "arcana_101_grade",
+      "kind": "flat",
+      "default_value": 0,
+      "ui_group": "academic"
+    },
+    {
+      "id": "mana",
       "kind": "resource",
-      "paired_capacity_id": "health_max",
-      "default_value": 100,
-      "default_capacity_value": 100,
+      "paired_capacity_id": "mana_max",
+      "default_value": 6,
+      "default_capacity_value": 6,
       "clamp_min": 0,
-      "ui_group": "survival"
+      "ui_group": "resources"
     },
     {
-      "id": "health_max",
+      "id": "mana_max",
       "kind": "capacity",
-      "paired_base_id": "health",
-      "default_value": 100,
+      "paired_base_id": "mana",
+      "default_value": 6,
       "clamp_min": 0,
-      "ui_group": "survival"
+      "ui_group": "resources"
     },
     {
-      "id": "stamina",
+      "id": "stress",
       "kind": "resource",
-      "paired_capacity_id": "stamina_max",
-      "default_value": 50,
-      "default_capacity_value": 50,
+      "paired_capacity_id": "stress_max",
+      "default_value": 0,
+      "default_capacity_value": 10,
       "clamp_min": 0,
-      "ui_group": "survival"
+      "ui_group": "resources"
     },
     {
-      "id": "stamina_max",
+      "id": "stress_max",
       "kind": "capacity",
-      "paired_base_id": "stamina",
-      "default_value": 50,
+      "paired_base_id": "stress",
+      "default_value": 10,
       "clamp_min": 0,
-      "ui_group": "survival"
+      "ui_group": "resources"
     }
   ]
 }

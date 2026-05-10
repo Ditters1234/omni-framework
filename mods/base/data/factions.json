@@ -1,24 +1,75 @@
 {
   "factions": [
     {
-      "faction_id": "base:threshold_syndicate",
-      "display_name": "Threshold Syndicate",
-      "description": "A loose network of fixers, smugglers, and freelance operatives who keep the district running outside corporate oversight. They value reliability over loyalty.",
-      "emblem_path": "res://mods/base/assets/faction_threshold_syndicate.png",
-      "faction_color": "#00d4aa",
-      "territory": ["base:warehouse", "base:market_row"],
-      "roster": ["base:npc_fixer", "base:npc_theta"],
+      "faction_id": "base:vanguard_students",
+      "display_name": "Vanguard Students",
+      "description": "The loose social ecosystem of clubs, roommates, study groups, and people who know which vending machines are haunted.",
+      "emblem_path": "res://mods/base/assets/vanguard/factions/vanguard_students.png",
+      "faction_color": "#6fae8f",
+      "territory": [
+        "base:dorm_common_area",
+        "base:student_union",
+        "base:library"
+      ],
+      "roster": [
+        "base:roommate_mara"
+      ],
       "reputation_thresholds": {
-        "allied": 100,
         "trusted": 50,
-        "friendly": 25,
+        "friendly": 20,
         "neutral": 0,
-        "distrusted": -25,
-        "hostile": -50
+        "awkward": -10,
+        "avoided": -30
+      },
+      "quest_pool": []
+    },
+    {
+      "faction_id": "base:vanguard_faculty",
+      "display_name": "Vanguard Faculty",
+      "description": "Professors, lecturers, and administrators who grade both essays and survival instincts.",
+      "emblem_path": "res://mods/base/assets/vanguard/factions/vanguard_faculty.png",
+      "faction_color": "#d7a84f",
+      "territory": [
+        "base:lecture_hall",
+        "base:library"
+      ],
+      "roster": [
+        "base:professor_ilex"
+      ],
+      "reputation_thresholds": {
+        "recognized": 40,
+        "approved": 20,
+        "neutral": 0,
+        "concerned": -15,
+        "probation": -30
       },
       "quest_pool": [
-        "base:deliver_package",
-        "base:supply_run"
+        "base:first_assignment"
+      ]
+    },
+    {
+      "faction_id": "base:aethelgard_workers",
+      "display_name": "Aethelgard Workers",
+      "description": "Off-campus crews, foremen, and shift workers who convert strength and reliability into cash.",
+      "emblem_path": "res://mods/base/assets/vanguard/factions/aethelgard_workers.png",
+      "faction_color": "#a96e45",
+      "territory": [
+        "base:industrial_ward",
+        "base:high_street"
+      ],
+      "roster": [
+        "base:foreman_briggs",
+        "base:shopkeeper_sel"
+      ],
+      "reputation_thresholds": {
+        "reliable": 40,
+        "known": 15,
+        "neutral": 0,
+        "unreliable": -15,
+        "barred": -40
+      },
+      "quest_pool": [
+        "base:tuition_pressure"
       ]
     }
   ]

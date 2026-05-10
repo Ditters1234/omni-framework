@@ -17,28 +17,28 @@ func test_base_bootstrap_content_exists() -> void:
 	assert_eq(str(player_template.get("location_id", "")), starting_location_id)
 
 
-func test_base_kael_ai_persona_exists_and_is_bound() -> void:
-	var kael_template := DataManager.get_entity("base:npc_fixer")
-	assert_eq(str(kael_template.get("ai_persona_id", "")), "base:kael_persona")
-	var kael_persona := DataManager.get_ai_persona("base:kael_persona")
-	assert_false(kael_persona.is_empty())
-	assert_eq(str(kael_persona.get("display_name", "")), "Kael")
+func test_base_vanguard_ai_personas_exist_and_are_bound() -> void:
+	var mara_template := DataManager.get_entity("base:roommate_mara")
+	assert_eq(str(mara_template.get("ai_persona_id", "")), "base:mara_persona")
+	var mara_persona := DataManager.get_ai_persona("base:mara_persona")
+	assert_false(mara_persona.is_empty())
+	assert_eq(str(mara_persona.get("display_name", "")), "Mara Vale")
 
-	var theta_template := DataManager.get_entity("base:npc_theta")
-	assert_eq(str(theta_template.get("ai_persona_id", "")), "base:theta_persona")
-	var theta_persona := DataManager.get_ai_persona("base:theta_persona")
-	assert_false(theta_persona.is_empty())
-	assert_eq(str(theta_persona.get("display_name", "")), "Quartermaster Theta")
+	var ilex_template := DataManager.get_entity("base:professor_ilex")
+	assert_eq(str(ilex_template.get("ai_persona_id", "")), "base:ilex_persona")
+	var ilex_persona := DataManager.get_ai_persona("base:ilex_persona")
+	assert_false(ilex_persona.is_empty())
+	assert_eq(str(ilex_persona.get("display_name", "")), "Professor Ilex")
 
 
-func test_base_player_head_has_custom_color_values_for_ui_testing() -> void:
-	var head_template := DataManager.get_part("base:human_head_male")
-	assert_false(head_template.is_empty())
-	var custom_fields_value: Variant = head_template.get("custom_fields", [])
+func test_base_player_senses_have_custom_color_values_for_ui_testing() -> void:
+	var senses_template := DataManager.get_part("base:human_senses")
+	assert_false(senses_template.is_empty())
+	var custom_fields_value: Variant = senses_template.get("custom_fields", [])
 	assert_true(custom_fields_value is Array)
 	if custom_fields_value is Array:
 		var custom_fields: Array = custom_fields_value
-		assert_gt(custom_fields.size(), 1)
+		assert_gt(custom_fields.size(), 0)
 
 	var player_template := DataManager.get_entity("base:player")
 	var assembly_socket_map_value: Variant = player_template.get("assembly_socket_map", {})
@@ -46,17 +46,16 @@ func test_base_player_head_has_custom_color_values_for_ui_testing() -> void:
 	if not assembly_socket_map_value is Dictionary:
 		return
 	var assembly_socket_map: Dictionary = assembly_socket_map_value
-	var head_instance_id := str(assembly_socket_map.get("head", ""))
-	assert_false(head_instance_id.is_empty())
-	if head_instance_id.is_empty():
+	var senses_instance_id := str(assembly_socket_map.get("sensory", ""))
+	assert_false(senses_instance_id.is_empty())
+	if senses_instance_id.is_empty():
 		return
 
 	var player := EntityInstance.from_template(player_template)
-	var head := player.get_inventory_part(head_instance_id)
-	assert_not_null(head)
-	if head != null:
-		assert_eq(str(head.get_custom_value("eye_color", "")), "green")
-		assert_eq(str(head.get_custom_value("hair_color", "")), "black")
+	var senses := player.get_inventory_part(senses_instance_id)
+	assert_not_null(senses)
+	if senses != null:
+		assert_eq(str(senses.get_custom_value("eye_color", "")), "brown")
 	
 
 func test_resource_and_capacity_stats_have_valid_pair_links() -> void:
@@ -137,53 +136,34 @@ func test_base_content_uses_known_stats_currencies_and_location_backends() -> vo
 			)
 
 
-func test_base_mod_ships_reference_dialogue_and_script_hook_fixtures() -> void:
-	assert_true(FileAccess.file_exists("res://mods/base/dialogue/quartermaster_theta.dialogue"))
-	# Remove this unless base actually promises a sample hook file:
-	# assert_true(FileAccess.file_exists("res://mods/base/scripts/sample_script_hook.gd"))
-
-
 func test_base_ships_the_timed_recipe_craft_task_shell() -> void:
-	var craft_task := DataManager.get_task("base:recipe_craft")
+	var craft_task := DataManager.get_task("base:ritual_craft")
 	assert_false(craft_task.is_empty())
 	assert_eq(str(craft_task.get("type", "")), "CRAFT")
 	assert_eq(int(craft_task.get("duration", 0)), 1)
 	assert_true(bool(craft_task.get("repeatable", false)))
 
 
-func test_base_ships_reference_encounters_and_launch_interactions() -> void:
-	var expected_encounter_ids := [
-		"base:tutorial_brawl",
-		"base:tutorial_negotiation",
-		"base:tutorial_endurance",
+func test_base_ships_vanguard_activities_and_quests() -> void:
+	var expected_activity_ids := [
+		"base:attend_arcana_lecture",
+		"base:study_at_library",
+		"base:warehouse_shift",
+		"base:student_mixer",
+		"base:prepare_ritual_circle",
+		"base:sleep_in_dorm",
 	]
-	for encounter_id in expected_encounter_ids:
-		var encounter := DataManager.get_encounter(encounter_id)
-		assert_false(encounter.is_empty(), "Missing reference encounter '%s'" % encounter_id)
+	for activity_id in expected_activity_ids:
+		assert_false(DataManager.get_activity(activity_id).is_empty(), "Missing activity '%s'" % activity_id)
 
-	assert_true(_entity_has_encounter_interaction("base:training_drone", "base:tutorial_brawl"))
-	assert_true(_entity_has_encounter_interaction("base:training_drone", "base:tutorial_endurance"))
-	assert_true(_entity_has_encounter_interaction("base:npc_theta", "base:tutorial_negotiation"))
+	assert_false(DataManager.get_quest("base:orientation").is_empty())
+	assert_false(DataManager.get_quest("base:first_assignment").is_empty())
+	assert_false(DataManager.get_quest("base:tuition_pressure").is_empty())
 
 
 func test_base_ships_reference_status_effects() -> void:
-	var repair_effect := DataManager.get_status_effect("base:field_repair")
-	assert_false(repair_effect.is_empty())
-	var focused_effect := DataManager.get_status_effect("base:focused")
-	assert_false(focused_effect.is_empty())
-	assert_true(DataManager.has_status_effect("base:focused"))
-
-
-func _entity_has_encounter_interaction(entity_id: String, encounter_id: String) -> bool:
-	var entity := DataManager.get_entity(entity_id)
-	var interactions_value: Variant = entity.get("interactions", [])
-	if not interactions_value is Array:
-		return false
-	var interactions: Array = interactions_value
-	for interaction_value in interactions:
-		if not interaction_value is Dictionary:
-			continue
-		var interaction: Dictionary = interaction_value
-		if str(interaction.get("backend_class", "")) == "EncounterBackend" and str(interaction.get("encounter_id", "")) == encounter_id:
-			return true
-	return false
+	var centered_effect := DataManager.get_status_effect("base:centered")
+	assert_false(centered_effect.is_empty())
+	var frazzled_effect := DataManager.get_status_effect("base:frazzled")
+	assert_false(frazzled_effect.is_empty())
+	assert_true(DataManager.has_status_effect("base:well_rested"))

@@ -1,27 +1,45 @@
-# Base Starter Pack
+# Vanguard University Base Mod
 
-A minimal **base game content pack** for Omni-Framework that follows the guide's `mods/base/` model instead of behaving like an add-on mod.
+This is the minimal playable base game for Omni-Framework.
 
-## What it is
+The base mod is intentionally small. It demonstrates how to build a real game loop with existing data systems before addon mods expand the content.
 
-This is a small self-contained starter dataset meant to help you validate the core data pipeline and major gameplay systems in a fresh project structure.
+## What This Teaches
 
-It includes:
-- base definitions for currencies and stats
-- a `base:player` entity with starter inventory and sockets
-- a vendor NPC with trade, dialogue, sheet, and challenge interactions
-- two connected locations (`base:hub_safehouse` and `base:test_hub`)
-- a faction, task templates, quest, achievements, and small config defaults
-- one simple DialogueBackend resource
+- `definitions.json`: stat groups, resource/capacity pairs, and a single money currency.
+- `parts.json`: body sockets, transformation parts, custom fields, equippable keepsakes, consumable items, and inventory components.
+- `entities.json`: player setup, inventory instances, socket maps, NPCs, containers, vendor stock, and entity interactions.
+- `locations.json`: location graph, map positions, location screens, entity presence, and backend payload examples.
+- `activities.json`: scheduled activities, repeat rules, requirements, weighted outcomes, stat changes, reputation, currency, item rewards, and event records.
+- `quests.json`: activity-history objectives, stat objectives, location objectives, rewards, and repeatable flags.
+- `factions.json`: reputation thresholds, territories, rosters, and quest pools.
+- `recipes.json`: crafting inputs, stations, required stats, instant recipes, and timed recipes.
+- `status_effects.json`: buffs, debuffs, stack modes, and condition-gated effects.
+- `config.json`: game identity, time buttons, stat group display, activity labels, theme colors, lifecycle rules, and AI toggles.
 
-## Install
+## Core Loop
 
-Extract so the final path is:
+1. Start in `base:dorm_room`.
+2. Review your student record.
+3. Prepare or use the ritual circle to change owned body parts.
+4. Attend lecture, study, work, socialize, or recover through activities.
+5. Earn cash, course progress, ritual chalk, stress, and reputation.
+6. Sleep to restore mana and let the day settle.
 
-`mods/base/`
+## Design Boundaries
 
-## Notes
+- This base game uses no combat and no `health` stat.
+- Pressure comes from `mana`, `stress`, cash, and `arcana_101_grade`.
+- Ritual components are inventory parts, not currencies.
+- The current ritual circle uses existing `AssemblyEditorBackend` behavior. Mana and ritual chalk are demonstrated through preparation activities and surrounding loops rather than custom assembly-cost engine code.
+- Addon mods should expand content through additions and patches instead of replacing the base loop.
 
-- This pack intentionally avoids custom assets so it stays small and easy to inspect.
-- It is designed as a *starter/base scaffold*, not a content-rich game.
-- If your current engine build has drifted from the guide, you may still need to adjust a few field names or route params.
+## Addon Direction
+
+Suggested tutorial/content addon order:
+
+1. `mods/omni/primal_lineage/`
+2. `mods/omni/course_arcana_101/`
+3. `mods/omni/occult_market/`
+4. `mods/omni/fae_lineage/`
+5. `mods/omni/nightlife/`

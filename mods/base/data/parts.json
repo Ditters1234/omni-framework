@@ -1,672 +1,345 @@
 {
   "parts": [
     {
+      "id": "base:human_mind",
+      "display_name": "Human Mind",
+      "description": "A familiar cognitive pattern. Reliable for lectures, schedules, and passing as ordinary.",
+      "tags": [
+        "cognitive",
+        "human",
+        "baseline"
+      ],
+      "price": {
+        "cash": 0
+      },
+      "stats": {
+        "intelligence": 1,
+        "willpower": 1,
+        "normalcy": 1
+      },
+      "equippable": true,
+      "sprite": "res://mods/base/assets/vanguard/parts/human_mind.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_soft.wav",
       "custom_fields": [
         {
-          "default_value": "brown",
+          "id": "memory_anchor",
+          "label": "Memory Anchor",
+          "type": "text",
+          "default_value": "student id"
+        }
+      ]
+    },
+    {
+      "id": "base:primal_hindbrain",
+      "display_name": "Primal Hindbrain",
+      "description": "Instinct rises close to the surface. Strong under pressure, rough in seminar rooms.",
+      "tags": [
+        "cognitive",
+        "primal",
+        "lineage_seed"
+      ],
+      "price": {
+        "cash": 45
+      },
+      "stats": {
+        "strength": 1,
+        "endurance": 1,
+        "intimidation": 1,
+        "intelligence": -1,
+        "normalcy": -1
+      },
+      "equippable": true,
+      "sprite": "res://mods/base/assets/vanguard/parts/primal_hindbrain.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_primal.wav"
+    },
+    {
+      "id": "base:human_senses",
+      "display_name": "Human Senses",
+      "description": "Normal eyes, ears, and proprioception. Comfortable, balanced, and socially unremarkable.",
+      "tags": [
+        "sensory",
+        "human",
+        "baseline"
+      ],
+      "price": {
+        "cash": 0
+      },
+      "stats": {
+        "perception": 1,
+        "normalcy": 1
+      },
+      "equippable": true,
+      "sprite": "res://mods/base/assets/vanguard/parts/human_senses.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_soft.wav",
+      "custom_fields": [
+        {
           "id": "eye_color",
           "label": "Eye Color",
+          "type": "color_name",
+          "default_value": "brown",
           "options": [
             "brown",
             "blue",
             "green",
             "amber",
-            "gray",
-            "violet"
-          ],
-          "type": "color_name"
-        },
-        {
-          "default_value": "black",
-          "id": "hair_color",
-          "label": "Hair Color",
-          "options": [
-            "black",
-            "brown",
-            "blonde",
-            "red",
-            "white",
-            "silver",
-            "blue"
-          ],
-          "type": "color_name"
+            "gray"
+          ]
         }
+      ]
+    },
+    {
+      "id": "base:fae_sight",
+      "display_name": "Fae Sight",
+      "description": "Eyes that catch glamour, tells, and hidden script. Beautiful, unsettling, and difficult to hide.",
+      "tags": [
+        "sensory",
+        "fae",
+        "lineage_seed"
       ],
-      "description": "Stock biological cranium. Houses standard neural pathways and one implant socket.",
-      "display_name": "Male Human Head",
-      "equippable": true,
-      "id": "base:human_head_male",
       "price": {
-        "credits": 0.0
+        "cash": 55
       },
+      "stats": {
+        "perception": 2,
+        "charisma": 1,
+        "normalcy": -2
+      },
+      "equippable": true,
+      "sprite": "res://mods/base/assets/vanguard/parts/fae_sight.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_fae.wav"
+    },
+    {
+      "id": "base:human_hands",
+      "display_name": "Human Hands",
+      "description": "Steady hands for notes, work, and social rituals.",
+      "tags": [
+        "manipulator",
+        "human",
+        "baseline"
+      ],
+      "price": {
+        "cash": 0
+      },
+      "stats": {
+        "dexterity": 1,
+        "charisma": 1,
+        "normalcy": 1
+      },
+      "equippable": true,
+      "sprite": "res://mods/base/assets/vanguard/parts/human_hands.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_soft.wav"
+    },
+    {
+      "id": "base:clawed_grip",
+      "display_name": "Clawed Grip",
+      "description": "Dense palms and black nails for lifting, tearing, and making a point without words.",
+      "tags": [
+        "manipulator",
+        "primal",
+        "lineage_seed"
+      ],
+      "price": {
+        "cash": 60
+      },
+      "stats": {
+        "strength": 2,
+        "intimidation": 1,
+        "dexterity": -1,
+        "normalcy": -2
+      },
+      "equippable": true,
+      "sprite": "res://mods/base/assets/vanguard/parts/clawed_grip.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_primal.wav"
+    },
+    {
+      "id": "base:human_stride",
+      "display_name": "Human Stride",
+      "description": "A normal gait. Good enough for campus and unnoticed in a crowd.",
+      "tags": [
+        "locomotion",
+        "human",
+        "baseline"
+      ],
+      "price": {
+        "cash": 0
+      },
+      "stats": {
+        "dexterity": 1,
+        "endurance": 1,
+        "normalcy": 1
+      },
+      "equippable": true,
+      "sprite": "res://mods/base/assets/vanguard/parts/human_stride.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_soft.wav"
+    },
+    {
+      "id": "base:bounding_legs",
+      "display_name": "Bounding Legs",
+      "description": "Powerful legs shaped for hauling, sprinting, and crouching in chairs that were not made for you.",
+      "tags": [
+        "locomotion",
+        "primal",
+        "lineage_seed"
+      ],
+      "price": {
+        "cash": 65
+      },
+      "stats": {
+        "strength": 1,
+        "endurance": 2,
+        "normalcy": -2
+      },
+      "equippable": true,
+      "sprite": "res://mods/base/assets/vanguard/parts/bounding_legs.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_primal.wav"
+    },
+    {
+      "id": "base:human_frame",
+      "display_name": "Human Frame",
+      "description": "An ordinary torso and stance. Nothing to explain, nothing to conceal.",
+      "tags": [
+        "framework",
+        "human",
+        "baseline"
+      ],
+      "price": {
+        "cash": 0
+      },
+      "stats": {
+        "endurance": 1,
+        "normalcy": 2
+      },
+      "equippable": true,
       "provides_sockets": [
         {
+          "id": "keepsake",
           "accepted_tags": [
-            "neural_implant"
+            "keepsake"
           ],
-          "id": "neural_slot",
-          "label": "Neural Socket"
+          "label": "Keepsake"
         }
       ],
-      "sprite": "res://assets/generated/human_head_male_frame_0_1777424594.png",
-      "stats": {
-        "charisma": 1.0
-      },
-      "tags": [
-        "head",
-        "organic"
-      ]
+      "sprite": "res://mods/base/assets/vanguard/parts/human_frame.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_soft.wav"
     },
     {
-      "custom_fields": [
-        {
-          "default_value": "brown",
-          "id": "eye_color",
-          "label": "Eye Color",
-          "options": [
-            "brown",
-            "blue",
-            "green",
-            "amber",
-            "gray",
-            "violet"
-          ],
-          "type": "color_name"
-        },
-        {
-          "default_value": "black",
-          "id": "hair_color",
-          "label": "Hair Color",
-          "options": [
-            "black",
-            "brown",
-            "blonde",
-            "red",
-            "white",
-            "silver",
-            "blue"
-          ],
-          "type": "color_name"
-        }
+      "id": "base:hulking_frame",
+      "display_name": "Hulking Frame",
+      "description": "A broader stance and heavier center. Excellent for labor, awkward for group projects.",
+      "tags": [
+        "framework",
+        "primal",
+        "lineage_seed"
       ],
-      "description": "Stock biological cranium. Houses standard neural pathways and one implant socket.",
-      "display_name": "Female Human Head",
-      "equippable": true,
-      "id": "base:human_head_female",
       "price": {
-        "credits": 0.0
+        "cash": 80
       },
+      "stats": {
+        "strength": 2,
+        "endurance": 1,
+        "charisma": -1,
+        "normalcy": -2
+      },
+      "equippable": true,
       "provides_sockets": [
         {
+          "id": "keepsake",
           "accepted_tags": [
-            "neural_implant"
+            "keepsake"
           ],
-          "id": "neural_slot",
-          "label": "Neural Socket"
+          "label": "Keepsake"
         }
       ],
-      "sprite": "res://assets/generated/human_head_female_frame_0_1777424595.png",
-      "stats": {
-        "charisma": 1.0
-      },
-      "tags": [
-        "head",
-        "organic"
-      ]
+      "sprite": "res://mods/base/assets/vanguard/parts/hulking_frame.png",
+      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_primal.wav"
     },
     {
-      "description": "Reinforced polymer shell with embedded threat scanner. Trades personality for durability.",
-      "display_name": "Composite Faceplate",
-      "equippable": true,
-      "id": "base:synth_head",
+      "id": "base:student_id_lanyard",
+      "display_name": "Student ID Lanyard",
+      "description": "A mundane anchor to campus life. It helps people see the student before the strange.",
+      "tags": [
+        "keepsake",
+        "campus",
+        "identity"
+      ],
       "price": {
-        "credits": 200.0
+        "cash": 0
       },
-      "provides_sockets": [
-        {
-          "accepted_tags": [
-            "neural_implant"
-          ],
-          "id": "neural_slot",
-          "label": "Neural Socket"
-        }
-      ],
-      "sprite": "res://assets/generated/synth_head_frame_0_1777424434.png",
       "stats": {
-        "armor": 2.0,
-        "health_max": 10.0
+        "normalcy": 1
       },
-      "tags": [
-        "head",
-        "synthetic"
-      ]
-    },
-    {
-      "description": "Standard ribcage and organ housing. Accepts subdermal plating.",
-      "display_name": "Male Human Torso",
       "equippable": true,
-      "id": "base:human_torso_male",
-      "price": {
-        "credits": 0.0
-      },
-      "provides_sockets": [
-        {
-          "accepted_tags": [
-            "subdermal_armor"
-          ],
-          "id": "subdermal_slot",
-          "label": "Subdermal Slot"
-        }
-      ],
-      "sprite": "res://assets/generated/human_torso_male_frame_0_1777424598.png",
-      "stats": {
-        "health": 20.0,
-        "health_max": 20.0
-      },
-      "tags": [
-        "torso",
-        "organic"
-      ]
+      "sprite": "res://mods/base/assets/vanguard/parts/student_id_lanyard.png"
     },
     {
-      "description": "Standard ribcage and organ housing. Accepts subdermal plating.",
-      "display_name": "Female Human Torso",
-      "equippable": true,
-      "id": "base:human_torso_female",
-      "price": {
-        "credits": 0.0
-      },
-      "provides_sockets": [
-        {
-          "accepted_tags": [
-            "subdermal_armor"
-          ],
-          "id": "subdermal_slot",
-          "label": "Subdermal Slot"
-        }
-      ],
-      "sprite": "res://assets/generated/human_torso_female_frame_0_1777424595.png",
-      "stats": {
-        "health": 20.0,
-        "health_max": 20.0
-      },
+      "id": "base:ritual_chalk",
+      "display_name": "Ritual Chalk",
+      "description": "White chalk mixed with powdered moon-shell. Basic circles, substitutions, and classroom-safe wards all start here.",
       "tags": [
-        "torso",
-        "organic"
-      ]
-    },
-    {
-      "description": "Military-surplus exo-torso. Heavy, expensive, and nearly indestructible.",
-      "display_name": "Hardshell Frame",
-      "equippable": true,
-      "id": "base:synth_torso",
+        "ritual_component",
+        "ritual_basic",
+        "material"
+      ],
       "price": {
-        "credits": 350.0
+        "cash": 12
       },
-      "provides_sockets": [
-        {
-          "accepted_tags": [
-            "subdermal_armor"
-          ],
-          "id": "subdermal_slot",
-          "label": "Subdermal Slot"
-        }
-      ],
-      "sprite": "res://assets/generated/synth_torso_frame_0_1777424430.png",
-      "stats": {
-        "armor": 3.0,
-        "health": 10.0,
-        "health_max": 40.0
-      },
-      "tags": [
-        "torso",
-        "synthetic"
-      ]
-    },
-    {
-      "description": "Flesh and bone manipulators. Reliable and cheap to repair.",
-      "display_name": "Male Human Arms",
-      "equippable": true,
-      "id": "base:human_arms_male",
-      "price": {
-        "credits": 0.0
-      },
-      "provides_sockets": [
-        {
-          "accepted_tags": [
-            "arm_mod"
-          ],
-          "id": "arm_mod_slot",
-          "label": "Arm Mod"
-        }
-      ],
-      "required_tags": [
-        "torso"
-      ],
-      "sprite": "res://assets/generated/human_arms_male_frame_0_1777424597.png",
-      "stats": {
-        "power": 1.0
-      },
-      "tags": [
-        "arms",
-        "organic"
-      ]
-    },
-    {
-      "description": "Flesh and bone manipulators. Reliable and cheap to repair.",
-      "display_name": "Female Human Arms",
-      "equippable": true,
-      "id": "base:human_arms_female",
-      "price": {
-        "credits": 0.0
-      },
-      "provides_sockets": [
-        {
-          "accepted_tags": [
-            "arm_mod"
-          ],
-          "id": "arm_mod_slot",
-          "label": "Arm Mod"
-        }
-      ],
-      "required_tags": [
-        "torso"
-      ],
-      "sprite": "res://assets/generated/human_arms_female_frame_0_1777424598.png",
-      "stats": {
-        "power": 1.0
-      },
-      "tags": [
-        "arms",
-        "organic"
-      ]
-    },
-    {
-      "description": "Pneumatic servos replace muscle fiber. Grip strength exceeds human limits.",
-      "display_name": "Hydraulic Arms",
-      "equippable": true,
-      "id": "base:synth_arms",
-      "price": {
-        "credits": 250.0
-      },
-      "provides_sockets": [
-        {
-          "accepted_tags": [
-            "arm_mod"
-          ],
-          "id": "arm_mod_slot",
-          "label": "Arm Mod"
-        }
-      ],
-      "required_tags": [
-        "torso"
-      ],
-      "sprite": "res://assets/generated/synth_arms_frame_0_1777424436.png",
-      "stats": {
-        "power": 3.0
-      },
-      "tags": [
-        "arms",
-        "synthetic"
-      ]
-    },
-    {
-      "description": "Standard bipedal locomotion. Good endurance on flat ground.",
-      "display_name": "Male Human Legs",
-      "equippable": true,
-      "id": "base:human_legs_male",
-      "price": {
-        "credits": 0.0
-      },
-      "required_tags": [
-        "torso"
-      ],
-      "sprite": "res://assets/generated/human_legs_male_frame_0_1777424599.png",
-      "stats": {
-        "stamina": 10.0,
-        "stamina_max": 10.0
-      },
-      "tags": [
-        "legs",
-        "organic"
-      ]
-    },
-    {
-      "description": "Standard bipedal locomotion. Good endurance on flat ground.",
-      "display_name": "Female Human Legs",
-      "equippable": true,
-      "id": "base:human_legs_female",
-      "price": {
-        "credits": 0.0
-      },
-      "required_tags": [
-        "torso"
-      ],
-      "sprite": "res://assets/generated/human_legs_female_frame_0_1777424603.png",
-      "stats": {
-        "stamina": 10.0,
-        "stamina_max": 10.0
-      },
-      "tags": [
-        "legs",
-        "organic"
-      ]
-    },
-    {
-      "description": "Carbon-fiber struts with shock absorbers. Sprint without fatigue.",
-      "display_name": "Piston Legs",
-      "equippable": true,
-      "id": "base:synth_legs",
-      "price": {
-        "credits": 220.0
-      },
-      "required_tags": [
-        "torso"
-      ],
-      "sprite": "res://assets/generated/synth_legs_frame_0_1777424432.png",
-      "stats": {
-        "stamina": 20.0,
-        "stamina_max": 20.0
-      },
-      "tags": [
-        "legs",
-        "synthetic"
-      ]
-    },
-    {
-      "description": "Ten fingers. Good for locks, triggers, and handshakes.",
-      "display_name": "Male Human Hands",
-      "equippable": true,
-      "id": "base:human_hands_male",
-      "price": {
-        "credits": 0.0
-      },
-      "required_tags": [
-        "arms"
-      ],
-      "sprite": "res://assets/generated/human_hands_male_frame_0_1777424601.png",
-      "stats": {
-        "power": 1.0
-      },
-      "tags": [
-        "hands",
-        "organic"
-      ]
-    },
-    {
-      "description": "Ten fingers. Good for locks, triggers, and handshakes.",
-      "display_name": "Female Human Hands",
-      "equippable": true,
-      "id": "base:human_hands_female",
-      "price": {
-        "credits": 0.0
-      },
-      "required_tags": [
-        "arms"
-      ],
-      "sprite": "res://assets/generated/human_hands_female_frame_0_1777424600.png",
-      "stats": {
-        "power": 1.0
-      },
-      "tags": [
-        "hands",
-        "organic"
-      ]
-    },
-    {
-      "description": "Standard ground contact. Gets the job done.",
-      "display_name": "Male Human Feet",
-      "equippable": true,
-      "id": "base:human_feet_male",
-      "price": {
-        "credits": 0.0
-      },
-      "required_tags": [
-        "legs"
-      ],
-      "sprite": "res://assets/generated/human_feet_male_frame_0_1777424600.png",
-      "stats": {
-        "stamina": 5.0,
-        "stamina_max": 5.0
-      },
-      "tags": [
-        "feet",
-        "organic"
-      ]
-    },
-    {
-      "description": "Standard ground contact. Gets the job done.",
-      "display_name": "Female Human Feet",
-      "equippable": true,
-      "id": "base:human_feet_female",
-      "price": {
-        "credits": 0.0
-      },
-      "required_tags": [
-        "legs"
-      ],
-      "sprite": "res://assets/generated/human_feet_female_frame_0_1777424602.png",
-      "stats": {
-        "stamina": 5.0,
-        "stamina_max": 5.0
-      },
-      "tags": [
-        "feet",
-        "organic"
-      ]
-    },
-    {
-      "description": "Entry-level optical augment. Highlights threats and reads barcodes at fifty meters.",
-      "display_name": "Kiroshi Optic Scanner",
-      "equippable": true,
-      "id": "base:optic_implant",
-      "price": {
-        "credits": 150.0
-      },
-      "required_tags": [
-        "head"
-      ],
-      "sprite": "res://assets/generated/optic_implant_frame_0_1777424438.png",
-      "stats": {
-        "charisma": 1.0,
-        "luck": 1.0
-      },
-      "tags": [
-        "neural_implant",
-        "device"
-      ]
-    },
-    {
-      "description": "Neural co-processor that shaves milliseconds off reaction time. Expensive but worth it in a fight.",
-      "display_name": "Synaptic Accelerator",
-      "equippable": true,
-      "id": "base:reflex_booster",
-      "price": {
-        "credits": 300.0
-      },
-      "required_tags": [
-        "head"
-      ],
-      "sprite": "res://assets/generated/reflex_booster_frame_0_1777424439.png",
-      "stats": {
-        "power": 2.0,
-        "stamina_max": 5.0
-      },
-      "tags": [
-        "neural_implant",
-        "device"
-      ]
-    },
-    {
-      "description": "Subdermal ballistic mesh. Stops small caliber rounds and knife edges.",
-      "display_name": "Kevlar Weave",
-      "equippable": true,
-      "id": "base:kevlar_weave",
-      "price": {
-        "credits": 200.0
-      },
-      "required_tags": [
-        "torso"
-      ],
-      "sprite": "res://assets/generated/kevlar_weave_frame_0_1777424445.png",
-      "stats": {
-        "armor": 2.0,
-        "health_max": 15.0
-      },
-      "tags": [
-        "subdermal_armor",
-        "armor"
-      ]
-    },
-    {
-      "description": "Military-grade ceramic inserts. Heavy but they take the hit so you don't have to.",
-      "display_name": "Ceramic Trauma Plates",
-      "equippable": true,
-      "id": "base:ceramic_plating",
-      "price": {
-        "credits": 350.0
-      },
-      "required_tags": [
-        "torso"
-      ],
-      "sprite": "res://assets/generated/ceramic_plating_frame_0_1777424440.png",
-      "stats": {
-        "armor": 4.0,
-        "health_max": 25.0,
-        "stamina_max": -5.0
-      },
-      "tags": [
-        "subdermal_armor",
-        "armor"
-      ]
-    },
-    {
-      "description": "Close-range crowd control. Low lethality, high compliance.",
-      "display_name": "Stun Baton",
-      "equippable": true,
-      "id": "base:stun_baton",
-      "price": {
-        "credits": 60.0
-      },
-      "sprite": "res://assets/generated/stun_baton_frame_0_1777424442.png",
-      "stats": {
-        "power": 2.0
-      },
-      "tags": [
-        "weapon",
-        "melee"
-      ]
-    },
-    {
-      "description": "Forearm-mounted cutting edge one atom wide. Cuts through anything, including your budget.",
-      "display_name": "Monomolecular Blade",
-      "equippable": true,
-      "id": "base:mono_blade",
-      "price": {
-        "credits": 400.0
-      },
-      "sprite": "res://assets/generated/mono_blade_frame_0_1777424438.png",
-      "stats": {
-        "power": 5.0
-      },
-      "tags": [
-        "weapon",
-        "melee"
-      ]
-    },
-    {
-      "description": "Recovered circuitry. Used as a crafting component.",
-      "display_name": "Salvage Chip",
+      "stats": {},
       "equippable": false,
-      "id": "base:salvage_chip",
-      "price": {
-        "credits": 5.0
-      },
-      "sprite": "res://assets/generated/salvage_chip_frame_0_1777424441.png",
-      "stats": {
-
-      },
-      "tags": [
-        "material",
-        "salvage"
-      ]
+      "sprite": "res://mods/base/assets/vanguard/items/ritual_chalk.png"
     },
     {
-      "description": "Sheet metal off a wrecked drone. Useful for improvised armor.",
-      "display_name": "Scrap Plate",
-      "equippable": false,
-      "id": "base:scrap_plate",
-      "price": {
-        "credits": 8.0
-      },
-      "sprite": "res://assets/generated/scrap_plate_frame_0_1777424442.png",
-      "stats": {
-
-      },
-      "tags": [
-        "material",
-        "salvage"
-      ]
-    },
-    {
-      "description": "Improvised arm-mounted scanner cobbled from salvage chips. Weak but free.",
-      "display_name": "Diagnostic Grip",
-      "equippable": true,
-      "id": "base:diagnostic_grip",
-      "price": {
-        "credits": 30.0
-      },
-      "sprite": "res://assets/generated/diagnostic_grip_frame_0_1777424443.png",
-      "stats": {
-        "power": 1.0
-      },
-      "tags": [
-        "arm_mod",
-        "crafted"
-      ]
-    },
-    {
-      "description": "Single-use trauma sealant. Restores health on consumption.",
-      "display_name": "Field Medkit",
-      "consume_on_use": true,
-      "equippable": false,
-      "id": "base:field_medkit",
-      "price": {
-        "credits": 40.0
-      },
-      "sprite": "res://assets/generated/field_medkit_frame_0_1777424443.png",
-      "stats": {
-
-      },
+      "id": "base:cafeteria_voucher",
+      "display_name": "Cafeteria Voucher",
+      "description": "A prepaid meal slip. Useful when stress is louder than dignity.",
       "tags": [
         "consumable",
-        "medical"
+        "campus",
+        "food"
       ],
-      "use_label": "Use Medkit",
+      "price": {
+        "cash": 8
+      },
+      "stats": {},
+      "equippable": false,
+      "consume_on_use": true,
+      "use_label": "Eat",
       "use_actions": [
         {
           "type": "modify_stat",
-          "stat": "health",
-          "delta": 35
+          "stat": "stress",
+          "delta": -1
         }
-      ]
+      ],
+      "sprite": "res://mods/base/assets/vanguard/items/cafeteria_voucher.png"
     },
     {
-      "description": "A coin with both sides showing heads. Supposedly brings luck.",
-      "display_name": "Loaded Coin",
-      "equippable": false,
-      "id": "base:lucky_charm",
-      "price": {
-        "credits": 75.0
-      },
-      "sprite": "res://assets/generated/lucky_charm_frame_0_1777424445.png",
-      "stats": {
-        "luck": 2.0
-      },
+      "id": "base:lecture_notes",
+      "display_name": "Borrowed Lecture Notes",
+      "description": "A packet of neat handwriting and margin sigils from someone who absolutely has their life together.",
       "tags": [
-        "accessory",
-        "trinket"
-      ]
+        "study_aid",
+        "course_arcana_101"
+      ],
+      "price": {
+        "cash": 20
+      },
+      "stats": {},
+      "equippable": false,
+      "consume_on_use": true,
+      "use_label": "Review Notes",
+      "use_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "arcana_101_grade",
+          "delta": 1
+        },
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": 1
+        }
+      ],
+      "sprite": "res://mods/base/assets/vanguard/items/lecture_notes.png"
     }
   ]
 }

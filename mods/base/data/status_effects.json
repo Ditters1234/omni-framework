@@ -1,50 +1,61 @@
 {
   "status_effects": [
     {
-      "status_effect_id": "base:field_repair",
-      "display_name": "Field Repair",
-      "description": "A short generic recovery-over-time effect used as a reference template for timed status effects.",
-      "duration": 3,
+      "status_effect_id": "base:centered",
+      "display_name": "Centered",
+      "description": "A calm state that helps the student hold a form and focus through pressure.",
+      "duration": 4,
       "tick_interval": 1,
       "max_stacks": 1,
       "stack_mode": "refresh",
-      "apply_condition": {
-        "type": "stat_check",
-        "entity_id": "context:entity",
-        "stat": "health",
-        "op": "<",
-        "value_stat": "health_max"
-      },
-      "tick_condition": {
-        "type": "stat_check",
-        "entity_id": "context:entity",
-        "stat": "health",
-        "op": "<",
-        "value_stat": "health_max"
+      "stat_modifiers": {
+        "willpower": 1,
+        "normalcy": 1
       },
       "tags": [
+        "buff",
         "recovery"
-      ],
-      "on_tick": [
-        {
-          "type": "modify_stat",
-          "stat": "health",
-          "delta": 2
-        }
       ]
     },
     {
-      "status_effect_id": "base:focused",
-      "display_name": "Focused",
-      "description": "A short generic buff that demonstrates data-authored stat modifiers.",
-      "duration": 4,
+      "status_effect_id": "base:frazzled",
+      "display_name": "Frazzled",
+      "description": "Too much pressure makes the next few hours harder to manage.",
+      "duration": 3,
+      "tick_interval": 1,
       "max_stacks": 2,
       "stack_mode": "stack",
       "stat_modifiers": {
-        "power": 1
+        "intelligence": -1,
+        "charisma": -1
+      },
+      "apply_condition": {
+        "type": "stat_check",
+        "entity_id": "context:entity",
+        "stat": "stress",
+        "op": ">=",
+        "value": 5
       },
       "tags": [
-        "buff"
+        "debuff",
+        "stress"
+      ]
+    },
+    {
+      "status_effect_id": "base:well_rested",
+      "display_name": "Well Rested",
+      "description": "A short-lived morning buffer from actually sleeping.",
+      "duration": 6,
+      "tick_interval": 1,
+      "max_stacks": 1,
+      "stack_mode": "refresh",
+      "stat_modifiers": {
+        "endurance": 1,
+        "willpower": 1
+      },
+      "tags": [
+        "buff",
+        "sleep"
       ]
     }
   ]

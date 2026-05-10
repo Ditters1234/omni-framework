@@ -1,211 +1,326 @@
 {
   "locations": [
     {
-      "location_id": "base:apartment",
-      "display_name": "Your Apartment",
-      "description": "A cramped studio on the 14th floor. The lock works, the water runs, and nobody asks questions. Good enough.",
+      "location_id": "base:dorm_room",
+      "display_name": "Dorm Room",
+      "description": "Your narrow room in Vanguard House. The ritual circle is painted under the rug because technically it is not furniture.",
       "connections": {
-        "base:market_row": 1
+        "base:dorm_common_area": 1
+      },
+      "map_position": {
+        "x": 0.15,
+        "y": 0.45
       },
       "screens": [
         {
-          "tab_id": "apt_sheet",
-          "display_name": "Check Status",
-          "description": "Review your body, stats, and inventory.",
+          "tab_id": "dorm_sheet",
+          "display_name": "Student Record",
+          "description": "Review stats, resources, equipment, and inventory.",
           "backend_class": "EntitySheetBackend",
           "target_entity_id": "player",
-          "screen_title": "Personal Status"
+          "screen_title": "Student Record",
+          "show_currencies": true,
+          "show_equipped": true,
+          "show_inventory": true,
+          "show_status_effects": true,
+          "show_reputation": true
         },
         {
-          "tab_id": "apt_owned_entities",
-          "display_name": "Owned Entities",
-          "description": "Inspect and assign owned drones, companions, and other controlled entities.",
-          "backend_class": "OwnedEntitiesBackend",
-          "owner_entity_id": "player",
-          "assignment_task_template_id": "base:goto_location",
-          "assignment_faction_id": "base:threshold_syndicate",
-          "assignment_provider_entity_id": "base:npc_fixer",
-          "screen_title": "Owned Entities"
+          "tab_id": "dorm_ritual",
+          "display_name": "Ritual Circle",
+          "description": "Change body parts from inventory. The base game keeps costs visible through mana and component loops; addons can deepen ritual economics.",
+          "backend_class": "AssemblyEditorBackend",
+          "target_entity_id": "player",
+          "option_source_entity_id": "player",
+          "option_tags": [
+            "cognitive",
+            "sensory",
+            "manipulator",
+            "locomotion",
+            "framework",
+            "keepsake"
+          ],
+          "screen_title": "Ritual Circle",
+          "screen_description": "Swap the parts you own. Your choices change academic, work, and social outcomes for the day.",
+          "screen_summary": "V1 uses existing assembly behavior: owned parts can be swapped here, while mana and ritual chalk are managed by surrounding activities and rewards.",
+          "confirm_label": "Commit Form",
+          "allow_confirm_without_changes": true
         },
         {
-          "tab_id": "apt_cache",
-          "display_name": "Supply Cache",
-          "description": "Review and take supplies from the apartment cache.",
+          "tab_id": "dorm_cache",
+          "display_name": "Desk Drawer",
+          "description": "Take starter supplies from your dorm desk.",
           "backend_class": "LootBackend",
-          "source_entity_id": "base:apartment_cache",
+          "source_entity_id": "base:dorm_cache",
           "destination_entity_id": "player",
-          "screen_title": "Supply Cache"
+          "screen_title": "Dorm Desk Drawer",
+          "pop_when_empty": false
         },
         {
-          "tab_id": "apt_quests",
-          "display_name": "Job Board",
-          "description": "Review your active contracts.",
+          "tab_id": "dorm_activities",
+          "display_name": "Plan Day",
+          "description": "Start dorm and campus activities from one board.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Daily Activities",
+          "location_filter": "all",
+          "show_locked": true,
+          "show_upcoming": true,
+          "max_upcoming_slots": 8,
+          "confirm_label": "Begin"
+        },
+        {
+          "tab_id": "dorm_schedule",
+          "display_name": "Schedule",
+          "description": "Read upcoming class, work, and recovery windows.",
+          "backend_class": "ScheduleBackend",
+          "screen_title": "Term Schedule",
+          "view_mode": "day",
+          "location_filter": "all",
+          "show_past": true,
+          "group_by": "category"
+        },
+        {
+          "tab_id": "dorm_quests",
+          "display_name": "Quest Log",
+          "description": "Review orientation and term pressure.",
           "backend_class": "ActiveQuestLogBackend",
-          "screen_title": "Active Contracts",
+          "screen_title": "Student Commitments",
           "include_completed": true
         },
         {
-          "tab_id": "apt_rewards",
+          "tab_id": "dorm_rewards",
           "display_name": "Reward History",
-          "description": "Review completed contract and encounter rewards.",
+          "description": "Review completed quest and activity rewards recorded by the event system.",
           "backend_class": "RewardReviewBackend",
-          "screen_title": "Reward History"
+          "screen_title": "Recent Outcomes"
         },
         {
-          "tab_id": "apt_achievements",
+          "tab_id": "dorm_events",
+          "display_name": "Event Log",
+          "description": "Inspect recent runtime events.",
+          "backend_class": "EventLogBackend",
+          "screen_title": "Term Log",
+          "limit": 20
+        },
+        {
+          "tab_id": "dorm_achievements",
           "display_name": "Milestones",
-          "description": "Track what you've accomplished so far.",
-          "backend_class": "AchievementListBackend"
+          "description": "Review tutorial achievements.",
+          "backend_class": "AchievementListBackend",
+          "screen_title": "Milestones"
+        }
+      ],
+      "entities_present": [
+        "base:dorm_cache"
+      ]
+    },
+    {
+      "location_id": "base:dorm_common_area",
+      "display_name": "Dorm Common Area",
+      "description": "Couches, vending machines, and a notice board pretending to be organized.",
+      "connections": {
+        "base:dorm_room": 1,
+        "base:student_union": 1,
+        "base:lecture_hall": 2,
+        "base:library": 2
+      },
+      "map_position": {
+        "x": 0.3,
+        "y": 0.45
+      },
+      "screens": [
+        {
+          "tab_id": "common_social",
+          "display_name": "Social Board",
+          "description": "Low-stakes social and recovery activities.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Common Area",
+          "categories": [
+            "social",
+            "recovery"
+          ],
+          "location_filter": "base:dorm_common_area",
+          "show_locked": true,
+          "show_upcoming": true
+        }
+      ],
+      "entities_present": [
+        "base:roommate_mara"
+      ]
+    },
+    {
+      "location_id": "base:lecture_hall",
+      "display_name": "Lecture Hall",
+      "description": "Tiered seats, brass projector lenses, and wards that glow when someone lies about doing the reading.",
+      "connections": {
+        "base:dorm_common_area": 2,
+        "base:library": 1,
+        "base:student_union": 1
+      },
+      "map_position": {
+        "x": 0.5,
+        "y": 0.3
+      },
+      "screens": [
+        {
+          "tab_id": "lecture_board",
+          "display_name": "Course Work",
+          "description": "Attend or review academic activities.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Arcana 101",
+          "categories": [
+            "academic"
+          ],
+          "location_filter": "base:lecture_hall",
+          "show_locked": true,
+          "show_upcoming": true
+        }
+      ],
+      "entities_present": [
+        "base:professor_ilex"
+      ]
+    },
+    {
+      "location_id": "base:library",
+      "display_name": "Library",
+      "description": "A quiet maze of stacks, warded desks, and books that object to careless readers.",
+      "connections": {
+        "base:lecture_hall": 1,
+        "base:student_union": 1,
+        "base:high_street": 2
+      },
+      "map_position": {
+        "x": 0.58,
+        "y": 0.5
+      },
+      "screens": [
+        {
+          "tab_id": "library_study",
+          "display_name": "Study",
+          "description": "Study activities and research options.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Library Study",
+          "categories": [
+            "academic"
+          ],
+          "location_filter": "base:library",
+          "show_locked": true,
+          "show_upcoming": true
         }
       ]
     },
     {
-      "location_id": "base:market_row",
-      "display_name": "Market Row",
-      "description": "A strip of neon-lit vendor stalls wedged between two megastructures. You can buy almost anything here if you know who to ask.",
+      "location_id": "base:student_union",
+      "display_name": "Student Union",
+      "description": "The official heart of campus life and the unofficial exchange for gossip, favors, and snacks.",
       "connections": {
-        "base:apartment": 1,
-        "base:warehouse": 2,
-        "base:undercity": 3
+        "base:dorm_common_area": 1,
+        "base:lecture_hall": 1,
+        "base:library": 1,
+        "base:high_street": 2
+      },
+      "map_position": {
+        "x": 0.48,
+        "y": 0.6
       },
       "screens": [
         {
-          "tab_id": "market_catalog",
-          "display_name": "Street Vendor",
-          "description": "Buy basic supplies and scrap from the open market.",
-          "backend_class": "CatalogListBackend",
-          "data_source": "catalog",
-          "currency_id": "credits",
-          "transaction_sound": "res://mods/base/assets/audio/sfx_trade.wav",
-          "action_payload": { "type": "buy_item" }
+          "tab_id": "union_social",
+          "display_name": "Union Events",
+          "description": "Social activities that care about charisma and normalcy.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Student Union",
+          "categories": [
+            "social"
+          ],
+          "location_filter": "base:student_union",
+          "show_locked": true,
+          "show_upcoming": true
         },
         {
-          "tab_id": "market_crafting",
-          "display_name": "Workbench",
-          "description": "An open-air workbench behind the stalls. Craft what you can from what you have.",
+          "tab_id": "union_factions",
+          "display_name": "Reputation",
+          "description": "Review faction standing.",
+          "backend_class": "FactionReputationBackend",
+          "screen_title": "Campus Standing",
+          "target_entity_id": "player"
+        }
+      ]
+    },
+    {
+      "location_id": "base:high_street",
+      "display_name": "High Street",
+      "description": "Coffee, components, copy shops, and three businesses that definitely move after midnight.",
+      "connections": {
+        "base:student_union": 2,
+        "base:library": 2,
+        "base:industrial_ward": 3
+      },
+      "map_position": {
+        "x": 0.75,
+        "y": 0.52
+      },
+      "screens": [
+        {
+          "tab_id": "high_catalog",
+          "display_name": "Open Market",
+          "description": "Buy basic catalog parts directly. This demonstrates template-catalog purchasing separately from exact vendor inventory.",
+          "backend_class": "CatalogListBackend",
+          "data_source": "catalog",
+          "currency_id": "cash",
+          "buyer_entity_id": "player",
+          "action_payload": {
+            "type": "buy_item"
+          },
+          "transaction_sound": "res://mods/base/assets/vanguard/audio/sfx_trade.wav"
+        },
+        {
+          "tab_id": "high_workbench",
+          "display_name": "Ritual Workbench",
+          "description": "Craft small ritual supplies from inventory components.",
           "backend_class": "CraftingBackend",
-          "station_id": "base:street_bench",
-          "recipe_tags": [],
+          "station_id": "base:ritual_desk",
+          "recipe_tags": [
+            "ritual"
+          ],
           "crafter_entity_id": "player",
           "input_source_entity_id": "player",
           "output_destination_entity_id": "player",
-          "screen_title": "Street Workbench"
-        },
-        {
-          "tab_id": "market_assembly",
-          "display_name": "Theta's Clinic",
-          "description": "Quartermaster Theta runs a ripperdoc shop out of a converted shipping container.",
-          "backend_class": "AssemblyEditorBackend",
-          "target_entity_id": "player",
-          "budget_entity_id": "player",
-          "budget_currency_id": "credits",
-          "option_tags": ["head", "torso", "arms", "legs", "hands", "feet", "neural_implant", "subdermal_armor", "weapon"],
-          "screen_title": "Theta's Clinic"
-        },
-        {
-          "tab_id": "market_recovery",
-          "display_name": "Field Treatment",
-          "description": "Patch yourself up with clinic supplies. Recovery only ticks while the target can still recover.",
-          "backend_class": "ChallengeBackend",
-          "target_entity_id": "player",
-          "portrait_entity_id": "base:npc_theta",
-          "required_stat": "health_max",
-          "required_value": 1.0,
-          "confirm_label": "Treat",
-          "screen_title": "Field Treatment",
-          "screen_description": "Apply a data-authored recovery effect. The effect's own conditions decide whether it can apply and continue ticking.",
-          "success_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
-          "action_payload": {
-            "type": "apply_status_effect",
-            "status_effect_id": "base:field_repair",
-            "entity_id": "player"
-          }
-        },
-        {
-          "tab_id": "market_inventory",
-          "display_name": "Check Inventory",
-          "description": "See what you're carrying.",
-          "backend_class": "ListBackend",
-          "data_source": "player:inventory"
-        },
-        {
-          "tab_id": "market_events",
-          "display_name": "Scanner Feed",
-          "description": "Review recent events from your neural log.",
-          "backend_class": "EventLogBackend"
+          "screen_title": "Ritual Workbench"
         }
       ],
-      "entities_present": ["base:npc_theta"]
+      "entities_present": [
+        "base:shopkeeper_sel"
+      ]
     },
     {
-      "location_id": "base:warehouse",
-      "display_name": "The Warehouse",
-      "description": "An abandoned shipping depot repurposed by the Threshold Syndicate. Kael runs operations from the back office. The coffee is terrible but the contracts pay well.",
+      "location_id": "base:industrial_ward",
+      "display_name": "Industrial Ward",
+      "description": "Off-campus loading bays, old brick warehouses, and honest work that pays by the hour.",
       "connections": {
-        "base:market_row": 2
+        "base:high_street": 3
+      },
+      "map_position": {
+        "x": 0.9,
+        "y": 0.62
       },
       "screens": [
         {
-          "tab_id": "warehouse_tasks",
-          "display_name": "Contract Board",
-          "description": "Pick up work from the Threshold Syndicate.",
-          "backend_class": "TaskProviderBackend",
-          "faction_id": "base:threshold_syndicate",
-          "accept_sound": "res://mods/base/assets/audio/sfx_task_accept.wav"
-        },
-        {
-          "tab_id": "warehouse_factions",
-          "display_name": "Syndicate Standing",
-          "description": "Check your reputation with local factions.",
-          "backend_class": "FactionReputationBackend",
-          "target_entity_id": "player"
-        },
-        {
-          "tab_id": "warehouse_quests",
-          "display_name": "Active Contracts",
-          "description": "Review your active contract status.",
-          "backend_class": "ActiveQuestLogBackend",
-          "screen_title": "Active Contracts",
-          "include_completed": true
+          "tab_id": "industrial_work",
+          "display_name": "Shift Board",
+          "description": "Work activities that reward physical builds.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Industrial Ward Shifts",
+          "categories": [
+            "work"
+          ],
+          "location_filter": "base:industrial_ward",
+          "show_locked": true,
+          "show_upcoming": true
         }
       ],
-      "entities_present": ["base:npc_fixer"]
-    },
-    {
-      "location_id": "base:undercity",
-      "display_name": "The Undercity",
-      "description": "Below the market, the infrastructure gives way to unmapped tunnels and flooded service corridors. Dangerous, but the scavengers down here find things nobody else can.",
-      "connections": {
-        "base:market_row": 3
-      },
-      "screens": [
-        {
-          "tab_id": "under_sheet",
-          "display_name": "Check Status",
-          "description": "Review your condition before going deeper.",
-          "backend_class": "EntitySheetBackend",
-          "target_entity_id": "player",
-          "screen_title": "Status Check"
-        },
-        {
-          "tab_id": "under_challenge",
-          "display_name": "Scavenger Gauntlet",
-          "description": "A makeshift obstacle course. Clear it to prove you belong down here. Requires stamina 60+.",
-          "backend_class": "ChallengeBackend",
-          "required_stat": "stamina_max",
-          "required_value": 60,
-          "success_sound": "res://mods/base/assets/audio/sfx_challenge_success.wav",
-          "failure_sound": "res://mods/base/assets/audio/sfx_challenge_failure.wav",
-          "action_payload": {
-            "type": "reward",
-            "reward": {
-              "credits": 150,
-              "data_shards": 1,
-              "items": [{ "template_id": "base:scrap_plate", "count": 2 }],
-              "reputation": { "base:threshold_syndicate": 15 }
-            }
-          }
-        }
+      "entities_present": [
+        "base:foreman_briggs"
       ]
     }
   ]

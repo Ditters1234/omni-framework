@@ -1,63 +1,67 @@
 {
   "game": {
-    "title": "Neon Threshold",
-    "tagline": "Scrap it. Rebuild. Survive.",
-    "starting_location": "base:apartment",
+    "title": "Vanguard University",
+    "tagline": "Study hard. Change carefully.",
+    "starting_location": "base:dorm_room",
     "ticks_per_day": 24,
     "ticks_per_hour": 1,
     "starting_discovered_locations": [
-      "base:apartment",
-      "base:market_row"
+      "base:dorm_room",
+      "base:dorm_common_area",
+      "base:lecture_hall",
+      "base:library",
+      "base:student_union",
+      "base:high_street"
     ],
     "starting_player_id": "base:player",
     "new_game_flow": {
       "screen_id": "gameplay_shell",
       "params": {
-        "initial_surface_id": "assembly_editor",
-        "disable_shell_chrome": true,
+        "initial_surface_id": "entity_sheet",
         "initial_surface_params": {
-          "screen_title": "Body Configuration",
-          "screen_description": "Assemble your starting body. Choose a head, torso, and limbs from biological or synthetic stock, then install any implants you can afford.",
-          "screen_summary": "Preview a part on the left, inspect its stats on the right, then apply it. Unspent credits carry into the game.",
           "target_entity_id": "player",
-          "budget_currency_id": "credits",
-          "option_tags": [
-            "head",
-            "torso",
-            "arms",
-            "legs",
-            "hands",
-            "feet",
-            "neural_implant",
-            "subdermal_armor",
-            "weapon"
-          ],
-          "confirm_label": "Enter Neon Threshold",
-          "cancel_label": "Back",
-          "pop_on_confirm": true,
-          "cancel_screen_id": "main_menu",
-          "reset_game_state_on_cancel": true,
-          "allow_confirm_without_changes": true
+          "screen_title": "Student Record",
+          "screen_description": "Review your starting body, resources, and inventory before your first day at Vanguard."
         }
       }
     }
   },
   "economy": {
-    "default_currency_id": "credits"
+    "default_currency_id": "cash"
   },
   "tasks": {
     "default_assignment_task_template_id": "base:goto_location",
     "default_travel_task_template_id": "base:goto_location"
   },
   "crafting": {
-    "default_task_template_id": "base:recipe_craft"
+    "default_task_template_id": "base:ritual_craft"
+  },
+  "calendar": {
+    "weekdays": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ],
+    "months": [
+      {
+        "name": "Term",
+        "days": 28,
+        "tags": [
+          "academic"
+        ]
+      }
+    ]
   },
   "ui": {
     "main_menu": {
-      "title": "Neon Threshold",
-      "subtitle": "Build yourself. Break the system.",
-      "new_game_label": "New Body",
-      "continue_label": "Resume Session",
+      "title": "Vanguard University",
+      "subtitle": "A body is a study plan.",
+      "new_game_label": "New Term",
+      "continue_label": "Continue Term",
       "load_label": "Load Save",
       "settings_label": "Settings",
       "credits_label": "Credits",
@@ -66,107 +70,119 @@
     "time_advance_buttons": [
       "1 hour",
       {
-        "label": "Rest",
-        "ticks": 4,
-        "task_template_id": "base:downtime",
+        "label": "Sleep",
+        "ticks": 8,
+        "task_template_id": "base:sleep",
         "entity_id": "player",
         "allow_duplicate": true,
-        "status_text": "Rested and recovered."
-      },
-      "1 day"
+        "status_text": "You sleep, recover mana, and let the day settle."
+      }
     ],
     "strings": {
-      "boot_status": "Neon Threshold ready."
+      "boot_status": "Vanguard University ready."
     },
     "theme": {
-      "primary_color": "#00d4aa",
-      "secondary_color": "#ff6b9d",
-      "bg_color": "#0a0e17",
-      "text_color": "#e8ecf4",
-      "text_muted": "#6b7a94",
-      "color_positive": "#4ade80",
-      "color_negative": "#f87171",
-      "color_warning": "#fbbf24",
-      "color_info": "#60a5fa"
+      "primary_color": "#6fae8f",
+      "secondary_color": "#d7a84f",
+      "bg_color": "#101418",
+      "text_color": "#edf1ea",
+      "text_muted": "#9aa59d",
+      "color_positive": "#7ccf8a",
+      "color_negative": "#d96c6c",
+      "color_warning": "#e0b85c",
+      "color_info": "#7ca7d9"
     },
     "stat_group_color_tokens": {
-      "combat": "warning",
-      "survival": "positive",
-      "economy": "primary"
+      "physical": "warning",
+      "mental": "info",
+      "social": "primary",
+      "academic": "secondary",
+      "resources": "positive"
+    },
+    "activity_category_labels": {
+      "academic": "Academic",
+      "work": "Work",
+      "social": "Social",
+      "recovery": "Recovery",
+      "ritual": "Ritual"
+    },
+    "activity_category_colors": {
+      "academic": "info",
+      "work": "warning",
+      "social": "primary",
+      "recovery": "positive",
+      "ritual": "secondary"
     },
     "default_sprites": {
       "parts": {
-        "head": "res://mods/base/assets/images/fallbacks/generic_head.png",
-        "hair": "res://mods/base/assets/images/fallbacks/generic_hat.png",
-        "torso": "res://mods/base/assets/images/fallbacks/generic_torso.png",
-        "body_core": "res://mods/base/assets/images/fallbacks/generic_torso.png",
-        "arm": "res://mods/base/assets/images/fallbacks/generic_arm.png",
-        "wing": "res://mods/base/assets/images/fallbacks/generic_arm.png",
-        "leg": "res://mods/base/assets/images/fallbacks/generic_leg.png",
-        "tail": "res://mods/base/assets/images/fallbacks/generic_leg.png",
-        "hand": "res://mods/base/assets/images/fallbacks/generic_hand.png",
-        "foot": "res://mods/base/assets/images/fallbacks/generic_foot.png",
-        "nose_cone": "res://mods/base/assets/images/fallbacks/generic_cyberware.png",
-        "fin": "res://mods/base/assets/images/fallbacks/generic_cyberware.png",
-        "thruster": "res://mods/base/assets/images/fallbacks/generic_cyberware.png",
-        "vehicle_core": "res://mods/base/assets/images/fallbacks/generic_cyberware.png",
-        "rocket_core": "res://mods/base/assets/images/fallbacks/generic_cyberware.png"
+        "cognitive": "res://mods/base/assets/vanguard/parts/default_cognitive.png",
+        "sensory": "res://mods/base/assets/vanguard/parts/default_sensory.png",
+        "manipulator": "res://mods/base/assets/vanguard/parts/default_manipulator.png",
+        "locomotion": "res://mods/base/assets/vanguard/parts/default_locomotion.png",
+        "framework": "res://mods/base/assets/vanguard/parts/default_framework.png",
+        "ritual_component": "res://mods/base/assets/vanguard/items/default_ritual_component.png",
+        "consumable": "res://mods/base/assets/vanguard/items/default_consumable.png",
+        "study_aid": "res://mods/base/assets/vanguard/items/default_study_aid.png"
       }
     }
   },
   "stats": {
     "groups": {
-      "combat": [
-        "power",
-        "armor"
+      "physical": [
+        "strength",
+        "dexterity",
+        "endurance"
+      ],
+      "mental": [
+        "intelligence",
+        "willpower",
+        "perception"
       ],
       "social": [
         "charisma",
-        "luck"
+        "intimidation",
+        "normalcy"
       ],
-      "survival": [
-        "health",
-        "health_max",
-        "stamina",
-        "stamina_max"
+      "academic": [
+        "arcana_101_grade"
+      ],
+      "resources": [
+        "mana",
+        "mana_max",
+        "stress",
+        "stress_max"
       ]
     }
   },
   "entity_lifecycle": {
     "rules": [
       {
-        "rule_id": "base:zero_health_incapacitated",
-        "display_name": "Incapacitated",
-        "stat": "health",
-        "state_flag": "base:incapacitated",
+        "rule_id": "base:overstressed",
+        "display_name": "Overstressed",
+        "stat": "stress",
+        "state_flag": "base:overstressed",
         "condition": {
           "type": "stat_check",
           "entity_id": "context:entity",
-          "stat": "health",
-          "op": "<=",
-          "value": 0
+          "stat": "stress",
+          "op": ">=",
+          "value_stat": "stress_max"
         },
-        "notification": "{entity_name} is incapacitated.",
+        "notification": "{entity_name} is overwhelmed by stress.",
         "notification_level": "warning",
         "clear_when_condition_false": true,
-        "exit_notification": "{entity_name} is no longer incapacitated.",
+        "exit_notification": "{entity_name} has recovered from the worst of the stress.",
         "exit_notification_level": "info",
-        "game_over_on_player": true
+        "game_over_on_player": false
       }
     ]
   },
   "ai": {
-    "narration_enabled": true,
-    "task_flavor_enabled": true,
-    "activity_flavor_enabled": true,
-    "lore_enabled": true,
-    "encounter_log_flavor_enabled": true,
-    "encounter_log_template_id": "base:encounter_log_flavor",
-    "world_gen_hooks": {
-      "narration": "res://mods/base/scripts/ai_narration_hook.gd",
-      "task_flavor": "res://mods/base/scripts/ai_task_flavor_hook.gd",
-      "activity_flavor": "res://mods/base/scripts/ai_activity_flavor_hook.gd",
-      "lore": "res://mods/base/scripts/ai_lore_hook.gd"
-    }
+    "narration_enabled": false,
+    "task_flavor_enabled": false,
+    "activity_flavor_enabled": false,
+    "lore_enabled": false,
+    "encounter_log_flavor_enabled": false,
+    "world_gen_hooks": {}
   }
 }

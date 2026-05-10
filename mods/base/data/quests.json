@@ -1,108 +1,143 @@
 {
   "quests": [
     {
-      "quest_id": "base:deliver_package",
-      "display_name": "Deliver Package",
-      "description": "Deliver a sealed package to a dead drop near your apartment. Don't open it.",
+      "quest_id": "base:orientation",
+      "display_name": "Orientation",
+      "description": "Learn the minimum loop: check your body, visit campus, attend class, and sleep before the day eats you alive.",
       "stages": [
         {
-          "description": "Carry the package to the apartment dead drop.",
+          "description": "Visit the Lecture Hall.",
           "objectives": [
-            { "type": "reach_location", "entity_id": "quest:assignee", "location_id": "base:apartment" }
-          ]
-        }
-      ],
-      "reward": {
-        "credits": 75,
-        "reputation": { "base:threshold_syndicate": 10 }
-      },
-      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
-      "repeatable": true
-    },
-    {
-      "quest_id": "base:supply_run",
-      "display_name": "Supply Run",
-      "description": "Pick up a crate from the Undercity salvage crews and haul it back to the Warehouse.",
-      "stages": [
-        {
-          "description": "Reach the Undercity salvage pickup.",
-          "objectives": [
-            { "type": "reach_location", "entity_id": "quest:assignee", "location_id": "base:undercity" }
-          ]
-        },
-        {
-          "description": "Return the crate to the Warehouse.",
-          "objectives": [
-            { "type": "reach_location", "entity_id": "quest:assignee", "location_id": "base:warehouse" }
-          ]
-        }
-      ],
-      "reward": {
-        "credits": 120,
-        "reputation": { "base:threshold_syndicate": 15 },
-        "items": [{ "template_id": "base:salvage_chip", "count": 1 }]
-      },
-      "complete_sound": "res://mods/base/assets/audio/sfx_task_complete.wav",
-      "repeatable": true
-    },
-    {
-      "quest_id": "base:first_steps",
-      "display_name": "First Steps",
-      "description": "Get oriented in the Threshold district. Arm yourself, find the market, and meet the people who matter.",
-      "stages": [
-        {
-          "description": "Acquire a weapon.",
-          "objectives": [
-            { "type": "has_item_tag", "tag": "weapon", "count": 1 }
+            {
+              "type": "reach_location",
+              "location_id": "base:lecture_hall"
+            }
           ],
-          "reward": { "credits": 25 }
+          "reward": {
+            "cash": 5
+          }
         },
         {
-          "description": "Travel to Market Row.",
+          "description": "Attend an Arcana 101 lecture.",
           "objectives": [
-            { "type": "reach_location", "location_id": "base:market_row" }
+            {
+              "type": "activity_completed",
+              "activity_id": "base:attend_arcana_lecture"
+            }
           ],
-          "reward": { "credits": 50 }
+          "reward": {
+            "items": [
+              {
+                "template_id": "base:lecture_notes",
+                "count": 1
+              }
+            ]
+          }
         },
         {
-          "description": "Visit the Warehouse to meet Kael.",
+          "description": "Return to the Dorm Room and sleep.",
           "objectives": [
-            { "type": "reach_location", "location_id": "base:warehouse" }
+            {
+              "type": "activity_completed",
+              "activity_id": "base:sleep_in_dorm"
+            }
           ]
         }
       ],
       "reward": {
-        "credits": 100,
-        "reputation": { "base:threshold_syndicate": 20 },
-        "flags": { "intro_complete": true }
+        "cash": 20,
+        "items": [
+          {
+            "template_id": "base:ritual_chalk",
+            "count": 1
+          }
+        ],
+        "flags": {
+          "orientation_complete": true
+        },
+        "reputation": {
+          "base:vanguard_students": 5
+        }
       },
-      "complete_sound": "res://mods/base/assets/audio/sfx_quest_complete.wav",
+      "complete_sound": "res://mods/base/assets/vanguard/audio/sfx_quest_complete.wav",
       "repeatable": false
     },
     {
-      "quest_id": "base:undercity_run",
-      "display_name": "Into the Dark",
-      "description": "Kael wants you to prove you can handle the Undercity. Get down there and survive the scavenger gauntlet.",
+      "quest_id": "base:first_assignment",
+      "display_name": "First Assignment",
+      "description": "Professor Ilex wants proof that you can translate lecture theory into a working study habit.",
       "stages": [
         {
-          "description": "Reach the Undercity.",
+          "description": "Raise your Arcana 101 grade progress to at least 3 through lecture, study, or notes.",
           "objectives": [
-            { "type": "reach_location", "location_id": "base:undercity" }
+            {
+              "type": "stat_check",
+              "stat": "arcana_101_grade",
+              "op": ">=",
+              "value": 3
+            }
           ]
         },
         {
-          "description": "Build up enough stamina to clear the gauntlet. You need at least 60 stamina capacity.",
+          "description": "Study at the Library at least once.",
           "objectives": [
-            { "type": "stat_check", "stat": "stamina_max", "op": ">=", "value": 60 }
+            {
+              "type": "activity_completed",
+              "activity_id": "base:study_at_library"
+            }
           ]
         }
       ],
       "reward": {
-        "credits": 200,
-        "data_shards": 2,
-        "reputation": { "base:threshold_syndicate": 30 }
+        "cash": 30,
+        "items": [
+          {
+            "template_id": "base:ritual_chalk",
+            "count": 2
+          }
+        ],
+        "reputation": {
+          "base:vanguard_faculty": 10
+        }
       },
-      "complete_sound": "res://mods/base/assets/audio/sfx_quest_complete.wav",
+      "complete_sound": "res://mods/base/assets/vanguard/audio/sfx_quest_complete.wav",
+      "repeatable": false
+    },
+    {
+      "quest_id": "base:tuition_pressure",
+      "display_name": "Tuition Pressure",
+      "description": "The bursar does not care that your hands were claws yesterday. Earn enough cash to stay solvent.",
+      "stages": [
+        {
+          "description": "Hold at least 100 cash.",
+          "objectives": [
+            {
+              "type": "has_currency",
+              "currency_id": "cash",
+              "amount": 100
+            }
+          ]
+        },
+        {
+          "description": "Complete one Warehouse Shift.",
+          "objectives": [
+            {
+              "type": "activity_completed",
+              "activity_id": "base:warehouse_shift"
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "cash": 25,
+        "reputation": {
+          "base:aethelgard_workers": 10
+        },
+        "flags": {
+          "tuition_week_started": true
+        }
+      },
+      "complete_sound": "res://mods/base/assets/vanguard/audio/sfx_quest_complete.wav",
       "repeatable": false
     }
   ]

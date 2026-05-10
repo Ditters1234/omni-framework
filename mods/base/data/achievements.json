@@ -1,58 +1,40 @@
 {
   "achievements": [
     {
+      "achievement_id": "base:first_activity",
+      "icon": "res://mods/base/assets/vanguard/achievements/first_activity.png",
+      "unlock_sound": "res://mods/base/assets/vanguard/audio/sfx_achievement_unlock.wav",
+      "display_name": "Found The Schedule",
+      "description": "Complete your first activity.",
+      "stat_name": "activities_completed",
+      "requirement": 1
+    },
+    {
       "achievement_id": "base:first_purchase",
-      "icon": "res://mods/base/assets/ach_buy.png",
-      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
-      "display_name": "Consumer Grade",
-      "description": "Buy your first item from a vendor.",
+      "icon": "res://mods/base/assets/vanguard/achievements/first_purchase.png",
+      "unlock_sound": "res://mods/base/assets/vanguard/audio/sfx_achievement_unlock.wav",
+      "display_name": "Campus Consumer",
+      "description": "Buy your first item.",
       "stat_name": "items_bought",
       "requirement": 1
     },
     {
-      "achievement_id": "base:big_spender",
-      "icon": "res://mods/base/assets/ach_buy.png",
-      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
-      "display_name": "Big Spender",
-      "description": "Buy 10 items total.",
-      "stat_name": "items_bought",
-      "requirement": 10
-    },
-    {
-      "achievement_id": "base:explorer",
-      "icon": "res://mods/base/assets/ach_trip.png",
-      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
-      "display_name": "Explorer",
-      "description": "Discover a new location.",
-      "stat_name": "locations_discovered",
+      "achievement_id": "base:orientation_complete",
+      "icon": "res://mods/base/assets/vanguard/achievements/orientation_complete.png",
+      "unlock_sound": "res://mods/base/assets/vanguard/audio/sfx_achievement_unlock.wav",
+      "display_name": "Oriented",
+      "description": "Complete the first orientation loop.",
+      "stat_name": "quests_completed",
       "requirement": 1
     },
     {
-      "achievement_id": "base:cartographer",
-      "icon": "res://mods/base/assets/ach_trip.png",
-      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
-      "display_name": "Cartographer",
-      "description": "Discover all four districts.",
+      "achievement_id": "base:campus_walker",
+      "icon": "res://mods/base/assets/vanguard/achievements/campus_walker.png",
+      "unlock_sound": "res://mods/base/assets/vanguard/audio/sfx_achievement_unlock.wav",
+      "display_name": "Campus Walker",
+      "description": "Discover several locations.",
       "stat_name": "locations_discovered",
       "requirement": 4
-    },
-    {
-      "achievement_id": "base:first_contract",
-      "icon": "res://mods/base/assets/ach_contract.png",
-      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
-      "display_name": "On The Payroll",
-      "description": "Complete your first repeatable contract.",
-      "stat_name": "tasks_completed",
-      "requirement": 1
-    },
-    {
-      "achievement_id": "base:grinder",
-      "icon": "res://mods/base/assets/ach_grinder.png",
-      "unlock_sound": "res://mods/base/assets/audio/sfx_achievement_unlock.wav",
-      "display_name": "Grinder",
-      "description": "Complete 10 contracts.",
-      "stat_name": "tasks_completed",
-      "requirement": 10
     }
   ]
 }

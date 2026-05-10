@@ -1,60 +1,37 @@
 {
   "ai_templates": [
     {
-      "template_id": "base:event_narration_quest_completed",
-      "purpose": "event_narration",
-      "prompt_template": "Write one short in-world event log line for completing the quest '{quest_name}'. Keep it under 16 words.",
-      "fallback": "{quest_name} is complete.",
-      "tags": ["world_gen", "event_log", "quest"]
-    },
-    {
-      "template_id": "base:event_narration_location_changed",
-      "purpose": "event_narration",
-      "prompt_template": "Write one short in-world travel narration line for arriving at {new_location_name} from {old_location_name}. Keep it under 16 words.",
-      "fallback": "You arrive at {new_location_name}.",
-      "tags": ["world_gen", "event_log", "travel"]
-    },
-    {
-      "template_id": "base:event_narration_day_advanced",
-      "purpose": "event_narration",
-      "prompt_template": "Write one short in-world line for the start of day {day} in {location_name}. Keep it under 16 words.",
-      "fallback": "Day {day} begins in {location_name}.",
-      "tags": ["world_gen", "event_log", "time"]
-    },
-    {
-      "template_id": "base:task_flavor",
-      "purpose": "task_description",
-      "prompt_template": "Write one concise mission-briefing sentence for the task '{display_name}' at {location_name}. Employer: {faction_name}. Reward: {reward_summary}. Keep it under 20 words.",
-      "fallback": "{display_name} awaits at {location_name}.",
-      "tags": ["world_gen", "task_board"]
-    },
-    {
       "template_id": "base:activity_flavor",
       "purpose": "activity_flavor",
-      "prompt_template": "Write one concise in-world activity completion sentence for '{display_name}' at {location_name}. Category: {category}. Provider: {provider_name}. Outcome: {outcome_id}. Keep it under 20 words.",
-      "fallback": "{display_name} leaves its mark at {location_name}.",
-      "tags": ["world_gen", "activity"]
-    },
-    {
-      "template_id": "base:encounter_log_flavor",
-      "purpose": "encounter_log_flavor",
-      "prompt_template": "Rewrite this encounter log as one vivid in-world sentence under 22 words. Encounter: {encounter_name}. Actor: {actor_name}. Target: {target_name}. Action: {action_label}. Result: {result}. Mechanical changes: {stat_delta_summary}. Fallback line: {fallback_text}.",
-      "fallback": "{fallback_text}",
-      "tags": ["world_gen", "encounter", "action_log"]
+      "prompt_template": "Write one concise Vanguard University activity result line for '{display_name}' at {location_name}. Category: {category}. Provider: {provider_name}. Outcome: {outcome_id}. Keep it under 20 words.",
+      "fallback": "{display_name} changes the shape of the day.",
+      "tags": [
+        "world_gen",
+        "activity",
+        "vanguard"
+      ]
     },
     {
       "template_id": "base:entity_lore",
       "purpose": "entity_lore",
-      "prompt_template": "Write a two-sentence in-world lore blurb about {display_name}. Description: {description}. Location: {location_name}.",
-      "fallback": "{display_name} is known around {location_name}. {description}",
-      "tags": ["world_gen", "lore", "entity"]
+      "prompt_template": "Write a two-sentence in-world campus blurb about {display_name}. Description: {description}. Location: {location_name}.",
+      "fallback": "{display_name} is part of Vanguard University's daily machinery. {description}",
+      "tags": [
+        "world_gen",
+        "lore",
+        "entity"
+      ]
     },
     {
       "template_id": "base:part_lore",
       "purpose": "part_lore",
-      "prompt_template": "Write a two-sentence in-world lore blurb about the part {display_name}. Description: {description}. Tags: {tag_summary}.",
-      "fallback": "{display_name} is a recognized piece of kit. {description}",
-      "tags": ["world_gen", "lore", "part"]
+      "prompt_template": "Write a two-sentence in-world blurb about the transformation part {display_name}. Description: {description}. Tags: {tag_summary}.",
+      "fallback": "{display_name} is a documented transformation option. {description}",
+      "tags": [
+        "world_gen",
+        "lore",
+        "part"
+      ]
     }
   ],
   "patches": []

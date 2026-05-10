@@ -1,36 +1,60 @@
 {
   "recipes": [
     {
-      "recipe_id": "base:diagnostic_grip",
-      "display_name": "Diagnostic Grip",
-      "description": "Combine two salvage chips into a crude arm-mounted scanner. Not pretty, but functional.",
-      "output_template_id": "base:diagnostic_grip",
-      "output_count": 1,
+      "recipe_id": "base:copy_ritual_chalk",
+      "display_name": "Prepare Ritual Chalk",
+      "description": "Stretch one usable stick of ritual chalk into two prepared pieces. This is intentionally simple so modders can copy the recipe shape.",
+      "output_template_id": "base:ritual_chalk",
+      "output_count": 2,
       "inputs": [
-        { "template_id": "base:salvage_chip", "count": 2 }
+        {
+          "template_id": "base:ritual_chalk",
+          "count": 1
+        }
       ],
-      "required_stations": ["base:street_bench"],
-      "required_stats": { "power": 1 },
+      "required_stations": [
+        "base:ritual_desk"
+      ],
+      "required_stats": {
+        "willpower": 1
+      },
       "required_flags": [],
       "craft_time_ticks": 0,
       "discovery": "always",
-      "tags": ["arm_mod"]
+      "tags": [
+        "ritual",
+        "component"
+      ]
     },
     {
-      "recipe_id": "base:improvised_plating",
-      "display_name": "Improvised Plating",
-      "description": "Weld two scrap plates into a rough but serviceable subdermal insert.",
-      "output_template_id": "base:kevlar_weave",
+      "recipe_id": "base:annotate_lecture_notes",
+      "display_name": "Annotate Lecture Notes",
+      "description": "Turn a packet of notes and ritual chalk into a stronger study aid.",
+      "output_template_id": "base:lecture_notes",
       "output_count": 1,
       "inputs": [
-        { "template_id": "base:scrap_plate", "count": 2 }
+        {
+          "template_id": "base:lecture_notes",
+          "count": 1
+        },
+        {
+          "template_id": "base:ritual_chalk",
+          "count": 1
+        }
       ],
-      "required_stations": ["base:street_bench"],
-      "required_stats": { "power": 2 },
+      "required_stations": [
+        "base:ritual_desk"
+      ],
+      "required_stats": {
+        "intelligence": 2
+      },
       "required_flags": [],
       "craft_time_ticks": 1,
       "discovery": "always",
-      "tags": ["armor"]
+      "tags": [
+        "ritual",
+        "study"
+      ]
     }
   ]
 }

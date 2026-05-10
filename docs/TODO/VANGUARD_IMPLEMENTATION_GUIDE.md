@@ -5,6 +5,14 @@ Build Vanguard University as a minimal playable base game, then expand it throug
 
 This guide assumes the existing starter base data can be deleted and rebuilt from scratch. Use old files only as schema references while authoring new content.
 
+Current status:
+
+- Phase 0 preflight is complete.
+- A first data-only pass of Phases 1-4 exists in `mods/base/`.
+- Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.
+- Legacy `mods/example/*` packs are disabled because they target the previous starter base.
+- Remaining work is validation in Godot, asset creation/import, tuning, and addon implementation.
+
 -----------
 Implementation Principles
 

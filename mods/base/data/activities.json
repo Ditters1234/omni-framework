@@ -1,3 +1,619 @@
 {
-  "activities": []
+  "activities": [
+    {
+      "activity_id": "base:attend_arcana_lecture",
+      "display_name": "Attend Arcana 101 Lecture",
+      "description": "Sit through Professor Ilex's introduction to stable ritual geometry.",
+      "category": "academic",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "base:lecture_hall",
+      "provider_entity_id": "base:professor_ilex",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "course_arcana_101",
+        "lecture",
+        "normalcy_sensitive"
+      ],
+      "schedule": {
+        "weekdays": [
+          "Mon",
+          "Wed",
+          "Fri"
+        ],
+        "start_tick": 9,
+        "end_tick": 13,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": 1
+        }
+      ],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "prepared",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "intelligence",
+              "op": ">=",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 2
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            },
+            {
+              "type": "record_event",
+              "event_type": "vanguard_activity_note",
+              "payload": {
+                "text": "You follow the lecture and leave with usable notes."
+              }
+            }
+          ]
+        },
+        {
+          "outcome_id": "passes_as_normal",
+          "weight": 1.5,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": ">=",
+              "value": 4
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 1
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": -1
+            }
+          ]
+        },
+        {
+          "outcome_id": "lost_thread",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 1
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 2
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Arcana 101 grade",
+          "Stress"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "base:study_at_library",
+      "display_name": "Study at the Library",
+      "description": "Spend quiet time cross-referencing lecture notes against the library's safer grimoires.",
+      "category": "academic",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "base:library",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "course_arcana_101",
+        "study",
+        "quiet"
+      ],
+      "schedule": {
+        "start_tick": 8,
+        "end_tick": 20,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "cooldown",
+        "cooldown_ticks": 2
+      },
+      "visible_if": [],
+      "requirements": [
+        {
+          "type": "stat_check",
+          "stat": "stress",
+          "op": "<",
+          "value": 10
+        }
+      ],
+      "start_actions": [],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "deep_focus",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "willpower",
+              "op": ">=",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 2
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            },
+            {
+              "type": "give_part",
+              "part_id": "base:lecture_notes"
+            }
+          ]
+        },
+        {
+          "outcome_id": "useful_review",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 1
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Arcana 101 grade",
+          "Possible notes"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "base:warehouse_shift",
+      "display_name": "Warehouse Shift",
+      "description": "Move sealed crates in the Industrial Ward. It pays better when your body can keep up.",
+      "category": "work",
+      "kind": "standard",
+      "duration_ticks": 3,
+      "location_id": "base:industrial_ward",
+      "provider_entity_id": "base:foreman_briggs",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "cash",
+        "physical",
+        "primal_friendly"
+      ],
+      "schedule": {
+        "start_tick": 12,
+        "end_tick": 22,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": 1
+        }
+      ],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "strong_shift",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "strength",
+              "op": ">=",
+              "value": 4
+            }
+          ],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 45
+            },
+            {
+              "type": "give_part",
+              "part_id": "base:ritual_chalk"
+            }
+          ]
+        },
+        {
+          "outcome_id": "steady_shift",
+          "weight": 1.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "endurance",
+              "op": ">=",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 35
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            }
+          ]
+        },
+        {
+          "outcome_id": "barely_managed",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 22
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 2
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Cash",
+          "Stress",
+          "Possible ritual chalk"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "base:student_mixer",
+      "display_name": "Student Mixer",
+      "description": "Try to meet people without letting the stranger parts of your body dominate the conversation.",
+      "category": "social",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "base:student_union",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "social",
+        "normalcy_sensitive"
+      ],
+      "schedule": {
+        "weekdays": [
+          "Tue",
+          "Thu",
+          "Sat"
+        ],
+        "start_tick": 16,
+        "end_tick": 21,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "easy_conversation",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "charisma",
+              "op": ">=",
+              "value": 3
+            },
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": ">=",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 10
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": -1
+            }
+          ]
+        },
+        {
+          "outcome_id": "memorable_strangeness",
+          "weight": 1.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": "<",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 4
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            },
+            {
+              "type": "record_event",
+              "event_type": "vanguard_social_note",
+              "payload": {
+                "text": "People remember you. Whether that helps is tomorrow's problem."
+              }
+            }
+          ]
+        },
+        {
+          "outcome_id": "awkward_hour",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Student reputation",
+          "Stress"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "base:common_room_decompress",
+      "display_name": "Common Room Decompression",
+      "description": "Sit somewhere soft, eat something questionable, and let the pressure drop.",
+      "category": "recovery",
+      "kind": "standard",
+      "duration_ticks": 1,
+      "location_id": "base:dorm_common_area",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "recovery",
+        "low_stakes"
+      ],
+      "schedule": {},
+      "repeat": {
+        "rule": "cooldown",
+        "cooldown_ticks": 2
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [],
+      "completion_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": -2
+        }
+      ],
+      "failure_actions": [],
+      "outcomes": [],
+      "ui": {
+        "preview_effects": [
+          "Stress -2"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "base:prepare_ritual_circle",
+      "display_name": "Prepare Ritual Circle",
+      "description": "Spend time checking the circle and laying out chalk. This models ritual preparation without adding a new engine state.",
+      "category": "ritual",
+      "kind": "standard",
+      "duration_ticks": 1,
+      "location_id": "base:dorm_room",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "ritual",
+        "component_gate"
+      ],
+      "schedule": {},
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [
+        {
+          "type": "has_item_tag",
+          "tag": "ritual_component",
+          "count": 1
+        },
+        {
+          "type": "stat_check",
+          "stat": "mana",
+          "op": ">=",
+          "value": 1
+        }
+      ],
+      "start_actions": [
+        {
+          "type": "remove_part",
+          "part_id": "base:ritual_chalk"
+        },
+        {
+          "type": "modify_stat",
+          "stat": "mana",
+          "delta": -1
+        }
+      ],
+      "completion_actions": [
+        {
+          "type": "set_flag",
+          "flag_id": "ritual_prepared_today",
+          "value": true,
+          "entity_id": "player"
+        },
+        {
+          "type": "record_event",
+          "event_type": "vanguard_ritual_prepared",
+          "payload": {
+            "text": "The ritual circle is prepared for the day."
+          }
+        }
+      ],
+      "failure_actions": [],
+      "outcomes": [],
+      "ui": {
+        "preview_effects": [
+          "Consumes ritual chalk",
+          "Mana -1",
+          "Sets ritual_prepared_today"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "base:sleep_in_dorm",
+      "display_name": "Sleep",
+      "description": "End the day, recover mana, and let consequences settle.",
+      "category": "recovery",
+      "kind": "standard",
+      "duration_ticks": 8,
+      "location_id": "base:dorm_room",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "sleep",
+        "day_end"
+      ],
+      "schedule": {
+        "start_tick": 20,
+        "end_tick": 24,
+        "must_fit_window": false
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [],
+      "completion_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "mana",
+          "delta": 999
+        },
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": -3
+        },
+        {
+          "type": "apply_status_effect",
+          "status_effect_id": "base:well_rested",
+          "entity_id": "player"
+        },
+        {
+          "type": "set_flag",
+          "flag_id": "first_sleep_complete",
+          "value": true,
+          "entity_id": "player"
+        },
+        {
+          "type": "set_flag",
+          "flag_id": "ritual_prepared_today",
+          "value": false,
+          "entity_id": "player"
+        },
+        {
+          "type": "record_event",
+          "event_type": "vanguard_day_settled",
+          "payload": {
+            "text": "Sleep restores mana and locks in the day."
+          }
+        }
+      ],
+      "failure_actions": [],
+      "outcomes": [],
+      "ui": {
+        "preview_effects": [
+          "Mana restored",
+          "Stress reduced",
+          "Day consequence point"
+        ]
+      },
+      "ai": {}
+    }
+  ]
 }

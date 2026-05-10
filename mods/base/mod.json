@@ -1,9 +1,9 @@
 {
-  "name": "Base",
-  "version": "0.2.0",
+  "name": "Vanguard University",
+  "version": "0.1.0",
   "schema_version": 1,
   "load_order": 0,
   "enabled": true,
   "id": "base",
-  "description": "Core content pack for the Omni-Framework. Provides a starter world with locations, NPCs, quests, items, factions, crafting, and achievements."
+  "description": "Minimal playable base game for Omni-Framework: an urban fantasy university loop built from data-only systems."
 }
