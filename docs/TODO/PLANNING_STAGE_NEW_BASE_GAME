@@ -182,6 +182,41 @@ Minimum quests:
 - Rent/Tuition Pressure: earn enough cash by a deadline or accept a consequence.
 
 -----------
+Base Game / Addon Strategy
+
+The base game should stay deliberately minimal: a complete, playable core loop with enough content to prove the setting and systems, but not enough content to bury the patterns modders need to learn.
+
+Each addon should be both:
+
+- A real component of the final Vanguard University game.
+- A focused tutorial module that demonstrates one content-authoring pattern clearly.
+
+Recommended split:
+
+- `mods/base/`: The core loop. Dorm, ritual circle, one class pressure, one job pressure, sleep, mana, stress, cash, and a tiny transformation set.
+- `mods/omni/primal_lineage/`: Adds the primal body-part lineage, physical jobs, intimidation-heavy outcomes, and shows how to add parts plus activity branches.
+- `mods/omni/fae_lineage/`: Adds fae body parts, social/normalcy tradeoffs, a student-union relationship path, and shows dialogue/activity condition patterns.
+- `mods/omni/course_arcana_101/`: Adds a specific course with its own grade progress, assignments, professor NPC, and quest chain.
+- `mods/omni/occult_market/`: Adds shops, ritual components, recipes, and blueprint unlocks.
+- `mods/omni/nightlife/`: Adds stress relief, risky social scenes, reputation consequences, and late-day schedules.
+
+Addon rules:
+
+- Every addon depends on `base` and changes one major axis.
+- Every addon should include a short README explaining what it teaches and which JSON files to inspect.
+- Addons should prefer patches/additions over replacing base content.
+- Addons should be independently removable unless their README explicitly declares another addon dependency.
+- A tutorial addon should contain fewer examples with clearer names rather than a large content dump.
+
+Content teaching order:
+
+1. Base game: definitions, entities, parts, locations, activities, config.
+2. First lineage addon: adding parts, socket compatibility, stat tradeoffs, and assembly options.
+3. First course addon: quests, activity-history objectives, grade progress, and scheduled activities.
+4. First market addon: currencies, components, recipes, exchanges, and unlocks.
+5. First social addon: dialogue, reputation, normalcy checks, and branching outcomes.
+
+-----------
 Implementation Milestones
 
 Milestone 1 - Fresh Content Skeleton
@@ -222,10 +257,18 @@ Milestone 5 - Modder Teaching Pass
 - Validate that the base game remains playable without that extension mod.
 
 -----------
-Open Planning Questions
+Resolved Planning Choices
 
-- Should part swapping spend `mana`, `cash`, ritual components, or a mix?
-- Is `normalcy` mostly a social stat, a risk meter, or both?
-- Are grades a single global progress value for v1, or should each course track separately?
-- Does sleep simply restore mana, or does it also lock in consequences from the day?
-- Should transformation parts be bought directly, crafted from components, unlocked by study, or all three in staged layers?
+- Should part swapping spend `mana`, `cash`, ritual components, or a mix?: Mana and components which will cost cash or be awarded for activities
+- Is `normalcy` mostly a social stat, a risk meter, or both?: A social stat
+- Are grades a single global progress value for v1, or should each course track separately?: Course-specific progress is the target model.
+- Does sleep simply restore mana, or does it also lock in consequences from the day?: locks in
+- Should transformation parts be bought directly, crafted from components, unlocked by study, or all three in staged layers?: can be all of the above or awarded by quests
+
+Planning implications:
+
+- Base game part swapping should spend `mana` and at least one ritual component; cash enters indirectly through buying components.
+- `normalcy` should live in the social stat group and should affect social checks without becoming a global alarm meter in v1.
+- The base game can include one course-specific grade track to establish the pattern. Later course addons should add their own grade/progress ids.
+- Sleep should be a commitment point: restore mana, advance the day, and resolve day-end consequences through authored actions/status effects/quest checks.
+- Part acquisition should support multiple paths over time. Base should include the smallest useful sample, while addons teach buying, crafting, studying, and quest rewards separately.
