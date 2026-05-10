@@ -1484,11 +1484,22 @@ func _validate_config_references() -> void:
 		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'game.starting_location' references unknown location '%s'." % starting_location_id)
 
 	var game_config_value: Variant = config.get("game", {})
+	var ticks_per_day := 24
 	if game_config_value is Dictionary:
 		var game_config: Dictionary = game_config_value
 		_validate_starting_discovered_locations(game_config)
 		_validate_positive_integer_config("game.ticks_per_day", game_config.get("ticks_per_day", null), game_config.has("ticks_per_day"))
 		_validate_positive_integer_config("game.ticks_per_hour", game_config.get("ticks_per_hour", null), game_config.has("ticks_per_hour"))
+		var ticks_per_day_value: Variant = game_config.get("ticks_per_day", ticks_per_day)
+		if _is_integral_number(ticks_per_day_value) and int(ticks_per_day_value) >= 1:
+			ticks_per_day = int(ticks_per_day_value)
+
+	var calendar_config_value: Variant = config.get("calendar", {})
+	if calendar_config_value is Dictionary:
+		var calendar_config: Dictionary = calendar_config_value
+		_validate_calendar_config(calendar_config, ticks_per_day)
+	elif config.has("calendar"):
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'calendar' must be an object.")
 
 	var ui_config_value: Variant = config.get("ui", {})
 	if ui_config_value is Dictionary:
@@ -1537,6 +1548,85 @@ func _validate_positive_integer_config(field_path: String, value: Variant, is_pr
 		return
 	if not _is_integral_number(value) or int(value) < 1:
 		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must be an integer greater than or equal to 1." % field_path)
+
+
+func _validate_calendar_config(calendar_config: Dictionary, ticks_per_day: int) -> void:
+	if calendar_config.has("day_start_tick"):
+		var day_start_value: Variant = calendar_config.get("day_start_tick", 0)
+		if not _is_integral_number(day_start_value) or int(day_start_value) < 0 or int(day_start_value) >= ticks_per_day:
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'calendar.day_start_tick' must be an integer from 0 to game.ticks_per_day - 1.")
+	if calendar_config.has("weekdays"):
+		_validate_config_string_array("calendar.weekdays", calendar_config.get("weekdays", []), true, true)
+	if calendar_config.has("months"):
+		_validate_calendar_months(calendar_config.get("months", []))
+	if calendar_config.has("starting_year"):
+		_validate_positive_integer_config("calendar.starting_year", calendar_config.get("starting_year", null), true)
+	if calendar_config.has("starting_absolute_day"):
+		_validate_positive_integer_config("calendar.starting_absolute_day", calendar_config.get("starting_absolute_day", null), true)
+	if calendar_config.has("time_format"):
+		_validate_non_empty_string_config("calendar.time_format", calendar_config.get("time_format", ""))
+	if calendar_config.has("date_format"):
+		_validate_non_empty_string_config("calendar.date_format", calendar_config.get("date_format", ""))
+
+
+func _validate_calendar_months(months_value: Variant) -> void:
+	if not months_value is Array:
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'calendar.months' must be an array.")
+		return
+	var months: Array = months_value
+	if months.is_empty():
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'calendar.months' must contain at least one month when present.")
+		return
+	var seen_ids: Dictionary = {}
+	for index in range(months.size()):
+		var month_value: Variant = months[index]
+		var field_path := "calendar.months[%d]" % index
+		if not month_value is Dictionary:
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must be an object." % field_path)
+			continue
+		var month: Dictionary = month_value
+		var month_id_value: Variant = month.get("month_id", "")
+		if not month_id_value is String or str(month_id_value).strip_edges().is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.month_id' must be a non-empty string." % field_path)
+		else:
+			var month_id := str(month_id_value).strip_edges()
+			if seen_ids.has(month_id):
+				_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.month_id' duplicates month id '%s'." % [field_path, month_id])
+			seen_ids[month_id] = true
+		_validate_non_empty_string_config("%s.display_name" % field_path, month.get("display_name", ""))
+		var days_value: Variant = month.get("days", 0)
+		if not _is_integral_number(days_value) or int(days_value) < 1:
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s.days' must be an integer greater than or equal to 1." % field_path)
+		if month.has("tags"):
+			_validate_config_string_array("%s.tags" % field_path, month.get("tags", []), false, false)
+
+
+func _validate_config_string_array(field_path: String, value: Variant, require_non_empty: bool, reject_duplicates: bool) -> void:
+	if not value is Array:
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must be an array." % field_path)
+		return
+	var values: Array = value
+	if require_non_empty and values.is_empty():
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must contain at least one value." % field_path)
+		return
+	var seen_values: Dictionary = {}
+	for index in range(values.size()):
+		var entry_value: Variant = values[index]
+		var indexed_path := "%s[%d]" % [field_path, index]
+		if not entry_value is String:
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must be a string." % indexed_path)
+			continue
+		var entry := str(entry_value).strip_edges()
+		if entry.is_empty():
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must be a non-empty string." % indexed_path)
+		elif reject_duplicates and seen_values.has(entry):
+			_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' duplicates value '%s'." % [indexed_path, entry])
+		seen_values[entry] = true
+
+
+func _validate_non_empty_string_config(field_path: String, value: Variant) -> void:
+	if not value is String or str(value).strip_edges().is_empty():
+		_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key '%s' must be a non-empty string." % field_path)
 
 
 func _validate_time_advance_buttons(ui_config: Dictionary) -> void:

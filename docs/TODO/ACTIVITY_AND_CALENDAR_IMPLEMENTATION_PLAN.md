@@ -32,7 +32,7 @@ Search anchors:
 - `Phase 14 - Documentation alignment`
 - `Definition of Done`
 
-Current implementation status: not started.
+Current implementation status: Phase 1 complete; Phase 2 not started.
 
 ## 1. Purpose
 
@@ -1479,13 +1479,13 @@ Completion rule: a phase is complete only when its code, tests, and relevant cur
 
 ### Phase 1 - Time foundation
 
-- [ ] Add `systems/time_model.gd`.
-- [ ] Add `calendar.*` config handling.
-- [ ] Add validation for weekdays, months, day start offset, and display formats.
-- [ ] Add tests for arbitrary ticks per day.
-- [ ] Add tests for arbitrary week length.
-- [ ] Add tests for arbitrary month/year structures.
-- [ ] Add tests for day-start offset.
+- [x] Add `systems/time_model.gd`.
+- [x] Add `calendar.*` config handling.
+- [x] Add validation for weekdays, months, day start offset, and display formats.
+- [x] Add tests for arbitrary ticks per day.
+- [x] Add tests for arbitrary week length.
+- [x] Add tests for arbitrary month/year structures.
+- [x] Add tests for day-start offset.
 
 ### Phase 2 - Activity loading
 

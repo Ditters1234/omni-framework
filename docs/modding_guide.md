@@ -1518,6 +1518,22 @@ Common fields:
     "starting_player_id": "base:player",
     "starting_location": "my_name:my_mod:back_alley"
   },
+  "calendar": {
+    "day_start_tick": 0,
+    "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "months": [
+      {
+        "month_id": "spring",
+        "display_name": "Spring",
+        "days": 30,
+        "tags": ["season:spring"]
+      }
+    ],
+    "starting_year": 1,
+    "starting_absolute_day": 1,
+    "time_format": "{hour_24}:{minute_2}",
+    "date_format": "{weekday}, {month} {day}, Year {year}"
+  },
   "ui": {
     "strings": {
       "base_pack_label": "My conversion loaded"
@@ -1557,6 +1573,10 @@ Common fields:
 - `game.starting_location` should be a valid location id when provided
 - `game.starting_discovered_locations` must be an array of valid location ids when provided; include any connected locations that should be available in the first travel view
 - Starting currencies are set on the player entity template in `entities.json`, not in `config.json`. To change starting money, patch the player entity's `currencies` field.
+- `calendar` config controls date interpretation for schedule and calendar surfaces. `TimeKeeper` still owns absolute time advancement through `GameState.current_tick`; `calendar.day_start_tick` only changes display-day and schedule projection.
+- `calendar.weekdays` must be a non-empty array of unique non-empty strings. The engine does not assume a seven-day week.
+- `calendar.months` may define any year shape with non-empty `month_id`, non-empty `display_name`, positive integer `days`, and optional string `tags`. The engine does not assume twelve months, real-world month names, or a 365-day year.
+- `calendar.starting_year` and `calendar.starting_absolute_day` must be positive integers when provided. `calendar.time_format` and `calendar.date_format` must be non-empty strings when provided.
 - `economy.default_currency_id` is the preferred currency for generic budget UIs when a backend does not provide `budget_currency_id`. If omitted, the runtime derives a currency from the paying entity or runs without a budget currency.
 - `tasks.default_assignment_task_template_id` and `tasks.default_travel_task_template_id` define the generic task templates used by owned-entity reach-location assignment when a backend route does not provide `assignment_task_template_id`.
 - `crafting.default_task_template_id` defines the generic timed-crafting task shell used when a recipe or backend route does not provide `craft_task_template_id`.

@@ -110,6 +110,7 @@ systems/
 |-- task_activity_summary.gd
 |-- task_routine_runner.gd
 |-- task_runner.gd
+|-- time_model.gd
 `-- transaction_service.gd
 ```
 
@@ -119,6 +120,7 @@ The loader scripts above load JSON templates into `DataManager`, including `ai_p
 `systems/entity_lifecycle_runner.gd` evaluates config-authored lifecycle rules for live entities, setting state flags and dispatching normal actions when authored conditions enter or exit.
 `systems/location_presence_service.gd` resolves gameplay location presence rows and empty-loot visibility from location templates, entity templates, and runtime entity instances, keeping that model assembly out of the shell surface UI.
 `systems/task_activity_summary.gd` formats active and queued task instances into shared entity activity summaries for owned-entity management and gameplay location presence rows.
+`systems/time_model.gd` is a stateless helper for interpreting configured game time, weekdays, months, display dates, and formatted time strings. It reads `GameState.current_tick` and `calendar.*` config but never advances time.
 `systems/ai/` includes `ai_chat_service.gd`, a non-autoload helper that assembles persona-aware prompts, keeps bounded conversation history, and validates AI replies for dialogue UI.
 `systems/ai/` includes `bt_action_ai_query.gd` and `bt_condition_ai_check.gd`, two LimboAI custom tasks for AI-driven behavior-tree decisions, plus `bt_ai_utils.gd`, the shared prompt-token and response-parser helper those tasks use.
 `script_hook_service.gd` owns the world-generation hook bridge: it resolves config-declared global AI hook paths, caches generated task flavor text, and dispatches event narration requests after quest, travel, and day-advance events are recorded.

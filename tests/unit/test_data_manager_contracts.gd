@@ -430,6 +430,60 @@ func test_validate_loaded_content_reports_runtime_config_shape_issues() -> void:
 	assert_true(_messages_contain(issue_messages, "ui.time_advance_buttons[3]"))
 
 
+func test_validate_loaded_content_reports_calendar_config_shape_issues() -> void:
+	DataManager.locations["base:start"] = {
+		"location_id": "base:start",
+		"display_name": "Start",
+		"connections": {},
+	}
+	DataManager.entities["base:player"] = {
+		"entity_id": "base:player",
+		"display_name": "Player",
+		"location_id": "base:start",
+	}
+	DataManager.config = {
+		"game": {
+			"starting_player_id": "base:player",
+			"starting_location": "base:start",
+			"ticks_per_day": 24,
+		},
+		"calendar": {
+			"day_start_tick": 24,
+			"weekdays": ["Mon", "", "Mon", 7],
+			"months": [
+				{"month_id": "", "display_name": "", "days": 0, "tags": ["season", 8]},
+				"not_a_month",
+				{"month_id": "spring", "display_name": "Spring", "days": 30},
+				{"month_id": "spring", "display_name": "Duplicate", "days": 30},
+			],
+			"starting_year": 0,
+			"starting_absolute_day": "one",
+			"time_format": "",
+			"date_format": 9,
+		},
+	}
+
+	var issues := DataManager.validate_loaded_content()
+	var issue_messages := _issue_messages(issues)
+
+	assert_true(_messages_contain(issue_messages, "calendar.day_start_tick"))
+	assert_true(_messages_contain(issue_messages, "calendar.weekdays[1]"))
+	assert_true(_messages_contain(issue_messages, "calendar.weekdays[2]"))
+	assert_true(_messages_contain(issue_messages, "duplicates value"))
+	assert_true(_messages_contain(issue_messages, "calendar.weekdays[3]"))
+	assert_true(_messages_contain(issue_messages, "calendar.months[0].month_id"))
+	assert_true(_messages_contain(issue_messages, "calendar.months[0].display_name"))
+	assert_true(_messages_contain(issue_messages, "calendar.months[0].days"))
+	assert_true(_messages_contain(issue_messages, "calendar.months[0].tags[1]"))
+	assert_true(_messages_contain(issue_messages, "calendar.months[1]"))
+	assert_true(_messages_contain(issue_messages, "calendar.months[3].month_id"))
+	assert_true(_messages_contain(issue_messages, "duplicates month id"))
+	assert_true(_messages_contain(issue_messages, "calendar.starting_year"))
+	assert_true(_messages_contain(issue_messages, "calendar.starting_absolute_day"))
+	assert_true(_messages_contain(issue_messages, "calendar.time_format"))
+	assert_true(_messages_contain(issue_messages, "calendar.date_format"))
+
+
 func test_query_locations_filters_and_returns_copies() -> void:
 	DataManager.locations["base:market"] = {
 		"location_id": "base:market",
