@@ -6,7 +6,7 @@
 - All code follows the naming conventions below.
 - Always check docs/ before making architectural decisions.
 - Treat Godot warnings as errors when writing GDScript. Avoid relying on implicit typing when values come from `Dictionary.get()`, autoload properties typed as `Object`, JSON data, or other `Variant` sources.
-- Keep our docs/ updated as edits happen
+- Keep our docs/ updated as edits happen. Docs in the base ./docs/ folder should be "this is what exists now" documents without reference to history or future plans. ./docs/TODO/ is for implementing and to-do work.
 
 ### GDScript Typing Rules
 - Prefer explicit types for locals when a value may come from a `Variant`.
