@@ -5,7 +5,7 @@ List the image and sound asset paths referenced by the fresh Vanguard base data.
 
 Status:
 - Image paths are filled with generated placeholder PNGs.
-- Sound paths are still required.
+- Sound paths are filled with generated placeholder WAVs.
 
 -----------
 Image Assets
