@@ -9,6 +9,7 @@ Current status:
 
 - Phase 0 preflight is complete.
 - A first data-only pass of Phases 1-4 exists in `mods/base/`.
+- Phase 5 documentation and content-test coverage is underway: the base README now explains the playable loop, and `tests/content/test_base_content_invariants.gd` covers key Vanguard ids, sockets, activity references, ritual location policy, and legacy starter-content cleanup.
 - Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.
 - Legacy `mods/example/*` packs are disabled because they target the previous starter base.
 - Remaining work is validation in Godot, asset creation/import, tuning, and addon implementation.
