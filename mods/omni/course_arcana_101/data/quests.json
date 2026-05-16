@@ -1,0 +1,70 @@
+{
+  "quests": [
+    {
+      "quest_id": "omni:course_arcana_101:stabilization_assignment",
+      "display_name": "Stabilization Assignment",
+      "description": "Complete Roan's first practical Arcana 101 assignment without proving any of the safety disclaimers necessary.",
+      "stages": [
+        {
+          "description": "Attend the Arcana Problem Seminar.",
+          "objectives": [
+            {
+              "type": "activity_completed",
+              "activity_id": "omni:course_arcana_101:problem_seminar"
+            }
+          ]
+        },
+        {
+          "description": "Complete the Archive Practicum.",
+          "objectives": [
+            {
+              "type": "activity_completed",
+              "activity_id": "omni:course_arcana_101:archive_practicum"
+            }
+          ]
+        },
+        {
+          "description": "Raise Arcana 101 grade progress to at least 7 before the practical.",
+          "objectives": [
+            {
+              "type": "stat_check",
+              "stat": "arcana_101_grade",
+              "op": ">=",
+              "value": 7
+            }
+          ]
+        },
+        {
+          "description": "Complete the Stabilization Practical.",
+          "objectives": [
+            {
+              "type": "activity_completed",
+              "activity_id": "omni:course_arcana_101:stabilization_practical"
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "cash": 35,
+        "items": [
+          {
+            "template_id": "base:lecture_notes",
+            "count": 1
+          },
+          {
+            "template_id": "base:ritual_chalk",
+            "count": 1
+          }
+        ],
+        "reputation": {
+          "base:vanguard_faculty": 8
+        },
+        "flags": {
+          "omni_course_arcana_101_stabilization_complete": true
+        }
+      },
+      "complete_sound": "res://mods/omni/course_arcana_101/assets/audio/sfx_assignment_complete.wav",
+      "repeatable": false
+    }
+  ]
+}

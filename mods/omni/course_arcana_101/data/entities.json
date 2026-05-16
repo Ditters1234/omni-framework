@@ -1,0 +1,51 @@
+{
+  "entities": [
+    {
+      "entity_id": "omni:course_arcana_101:ta_roan",
+      "display_name": "TA Roan",
+      "description": "An Arcana 101 teaching assistant with three spare pencils, no spare patience, and a worrying command of rubric language.",
+      "portrait": "res://mods/omni/course_arcana_101/assets/entities/ta_roan.png",
+      "location_id": "base:lecture_hall",
+      "currencies": {},
+      "stats": {
+        "intelligence": 4,
+        "willpower": 3,
+        "perception": 3,
+        "normalcy": 5,
+        "stress": 0,
+        "stress_max": 10,
+        "mana": 5,
+        "mana_max": 5
+      },
+      "flags": {},
+      "inventory": [],
+      "interactions": [
+        {
+          "tab_id": "roan_assignment",
+          "label": "Ask About Stabilization Assignment",
+          "description": "Start the Arcana 101 addon assignment chain.",
+          "backend_class": "ChallengeBackend",
+          "target_entity_id": "player",
+          "portrait_entity_id": "omni:course_arcana_101:ta_roan",
+          "required_stat": "intelligence",
+          "required_value": 1,
+          "screen_title": "Stabilization Assignment",
+          "screen_description": "Roan gives you a practical assignment sheet with exactly one encouraging sentence.",
+          "confirm_label": "Take Assignment",
+          "action_payload": {
+            "type": "start_quest",
+            "quest_id": "omni:course_arcana_101:stabilization_assignment"
+          }
+        },
+        {
+          "tab_id": "roan_profile",
+          "label": "Profile",
+          "description": "Review Roan as an entity-backed course NPC.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "omni:course_arcana_101:ta_roan",
+          "screen_title": "TA Roan"
+        }
+      ]
+    }
+  ]
+}

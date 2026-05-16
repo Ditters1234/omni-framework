@@ -102,6 +102,13 @@ Addon placeholder assets:
 
 These are acceptable placeholders, not final unique addon art.
 
+`mods/omni/course_arcana_101/` currently includes local placeholder copies for all addon-owned asset references:
+
+- `res://mods/omni/course_arcana_101/assets/entities/ta_roan.png`
+- `res://mods/omni/course_arcana_101/assets/audio/sfx_assignment_complete.wav`
+
+These are acceptable placeholders, not final unique addon art.
+
 -----------
 Asset Notes
 

@@ -1,0 +1,301 @@
+{
+  "activities": [
+    {
+      "activity_id": "omni:course_arcana_101:problem_seminar",
+      "display_name": "Arcana Problem Seminar",
+      "description": "Work through unstable circle diagrams while Roan explains why each obvious answer is wrong.",
+      "category": "academic",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "base:lecture_hall",
+      "provider_entity_id": "omni:course_arcana_101:ta_roan",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "course_arcana_101",
+        "seminar",
+        "assignment"
+      ],
+      "schedule": {
+        "weekdays": [
+          "Tue",
+          "Thu"
+        ],
+        "start_tick": 10,
+        "end_tick": 15,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": 1
+        }
+      ],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "clean_solution",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "intelligence",
+              "op": ">=",
+              "value": 4
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 3
+            },
+            {
+              "type": "record_event",
+              "event_type": "arcana_101_course_note",
+              "payload": {
+                "text": "Your seminar solution holds without any visible smoke."
+              }
+            }
+          ]
+        },
+        {
+          "outcome_id": "partial_credit",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 1
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Arcana 101 grade",
+          "Stress"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "omni:course_arcana_101:archive_practicum",
+      "display_name": "Archive Practicum",
+      "description": "Use library references to annotate a ritual diagram without waking the margins.",
+      "category": "academic",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "base:library",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "course_arcana_101",
+        "study",
+        "assignment"
+      ],
+      "schedule": {
+        "start_tick": 8,
+        "end_tick": 20,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "cooldown",
+        "cooldown_ticks": 3
+      },
+      "visible_if": [
+        {
+          "type": "activity_completed",
+          "activity_id": "omni:course_arcana_101:problem_seminar"
+        }
+      ],
+      "requirements": [
+        {
+          "type": "stat_check",
+          "stat": "stress",
+          "op": "<",
+          "value": 10
+        }
+      ],
+      "start_actions": [],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "careful_annotations",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "willpower",
+              "op": ">=",
+              "value": 3
+            },
+            {
+              "type": "stat_check",
+              "stat": "perception",
+              "op": ">=",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 3
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            }
+          ]
+        },
+        {
+          "outcome_id": "messy_margin_notes",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 1
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 2
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Arcana 101 grade",
+          "Stress"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "omni:course_arcana_101:stabilization_practical",
+      "display_name": "Stabilization Practical",
+      "description": "Draw, anchor, and defend a small ritual circle while Professor Ilex says very little.",
+      "category": "academic",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "base:lecture_hall",
+      "provider_entity_id": "base:professor_ilex",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "course_arcana_101",
+        "exam",
+        "assignment"
+      ],
+      "schedule": {
+        "weekdays": [
+          "Fri"
+        ],
+        "start_tick": 9,
+        "end_tick": 14,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [
+        {
+          "type": "activity_completed",
+          "activity_id": "omni:course_arcana_101:archive_practicum"
+        }
+      ],
+      "requirements": [
+        {
+          "type": "stat_check",
+          "stat": "arcana_101_grade",
+          "op": ">=",
+          "value": 4
+        }
+      ],
+      "start_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": 1
+        }
+      ],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "stable_circle",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "arcana_101_grade",
+              "op": ">=",
+              "value": 7
+            },
+            {
+              "type": "stat_check",
+              "stat": "willpower",
+              "op": ">=",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 4
+            },
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_faculty",
+              "amount": 8
+            }
+          ]
+        },
+        {
+          "outcome_id": "contained_wobble",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "arcana_101_grade",
+              "delta": 2
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 2
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Arcana 101 grade",
+          "Faculty reputation",
+          "Stress"
+        ]
+      },
+      "ai": {}
+    }
+  ]
+}
