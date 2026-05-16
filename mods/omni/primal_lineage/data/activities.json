@@ -1,0 +1,307 @@
+{
+  "activities": [
+    {
+      "activity_id": "omni:primal_lineage:heavy_crate_run",
+      "display_name": "Heavy Crate Run",
+      "description": "Take the warehouse loads nobody wants. A strong body turns bad ergonomics into rent money.",
+      "category": "work",
+      "kind": "standard",
+      "duration_ticks": 3,
+      "location_id": "base:industrial_ward",
+      "provider_entity_id": "base:foreman_briggs",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "work",
+        "physical",
+        "primal_lineage",
+        "industrial_ward"
+      ],
+      "schedule": {
+        "start_tick": 12,
+        "end_tick": 22,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [
+        {
+          "type": "stat_check",
+          "stat": "strength",
+          "op": ">=",
+          "value": 4
+        }
+      ],
+      "start_actions": [
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": 1
+        }
+      ],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "dominant_shift",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "strength",
+              "op": ">=",
+              "value": 7
+            },
+            {
+              "type": "stat_check",
+              "stat": "endurance",
+              "op": ">=",
+              "value": 5
+            }
+          ],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 70
+            },
+            {
+              "type": "give_part",
+              "part_id": "base:ritual_chalk"
+            },
+            {
+              "type": "record_event",
+              "event_type": "primal_lineage_work_note",
+              "payload": {
+                "text": "The loading crew stops joking after the third impossible crate."
+              }
+            }
+          ]
+        },
+        {
+          "outcome_id": "paid_in_full",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 48
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Cash",
+          "Stress",
+          "Ritual chalk on strong outcomes"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "omni:primal_lineage:loading_dock_standoff",
+      "display_name": "Loading Dock Standoff",
+      "description": "Convince a subcontractor that Vanguard students are not unpaid extra labor.",
+      "category": "work",
+      "kind": "standard",
+      "duration_ticks": 1,
+      "location_id": "base:industrial_ward",
+      "provider_entity_id": "base:foreman_briggs",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "work",
+        "social",
+        "intimidation",
+        "primal_lineage"
+      ],
+      "schedule": {
+        "start_tick": 12,
+        "end_tick": 22,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "cooldown",
+        "cooldown_ticks": 6
+      },
+      "visible_if": [],
+      "requirements": [
+        {
+          "type": "stat_check",
+          "stat": "intimidation",
+          "op": ">=",
+          "value": 2
+        }
+      ],
+      "start_actions": [],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "backs_down",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "intimidation",
+              "op": ">=",
+              "value": 4
+            }
+          ],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 30
+            },
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:aethelgard_workers",
+              "amount": 8
+            },
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": -2
+            },
+            {
+              "type": "record_event",
+              "event_type": "primal_lineage_social_note",
+              "payload": {
+                "text": "The workers approve. Campus gossip chooses a less generous word."
+              }
+            }
+          ]
+        },
+        {
+          "outcome_id": "too_visible",
+          "weight": 1.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": "<",
+              "value": 2
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:aethelgard_workers",
+              "amount": 4
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 2
+            }
+          ]
+        },
+        {
+          "outcome_id": "awkward_compromise",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 12
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Cash",
+          "Worker reputation",
+          "Possible student reputation cost"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "omni:primal_lineage:primal_day_debrief",
+      "display_name": "Primal Day Debrief",
+      "description": "Write down what the body did well before sleep makes it feel normal.",
+      "category": "ritual",
+      "kind": "standard",
+      "duration_ticks": 1,
+      "location_id": "base:dorm_room",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "ritual",
+        "reflection",
+        "primal_lineage"
+      ],
+      "schedule": {
+        "start_tick": 18,
+        "end_tick": 24,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [
+        {
+          "type": "activity_completed_today",
+          "activity_id": "omni:primal_lineage:heavy_crate_run"
+        }
+      ],
+      "requirements": [
+        {
+          "type": "stat_check",
+          "stat": "strength",
+          "op": ">=",
+          "value": 6
+        },
+        {
+          "type": "stat_check",
+          "stat": "intimidation",
+          "op": ">=",
+          "value": 3
+        },
+        {
+          "type": "stat_check",
+          "stat": "normalcy",
+          "op": "<=",
+          "value": 3
+        }
+      ],
+      "start_actions": [],
+      "completion_actions": [
+        {
+          "type": "unlock_achievement",
+          "achievement_id": "omni:primal_lineage:mostly_primal_day"
+        },
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": -1
+        }
+      ],
+      "failure_actions": [],
+      "outcomes": [],
+      "ui": {
+        "preview_effects": [
+          "Unlocks Primal Lineage achievement",
+          "Stress -1"
+        ]
+      },
+      "ai": {}
+    }
+  ]
+}

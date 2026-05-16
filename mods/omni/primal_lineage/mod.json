@@ -1,0 +1,11 @@
+{
+  "id": "omni:primal_lineage",
+  "name": "Vanguard University: Primal Lineage",
+  "version": "0.1.0",
+  "schema_version": 1,
+  "load_order": 100,
+  "enabled": true,
+  "dependencies": [
+    "base"
+  ]
+}

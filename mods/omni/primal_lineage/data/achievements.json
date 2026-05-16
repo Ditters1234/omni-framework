@@ -1,0 +1,13 @@
+{
+  "achievements": [
+    {
+      "achievement_id": "omni:primal_lineage:mostly_primal_day",
+      "display_name": "Mostly Primal Day",
+      "description": "Complete a strong Industrial Ward workday in a visibly primal body, then debrief before sleep.",
+      "stat_name": "omni_primal_lineage_debriefs",
+      "requirement": 1,
+      "hidden": false,
+      "unlock_sound": "res://mods/base/assets/vanguard/audio/sfx_achievement_unlock.wav"
+    }
+  ]
+}
