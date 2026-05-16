@@ -16,6 +16,7 @@ Current status:
 - Addon Phase D has a first data-only slice in `mods/omni/occult_market/`: a component vendor, ritual components, market recipes, a recipe unlock activity/item, High Street screen patches, local placeholder assets, and README guidance.
 - Addon Phase E has a first data-only slice in `mods/omni/nightlife/`: a Nightlife District location, High Street connection patch, late-night recovery/social/work activities, temporary status effects, an NPC challenge, an addon achievement, local placeholder assets, and README guidance.
 - Integrated JSON/reference audit passes for base plus all current `mods/omni/*` addon slices: IDs, actions, conditions, status effects, achievements, recipes, task templates, location connections, and `res://` asset references resolve together.
+- Base and addon image assets now use generated draft PNGs rather than copied placeholder art. Sound assets are still placeholder WAVs.
 - Godot-side validation is currently blocked before project load by the native `godot-rust` extension startup crash (`API v4.5`, runtime `v4.6.2`, signal 11).
 - Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.
 - Legacy `mods/example/*` packs are disabled because they target the previous starter base.

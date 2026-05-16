@@ -4,7 +4,7 @@ Purpose:
 List the image and sound asset paths referenced by the fresh Vanguard base data. These files do not need engine work; they are content assets to create or replace.
 
 Status:
-- Image paths are filled with generated placeholder PNGs.
+- Image paths are filled with generated draft PNGs.
 - Sound paths are filled with generated placeholder WAVs.
 
 -----------
@@ -89,27 +89,28 @@ Dialogue blips:
 - `res://mods/base/assets/vanguard/audio/sfx_dialogue_ilex.wav`
 
 -----------
-Addon placeholder assets:
+Addon assets:
 
-`mods/omni/primal_lineage/` currently includes local placeholder copies for all addon-owned asset references:
+`mods/omni/primal_lineage/` currently includes local generated draft PNGs and placeholder WAVs for all addon-owned asset references:
 
 - `res://mods/omni/primal_lineage/assets/parts/pack_instinct.png`
 - `res://mods/omni/primal_lineage/assets/parts/hauling_grip.png`
 - `res://mods/omni/primal_lineage/assets/parts/yard_runner_legs.png`
 - `res://mods/omni/primal_lineage/assets/parts/dray_frame.png`
+- `res://mods/omni/primal_lineage/assets/achievements/primal_day.png`
 - `res://mods/omni/primal_lineage/assets/audio/sfx_ritual_primal.wav`
 - `res://mods/omni/primal_lineage/assets/audio/sfx_achievement_unlock.wav`
 
-These are acceptable placeholders, not final unique addon art.
+The PNGs are generated draft art. The WAVs are still placeholders.
 
-`mods/omni/course_arcana_101/` currently includes local placeholder copies for all addon-owned asset references:
+`mods/omni/course_arcana_101/` currently includes local generated draft PNGs and placeholder WAVs for all addon-owned asset references:
 
 - `res://mods/omni/course_arcana_101/assets/entities/ta_roan.png`
 - `res://mods/omni/course_arcana_101/assets/audio/sfx_assignment_complete.wav`
 
-These are acceptable placeholders, not final unique addon art.
+The PNGs are generated draft art. The WAVs are still placeholders.
 
-`mods/omni/fae_lineage/` currently includes local placeholder copies for all addon-owned asset references:
+`mods/omni/fae_lineage/` currently includes local generated draft PNGs and placeholder WAVs for all addon-owned asset references:
 
 - `res://mods/omni/fae_lineage/assets/entities/lark.png`
 - `res://mods/omni/fae_lineage/assets/parts/silver_tongue_mind.png`
@@ -119,9 +120,9 @@ These are acceptable placeholders, not final unique addon art.
 - `res://mods/omni/fae_lineage/assets/audio/sfx_dialogue_lark.wav`
 - `res://mods/omni/fae_lineage/assets/audio/sfx_fae_quest_complete.wav`
 
-These are acceptable placeholders, not final unique addon art.
+The PNGs are generated draft art. The WAVs are still placeholders.
 
-`mods/omni/occult_market/` currently includes local placeholder copies for all addon-owned asset references:
+`mods/omni/occult_market/` currently includes local generated draft PNGs and placeholder WAVs for all addon-owned asset references:
 
 - `res://mods/omni/occult_market/assets/entities/shopkeeper_nix.png`
 - `res://mods/omni/occult_market/assets/items/moon_shell_dust.png`
@@ -131,9 +132,9 @@ These are acceptable placeholders, not final unique addon art.
 - `res://mods/omni/occult_market/assets/audio/sfx_market_trade.wav`
 - `res://mods/omni/occult_market/assets/audio/sfx_market_craft.wav`
 
-These are acceptable placeholders, not final unique addon art.
+The PNGs are generated draft art. The WAVs are still placeholders.
 
-`mods/omni/nightlife/` currently includes local placeholder copies for all addon-owned asset references:
+`mods/omni/nightlife/` currently includes local generated draft PNGs and placeholder WAVs for all addon-owned asset references:
 
 - `res://mods/omni/nightlife/assets/entities/vesper.png`
 - `res://mods/omni/nightlife/assets/achievements/after_hours.png`
@@ -142,13 +143,13 @@ These are acceptable placeholders, not final unique addon art.
 - `res://mods/omni/nightlife/assets/audio/sfx_night_risk.wav`
 - `res://mods/omni/nightlife/assets/audio/sfx_after_hours_unlock.wav`
 
-These are acceptable placeholders, not final unique addon art.
+The PNGs are generated draft art. The WAVs are still placeholders.
 
 -----------
 Asset Notes
 
 - Keep icons readable at small UI sizes.
-- Use transparent PNGs for parts, items, faction emblems, and achievement icons.
-- Entity portraits can be square PNGs.
+- Prefer transparent PNGs for final parts, items, faction emblems, and achievement icons when the silhouette needs to float over UI.
+- Entity portraits and current draft icons can be square PNGs with painted backgrounds.
 - One-shot UI sounds should be short `.wav` or `.ogg` files.
 - Add `.import` files by importing the assets through Godot after the source files exist.

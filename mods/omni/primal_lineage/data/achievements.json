@@ -2,6 +2,7 @@
   "achievements": [
     {
       "achievement_id": "omni:primal_lineage:mostly_primal_day",
+      "icon": "res://mods/omni/primal_lineage/assets/achievements/primal_day.png",
       "display_name": "Mostly Primal Day",
       "description": "Complete a strong Industrial Ward workday in a visibly primal body, then debrief before sleep.",
       "stat_name": "omni_primal_lineage_debriefs",

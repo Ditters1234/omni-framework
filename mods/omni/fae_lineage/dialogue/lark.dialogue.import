@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://0omevt1cdtoe"
+path="res://.godot/imported/lark.dialogue-f48216b254b22ed94ca5110338188979.tres"
+
+[deps]
+
+source_file="res://mods/omni/fae_lineage/dialogue/lark.dialogue"
+dest_files=["res://.godot/imported/lark.dialogue-f48216b254b22ed94ca5110338188979.tres"]
+
+[params]
+
+defaults=true
