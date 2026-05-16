@@ -1,0 +1,83 @@
+{
+  "parts": [
+    {
+      "id": "omni:fae_lineage:silver_tongue_mind",
+      "display_name": "Silver-Tongue Mind",
+      "description": "A quick, elegant pattern for implication, promises, and hearing what people nearly said.",
+      "tags": [
+        "cognitive",
+        "fae",
+        "lineage_fae",
+        "social"
+      ],
+      "price": {
+        "cash": 75
+      },
+      "stats": {
+        "charisma": 2,
+        "perception": 1,
+        "willpower": -1,
+        "normalcy": -2
+      },
+      "equippable": true,
+      "sprite": "res://mods/omni/fae_lineage/assets/parts/silver_tongue_mind.png",
+      "equip_sound": "res://mods/omni/fae_lineage/assets/audio/sfx_ritual_fae.wav"
+    },
+    {
+      "id": "omni:fae_lineage:glamour_sight",
+      "display_name": "Glamour Sight",
+      "description": "Eyes that catch favors, hidden exits, and the shimmer around a lie.",
+      "tags": [
+        "sensory",
+        "fae",
+        "lineage_fae",
+        "glamour"
+      ],
+      "price": {
+        "cash": 80
+      },
+      "stats": {
+        "perception": 3,
+        "charisma": 1,
+        "endurance": -1,
+        "normalcy": -3
+      },
+      "equippable": true,
+      "sprite": "res://mods/omni/fae_lineage/assets/parts/glamour_sight.png",
+      "equip_sound": "res://mods/omni/fae_lineage/assets/audio/sfx_ritual_fae.wav"
+    },
+    {
+      "id": "omni:fae_lineage:willow_frame",
+      "display_name": "Willow Frame",
+      "description": "A graceful frame that moves like a compliment and stands like a question.",
+      "tags": [
+        "framework",
+        "fae",
+        "lineage_fae",
+        "social"
+      ],
+      "price": {
+        "cash": 95
+      },
+      "stats": {
+        "charisma": 2,
+        "dexterity": 1,
+        "intimidation": -1,
+        "endurance": -1,
+        "normalcy": -2
+      },
+      "equippable": true,
+      "provides_sockets": [
+        {
+          "id": "keepsake",
+          "accepted_tags": [
+            "keepsake"
+          ],
+          "label": "Keepsake"
+        }
+      ],
+      "sprite": "res://mods/omni/fae_lineage/assets/parts/willow_frame.png",
+      "equip_sound": "res://mods/omni/fae_lineage/assets/audio/sfx_ritual_fae.wav"
+    }
+  ]
+}

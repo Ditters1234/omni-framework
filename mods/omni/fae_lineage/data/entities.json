@@ -1,0 +1,57 @@
+{
+  "entities": [
+    {
+      "entity_id": "omni:fae_lineage:lark",
+      "display_name": "Lark",
+      "description": "A Student Union regular who knows which campus rumors have teeth and which ones only want attention.",
+      "portrait": "res://mods/omni/fae_lineage/assets/entities/lark.png",
+      "dialogue_blip": "res://mods/omni/fae_lineage/assets/audio/sfx_dialogue_lark.wav",
+      "location_id": "base:student_union",
+      "currencies": {},
+      "stats": {
+        "charisma": 4,
+        "perception": 4,
+        "normalcy": 3,
+        "stress": 0,
+        "stress_max": 10,
+        "mana": 5,
+        "mana_max": 5
+      },
+      "flags": {},
+      "inventory": [],
+      "interactions": [
+        {
+          "tab_id": "lark_dialogue",
+          "label": "Talk To Lark",
+          "description": "Follow a small authored dialogue path.",
+          "backend_class": "DialogueBackend",
+          "dialogue_resource": "res://mods/omni/fae_lineage/dialogue/lark.dialogue",
+          "dialogue_start": "start",
+          "speaker_entity_id": "omni:fae_lineage:lark"
+        },
+        {
+          "tab_id": "lark_favor",
+          "label": "Ask For A Favor",
+          "description": "Start Lark's Student Union relationship path.",
+          "backend_class": "ChallengeBackend",
+          "target_entity_id": "player",
+          "portrait_entity_id": "omni:fae_lineage:lark",
+          "required_stat": "charisma",
+          "required_value": 2,
+          "screen_title": "Lark's Favor",
+          "screen_description": "Lark wants proof you can read a room before she trusts you with anything sharper than gossip.",
+          "confirm_label": "Accept",
+          "action_payload": {
+            "type": "start_quest",
+            "quest_id": "omni:fae_lineage:larks_favor"
+          },
+          "failure_action_payload": {
+            "type": "modify_stat",
+            "stat": "stress",
+            "delta": 1
+          }
+        }
+      ]
+    }
+  ]
+}

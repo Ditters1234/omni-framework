@@ -1,0 +1,27 @@
+{
+  "patches": [
+    {
+      "target": "base:student_union",
+      "add_screens": [
+        {
+          "tab_id": "fae_lineage_social",
+          "display_name": "Fae Social Work",
+          "description": "Social activities that reward charisma and perception while testing normalcy.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Fae Social Work",
+          "tags": [
+            "fae_lineage"
+          ],
+          "location_filter": "base:student_union",
+          "show_locked": true,
+          "show_upcoming": true
+        }
+      ],
+      "set": {
+        "entities_present": [
+          "omni:fae_lineage:lark"
+        ]
+      }
+    }
+  ]
+}

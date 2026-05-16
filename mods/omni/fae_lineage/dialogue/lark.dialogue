@@ -1,0 +1,28 @@
+~ start
+Lark: You have the look of someone who can hear the room humming.
+- Ask what the room is saying.
+	=> sharp_read
+- Offer a careful compliment.
+	=> compliment
+- Ask about the favor.
+	=> trusted
+- Admit you are still learning.
+	=> learning
+
+~ sharp_read
+Lark: Good. The loud table is scared, the quiet table is bargaining, and the snack machine is lying.
+Lark: Keep noticing things before they notice you back.
+=> END
+
+~ compliment
+Lark: Better. Polite enough for campus, pointed enough for the parts of campus that matter.
+Lark: Try not to spend all of that charm in one place.
+=> END
+
+~ trusted
+Lark: You did well with the favor. Not safe, exactly, but useful. Useful gets invited back.
+=> END
+
+~ learning
+Lark: Then learn softly. The Union forgives awkward. It charges interest on obvious.
+=> END

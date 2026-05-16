@@ -1,0 +1,229 @@
+{
+  "activities": [
+    {
+      "activity_id": "omni:fae_lineage:read_union_tells",
+      "display_name": "Read Union Tells",
+      "description": "Watch the Student Union for hidden alliances, false smiles, and fae-shaped opportunities.",
+      "category": "social",
+      "kind": "standard",
+      "duration_ticks": 1,
+      "location_id": "base:student_union",
+      "provider_entity_id": "omni:fae_lineage:lark",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "social",
+        "fae_lineage",
+        "normalcy_sensitive"
+      ],
+      "schedule": {
+        "start_tick": 12,
+        "end_tick": 22,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "cooldown",
+        "cooldown_ticks": 3
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "sees_the_pattern",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "perception",
+              "op": ">=",
+              "value": 4
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 6
+            },
+            {
+              "type": "set_flag",
+              "flag_id": "omni_fae_lineage_read_union_tells",
+              "value": true,
+              "entity_id": "player"
+            },
+            {
+              "type": "record_event",
+              "event_type": "fae_lineage_social_note",
+              "payload": {
+                "text": "You catch three favors changing hands before anyone says the word favor."
+              }
+            }
+          ]
+        },
+        {
+          "outcome_id": "too_bright",
+          "weight": 1.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": "<",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 2
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 2
+            }
+          ]
+        },
+        {
+          "outcome_id": "surface_gossip",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 2
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Student reputation",
+          "Possible relationship flag",
+          "Stress risk"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "omni:fae_lineage:glamour_small_talk",
+      "display_name": "Glamour Small Talk",
+      "description": "Trade compliments, careful truths, and one harmless secret in the Student Union.",
+      "category": "social",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "base:student_union",
+      "provider_entity_id": "omni:fae_lineage:lark",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "social",
+        "fae_lineage",
+        "normalcy_sensitive"
+      ],
+      "schedule": {
+        "weekdays": [
+          "Tue",
+          "Thu",
+          "Sat"
+        ],
+        "start_tick": 16,
+        "end_tick": 22,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [],
+      "start_actions": [],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "wins_the_table",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "charisma",
+              "op": ">=",
+              "value": 5
+            },
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": ">=",
+              "value": 2
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 10
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": -1
+            },
+            {
+              "type": "set_flag",
+              "flag_id": "omni_fae_lineage_lark_impressed",
+              "value": true,
+              "entity_id": "player"
+            }
+          ]
+        },
+        {
+          "outcome_id": "beautifully_unsettling",
+          "weight": 1.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": "<",
+              "value": 2
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 3
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 2
+            }
+          ]
+        },
+        {
+          "outcome_id": "pleasant_enough",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 3
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Student reputation",
+          "Stress",
+          "Relationship flag"
+        ]
+      },
+      "ai": {}
+    }
+  ]
+}

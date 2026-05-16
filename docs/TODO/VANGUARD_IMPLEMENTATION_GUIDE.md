@@ -11,6 +11,7 @@ Current status:
 - A first data-only pass of Phases 1-4 exists in `mods/base/`.
 - Phase 5 documentation is underway: the base README now explains the playable loop. Automated tests intentionally avoid asserting against live mod data while Vanguard content is still changing quickly.
 - Addon Phase A has a first data-only slice in `mods/omni/primal_lineage/`: new primal parts, Industrial Ward activities, an addon achievement, and README guidance.
+- Addon Phase B has a first data-only slice in `mods/omni/fae_lineage/`: social/perceptive fae parts, Student Union activities, Lark NPC dialogue, a stat-gated relationship challenge, local placeholder assets, and README guidance. Dialogue Manager stat/flag helpers are not exposed yet, so conditional gating currently lives in JSON conditions.
 - Addon Phase C has a first data-only slice in `mods/omni/course_arcana_101/`: a TA NPC, scheduled seminar/study/practical activities, a short assignment quest chain, local placeholder assets, and README guidance.
 - Addon Phase D has a first data-only slice in `mods/omni/occult_market/`: a component vendor, ritual components, market recipes, a recipe unlock activity/item, High Street screen patches, local placeholder assets, and README guidance.
 - Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.

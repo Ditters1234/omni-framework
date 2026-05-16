@@ -1,0 +1,46 @@
+{
+  "quests": [
+    {
+      "quest_id": "omni:fae_lineage:larks_favor",
+      "display_name": "Lark's Favor",
+      "description": "Prove you can read a room, survive the attention, and make the Student Union useful.",
+      "stages": [
+        {
+          "description": "Read the Student Union's social tells.",
+          "objectives": [
+            {
+              "type": "activity_completed",
+              "activity_id": "omni:fae_lineage:read_union_tells"
+            }
+          ]
+        },
+        {
+          "description": "Impress Lark during Glamour Small Talk.",
+          "objectives": [
+            {
+              "type": "activity_completed",
+              "activity_id": "omni:fae_lineage:glamour_small_talk"
+            },
+            {
+              "type": "has_flag",
+              "entity_id": "player",
+              "flag_id": "omni_fae_lineage_lark_impressed",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "cash": 15,
+        "reputation": {
+          "base:vanguard_students": 12
+        },
+        "flags": {
+          "omni_fae_lineage_lark_trust": true
+        }
+      },
+      "complete_sound": "res://mods/omni/fae_lineage/assets/audio/sfx_fae_quest_complete.wav",
+      "repeatable": false
+    }
+  ]
+}

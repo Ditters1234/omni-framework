@@ -109,6 +109,18 @@ These are acceptable placeholders, not final unique addon art.
 
 These are acceptable placeholders, not final unique addon art.
 
+`mods/omni/fae_lineage/` currently includes local placeholder copies for all addon-owned asset references:
+
+- `res://mods/omni/fae_lineage/assets/entities/lark.png`
+- `res://mods/omni/fae_lineage/assets/parts/silver_tongue_mind.png`
+- `res://mods/omni/fae_lineage/assets/parts/glamour_sight.png`
+- `res://mods/omni/fae_lineage/assets/parts/willow_frame.png`
+- `res://mods/omni/fae_lineage/assets/audio/sfx_ritual_fae.wav`
+- `res://mods/omni/fae_lineage/assets/audio/sfx_dialogue_lark.wav`
+- `res://mods/omni/fae_lineage/assets/audio/sfx_fae_quest_complete.wav`
+
+These are acceptable placeholders, not final unique addon art.
+
 `mods/omni/occult_market/` currently includes local placeholder copies for all addon-owned asset references:
 
 - `res://mods/omni/occult_market/assets/entities/shopkeeper_nix.png`
