@@ -1,0 +1,96 @@
+{
+  "parts": [
+    {
+      "id": "omni:occult_market:moon_shell_dust",
+      "display_name": "Moon-Shell Dust",
+      "description": "Pearled dust used to steady ritual chalk lines under cheap dorm lighting.",
+      "tags": [
+        "ritual_component",
+        "ritual_refined",
+        "occult_market",
+        "material"
+      ],
+      "price": {
+        "cash": 14
+      },
+      "stats": {},
+      "equippable": false,
+      "sprite": "res://mods/omni/occult_market/assets/items/moon_shell_dust.png"
+    },
+    {
+      "id": "omni:occult_market:ironwood_splinter",
+      "display_name": "Ironwood Splinter",
+      "description": "A brittle charm sliver that keeps circles from crawling across the floorboards.",
+      "tags": [
+        "ritual_component",
+        "ritual_basic",
+        "occult_market",
+        "material"
+      ],
+      "price": {
+        "cash": 10
+      },
+      "stats": {},
+      "equippable": false,
+      "sprite": "res://mods/omni/occult_market/assets/items/ironwood_splinter.png"
+    },
+    {
+      "id": "omni:occult_market:market_recipe_card",
+      "display_name": "Market Recipe Card",
+      "description": "A laminated instruction card for turning suspicious supplies into something nearly school-approved.",
+      "tags": [
+        "study_aid",
+        "recipe_card",
+        "occult_market"
+      ],
+      "price": {
+        "cash": 28
+      },
+      "stats": {},
+      "equippable": false,
+      "consume_on_use": true,
+      "use_label": "Study Card",
+      "use_actions": [
+        {
+          "type": "learn_recipe",
+          "recipe_id": "omni:occult_market:assemble_circle_kit"
+        },
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": 1
+        }
+      ],
+      "sprite": "res://mods/omni/occult_market/assets/items/market_recipe_card.png"
+    },
+    {
+      "id": "omni:occult_market:portable_circle_kit",
+      "display_name": "Portable Circle Kit",
+      "description": "A tidy bundle of dust, splinters, and chalk guides. It settles the nerves before a dorm-room ritual.",
+      "tags": [
+        "consumable",
+        "ritual_support",
+        "occult_market"
+      ],
+      "price": {
+        "cash": 45
+      },
+      "stats": {},
+      "equippable": false,
+      "consume_on_use": true,
+      "use_label": "Lay Out Kit",
+      "use_actions": [
+        {
+          "type": "give_part",
+          "part_id": "base:ritual_chalk"
+        },
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": -1
+        }
+      ],
+      "sprite": "res://mods/omni/occult_market/assets/items/circle_kit.png"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "entities": [
+    {
+      "entity_id": "omni:occult_market:shopkeeper_nix",
+      "display_name": "Nix",
+      "description": "A High Street seller with component jars, careful labels, and a strict no-refunds policy for anything that whispers.",
+      "portrait": "res://mods/omni/occult_market/assets/entities/shopkeeper_nix.png",
+      "location_id": "base:high_street",
+      "currencies": {
+        "cash": 800
+      },
+      "stats": {
+        "charisma": 4,
+        "perception": 4,
+        "normalcy": 4,
+        "stress": 0,
+        "stress_max": 10,
+        "mana": 4,
+        "mana_max": 4
+      },
+      "flags": {},
+      "inventory": [
+        {
+          "instance_id": "nix_moon_dust_001",
+          "template_id": "omni:occult_market:moon_shell_dust"
+        },
+        {
+          "instance_id": "nix_moon_dust_002",
+          "template_id": "omni:occult_market:moon_shell_dust"
+        },
+        {
+          "instance_id": "nix_ironwood_001",
+          "template_id": "omni:occult_market:ironwood_splinter"
+        },
+        {
+          "instance_id": "nix_ironwood_002",
+          "template_id": "omni:occult_market:ironwood_splinter"
+        },
+        {
+          "instance_id": "nix_recipe_card_001",
+          "template_id": "omni:occult_market:market_recipe_card"
+        }
+      ],
+      "interactions": [
+        {
+          "tab_id": "nix_trade",
+          "label": "Buy Components",
+          "description": "Buy exact ritual supplies from Nix's current stock.",
+          "backend_class": "ExchangeBackend",
+          "source_inventory": "entity:omni:occult_market:shopkeeper_nix",
+          "destination_inventory": "player",
+          "currency_id": "cash",
+          "transaction_sound": "res://mods/omni/occult_market/assets/audio/sfx_market_trade.wav"
+        },
+        {
+          "tab_id": "nix_profile",
+          "label": "Profile",
+          "description": "Review Nix as an entity-backed vendor.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "omni:occult_market:shopkeeper_nix",
+          "screen_title": "Nix"
+        }
+      ]
+    }
+  ]
+}

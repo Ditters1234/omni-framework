@@ -12,6 +12,7 @@ Current status:
 - Phase 5 documentation is underway: the base README now explains the playable loop. Automated tests intentionally avoid asserting against live mod data while Vanguard content is still changing quickly.
 - Addon Phase A has a first data-only slice in `mods/omni/primal_lineage/`: new primal parts, Industrial Ward activities, an addon achievement, and README guidance.
 - Addon Phase C has a first data-only slice in `mods/omni/course_arcana_101/`: a TA NPC, scheduled seminar/study/practical activities, a short assignment quest chain, local placeholder assets, and README guidance.
+- Addon Phase D has a first data-only slice in `mods/omni/occult_market/`: a component vendor, ritual components, market recipes, a recipe unlock activity/item, High Street screen patches, local placeholder assets, and README guidance.
 - Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.
 - Legacy `mods/example/*` packs are disabled because they target the previous starter base.
 - Remaining work is validation in Godot, asset creation/import, tuning, and addon implementation.

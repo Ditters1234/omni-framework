@@ -1,0 +1,70 @@
+{
+  "recipes": [
+    {
+      "recipe_id": "omni:occult_market:bind_market_chalk",
+      "display_name": "Bind Market Chalk",
+      "description": "Bind moon-shell dust and ironwood into a reliable stick of ritual chalk.",
+      "output_template_id": "base:ritual_chalk",
+      "output_count": 1,
+      "inputs": [
+        {
+          "template_id": "omni:occult_market:moon_shell_dust",
+          "count": 1
+        },
+        {
+          "template_id": "omni:occult_market:ironwood_splinter",
+          "count": 1
+        }
+      ],
+      "required_stations": [
+        "omni:occult_market:market_altar"
+      ],
+      "required_stats": {
+        "willpower": 1
+      },
+      "required_flags": [],
+      "craft_time_ticks": 0,
+      "discovery": "always",
+      "tags": [
+        "ritual",
+        "component",
+        "occult_market"
+      ]
+    },
+    {
+      "recipe_id": "omni:occult_market:assemble_circle_kit",
+      "display_name": "Assemble Portable Circle Kit",
+      "description": "Package market components into a reusable-looking support kit for dorm rituals.",
+      "output_template_id": "omni:occult_market:portable_circle_kit",
+      "output_count": 1,
+      "inputs": [
+        {
+          "template_id": "base:ritual_chalk",
+          "count": 1
+        },
+        {
+          "template_id": "omni:occult_market:moon_shell_dust",
+          "count": 1
+        },
+        {
+          "template_id": "omni:occult_market:ironwood_splinter",
+          "count": 1
+        }
+      ],
+      "required_stations": [
+        "omni:occult_market:market_altar"
+      ],
+      "required_stats": {
+        "intelligence": 2
+      },
+      "required_flags": [],
+      "craft_time_ticks": 1,
+      "discovery": "learned_on_flag",
+      "tags": [
+        "ritual",
+        "support",
+        "occult_market"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "activities": [
+    {
+      "activity_id": "omni:occult_market:read_market_recipe_card",
+      "display_name": "Read Market Recipe Card",
+      "description": "Squint through Nix's shorthand until the portable circle kit recipe makes a dangerous kind of sense.",
+      "category": "ritual",
+      "kind": "standard",
+      "duration_ticks": 1,
+      "location_id": "base:high_street",
+      "provider_entity_id": "omni:occult_market:shopkeeper_nix",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "ritual",
+        "crafting",
+        "occult_market"
+      ],
+      "schedule": {
+        "start_tick": 9,
+        "end_tick": 21,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "once"
+      },
+      "visible_if": [],
+      "requirements": [
+        {
+          "type": "stat_check",
+          "stat": "intelligence",
+          "op": ">=",
+          "value": 1
+        }
+      ],
+      "start_actions": [],
+      "completion_actions": [
+        {
+          "type": "learn_recipe",
+          "recipe_id": "omni:occult_market:assemble_circle_kit"
+        },
+        {
+          "type": "modify_stat",
+          "stat": "stress",
+          "delta": 1
+        },
+        {
+          "type": "record_event",
+          "event_type": "occult_market_recipe_learned",
+          "payload": {
+            "text": "The market card teaches a compact circle-kit recipe."
+          }
+        }
+      ],
+      "failure_actions": [],
+      "outcomes": [],
+      "ui": {
+        "preview_effects": [
+          "Learns Portable Circle Kit recipe",
+          "Stress +1"
+        ]
+      },
+      "ai": {}
+    }
+  ]
+}

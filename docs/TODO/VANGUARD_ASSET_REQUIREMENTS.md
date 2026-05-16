@@ -109,6 +109,18 @@ These are acceptable placeholders, not final unique addon art.
 
 These are acceptable placeholders, not final unique addon art.
 
+`mods/omni/occult_market/` currently includes local placeholder copies for all addon-owned asset references:
+
+- `res://mods/omni/occult_market/assets/entities/shopkeeper_nix.png`
+- `res://mods/omni/occult_market/assets/items/moon_shell_dust.png`
+- `res://mods/omni/occult_market/assets/items/ironwood_splinter.png`
+- `res://mods/omni/occult_market/assets/items/market_recipe_card.png`
+- `res://mods/omni/occult_market/assets/items/circle_kit.png`
+- `res://mods/omni/occult_market/assets/audio/sfx_market_trade.wav`
+- `res://mods/omni/occult_market/assets/audio/sfx_market_craft.wav`
+
+These are acceptable placeholders, not final unique addon art.
+
 -----------
 Asset Notes
 

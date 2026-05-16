@@ -1,0 +1,52 @@
+{
+  "patches": [
+    {
+      "target": "base:high_street",
+      "add_screens": [
+        {
+          "tab_id": "occult_market_trade",
+          "display_name": "Occult Market",
+          "description": "Buy exact ritual components from Nix's current stock.",
+          "backend_class": "ExchangeBackend",
+          "source_inventory": "entity:omni:occult_market:shopkeeper_nix",
+          "destination_inventory": "player",
+          "currency_id": "cash",
+          "transaction_sound": "res://mods/omni/occult_market/assets/audio/sfx_market_trade.wav"
+        },
+        {
+          "tab_id": "occult_market_workbench",
+          "display_name": "Market Workbench",
+          "description": "Craft occult-market recipes from purchased components.",
+          "backend_class": "CraftingBackend",
+          "station_id": "omni:occult_market:market_altar",
+          "recipe_tags": [
+            "occult_market"
+          ],
+          "crafter_entity_id": "player",
+          "input_source_entity_id": "player",
+          "output_destination_entity_id": "player",
+          "screen_title": "Market Workbench"
+        },
+        {
+          "tab_id": "occult_market_lessons",
+          "display_name": "Market Lessons",
+          "description": "Learn market recipe patterns through activities.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Occult Market Lessons",
+          "categories": [
+            "ritual"
+          ],
+          "location_filter": "base:high_street",
+          "show_locked": true,
+          "show_upcoming": true
+        }
+      ],
+      "set": {
+        "entities_present": [
+          "base:shopkeeper_sel",
+          "omni:occult_market:shopkeeper_nix"
+        ]
+      }
+    }
+  ]
+}
