@@ -3,6 +3,10 @@
 Purpose:
 List the image and sound asset paths referenced by the fresh Vanguard base data. These files do not need engine work; they are content assets to create or replace.
 
+Status:
+- Image paths are filled with generated placeholder PNGs.
+- Sound paths are still required.
+
 -----------
 Image Assets
 
