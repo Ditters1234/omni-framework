@@ -89,6 +89,20 @@ Dialogue blips:
 - `res://mods/base/assets/vanguard/audio/sfx_dialogue_ilex.wav`
 
 -----------
+Addon placeholder assets:
+
+`mods/omni/primal_lineage/` currently includes local placeholder copies for all addon-owned asset references:
+
+- `res://mods/omni/primal_lineage/assets/parts/pack_instinct.png`
+- `res://mods/omni/primal_lineage/assets/parts/hauling_grip.png`
+- `res://mods/omni/primal_lineage/assets/parts/yard_runner_legs.png`
+- `res://mods/omni/primal_lineage/assets/parts/dray_frame.png`
+- `res://mods/omni/primal_lineage/assets/audio/sfx_ritual_primal.wav`
+- `res://mods/omni/primal_lineage/assets/audio/sfx_achievement_unlock.wav`
+
+These are acceptable placeholders, not final unique addon art.
+
+-----------
 Asset Notes
 
 - Keep icons readable at small UI sizes.

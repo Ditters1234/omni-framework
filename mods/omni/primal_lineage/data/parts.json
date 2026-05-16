@@ -22,8 +22,8 @@
         "normalcy": -2
       },
       "equippable": true,
-      "sprite": "res://mods/base/assets/vanguard/parts/primal_hindbrain.png",
-      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_primal.wav"
+      "sprite": "res://mods/omni/primal_lineage/assets/parts/pack_instinct.png",
+      "equip_sound": "res://mods/omni/primal_lineage/assets/audio/sfx_ritual_primal.wav"
     },
     {
       "id": "omni:primal_lineage:hauling_grip",
@@ -46,8 +46,8 @@
         "normalcy": -2
       },
       "equippable": true,
-      "sprite": "res://mods/base/assets/vanguard/parts/clawed_grip.png",
-      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_primal.wav"
+      "sprite": "res://mods/omni/primal_lineage/assets/parts/hauling_grip.png",
+      "equip_sound": "res://mods/omni/primal_lineage/assets/audio/sfx_ritual_primal.wav"
     },
     {
       "id": "omni:primal_lineage:yard_runner_legs",
@@ -69,8 +69,8 @@
         "normalcy": -2
       },
       "equippable": true,
-      "sprite": "res://mods/base/assets/vanguard/parts/bounding_legs.png",
-      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_primal.wav"
+      "sprite": "res://mods/omni/primal_lineage/assets/parts/yard_runner_legs.png",
+      "equip_sound": "res://mods/omni/primal_lineage/assets/audio/sfx_ritual_primal.wav"
     },
     {
       "id": "omni:primal_lineage:dray_frame",
@@ -102,8 +102,8 @@
           "label": "Keepsake"
         }
       ],
-      "sprite": "res://mods/base/assets/vanguard/parts/hulking_frame.png",
-      "equip_sound": "res://mods/base/assets/vanguard/audio/sfx_ritual_primal.wav"
+      "sprite": "res://mods/omni/primal_lineage/assets/parts/dray_frame.png",
+      "equip_sound": "res://mods/omni/primal_lineage/assets/audio/sfx_ritual_primal.wav"
     }
   ]
 }

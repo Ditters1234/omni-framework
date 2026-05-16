@@ -7,7 +7,7 @@
       "stat_name": "omni_primal_lineage_debriefs",
       "requirement": 1,
       "hidden": false,
-      "unlock_sound": "res://mods/base/assets/vanguard/audio/sfx_achievement_unlock.wav"
+      "unlock_sound": "res://mods/omni/primal_lineage/assets/audio/sfx_achievement_unlock.wav"
     }
   ]
 }
