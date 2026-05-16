@@ -1,0 +1,13 @@
+{
+  "achievements": [
+    {
+      "achievement_id": "omni:nightlife:after_hours",
+      "icon": "res://mods/omni/nightlife/assets/achievements/after_hours.png",
+      "unlock_sound": "res://mods/omni/nightlife/assets/audio/sfx_after_hours_unlock.wav",
+      "display_name": "After Hours",
+      "description": "Have a genuinely good night out in the Nightlife District.",
+      "stat_name": "manual_unlocks",
+      "requirement": 999
+    }
+  ]
+}

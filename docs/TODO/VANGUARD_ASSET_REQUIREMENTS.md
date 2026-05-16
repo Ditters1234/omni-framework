@@ -133,6 +133,17 @@ These are acceptable placeholders, not final unique addon art.
 
 These are acceptable placeholders, not final unique addon art.
 
+`mods/omni/nightlife/` currently includes local placeholder copies for all addon-owned asset references:
+
+- `res://mods/omni/nightlife/assets/entities/vesper.png`
+- `res://mods/omni/nightlife/assets/achievements/after_hours.png`
+- `res://mods/omni/nightlife/assets/audio/sfx_dialogue_vesper.wav`
+- `res://mods/omni/nightlife/assets/audio/sfx_night_success.wav`
+- `res://mods/omni/nightlife/assets/audio/sfx_night_risk.wav`
+- `res://mods/omni/nightlife/assets/audio/sfx_after_hours_unlock.wav`
+
+These are acceptable placeholders, not final unique addon art.
+
 -----------
 Asset Notes
 

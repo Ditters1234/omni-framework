@@ -14,6 +14,7 @@ Current status:
 - Addon Phase B has a first data-only slice in `mods/omni/fae_lineage/`: social/perceptive fae parts, Student Union activities, Lark NPC dialogue, a stat-gated relationship challenge, local placeholder assets, and README guidance. Dialogue Manager stat/flag helpers are not exposed yet, so conditional gating currently lives in JSON conditions.
 - Addon Phase C has a first data-only slice in `mods/omni/course_arcana_101/`: a TA NPC, scheduled seminar/study/practical activities, a short assignment quest chain, local placeholder assets, and README guidance.
 - Addon Phase D has a first data-only slice in `mods/omni/occult_market/`: a component vendor, ritual components, market recipes, a recipe unlock activity/item, High Street screen patches, local placeholder assets, and README guidance.
+- Addon Phase E has a first data-only slice in `mods/omni/nightlife/`: a Nightlife District location, High Street connection patch, late-night recovery/social/work activities, temporary status effects, an NPC challenge, an addon achievement, local placeholder assets, and README guidance.
 - Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.
 - Legacy `mods/example/*` packs are disabled because they target the previous starter base.
 - Remaining work is validation in Godot, asset creation/import, tuning, and addon implementation.

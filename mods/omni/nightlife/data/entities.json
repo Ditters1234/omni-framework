@@ -1,0 +1,52 @@
+{
+  "entities": [
+    {
+      "entity_id": "omni:nightlife:vesper",
+      "display_name": "Vesper",
+      "description": "A venue host who knows which doors are real, which doors are traps, and which doors only open after midnight.",
+      "portrait": "res://mods/omni/nightlife/assets/entities/vesper.png",
+      "dialogue_blip": "res://mods/omni/nightlife/assets/audio/sfx_dialogue_vesper.wav",
+      "location_id": "omni:nightlife:nightlife_district",
+      "currencies": {},
+      "stats": {
+        "charisma": 5,
+        "perception": 4,
+        "normalcy": 4,
+        "stress": 0,
+        "stress_max": 10,
+        "mana": 4,
+        "mana_max": 4
+      },
+      "flags": {},
+      "inventory": [],
+      "interactions": [
+        {
+          "tab_id": "vesper_tip",
+          "label": "Ask For The Scene",
+          "description": "Get a little orientation and mark the district as discovered socially.",
+          "backend_class": "ChallengeBackend",
+          "target_entity_id": "player",
+          "portrait_entity_id": "omni:nightlife:vesper",
+          "required_stat": "perception",
+          "required_value": 2,
+          "screen_title": "Read The Room",
+          "screen_description": "Vesper points out which crowds are safe, expensive, or hungry for novelty.",
+          "confirm_label": "Listen",
+          "success_sound": "res://mods/omni/nightlife/assets/audio/sfx_night_success.wav",
+          "failure_sound": "res://mods/omni/nightlife/assets/audio/sfx_night_risk.wav",
+          "action_payload": {
+            "type": "set_flag",
+            "flag_id": "omni_nightlife_knows_the_scene",
+            "value": true,
+            "entity_id": "player"
+          },
+          "failure_action_payload": {
+            "type": "modify_stat",
+            "stat": "stress",
+            "delta": 1
+          }
+        }
+      ]
+    }
+  ]
+}

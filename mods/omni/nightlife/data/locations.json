@@ -1,0 +1,62 @@
+{
+  "locations": [
+    {
+      "location_id": "omni:nightlife:nightlife_district",
+      "display_name": "Nightlife District",
+      "description": "A late strip of basement venues, food carts, neon sigils, and places that make bad decisions look scheduled.",
+      "connections": {
+        "base:high_street": 2
+      },
+      "map_position": {
+        "x": 0.78,
+        "y": 0.78
+      },
+      "screens": [
+        {
+          "tab_id": "nightlife_board",
+          "display_name": "After Hours",
+          "description": "Late activities for stress relief, reputation, and risky social momentum.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "After Hours",
+          "location_filter": "omni:nightlife:nightlife_district",
+          "show_locked": true,
+          "show_upcoming": true,
+          "max_upcoming_slots": 8
+        },
+        {
+          "tab_id": "nightlife_status",
+          "display_name": "Aftereffects",
+          "description": "Review active stress, fatigue, and inspiration effects.",
+          "backend_class": "EntitySheetBackend",
+          "target_entity_id": "player",
+          "screen_title": "Aftereffects",
+          "show_currencies": false,
+          "show_equipped": false,
+          "show_inventory": false,
+          "show_status_effects": true,
+          "show_reputation": true
+        }
+      ]
+    }
+  ],
+  "patches": [
+    {
+      "target": "base:high_street",
+      "add_connections": {
+        "omni:nightlife:nightlife_district": 2
+      },
+      "add_screens": [
+        {
+          "tab_id": "nightlife_access",
+          "display_name": "Nightlife",
+          "description": "Check after-hours activities and stress relief options.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Nightlife Preview",
+          "location_filter": "omni:nightlife:nightlife_district",
+          "show_locked": true,
+          "show_upcoming": true
+        }
+      ]
+    }
+  ]
+}

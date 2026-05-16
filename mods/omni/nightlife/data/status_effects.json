@@ -1,0 +1,41 @@
+{
+  "status_effects": [
+    {
+      "status_effect_id": "omni:nightlife:inspired",
+      "display_name": "Afterglow",
+      "description": "A bright social buzz from a good night out.",
+      "duration": 4,
+      "tick_interval": 1,
+      "max_stacks": 1,
+      "stack_mode": "refresh",
+      "stat_modifiers": {
+        "charisma": 1,
+        "willpower": 1
+      },
+      "tags": [
+        "buff",
+        "nightlife",
+        "recovery"
+      ]
+    },
+    {
+      "status_effect_id": "omni:nightlife:tired",
+      "display_name": "Too Wired",
+      "description": "The night went long enough that morning will collect payment.",
+      "duration": 5,
+      "tick_interval": 1,
+      "max_stacks": 2,
+      "stack_mode": "stack",
+      "stat_modifiers": {
+        "intelligence": -1,
+        "endurance": -1,
+        "normalcy": -1
+      },
+      "tags": [
+        "debuff",
+        "nightlife",
+        "fatigue"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+{
+  "activities": [
+    {
+      "activity_id": "omni:nightlife:food_cart_decompress",
+      "display_name": "Food Cart Decompression",
+      "description": "Eat something hot under ward-light and let the day loosen its grip.",
+      "category": "recovery",
+      "kind": "standard",
+      "duration_ticks": 1,
+      "location_id": "omni:nightlife:nightlife_district",
+      "provider_entity_id": "omni:nightlife:vesper",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "nightlife",
+        "recovery",
+        "stress_relief"
+      ],
+      "schedule": {
+        "start_tick": 18,
+        "end_tick": 24,
+        "must_fit_window": true
+      },
+      "repeat": {
+        "rule": "cooldown",
+        "cooldown_ticks": 3
+      },
+      "visible_if": [],
+      "requirements": [
+        {
+          "type": "has_currency",
+          "currency_id": "cash",
+          "amount": 4
+        }
+      ],
+      "start_actions": [
+        {
+          "type": "take_currency",
+          "currency_id": "cash",
+          "amount": 4
+        }
+      ],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "actually_restful",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": ">=",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": -3
+            },
+            {
+              "type": "apply_status_effect",
+              "status_effect_id": "omni:nightlife:inspired",
+              "entity_id": "player"
+            },
+            {
+              "type": "record_event",
+              "event_type": "nightlife_recovery_note",
+              "payload": {
+                "text": "Warm food and ordinary noise make the city feel manageable."
+              }
+            }
+          ]
+        },
+        {
+          "outcome_id": "cheap_reset",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": -2
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Cash -4",
+          "Stress relief",
+          "Possible Afterglow"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "omni:nightlife:basement_show",
+      "display_name": "Basement Show",
+      "description": "Spend a few hours in a basement venue where every chorus sounds like a dare.",
+      "category": "social",
+      "kind": "standard",
+      "duration_ticks": 3,
+      "location_id": "omni:nightlife:nightlife_district",
+      "provider_entity_id": "omni:nightlife:vesper",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "nightlife",
+        "social",
+        "risk_reward"
+      ],
+      "schedule": {
+        "weekdays": [
+          "Thu",
+          "Fri",
+          "Sat"
+        ],
+        "start_tick": 20,
+        "end_tick": 3,
+        "must_fit_window": false
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [
+        {
+          "type": "has_currency",
+          "currency_id": "cash",
+          "amount": 8
+        }
+      ],
+      "start_actions": [
+        {
+          "type": "take_currency",
+          "currency_id": "cash",
+          "amount": 8
+        }
+      ],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "perfect_night",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "charisma",
+              "op": ">=",
+              "value": 4
+            },
+            {
+              "type": "stat_check",
+              "stat": "stress",
+              "op": "<",
+              "value": 8
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": -4
+            },
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 8
+            },
+            {
+              "type": "apply_status_effect",
+              "status_effect_id": "omni:nightlife:inspired",
+              "entity_id": "player"
+            },
+            {
+              "type": "unlock_achievement",
+              "achievement_id": "omni:nightlife:after_hours"
+            }
+          ]
+        },
+        {
+          "outcome_id": "too_late",
+          "weight": 1.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "willpower",
+              "op": "<",
+              "value": 3
+            }
+          ],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": -1
+            },
+            {
+              "type": "apply_status_effect",
+              "status_effect_id": "omni:nightlife:tired",
+              "entity_id": "player"
+            }
+          ]
+        },
+        {
+          "outcome_id": "forgettable_set",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": -2
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Cash -8",
+          "Stress swing",
+          "Reputation or fatigue"
+        ]
+      },
+      "ai": {}
+    },
+    {
+      "activity_id": "omni:nightlife:velvet_door",
+      "display_name": "Velvet Door Favor",
+      "description": "Do a favor for the venue door list: carry a message, dodge a debt, and keep smiling.",
+      "category": "work",
+      "kind": "standard",
+      "duration_ticks": 2,
+      "location_id": "omni:nightlife:nightlife_district",
+      "provider_entity_id": "omni:nightlife:vesper",
+      "travel_policy": "must_be_present",
+      "tags": [
+        "nightlife",
+        "cash",
+        "social_risk"
+      ],
+      "schedule": {
+        "start_tick": 19,
+        "end_tick": 2,
+        "must_fit_window": false
+      },
+      "repeat": {
+        "rule": "limited_per_day",
+        "max_completions_per_day": 1
+      },
+      "visible_if": [],
+      "requirements": [
+        {
+          "type": "has_flag",
+          "entity_id": "player",
+          "flag_id": "omni_nightlife_knows_the_scene",
+          "value": true
+        }
+      ],
+      "start_actions": [],
+      "completion_actions": [],
+      "failure_actions": [],
+      "outcomes": [
+        {
+          "outcome_id": "smooth_favor",
+          "weight": 2.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "perception",
+              "op": ">=",
+              "value": 4
+            },
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": ">=",
+              "value": 2
+            }
+          ],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 24
+            },
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": 6
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 1
+            }
+          ]
+        },
+        {
+          "outcome_id": "publicly_weird",
+          "weight": 1.0,
+          "conditions": [
+            {
+              "type": "stat_check",
+              "stat": "normalcy",
+              "op": "<",
+              "value": 2
+            }
+          ],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 12
+            },
+            {
+              "type": "modify_reputation",
+              "faction_id": "base:vanguard_students",
+              "amount": -4
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 3
+            },
+            {
+              "type": "apply_status_effect",
+              "status_effect_id": "omni:nightlife:tired",
+              "entity_id": "player"
+            }
+          ]
+        },
+        {
+          "outcome_id": "paid_anyway",
+          "weight": 1.0,
+          "conditions": [],
+          "actions": [
+            {
+              "type": "give_currency",
+              "currency_id": "cash",
+              "amount": 16
+            },
+            {
+              "type": "modify_stat",
+              "stat": "stress",
+              "delta": 2
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "preview_effects": [
+          "Cash",
+          "Stress",
+          "Student reputation"
+        ]
+      },
+      "ai": {}
+    }
+  ]
+}
