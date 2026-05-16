@@ -234,7 +234,7 @@ Milestone 2 - Body Loadout Prototype
 - Add one themed alternate set that creates obvious tradeoffs.
 - Configure the dorm ritual circle interaction to open `AssemblyEditorBackend`.
 - Add a first-pass economy/mana cost model for swapping parts.
-- Add content tests that the player can equip all required starting slots.
+- Keep mod documentation current while content changes quickly; automated framework tests should use fixture data rather than live mod data.
 
 Milestone 3 - Daily Activity Loop
 

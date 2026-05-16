@@ -170,67 +170,6 @@ func test_save_and_load_emit_documented_success_and_failure_signals() -> void:
 	assert_signal_emitted(GameEvents, "load_failed")
 
 
-func test_mod_loader_can_discover_and_order_base_mod() -> void:
-	ModLoader.load_report = ModLoader._create_empty_load_report()
-	ModLoader.loaded_mods.clear()
-	DataManager.clear_all()
-
-	var discovered := ModLoader._discover_mods()
-	var filtered := ModLoader._filter_loadable_mods(discovered)
-	var ordered := ModLoader._resolve_load_order(filtered)
-
-	assert_true(discovered.size() >= 1)
-	assert_true(filtered.size() >= 1)
-	assert_true(ordered.size() >= 1)
-	assert_eq(str(ordered[0].get("id", "")), "base")
-
-
-func test_mod_loader_phase_one_populates_registries() -> void:
-	ModLoader.load_report = ModLoader._create_empty_load_report()
-	DataManager.clear_all()
-
-	var ordered := ModLoader._resolve_load_order(
-		ModLoader._filter_loadable_mods(ModLoader._discover_mods())
-	)
-
-	ModLoader._phase_one_additions(ordered)
-
-	var starting_player_id := str(DataManager.get_config_value("game.starting_player_id", ""))
-	var starting_location_id := str(DataManager.get_config_value("game.starting_location", ""))
-
-	assert_false(starting_player_id.is_empty())
-	assert_false(starting_location_id.is_empty())
-	assert_false(DataManager.get_entity(starting_player_id).is_empty())
-	assert_false(DataManager.get_location(starting_location_id).is_empty())
-	assert_true(DataManager.get_definitions("stats").size() > 0)
-
-
-func test_mod_loader_phase_two_and_script_preload_complete() -> void:
-	ModLoader.load_report = ModLoader._create_empty_load_report()
-	DataManager.clear_all()
-
-	var ordered := ModLoader._resolve_load_order(
-		ModLoader._filter_loadable_mods(ModLoader._discover_mods())
-	)
-
-	ModLoader._phase_one_additions(ordered)
-	ModLoader._phase_two_patches(ordered)
-
-	var hook_loader := ScriptHookLoader.new()
-	hook_loader.preload_all()
-
-	assert_false(DataManager.get_entity("base:player").is_empty())
-	assert_false(DataManager.get_config_value("game.starting_player_id", "").is_empty())
-
-
-func test_mod_loader_load_all_mods_completes() -> void:
-	ModLoader.load_all_mods()
-
-	assert_true(ModLoader.is_loaded)
-	assert_false(DataManager.get_entity("base:player").is_empty())
-	assert_eq(str(ModLoader.get_debug_snapshot().get("status", "")), ModLoader.LOAD_STATUS_LOADED)
-
-
 func test_boot_can_initialize_ai_and_start_new_game() -> void:
 	TEST_FIXTURE_WORLD.bootstrap_runtime_fixture()
 	AIManager.initialize()

@@ -9,8 +9,8 @@ Current status:
 
 - Phase 0 preflight is complete.
 - A first data-only pass of Phases 1-4 exists in `mods/base/`.
-- Phase 5 documentation and content-test coverage is underway: the base README now explains the playable loop, and `tests/content/test_base_content_invariants.gd` covers key Vanguard ids, sockets, activity references, ritual location policy, and legacy starter-content cleanup.
-- Addon Phase A has a first data-only slice in `mods/omni/primal_lineage/`: new primal parts, Industrial Ward activities, an addon achievement, README guidance, and focused content invariants.
+- Phase 5 documentation is underway: the base README now explains the playable loop. Automated tests intentionally avoid asserting against live mod data while Vanguard content is still changing quickly.
+- Addon Phase A has a first data-only slice in `mods/omni/primal_lineage/`: new primal parts, Industrial Ward activities, an addon achievement, and README guidance.
 - Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.
 - Legacy `mods/example/*` packs are disabled because they target the previous starter base.
 - Remaining work is validation in Godot, asset creation/import, tuning, and addon implementation.
@@ -266,19 +266,17 @@ Files:
 
 - `mods/base/README.md`
 - `docs/TODO/PLANNING_STAGE_NEW_BASE_GAME`
-- content tests under `tests/content/` if suitable
 
 Tasks:
 
 - Document what each base data file demonstrates.
 - Add a compact "how this base loop works" section to `mods/base/README.md`.
-- Add content checks for critical ids, player sockets, starting location, and required activity references.
 - Verify no base doc describes old Neon Threshold content.
 
 Definition of done:
 
 - A future modder can inspect the base pack and understand the loop.
-- Content tests cover the highest-risk references.
+- Automated framework tests avoid live mod data while Vanguard content is still changing quickly.
 - Base remains small enough to read in one sitting.
 
 -----------

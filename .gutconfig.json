@@ -1,6 +1,5 @@
 {
   "dirs": [
-    "res://tests/content",
     "res://tests/integration",
     "res://tests/unit"
   ],

@@ -46,4 +46,5 @@ Current baseline suites cover:
 - mod dependency-aware load ordering
 - mod manifest validation and loader debug snapshot coverage
 - end-to-end boot pipeline contracts (load phases, new game bootstrap, repeated reloads, save/load flow)
-- base content invariants
+
+The automated suite uses fixture-authored data for framework behavior. It intentionally avoids asserting against the live contents of `mods/base/` or addon mods while game content is being actively authored.

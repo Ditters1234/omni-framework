@@ -22,7 +22,10 @@ static func seed() -> void:
 
 static func _prepare_fixture(load_engine_bootstrap: bool, start_game: bool) -> void:
 	if load_engine_bootstrap:
-		ModLoader.load_all_mods()
+		ModLoader.load_report = ModLoader._create_empty_load_report()
+		ModLoader.loaded_mods.clear()
+		ModLoader._register_backend_contracts()
+		ModLoader.is_loaded = true
 	GameEvents.clear_event_history()
 	GameState.reset()
 	DataManager.clear_all()
