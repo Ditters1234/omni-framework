@@ -58,10 +58,10 @@
         },
         {
           "tab_id": "dorm_activities",
-          "display_name": "Plan Day",
-          "description": "Start dorm and campus activities from one board.",
+          "display_name": "Campus Planner",
+          "description": "Start available activities from one board. The planner auto-travels when a route exists.",
           "backend_class": "ActivityBoardBackend",
-          "screen_title": "Daily Activities",
+          "screen_title": "Campus Planner",
           "location_filter": "all",
           "show_locked": true,
           "show_upcoming": true,

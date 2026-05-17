@@ -9,7 +9,7 @@
       "duration_ticks": 2,
       "location_id": "base:lecture_hall",
       "provider_entity_id": "base:professor_ilex",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "course_arcana_101",
         "lecture",
@@ -130,7 +130,7 @@
       "kind": "standard",
       "duration_ticks": 2,
       "location_id": "base:library",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "course_arcana_101",
         "study",
@@ -221,7 +221,7 @@
       "duration_ticks": 3,
       "location_id": "base:industrial_ward",
       "provider_entity_id": "base:foreman_briggs",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "cash",
         "physical",
@@ -330,7 +330,7 @@
       "kind": "standard",
       "duration_ticks": 2,
       "location_id": "base:student_union",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "social",
         "normalcy_sensitive"
@@ -445,7 +445,7 @@
       "kind": "standard",
       "duration_ticks": 1,
       "location_id": "base:dorm_common_area",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "recovery",
         "low_stakes"

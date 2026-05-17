@@ -102,6 +102,11 @@ func new_game() -> void:
 	current_location_id = configured_location_id if not configured_location_id.is_empty() else player_entity.location_id
 	player_entity.location_id = current_location_id
 	player_entity.discover_location(current_location_id)
+	var starting_tick_value: Variant = DataManager.get_config_value("game.starting_tick", 0)
+	if starting_tick_value is int:
+		current_tick = maxi(starting_tick_value, 0)
+	elif starting_tick_value is float:
+		current_tick = maxi(int(starting_tick_value), 0)
 	var discovered_locations_value: Variant = DataManager.get_config_value("game.starting_discovered_locations", [])
 	if discovered_locations_value is Array:
 		var discovered_locations: Array = discovered_locations_value

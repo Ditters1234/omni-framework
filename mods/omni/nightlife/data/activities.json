@@ -9,7 +9,7 @@
       "duration_ticks": 1,
       "location_id": "omni:nightlife:nightlife_district",
       "provider_entity_id": "omni:nightlife:vesper",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "nightlife",
         "recovery",
@@ -104,7 +104,7 @@
       "duration_ticks": 3,
       "location_id": "omni:nightlife:nightlife_district",
       "provider_entity_id": "omni:nightlife:vesper",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "nightlife",
         "social",
@@ -118,6 +118,7 @@
         ],
         "start_tick": 20,
         "end_tick": 3,
+        "crosses_midnight": true,
         "must_fit_window": false
       },
       "repeat": {
@@ -236,7 +237,7 @@
       "duration_ticks": 2,
       "location_id": "omni:nightlife:nightlife_district",
       "provider_entity_id": "omni:nightlife:vesper",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "nightlife",
         "cash",
@@ -245,6 +246,7 @@
       "schedule": {
         "start_tick": 19,
         "end_tick": 2,
+        "crosses_midnight": true,
         "must_fit_window": false
       },
       "repeat": {

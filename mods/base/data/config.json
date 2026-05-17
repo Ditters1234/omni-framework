@@ -3,6 +3,7 @@
     "title": "Vanguard University",
     "tagline": "Study hard. Change carefully.",
     "starting_location": "base:dorm_room",
+    "starting_tick": 8,
     "ticks_per_day": 24,
     "ticks_per_hour": 1,
     "starting_discovered_locations": [

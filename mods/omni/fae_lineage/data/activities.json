@@ -9,7 +9,7 @@
       "duration_ticks": 1,
       "location_id": "base:student_union",
       "provider_entity_id": "omni:fae_lineage:lark",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "social",
         "fae_lineage",
@@ -117,7 +117,7 @@
       "duration_ticks": 2,
       "location_id": "base:student_union",
       "provider_entity_id": "omni:fae_lineage:lark",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "social",
         "fae_lineage",

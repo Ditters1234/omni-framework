@@ -1572,6 +1572,10 @@ func _validate_config_references() -> void:
 		var ticks_per_day_value: Variant = game_config.get("ticks_per_day", ticks_per_day)
 		if _is_integral_number(ticks_per_day_value) and int(ticks_per_day_value) >= 1:
 			ticks_per_day = int(ticks_per_day_value)
+		if game_config.has("starting_tick"):
+			var starting_tick_value: Variant = game_config.get("starting_tick", 0)
+			if not _is_integral_number(starting_tick_value) or int(starting_tick_value) < 0 or int(starting_tick_value) >= ticks_per_day:
+				_record_issue("base", OmniConstants.DATA_CONFIG, LOAD_PHASE_VALIDATION, "Config key 'game.starting_tick' must be an integer from 0 to game.ticks_per_day - 1.")
 
 	var calendar_config_value: Variant = config.get("calendar", {})
 	if calendar_config_value is Dictionary:

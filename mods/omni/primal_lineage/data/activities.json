@@ -9,7 +9,7 @@
       "duration_ticks": 3,
       "location_id": "base:industrial_ward",
       "provider_entity_id": "base:foreman_briggs",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "work",
         "physical",
@@ -116,7 +116,7 @@
       "duration_ticks": 1,
       "location_id": "base:industrial_ward",
       "provider_entity_id": "base:foreman_briggs",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "work",
         "social",
@@ -240,7 +240,7 @@
       "kind": "standard",
       "duration_ticks": 1,
       "location_id": "base:dorm_room",
-      "travel_policy": "must_be_present",
+      "travel_policy": "auto_travel",
       "tags": [
         "ritual",
         "reflection",
