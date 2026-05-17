@@ -8,6 +8,7 @@ This addon adds a small High Street component vendor and recipe chain.
 - `data/parts.json`: ritual components, study cards, and consumable support items.
 - `data/recipes.json`: always-known and learned-on-flag crafting recipes.
 - `data/activities.json`: an activity that unlocks a recipe through the `learn_recipe` action.
+- `data/quests.json`: a lightweight crafting objective that tracks the recipe-card-to-kit loop.
 - `data/locations.json`: patching a base location with addon screens.
 
 ## Buying
@@ -21,6 +22,8 @@ The Market Workbench screen filters recipes tagged `occult_market`. `omni:occult
 ## Unlocking
 
 The Market Recipe Card item can be used from inventory, and the Read Market Recipe Card activity can be completed on High Street. Both teach the circle-kit recipe with normal data-authored actions.
+
+The quest `omni:occult_market:portable_practice` starts from the card-reading activity and completes when the player acquires a Portable Circle Kit.
 
 ## Assets
 

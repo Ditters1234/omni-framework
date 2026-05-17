@@ -1,0 +1,63 @@
+{
+  "quests": [
+    {
+      "quest_id": "omni:nightlife:learn_the_scene",
+      "display_name": "Learn The Scene",
+      "description": "Find the Nightlife District, get Vesper's read on the room, and decide whether after-hours pressure helps or hurts.",
+      "stages": [
+        {
+          "description": "Reach the Nightlife District.",
+          "objectives": [
+            {
+              "type": "reach_location",
+              "location_id": "omni:nightlife:nightlife_district"
+            }
+          ]
+        },
+        {
+          "description": "Ask Vesper for the scene.",
+          "objectives": [
+            {
+              "type": "has_flag",
+              "entity_id": "player",
+              "flag_id": "omni_nightlife_knows_the_scene",
+              "value": true
+            }
+          ]
+        },
+        {
+          "description": "Complete one Nightlife District activity.",
+          "objectives": [
+            {
+              "OR": [
+                {
+                  "type": "activity_completed",
+                  "activity_id": "omni:nightlife:food_cart_decompress"
+                },
+                {
+                  "type": "activity_completed",
+                  "activity_id": "omni:nightlife:basement_show"
+                },
+                {
+                  "type": "activity_completed",
+                  "activity_id": "omni:nightlife:velvet_door"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "cash": 12,
+        "reputation": {
+          "base:vanguard_students": 6
+        },
+        "flags": {
+          "omni_nightlife_scene_learned": true
+        }
+      },
+      "complete_sound": "res://mods/omni/nightlife/assets/audio/sfx_after_hours_unlock.wav",
+      "repeatable": false
+    }
+  ]
+}

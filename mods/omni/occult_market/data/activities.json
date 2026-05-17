@@ -49,6 +49,10 @@
           "payload": {
             "text": "The market card teaches a compact circle-kit recipe."
           }
+        },
+        {
+          "type": "start_quest",
+          "quest_id": "omni:occult_market:portable_practice"
         }
       ],
       "failure_actions": [],

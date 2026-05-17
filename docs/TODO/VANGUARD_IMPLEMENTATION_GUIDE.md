@@ -19,6 +19,7 @@ Current status:
 - Base and addon image assets now use generated draft PNGs rather than copied placeholder art. Sound assets are still placeholder WAVs.
 - The default player copy and portrait are being kept gender-flexible. A real player presentation picker is still needed so players can choose portraits/pronouns/body presentation at new game without encoding gender as stat modifiers.
 - Campus Planner activities now use auto-travel where appropriate, and new games start at 08:00 so day-one campus activities are immediately usable instead of greyed out from midnight.
+- A general polish pass added a dorm Campus Map, made the Industrial Ward initially discoverable, and gave the Primal Lineage, Occult Market, and Nightlife addons focused quest/navigation hooks.
 - Godot-side validation is currently blocked before project load by the native `godot-rust` extension startup crash (`API v4.5`, runtime `v4.6.2`, signal 11).
 - Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.
 - Legacy `mods/example/*` packs are disabled because they target the previous starter base.

@@ -6,6 +6,8 @@ This addon expands Vanguard University with a small physical transformation line
 
 - `data/parts.json`: adding new body parts in another namespace, using socket tags, prices, stat modifiers, and addon-owned placeholder assets.
 - `data/activities.json`: adding Industrial Ward activities that reward strength, endurance, and intimidation while creating normalcy and stress consequences.
+- `data/locations.json`: patching a base location with a focused addon activity board.
+- `data/quests.json`: starting a small addon quest from activity completion actions.
 - `data/achievements.json`: adding an addon-owned achievement that can be unlocked by addon activity actions.
 
 ## Play Pattern
@@ -13,6 +15,8 @@ This addon expands Vanguard University with a small physical transformation line
 Buy one or more primal parts from the High Street catalog, prepare the ritual circle, and equip them in the dorm. The new parts make physical Industrial Ward work more profitable and open an intimidation-heavy errand, but they make social passing harder through lower `normalcy` and `charisma`.
 
 The achievement `omni:primal_lineage:mostly_primal_day` is unlocked by completing the Primal Day Debrief after a strong primal workday.
+
+The quest `omni:primal_lineage:prove_the_body` now starts from the Heavy Crate Run and asks the player to follow through with either a dock standoff or a dorm debrief.
 
 ## Assets
 

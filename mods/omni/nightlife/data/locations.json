@@ -55,6 +55,16 @@
           "location_filter": "omni:nightlife:nightlife_district",
           "show_locked": true,
           "show_upcoming": true
+        },
+        {
+          "tab_id": "nightlife_map",
+          "display_name": "Nightlife Route",
+          "description": "Travel directly to the Nightlife District once the evening opens up.",
+          "backend_class": "WorldMapBackend",
+          "screen_title": "Nightlife Route",
+          "screen_description": "High Street connects to the after-hours district when this addon is enabled.",
+          "show_travel_costs": true,
+          "discovered_only": false
         }
       ]
     }

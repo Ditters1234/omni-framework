@@ -1,0 +1,54 @@
+{
+  "quests": [
+    {
+      "quest_id": "omni:primal_lineage:prove_the_body",
+      "display_name": "Prove The Body",
+      "description": "Use a visibly primal build for work, pressure, and reflection instead of treating the transformation as a cosmetic stunt.",
+      "stages": [
+        {
+          "description": "Complete a Heavy Crate Run in the Industrial Ward.",
+          "objectives": [
+            {
+              "type": "activity_completed",
+              "activity_id": "omni:primal_lineage:heavy_crate_run"
+            }
+          ]
+        },
+        {
+          "description": "Settle a Loading Dock Standoff or write a Primal Day Debrief.",
+          "objectives": [
+            {
+              "OR": [
+                {
+                  "type": "activity_completed",
+                  "activity_id": "omni:primal_lineage:loading_dock_standoff"
+                },
+                {
+                  "type": "activity_completed",
+                  "activity_id": "omni:primal_lineage:primal_day_debrief"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "cash": 20,
+        "items": [
+          {
+            "template_id": "base:ritual_chalk",
+            "count": 1
+          }
+        ],
+        "reputation": {
+          "base:aethelgard_workers": 8
+        },
+        "flags": {
+          "omni_primal_lineage_body_proven": true
+        }
+      },
+      "complete_sound": "res://mods/omni/primal_lineage/assets/audio/sfx_achievement_unlock.wav",
+      "repeatable": false
+    }
+  ]
+}

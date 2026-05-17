@@ -77,6 +77,10 @@
               "payload": {
                 "text": "The loading crew stops joking after the third impossible crate."
               }
+            },
+            {
+              "type": "start_quest",
+              "quest_id": "omni:primal_lineage:prove_the_body"
             }
           ]
         },
@@ -94,6 +98,10 @@
               "type": "modify_stat",
               "stat": "stress",
               "delta": 1
+            },
+            {
+              "type": "start_quest",
+              "quest_id": "omni:primal_lineage:prove_the_body"
             }
           ]
         }

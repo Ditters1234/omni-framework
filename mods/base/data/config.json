@@ -12,7 +12,8 @@
       "base:lecture_hall",
       "base:library",
       "base:student_union",
-      "base:high_street"
+      "base:high_street",
+      "base:industrial_ward"
     ],
     "starting_player_id": "base:player",
     "new_game_flow": {

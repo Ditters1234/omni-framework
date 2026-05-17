@@ -1,0 +1,44 @@
+{
+  "quests": [
+    {
+      "quest_id": "omni:occult_market:portable_practice",
+      "display_name": "Portable Practice",
+      "description": "Turn Nix's market supplies into a ritual support kit that makes dorm-room body work feel less improvised.",
+      "stages": [
+        {
+          "description": "Read the Market Recipe Card.",
+          "objectives": [
+            {
+              "type": "activity_completed",
+              "activity_id": "omni:occult_market:read_market_recipe_card"
+            }
+          ]
+        },
+        {
+          "description": "Craft or acquire a Portable Circle Kit.",
+          "objectives": [
+            {
+              "type": "has_part",
+              "template_id": "omni:occult_market:portable_circle_kit",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "reward": {
+        "cash": 10,
+        "items": [
+          {
+            "template_id": "omni:occult_market:moon_shell_dust",
+            "count": 1
+          }
+        ],
+        "flags": {
+          "omni_occult_market_portable_practice_complete": true
+        }
+      },
+      "complete_sound": "res://mods/omni/occult_market/assets/audio/sfx_market_trade.wav",
+      "repeatable": false
+    }
+  ]
+}

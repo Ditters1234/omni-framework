@@ -34,11 +34,14 @@
           "confirm_label": "Listen",
           "success_sound": "res://mods/omni/nightlife/assets/audio/sfx_night_success.wav",
           "failure_sound": "res://mods/omni/nightlife/assets/audio/sfx_night_risk.wav",
+          "reward": {
+            "flags": {
+              "omni_nightlife_knows_the_scene": true
+            }
+          },
           "action_payload": {
-            "type": "set_flag",
-            "flag_id": "omni_nightlife_knows_the_scene",
-            "value": true,
-            "entity_id": "player"
+            "type": "start_quest",
+            "quest_id": "omni:nightlife:learn_the_scene"
           },
           "failure_action_payload": {
             "type": "modify_stat",

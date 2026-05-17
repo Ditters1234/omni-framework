@@ -69,6 +69,16 @@
           "confirm_label": "Begin"
         },
         {
+          "tab_id": "dorm_map",
+          "display_name": "Campus Map",
+          "description": "Travel directly or inspect how campus, city, and addon locations connect.",
+          "backend_class": "WorldMapBackend",
+          "screen_title": "Campus Map",
+          "screen_description": "Select a destination to travel. Addon locations appear here when their mods add them to the graph.",
+          "show_travel_costs": true,
+          "discovered_only": false
+        },
+        {
           "tab_id": "dorm_schedule",
           "display_name": "Schedule",
           "description": "Read upcoming class, work, and recovery windows.",

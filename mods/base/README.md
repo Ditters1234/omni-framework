@@ -34,6 +34,8 @@ Activities are the main day-spending surface. `base:attend_arcana_lecture`, `bas
 
 The first quest spine is intentionally compact: `base:orientation` teaches travel, lecture, and sleep; `base:first_assignment` teaches course progress plus study; and `base:tuition_pressure` teaches cash pressure and physical work. Addons should extend these patterns with additions and patches.
 
+The dorm also exposes a `WorldMapBackend` campus map. It keeps navigation visible even when the all-location Campus Planner is doing auto-travel, and it gives addon locations a clear place to appear once their patches add graph connections.
+
 ## Design Boundaries
 
 - This base game uses no combat and no `health` stat.

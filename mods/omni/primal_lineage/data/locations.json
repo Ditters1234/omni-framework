@@ -1,0 +1,22 @@
+{
+  "patches": [
+    {
+      "target": "base:industrial_ward",
+      "add_screens": [
+        {
+          "tab_id": "primal_lineage_work",
+          "display_name": "Primal Work",
+          "description": "Industrial Ward activities tuned for strength, endurance, intimidation, and visible body tradeoffs.",
+          "backend_class": "ActivityBoardBackend",
+          "screen_title": "Primal Work",
+          "tags": [
+            "primal_lineage"
+          ],
+          "location_filter": "base:industrial_ward",
+          "show_locked": true,
+          "show_upcoming": true
+        }
+      ]
+    }
+  ]
+}
