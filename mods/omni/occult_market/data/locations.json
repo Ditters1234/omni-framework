@@ -36,9 +36,7 @@
           "categories": [
             "ritual"
           ],
-          "location_filter": "base:high_street",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "base:high_street"
         }
       ],
       "set": {

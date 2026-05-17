@@ -63,9 +63,6 @@
           "backend_class": "ActivityBoardBackend",
           "screen_title": "Campus Planner",
           "location_filter": "all",
-          "show_locked": true,
-          "show_upcoming": true,
-          "max_upcoming_slots": 8,
           "confirm_label": "Begin"
         },
         {
@@ -149,9 +146,7 @@
             "social",
             "recovery"
           ],
-          "location_filter": "base:dorm_common_area",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "base:dorm_common_area"
         }
       ],
       "entities_present": [
@@ -181,9 +176,7 @@
           "categories": [
             "academic"
           ],
-          "location_filter": "base:lecture_hall",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "base:lecture_hall"
         }
       ],
       "entities_present": [
@@ -213,9 +206,7 @@
           "categories": [
             "academic"
           ],
-          "location_filter": "base:library",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "base:library"
         }
       ]
     },
@@ -243,9 +234,7 @@
           "categories": [
             "social"
           ],
-          "location_filter": "base:student_union",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "base:student_union"
         },
         {
           "tab_id": "union_factions",
@@ -324,9 +313,7 @@
           "categories": [
             "work"
           ],
-          "location_filter": "base:industrial_ward",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "base:industrial_ward"
         }
       ],
       "entities_present": [

@@ -18,10 +18,7 @@
           "description": "Late activities for stress relief, reputation, and risky social momentum.",
           "backend_class": "ActivityBoardBackend",
           "screen_title": "After Hours",
-          "location_filter": "omni:nightlife:nightlife_district",
-          "show_locked": true,
-          "show_upcoming": true,
-          "max_upcoming_slots": 8
+          "location_filter": "omni:nightlife:nightlife_district"
         },
         {
           "tab_id": "nightlife_status",
@@ -52,9 +49,7 @@
           "description": "Check after-hours activities and stress relief options.",
           "backend_class": "ActivityBoardBackend",
           "screen_title": "Nightlife Preview",
-          "location_filter": "omni:nightlife:nightlife_district",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "omni:nightlife:nightlife_district"
         },
         {
           "tab_id": "nightlife_map",

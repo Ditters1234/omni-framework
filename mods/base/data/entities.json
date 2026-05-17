@@ -284,8 +284,6 @@
             "work"
           ],
           "location_filter": "base:industrial_ward",
-          "show_locked": true,
-          "show_upcoming": true,
           "confirm_label": "Start Shift"
         }
       ]

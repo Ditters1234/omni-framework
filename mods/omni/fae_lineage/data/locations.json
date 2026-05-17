@@ -12,9 +12,7 @@
           "tags": [
             "fae_lineage"
           ],
-          "location_filter": "base:student_union",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "base:student_union"
         }
       ],
       "set": {

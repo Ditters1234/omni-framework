@@ -12,9 +12,7 @@
           "tags": [
             "primal_lineage"
           ],
-          "location_filter": "base:industrial_ward",
-          "show_locked": true,
-          "show_upcoming": true
+          "location_filter": "base:industrial_ward"
         }
       ]
     }
