@@ -28,7 +28,7 @@ The base mod is intentionally small. It demonstrates how to build a real game lo
 
 ## How The Loop Works
 
-The player starts with five equipped body sockets: `cognitive`, `sensory`, `manipulator`, `locomotion`, and `framework`. The dorm ritual circle is the only base location that opens `AssemblyEditorBackend`, so body choices are made at home before travelling to scheduled activities.
+The player starts with five equipped body sockets: `cognitive`, `sensory`, `manipulator`, `locomotion`, and `framework`. The dorm ritual circle is the only base location that opens `AssemblyEditorBackend`, so body choices are made at home before travelling to scheduled activities. The starter identity is intentionally neutral; presentation options should be handled as player-facing choice, not as statted transformation parts.
 
 Activities are the main day-spending surface. `base:attend_arcana_lecture`, `base:study_at_library`, `base:warehouse_shift`, and `base:student_mixer` use stat-gated outcomes so different bodies produce different rewards and stress pressure. `base:prepare_ritual_circle` spends mana and ritual chalk through normal activity actions, while `base:sleep_in_dorm` restores mana, reduces stress, clears the ritual-prepared flag, and records the day-end event.
 

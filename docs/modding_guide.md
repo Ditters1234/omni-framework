@@ -1642,7 +1642,8 @@ Common fields:
     "title": "My Total Conversion",
     "tagline": "A new world built on Omni-Framework.",
     "starting_player_id": "base:player",
-    "starting_location": "my_name:my_mod:back_alley"
+    "starting_location": "my_name:my_mod:back_alley",
+    "starting_tick": 8
   },
   "calendar": {
     "day_start_tick": 0,
@@ -1698,6 +1699,7 @@ Common fields:
 - `game.starting_player_id` is required and must point at a valid entity id
 - `game.starting_location` should be a valid location id when provided
 - `game.starting_discovered_locations` must be an array of valid location ids when provided; include any connected locations that should be available in the first travel view
+- `game.starting_tick` is optional and sets the new-game absolute tick within the first day. It must be an integer from `0` to `game.ticks_per_day - 1`.
 - Starting currencies are set on the player entity template in `entities.json`, not in `config.json`. To change starting money, patch the player entity's `currencies` field.
 - `calendar` config controls date interpretation for schedule and calendar surfaces. `TimeKeeper` still owns absolute time advancement through `GameState.current_tick`; `calendar.day_start_tick` only changes display-day and schedule projection.
 - `calendar.weekdays` must be a non-empty array of unique non-empty strings. The engine does not assume a seven-day week.

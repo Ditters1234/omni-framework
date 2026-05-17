@@ -3,7 +3,7 @@
     {
       "entity_id": "base:player",
       "display_name": "First-Year Student",
-      "description": "A new Vanguard student with a scholarship, a borrowed dorm room, and a body that can be revised if the ritual circle holds.",
+      "description": "A new Vanguard student with a scholarship, a borrowed dorm room, and a self that should be yours to define.",
       "portrait": "res://mods/base/assets/vanguard/entities/player_student.png",
       "location_id": "base:dorm_room",
       "currencies": {

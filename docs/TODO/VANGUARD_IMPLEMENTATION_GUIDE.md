@@ -17,6 +17,8 @@ Current status:
 - Addon Phase E has a first data-only slice in `mods/omni/nightlife/`: a Nightlife District location, High Street connection patch, late-night recovery/social/work activities, temporary status effects, an NPC challenge, an addon achievement, local placeholder assets, and README guidance.
 - Integrated JSON/reference audit passes for base plus all current `mods/omni/*` addon slices: IDs, actions, conditions, status effects, achievements, recipes, task templates, location connections, and `res://` asset references resolve together.
 - Base and addon image assets now use generated draft PNGs rather than copied placeholder art. Sound assets are still placeholder WAVs.
+- The default player copy and portrait are being kept gender-flexible. A real player presentation picker is still needed so players can choose portraits/pronouns/body presentation at new game without encoding gender as stat modifiers.
+- Campus Planner activities now use auto-travel where appropriate, and new games start at 08:00 so day-one campus activities are immediately usable instead of greyed out from midnight.
 - Godot-side validation is currently blocked before project load by the native `godot-rust` extension startup crash (`API v4.5`, runtime `v4.6.2`, signal 11).
 - Required images and sounds are listed in `docs/TODO/VANGUARD_ASSET_REQUIREMENTS.md`.
 - Legacy `mods/example/*` packs are disabled because they target the previous starter base.

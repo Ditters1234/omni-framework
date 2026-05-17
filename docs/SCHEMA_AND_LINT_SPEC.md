@@ -156,6 +156,7 @@ Rules:
 - `game.starting_player_id` is required and must reference a known entity.
 - `game.starting_location` must reference a known location when present.
 - `game.starting_discovered_locations` must be an array of known location ids when present.
+- `game.starting_tick` must be an integer from `0` to `game.ticks_per_day - 1` when present.
 - `game.ticks_per_day` and `game.ticks_per_hour` must be positive integers when present.
 - `calendar` must be an object when present.
 - `calendar.day_start_tick` must be an integer from `0` to `game.ticks_per_day - 1` when present.

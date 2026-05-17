@@ -151,5 +151,6 @@ Asset Notes
 - Keep icons readable at small UI sizes.
 - Prefer transparent PNGs for final parts, items, faction emblems, and achievement icons when the silhouette needs to float over UI.
 - Entity portraits and current draft icons can be square PNGs with painted backgrounds.
+- The default player portrait should stay gender-flexible until a proper new-game presentation picker exists.
 - One-shot UI sounds should be short `.wav` or `.ogg` files.
 - Add `.import` files by importing the assets through Godot after the source files exist.
